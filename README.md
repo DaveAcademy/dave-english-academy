@@ -59,16 +59,40 @@ npm run dev
 
 Open the URL it prints (usually `http://localhost:5173`).
 
-## Deploying for free — step by step
+## Part 1: Create a GitHub repository
 
-Any of these three hosts work well and have generous free tiers. Pick one.
-All the steps below assume your code is in a GitHub repository — if you haven't
-used GitHub before:
+1. Go to [github.com](https://github.com) and sign up (free) if you don't have an account
+2. Click the **+** icon top-right → **New repository**
+3. Name it `dave-english-academy` (or anything you like)
+4. Leave it **Public** or **Private** — either works for deployment
+5. Do **not** check "Add a README" — this project already has one
+6. Click **Create repository**
 
-1. Create a free account at [github.com](https://github.com)
-2. Create a new repository (e.g. `dave-english-academy`)
-3. Upload this project's files to it (GitHub's website lets you drag-and-drop
-   files directly — look for "uploading an existing file" on your new repo's page)
+## Part 2: Upload this project to GitHub
+
+This project is already a Git repository (it has a `.git` folder with your first
+commit saved). You just need to connect it to the empty repository you made and push.
+
+**If you have a computer with Git installed** (recommended):
+1. Unzip this project somewhere on your computer
+2. Open a terminal in that folder
+3. Run the three commands GitHub shows you after creating the repo — they'll look like:
+   ```bash
+   git remote add origin https://github.com/YOUR-USERNAME/dave-english-academy.git
+   git branch -M main
+   git push -u origin main
+   ```
+4. Refresh your GitHub repository page — all the files should now be there
+
+**If you don't have Git installed or prefer not to use a terminal:**
+1. On your new GitHub repository page, click **uploading an existing file**
+2. Unzip this project on your computer, then drag every file and folder into the browser
+   (do this in a few batches if GitHub limits how many at once)
+3. Scroll down and click **Commit changes**
+
+Either way, once it's uploaded, move on to Part 3.
+
+## Part 3: Deploy for free — step by step
 
 ### Option A: Vercel (recommended - simplest)
 
