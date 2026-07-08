@@ -3,6 +3,8 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Sidebar, BottomNav } from './components/Nav';
 import { AcademyDataProvider } from './lib/AcademyDataContext';
+import { AuthProvider, useAuth } from './lib/AuthContext';
+import AuthGate from './components/auth/AuthGate';
 import Dashboard from './pages/Dashboard';
 import Students from './pages/Students';
 import Payments from './pages/Payments';
@@ -12,7 +14,18 @@ import Settings from './pages/Settings';
 
 export default function App() {
   return (
-    <AcademyDataProvider>
+    <AuthProvider>
+      <AuthGate>
+        <AppShell />
+      </AuthGate>
+    </AuthProvider>
+  );
+}
+
+function AppShell() {
+  const { session } = useAuth();
+  return (
+    <AcademyDataProvider key={session.user.id}>
       <BrowserRouter>
         <div className="flex min-h-screen bg-paper">
           <Sidebar />

@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { Search, Plus, Upload, Pencil, Trash2, ChevronUp, ChevronDown, ArrowUpDown } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
+import { useAuth } from '../lib/AuthContext';
 import { LevelBadge, StatusBadge } from '../components/Badge';
 import StudentForm from '../components/StudentForm';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -11,6 +12,8 @@ import { formatUZS } from '../utils/format';
 
 export default function Students() {
   const { students, loading, error, addStudent, editStudent, removeStudent, importStudents } = useAcademy();
+  const { role } = useAuth();
+  const isAdmin = role === 'administrator';
 
   const [filters, setFilters] = useState({ search: '', level: '', status: '', group: '' });
   const [sortKey, setSortKey] = useState('real_name');
@@ -89,23 +92,25 @@ export default function Students() {
           <h1 className="font-display text-2xl font-bold text-ink">Students</h1>
           <p className="mt-1 text-sm text-ink/50">Add, edit, search, and filter your roster.</p>
         </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setImportOpen(true)}
-            className="flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-2 text-sm font-semibold text-brand-500 hover:bg-brand-50"
-          >
-            <Upload size={16} /> Import
-          </button>
-          <button
-            onClick={() => {
-              setEditingStudent(null);
-              setFormOpen(true);
-            }}
-            className="flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600"
-          >
-            <Plus size={16} /> Add student
-          </button>
-        </div>
+        {isAdmin && (
+          <div className="flex gap-2">
+            <button
+              onClick={() => setImportOpen(true)}
+              className="flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-2 text-sm font-semibold text-brand-500 hover:bg-brand-50"
+            >
+              <Upload size={16} /> Import
+            </button>
+            <button
+              onClick={() => {
+                setEditingStudent(null);
+                setFormOpen(true);
+              }}
+              className="flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600"
+            >
+              <Plus size={16} /> Add student
+            </button>
+          </div>
+        )}
       </header>
 
       {error && <div className="mb-4 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{error}</div>}
@@ -174,7 +179,7 @@ export default function Students() {
                         </span>
                       </th>
                     ))}
-                    <th className="px-4 py-3 text-right font-semibold text-ink/70">Actions</th>
+                    {isAdmin && <th className="px-4 py-3 text-right font-semibold text-ink/70">Actions</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -188,22 +193,24 @@ export default function Students() {
                       <td className="px-4 py-3 text-ink/70">Day {s.payment_deadline}</td>
                       <td className="px-4 py-3 text-ink/70">{formatUZS(s.monthly_fee)}</td>
                       <td className="px-4 py-3"><StatusBadge status={s.status} /></td>
-                      <td className="px-4 py-3">
-                        <div className="flex justify-end gap-2">
-                          <button
-                            onClick={() => {
-                              setEditingStudent(s);
-                              setFormOpen(true);
-                            }}
-                            className="rounded-md px-2 py-1 text-xs font-semibold text-brand-500 hover:bg-brand-50"
-                          >
-                            Edit
-                          </button>
-                          <button onClick={() => setDeletingStudent(s)} className="rounded-md px-2 py-1 text-xs font-semibold text-inactive hover:bg-inactive/10">
-                            Delete
-                          </button>
-                        </div>
-                      </td>
+                      {isAdmin && (
+                        <td className="px-4 py-3">
+                          <div className="flex justify-end gap-2">
+                            <button
+                              onClick={() => {
+                                setEditingStudent(s);
+                                setFormOpen(true);
+                              }}
+                              className="rounded-md px-2 py-1 text-xs font-semibold text-brand-500 hover:bg-brand-50"
+                            >
+                              Edit
+                            </button>
+                            <button onClick={() => setDeletingStudent(s)} className="rounded-md px-2 py-1 text-xs font-semibold text-inactive hover:bg-inactive/10">
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
@@ -220,20 +227,22 @@ export default function Students() {
                     <p className="font-semibold text-ink">{s.real_name}</p>
                     {s.english_name && <p className="text-xs text-ink/40">{s.english_name}</p>}
                   </div>
-                  <div className="flex gap-1">
-                    <button
-                      onClick={() => {
-                        setEditingStudent(s);
-                        setFormOpen(true);
-                      }}
-                      className="rounded-md p-1.5 text-brand-500 active:bg-brand-50"
-                    >
-                      <Pencil size={15} />
-                    </button>
-                    <button onClick={() => setDeletingStudent(s)} className="rounded-md p-1.5 text-inactive active:bg-inactive/10">
-                      <Trash2 size={15} />
-                    </button>
-                  </div>
+                  {isAdmin && (
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => {
+                          setEditingStudent(s);
+                          setFormOpen(true);
+                        }}
+                        className="rounded-md p-1.5 text-brand-500 active:bg-brand-50"
+                      >
+                        <Pencil size={15} />
+                      </button>
+                      <button onClick={() => setDeletingStudent(s)} className="rounded-md p-1.5 text-inactive active:bg-inactive/10">
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                  )}
                 </div>
                 <div className="mt-2 flex flex-wrap items-center gap-1.5">
                   <LevelBadge level={s.level} />
