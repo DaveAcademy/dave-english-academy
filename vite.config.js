@@ -11,9 +11,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icons/icon-192.png', 'icons/icon-512.png'],
       manifest: {
-        name: 'Dave English Academy',
+        name: 'Dave Academy',
         short_name: 'Dave Academy',
-        description: 'Student, payment, attendance and rankings management for Dave English Academy',
+        description: 'Student, payment, attendance and rankings management for Dave Academy',
         theme_color: '#0f373f',
         background_color: '#f5f6f8',
         display: 'standalone',

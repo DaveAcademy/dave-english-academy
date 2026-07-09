@@ -27,7 +27,7 @@ export default function Login() {
       <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-card">
         <div className="mb-5 text-center">
           <LogIn className="mx-auto mb-2 h-10 w-10 text-brand-500" />
-          <h1 className="font-display text-lg font-bold text-ink">Dave English Academy</h1>
+          <h1 className="font-display text-lg font-bold text-ink">Dave Academy</h1>
           <p className="mt-1 text-sm text-ink/60">Sign in to continue.</p>
         </div>
 

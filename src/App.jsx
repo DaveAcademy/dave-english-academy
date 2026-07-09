@@ -52,7 +52,7 @@ function AppShell() {
 function MobileHeader() {
   return (
     <header className="sticky top-0 z-10 bg-brand-700 px-4 py-3 text-white shadow-md md:hidden">
-      <p className="text-sm font-semibold leading-tight">Dave English Academy</p>
+      <p className="text-sm font-semibold leading-tight">Dave Academy</p>
     </header>
   );
 }
