@@ -149,6 +149,12 @@ export async function importAllData(data) {
     if (error) throw error;
   }
 
+  // Restoring inserts explicit id values, which bypasses (and desyncs) the
+  // identity sequences - resync them or every future insert eventually
+  // collides with an id from this restore.
+  const { error: resyncError } = await supabase.rpc('resync_sequences');
+  if (resyncError) throw resyncError;
+
   return true;
 }
 
