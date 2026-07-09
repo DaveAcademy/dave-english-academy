@@ -6,18 +6,22 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
+  const [profileError, setProfileError] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const loadProfile = useCallback(async (currentSession) => {
     if (!currentSession) {
       setProfile(null);
+      setProfileError(null);
       return;
     }
     try {
       const p = await getProfile(currentSession.user.id);
       setProfile(p);
-    } catch {
+      setProfileError(null);
+    } catch (e) {
       setProfile(null);
+      setProfileError(e.message || 'Could not load your account.');
     }
   }, []);
 
@@ -48,7 +52,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ session, profile, role: profile?.role ?? null, loading, refreshProfile }}
+      value={{ session, profile, profileError, role: profile?.role ?? null, loading, refreshProfile }}
     >
       {children}
     </AuthContext.Provider>

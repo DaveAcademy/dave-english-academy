@@ -3,12 +3,15 @@
 import { useState, useMemo } from 'react';
 import { Search, ChevronLeft, ChevronRight, Check } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
+import { useAuth } from '../lib/AuthContext';
 import { LevelBadge } from '../components/Badge';
 import { formatUZS, MONTH_NAMES } from '../utils/format';
 import { daysUntilDue } from '../utils/date';
 
 export default function Payments() {
   const { students, payments, togglePayment, error } = useAcademy();
+  const { role } = useAuth();
+  const isAdmin = role === 'administrator';
   const today = new Date();
   const curYear = today.getFullYear();
   const curMonth = today.getMonth() + 1;
@@ -174,17 +177,28 @@ export default function Payments() {
                   )}
                 </div>
               </div>
-              <button
-                onClick={() =>
-                  togglePayment(s.id, quickFilter === 'all' ? viewYear : curYear, quickFilter === 'all' ? viewMonth : curMonth, paid)
-                }
-                className={`flex flex-shrink-0 items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold ${
-                  paid ? 'bg-active text-white' : 'bg-ink/5 text-ink/50'
-                }`}
-              >
-                {paid && <Check size={14} />}
-                {paid ? 'Paid' : 'Unpaid'}
-              </button>
+              {isAdmin ? (
+                <button
+                  onClick={() =>
+                    togglePayment(s.id, quickFilter === 'all' ? viewYear : curYear, quickFilter === 'all' ? viewMonth : curMonth, paid)
+                  }
+                  className={`flex flex-shrink-0 items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold ${
+                    paid ? 'bg-active text-white' : 'bg-ink/5 text-ink/50'
+                  }`}
+                >
+                  {paid && <Check size={14} />}
+                  {paid ? 'Paid' : 'Unpaid'}
+                </button>
+              ) : (
+                <span
+                  className={`flex flex-shrink-0 items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold ${
+                    paid ? 'bg-active text-white' : 'bg-ink/5 text-ink/50'
+                  }`}
+                >
+                  {paid && <Check size={14} />}
+                  {paid ? 'Paid' : 'Unpaid'}
+                </span>
+              )}
             </div>
           ))}
         </div>
