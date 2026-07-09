@@ -79,7 +79,7 @@ Deno.serve(async (req: Request) => {
     return json({ error: "Forbidden" }, 403, origin);
   }
 
-  let body: { email?: string; full_name?: string; role?: string };
+  let body: { email?: string; full_name?: string; role?: string; student_id?: number };
   try {
     body = await req.json();
   } catch {
@@ -88,12 +88,16 @@ Deno.serve(async (req: Request) => {
 
   const { email, full_name } = body;
   const role = body.role;
+  const studentId = role === "student" ? body.student_id : undefined;
 
   if (!email || typeof email !== "string") {
     return json({ error: "email is required" }, 400, origin);
   }
   if (!["teacher", "student"].includes(role ?? "")) {
     return json({ error: "role must be 'teacher' or 'student'" }, 400, origin);
+  }
+  if (studentId !== undefined && typeof studentId !== "number") {
+    return json({ error: "student_id must be a number" }, 400, origin);
   }
 
   const password = randomPassword();
@@ -113,6 +117,31 @@ Deno.serve(async (req: Request) => {
       ? 409
       : 400;
     return json({ error: createError.message }, status, origin);
+  }
+
+  if (studentId !== undefined && created.user) {
+    const { error: linkError, count } = await adminClient
+      .from("students")
+      .update({ profile_id: created.user.id }, { count: "exact" })
+      .eq("id", studentId)
+      .is("profile_id", null);
+
+    if (linkError || count === 0) {
+      // The login account already exists at this point - don't fail the
+      // whole request, just report that linking didn't happen so the
+      // admin can retry linking separately rather than losing the account.
+      return json(
+        {
+          email: created.user.email ?? email,
+          password,
+          full_name: full_name ?? "",
+          role,
+          linkWarning: "Account created, but linking to that student failed (it may already be linked).",
+        },
+        200,
+        origin,
+      );
+    }
   }
 
   return json(

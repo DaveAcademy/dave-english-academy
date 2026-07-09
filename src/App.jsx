@@ -1,16 +1,32 @@
 // App.jsx
 
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Sidebar, BottomNav } from './components/Nav';
+import { PortalSidebar, PortalBottomNav } from './components/PortalNav';
 import { AcademyDataProvider } from './lib/AcademyDataContext';
 import { AuthProvider, useAuth } from './lib/AuthContext';
 import AuthGate from './components/auth/AuthGate';
-import Dashboard from './pages/Dashboard';
-import Students from './pages/Students';
-import Payments from './pages/Payments';
-import Attendance from './pages/Attendance';
-import Rankings from './pages/Rankings';
-import Settings from './pages/Settings';
+
+// Route-level code splitting - each page is its own chunk, loaded on
+// first visit rather than all bundled into one file up front. This
+// matters most for Reports.jsx/Certificates.jsx, which pull in jsPDF (a
+// large dependency) that most sessions never touch.
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Students = lazy(() => import('./pages/Students'));
+const Payments = lazy(() => import('./pages/Payments'));
+const Attendance = lazy(() => import('./pages/Attendance'));
+const Lessons = lazy(() => import('./pages/Lessons'));
+const Exams = lazy(() => import('./pages/Exams'));
+const Homework = lazy(() => import('./pages/Homework'));
+const Certificates = lazy(() => import('./pages/Certificates'));
+const Rankings = lazy(() => import('./pages/Rankings'));
+const Reports = lazy(() => import('./pages/Reports'));
+const Settings = lazy(() => import('./pages/Settings'));
+const PortalHome = lazy(() => import('./pages/portal/PortalHome'));
+const MyProgress = lazy(() => import('./pages/portal/MyProgress'));
+const MyCertificates = lazy(() => import('./pages/portal/MyCertificates'));
+const MyRanking = lazy(() => import('./pages/portal/MyRanking'));
 
 export default function App() {
   return (
@@ -23,30 +39,53 @@ export default function App() {
 }
 
 function AppShell() {
-  const { session } = useAuth();
+  const { session, role } = useAuth();
+  const isStudent = role === 'student';
+
   return (
     <AcademyDataProvider key={session.user.id}>
       <BrowserRouter>
         <div className="flex min-h-screen bg-paper">
-          <Sidebar />
+          {isStudent ? <PortalSidebar /> : <Sidebar />}
           <div className="flex-1">
             <MobileHeader />
             <main className="mx-auto max-w-6xl px-4 pb-24 pt-4 sm:px-6 sm:pt-6 md:pb-8">
-              <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/students" element={<Students />} />
-                <Route path="/payments" element={<Payments />} />
-                <Route path="/attendance" element={<Attendance />} />
-                <Route path="/rankings" element={<Rankings />} />
-                <Route path="/settings" element={<Settings />} />
-              </Routes>
+              <Suspense fallback={<PageLoading />}>
+                {isStudent ? (
+                  <Routes>
+                    <Route path="/" element={<PortalHome />} />
+                    <Route path="/progress" element={<MyProgress />} />
+                    <Route path="/my-certificates" element={<MyCertificates />} />
+                    <Route path="/my-ranking" element={<MyRanking />} />
+                    <Route path="/settings" element={<Settings />} />
+                  </Routes>
+                ) : (
+                  <Routes>
+                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/students" element={<Students />} />
+                    <Route path="/payments" element={<Payments />} />
+                    <Route path="/attendance" element={<Attendance />} />
+                    <Route path="/lessons" element={<Lessons />} />
+                    <Route path="/exams" element={<Exams />} />
+                    <Route path="/homework" element={<Homework />} />
+                    <Route path="/certificates" element={<Certificates />} />
+                    <Route path="/rankings" element={<Rankings />} />
+                    <Route path="/reports" element={<Reports />} />
+                    <Route path="/settings" element={<Settings />} />
+                  </Routes>
+                )}
+              </Suspense>
             </main>
           </div>
-          <BottomNav />
+          {isStudent ? <PortalBottomNav /> : <BottomNav />}
         </div>
       </BrowserRouter>
     </AcademyDataProvider>
   );
+}
+
+function PageLoading() {
+  return <div className="p-10 text-center text-sm text-ink/40">Loading...</div>;
 }
 
 function MobileHeader() {

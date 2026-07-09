@@ -4,18 +4,42 @@
 // pages in sync automatically.
 
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, Wallet, CalendarCheck, Trophy, Settings } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Users,
+  Wallet,
+  CalendarCheck,
+  Trophy,
+  Settings,
+  CalendarClock,
+  FileCheck2,
+  BookOpen,
+  Award,
+  BarChart3,
+} from 'lucide-react';
+import { useAuth } from '../lib/AuthContext';
 
 const NAV_ITEMS = [
   { to: '/', label: 'Home', shortLabel: 'Home', Icon: LayoutDashboard, end: true },
   { to: '/students', label: 'Students', shortLabel: 'Students', Icon: Users },
   { to: '/payments', label: 'Payments', shortLabel: 'Pay', Icon: Wallet },
   { to: '/attendance', label: 'Attendance', shortLabel: 'Attend', Icon: CalendarCheck },
+  { to: '/lessons', label: 'Lessons', shortLabel: 'Lessons', Icon: CalendarClock },
+  { to: '/exams', label: 'Exams', shortLabel: 'Exams', Icon: FileCheck2 },
+  { to: '/homework', label: 'Homework', shortLabel: 'HW', Icon: BookOpen },
+  { to: '/certificates', label: 'Certificates', shortLabel: 'Certs', Icon: Award },
   { to: '/rankings', label: 'Rankings', shortLabel: 'Ranks', Icon: Trophy },
+  { to: '/reports', label: 'Reports', shortLabel: 'Reports', Icon: BarChart3, adminOnly: true },
   { to: '/settings', label: 'Settings', shortLabel: 'Settings', Icon: Settings },
 ];
 
+function useVisibleNavItems() {
+  const { role } = useAuth();
+  return NAV_ITEMS.filter((item) => !item.adminOnly || role === 'administrator');
+}
+
 export function Sidebar() {
+  const items = useVisibleNavItems();
   return (
     <aside className="ruled-texture hidden h-screen w-64 flex-shrink-0 flex-col bg-brand-600 text-white md:flex">
       <div className="flex items-center gap-2 px-6 py-6">
@@ -28,8 +52,8 @@ export function Sidebar() {
         </div>
       </div>
 
-      <nav className="flex-1 space-y-1 px-3">
-        {NAV_ITEMS.map(({ to, label, Icon, end }) => (
+      <nav className="flex-1 space-y-1 overflow-y-auto px-3">
+        {items.map(({ to, label, Icon, end }) => (
           <NavLink
             key={to}
             to={to}
@@ -52,15 +76,16 @@ export function Sidebar() {
 }
 
 export function BottomNav() {
+  const items = useVisibleNavItems();
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-20 flex border-t border-ink/10 bg-white pb-[env(safe-area-inset-bottom)] md:hidden">
-      {NAV_ITEMS.map(({ to, shortLabel, Icon, end }) => (
+    <nav className="fixed bottom-0 left-0 right-0 z-20 flex overflow-x-auto border-t border-ink/10 bg-white pb-[env(safe-area-inset-bottom)] md:hidden">
+      {items.map(({ to, shortLabel, Icon, end }) => (
         <NavLink
           key={to}
           to={to}
           end={end}
           className={({ isActive }) =>
-            `flex flex-1 flex-col items-center gap-0.5 py-2.5 text-xs font-medium ${
+            `flex flex-1 flex-shrink-0 flex-col items-center gap-0.5 px-3 py-2.5 text-xs font-medium ${
               isActive ? 'text-brand-500' : 'text-ink/40'
             }`
           }
