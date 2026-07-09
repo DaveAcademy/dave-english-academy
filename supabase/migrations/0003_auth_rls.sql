@@ -99,13 +99,17 @@ drop policy if exists profiles_select_own on public.profiles;
 create policy profiles_select_own on public.profiles
   for select using (auth.uid() = id);
 
+-- NOTE: these use is_admin()/is_teacher() (SECURITY DEFINER, bypasses RLS),
+-- not a raw subquery on public.profiles - a policy on profiles that queries
+-- profiles directly causes "infinite recursion detected in policy for
+-- relation profiles" the first time it's actually evaluated.
 drop policy if exists profiles_select_admin_all on public.profiles;
 create policy profiles_select_admin_all on public.profiles
-  for select using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'administrator'));
+  for select using (is_admin());
 
 drop policy if exists profiles_select_teacher_all on public.profiles;
 create policy profiles_select_teacher_all on public.profiles
-  for select using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'teacher'));
+  for select using (is_teacher());
 
 drop policy if exists profiles_update_own on public.profiles;
 create policy profiles_update_own on public.profiles
@@ -113,7 +117,7 @@ create policy profiles_update_own on public.profiles
 
 drop policy if exists profiles_update_admin_all on public.profiles;
 create policy profiles_update_admin_all on public.profiles
-  for update using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'administrator'));
+  for update using (is_admin());
 
 drop policy if exists students_admin_all on public.students;
 create policy students_admin_all on public.students
