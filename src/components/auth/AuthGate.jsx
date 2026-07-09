@@ -1,11 +1,11 @@
 import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../../lib/AuthContext';
-import { isSetupComplete, claimFirstAdmin } from '../../lib/auth';
+import { isSetupComplete, claimFirstAdmin, signOut } from '../../lib/auth';
 import FirstTimeSetup from './FirstTimeSetup';
 import Login from './Login';
 
 export default function AuthGate({ children }) {
-  const { session, profile, role, loading: authLoading, refreshProfile } = useAuth();
+  const { session, profile, profileError, role, loading: authLoading, refreshProfile } = useAuth();
   const [setupComplete, setSetupComplete] = useState(null);
   const [checkingSetup, setCheckingSetup] = useState(true);
   const bootstrapAttempted = useRef(false);
@@ -56,6 +56,31 @@ export default function AuthGate({ children }) {
 
   if (!session) {
     return setupComplete ? <Login /> : <FirstTimeSetup onSetupComplete={() => setSetupComplete(true)} />;
+  }
+
+  if (profileError) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-paper px-4">
+        <div className="w-full max-w-sm rounded-xl bg-white p-6 text-center shadow-card">
+          <p className="mb-1 font-display text-base font-bold text-ink">Couldn't load your account</p>
+          <p className="mb-4 text-sm text-ink/60">{profileError}</p>
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={refreshProfile}
+              className="rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600"
+            >
+              Try again
+            </button>
+            <button
+              onClick={() => signOut()}
+              className="rounded-lg border border-ink/10 px-4 py-2.5 text-sm font-semibold text-ink/70 hover:bg-ink/5"
+            >
+              Sign out
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (!profile) {

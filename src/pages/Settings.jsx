@@ -11,6 +11,7 @@ import CreateUserForm from '../components/admin/CreateUserForm';
 export default function Settings() {
   const { reloadAll } = useAcademy();
   const { profile, role } = useAuth();
+  const isAdmin = role === 'administrator';
   const [message, setMessage] = useState('');
   const [autoBackupTime, setAutoBackupTime] = useState(null);
   const fileInputRef = useRef(null);
@@ -83,13 +84,17 @@ export default function Settings() {
           >
             <Download size={16} /> Download backup
           </button>
-          <button
-            onClick={handleRestoreClick}
-            className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-brand-500 px-4 py-2.5 text-sm font-semibold text-brand-500 hover:bg-brand-50"
-          >
-            <Upload size={16} /> Restore from file
-          </button>
-          <input ref={fileInputRef} type="file" accept="application/json" onChange={handleFileChange} className="hidden" />
+          {isAdmin && (
+            <button
+              onClick={handleRestoreClick}
+              className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-brand-500 px-4 py-2.5 text-sm font-semibold text-brand-500 hover:bg-brand-50"
+            >
+              <Upload size={16} /> Restore from file
+            </button>
+          )}
+          {isAdmin && (
+            <input ref={fileInputRef} type="file" accept="application/json" onChange={handleFileChange} className="hidden" />
+          )}
         </div>
 
         {autoBackupTime && (
