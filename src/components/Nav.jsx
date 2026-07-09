@@ -23,7 +23,7 @@ export function Sidebar() {
           D
         </div>
         <div>
-          <p className="font-display text-sm font-bold leading-tight">Dave English</p>
+          <p className="font-display text-sm font-bold leading-tight">Dave</p>
           <p className="text-xs text-white/60">Academy</p>
         </div>
       </div>

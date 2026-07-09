@@ -1,7 +1,7 @@
 {
   "name": "dave-english-academy",
   "version": "1.0.0",
-  "description": "Dave English Academy - Student, Payment, Attendance & Rankings management",
+  "description": "Dave Academy - Student, Payment, Attendance & Rankings management",
   "private": true,
   "type": "module",
   "scripts": {

@@ -74,7 +74,7 @@ export default function FirstTimeSetup({ onSetupComplete }) {
           <ShieldCheck className="mx-auto mb-2 h-10 w-10 text-brand-500" />
           <h1 className="font-display text-lg font-bold text-ink">First-time setup</h1>
           <p className="mt-1 text-sm text-ink/60">
-            No administrator exists yet. Create the first admin account for Dave English Academy.
+            No administrator exists yet. Create the first admin account for Dave Academy.
           </p>
         </div>
 
