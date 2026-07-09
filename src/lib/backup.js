@@ -11,9 +11,13 @@ import { exportAllData, importAllData } from './db';
 
 const AUTO_BACKUP_KEY = 'dea_autobackup';
 
-export async function writeAutoBackup() {
+// Takes the caller's already-in-memory state rather than re-fetching from
+// Supabase - this runs after every single mutation (add a student, toggle
+// one payment, ...), so re-fetching all three tables every time would mean
+// 3 extra full-table SELECTs per click for no benefit.
+export function writeAutoBackup({ students, payments, attendance }) {
   try {
-    const data = await exportAllData();
+    const data = { exported_at: new Date().toISOString(), students, payments, attendance };
     localStorage.setItem(AUTO_BACKUP_KEY, JSON.stringify(data));
     return true;
   } catch (e) {

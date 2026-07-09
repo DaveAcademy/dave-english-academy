@@ -159,3 +159,122 @@ export async function importAllData(data) {
 }
 
 export const STORAGE_KEYS = { students: 'students', payments: 'payments', attendance: 'attendance' };
+
+// ---------- Lessons ----------
+
+export async function listLessons() {
+  const { data, error } = await supabase.from('lessons').select('*').order('scheduled_at');
+  if (error) throw error;
+  return data;
+}
+
+export async function createLesson(data) {
+  const { data: record, error } = await supabase.from('lessons').insert(data).select().single();
+  if (error) throw error;
+  return record;
+}
+
+export async function deleteLesson(id) {
+  const { error } = await supabase.from('lessons').delete().eq('id', id);
+  if (error) throw error;
+  return true;
+}
+
+export async function listLessonAttendance() {
+  const { data, error } = await supabase.from('lesson_attendance').select('*');
+  if (error) throw error;
+  return data;
+}
+
+export async function setLessonAttendance(lessonId, studentId, status) {
+  const { error } = await supabase
+    .from('lesson_attendance')
+    .upsert({ lesson_id: lessonId, student_id: studentId, status }, { onConflict: 'lesson_id,student_id' });
+  if (error) throw error;
+  return listLessonAttendance();
+}
+
+// ---------- Exams ----------
+
+export async function listExams() {
+  const { data, error } = await supabase.from('exams').select('*').order('exam_date', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function createExam(data) {
+  const { data: record, error } = await supabase.from('exams').insert(data).select().single();
+  if (error) throw error;
+  return record;
+}
+
+export async function listExamScores() {
+  const { data, error } = await supabase.from('exam_scores').select('*');
+  if (error) throw error;
+  return data;
+}
+
+export async function setExamScore(examId, studentId, score) {
+  const { error } = await supabase
+    .from('exam_scores')
+    .upsert({ exam_id: examId, student_id: studentId, score }, { onConflict: 'exam_id,student_id' });
+  if (error) throw error;
+  return listExamScores();
+}
+
+// ---------- Homework ----------
+
+export async function listHomework() {
+  const { data, error } = await supabase.from('homework').select('*').order('due_date', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function createHomework(data) {
+  const { data: record, error } = await supabase.from('homework').insert(data).select().single();
+  if (error) throw error;
+  return record;
+}
+
+export async function listHomeworkStatus() {
+  const { data, error } = await supabase.from('homework_status').select('*');
+  if (error) throw error;
+  return data;
+}
+
+export async function setHomeworkStatus(homeworkId, studentId, status, score = null) {
+  const { error } = await supabase
+    .from('homework_status')
+    .upsert({ homework_id: homeworkId, student_id: studentId, status, score }, { onConflict: 'homework_id,student_id' });
+  if (error) throw error;
+  return listHomeworkStatus();
+}
+
+// ---------- Certificates ----------
+
+export async function listCertificates() {
+  const { data, error } = await supabase.from('certificates').select('*').order('issued_date', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function issueCertificate(studentId, title) {
+  const { data: record, error } = await supabase
+    .from('certificates')
+    .insert({ student_id: studentId, title })
+    .select()
+    .single();
+  if (error) throw error;
+  return record;
+}
+
+// ---------- Leaderboard ----------
+// Server-computed (see migration 0006) - a student's own RLS-scoped reads
+// don't include enough data to rank themselves against classmates
+// client-side, unlike admin/teacher who already have full access.
+
+export async function getLeaderboard() {
+  const { data, error } = await supabase.rpc('get_leaderboard');
+  if (error) throw error;
+  return data;
+}

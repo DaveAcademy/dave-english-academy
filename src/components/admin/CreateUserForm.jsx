@@ -1,15 +1,26 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { UserPlus, Copy, Check } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 
-const EMPTY = { fullName: '', email: '', role: 'teacher' };
+const EMPTY = { fullName: '', email: '', role: 'teacher', studentId: '' };
 
 export default function CreateUserForm() {
   const [form, setForm] = useState(EMPTY);
+  const [unlinkedStudents, setUnlinkedStudents] = useState([]);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [created, setCreated] = useState(null);
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (form.role !== 'student') return;
+    supabase
+      .from('students')
+      .select('id, real_name')
+      .is('profile_id', null)
+      .order('real_name')
+      .then(({ data }) => setUnlinkedStudents(data || []));
+  }, [form.role]);
 
   const handleChange = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
 
@@ -20,7 +31,12 @@ export default function CreateUserForm() {
     setCreated(null);
     try {
       const { data, error: fnError } = await supabase.functions.invoke('admin-create-user', {
-        body: { email: form.email, full_name: form.fullName, role: form.role },
+        body: {
+          email: form.email,
+          full_name: form.fullName,
+          role: form.role,
+          ...(form.role === 'student' && form.studentId ? { student_id: Number(form.studentId) } : {}),
+        },
       });
       if (fnError) throw fnError;
       if (data?.error) throw new Error(data.error);
@@ -59,6 +75,9 @@ export default function CreateUserForm() {
           <p className="mb-2 font-semibold">Account created - save these now, they won't be shown again:</p>
           <p className="font-mono text-xs">Email: {created.email}</p>
           <p className="font-mono text-xs">Password: {created.password}</p>
+          {created.linkWarning && (
+            <p className="mt-2 text-xs font-semibold text-amber-700">{created.linkWarning}</p>
+          )}
           <button
             onClick={handleCopy}
             className="mt-2 flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-xs font-semibold text-brand-500 hover:bg-brand-100"
@@ -99,6 +118,27 @@ export default function CreateUserForm() {
             <option value="student">Student</option>
           </select>
         </div>
+
+        {form.role === 'student' && (
+          <div>
+            <label className="mb-1 block text-xs font-medium text-ink/60">Link to student (optional)</label>
+            <select
+              value={form.studentId}
+              onChange={handleChange('studentId')}
+              className="w-full rounded-lg border border-ink/10 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
+            >
+              <option value="">Don't link yet</option>
+              {unlinkedStudents.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.real_name}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-ink/40">
+              Linking lets this login see that student's own lessons, exam scores, certificates, and ranking.
+            </p>
+          </div>
+        )}
 
         <button
           type="submit"
