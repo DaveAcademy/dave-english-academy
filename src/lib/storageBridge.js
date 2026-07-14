@@ -258,14 +258,27 @@ export async function listCertificates() {
   return data;
 }
 
-export async function issueCertificate(studentId, title) {
+export async function issueCertificate(studentId, title, issuedDate) {
   const { data: record, error } = await supabase
     .from('certificates')
-    .insert({ student_id: studentId, title })
+    .insert({ student_id: studentId, title, ...(issuedDate ? { issued_date: issuedDate } : {}) })
     .select()
     .single();
   if (error) throw error;
   return record;
+}
+
+export async function updateCertificate(id, data) {
+  const { data: rows, error } = await supabase.from('certificates').update(data).eq('id', id).select();
+  if (error) throw error;
+  return assertRows(rows, 'edit this certificate')[0];
+}
+
+export async function deleteCertificate(id) {
+  const { data: rows, error } = await supabase.from('certificates').delete().eq('id', id).select();
+  if (error) throw error;
+  assertRows(rows, 'delete this certificate');
+  return true;
 }
 
 // ---------- Leaderboard ----------

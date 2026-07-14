@@ -5,16 +5,31 @@ import { CheckCircle2, Clock, XCircle } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { todayISO } from '../utils/date';
 
+const LEVEL_TABS = [
+  { key: '', label: 'All' },
+  { key: 'A', label: 'Level A' },
+  { key: 'B', label: 'Level B' },
+  { key: 'C', label: 'Level C' },
+];
+
 export default function Attendance() {
   const { students, attendance, setAttendanceStatus, error } = useAcademy();
   const [date, setDate] = useState(todayISO());
+  const [level, setLevel] = useState('');
 
   const activeStudents = useMemo(
-    () => [...students].filter((s) => s.status === 'Active').sort((a, b) => a.real_name.localeCompare(b.real_name)),
-    [students]
+    () =>
+      [...students]
+        .filter((s) => s.status === 'Active')
+        .filter((s) => !level || s.level === level)
+        .sort((a, b) => a.real_name.localeCompare(b.real_name)),
+    [students, level]
   );
 
-  const dayRecords = useMemo(() => attendance.filter((a) => a.date === date), [attendance, date]);
+  const dayRecords = useMemo(() => {
+    const activeIds = new Set(activeStudents.map((s) => s.id));
+    return attendance.filter((a) => a.date === date && activeIds.has(a.student_id));
+  }, [attendance, date, activeStudents]);
 
   const counts = {
     Present: dayRecords.filter((a) => a.status === 'Present').length,
@@ -32,6 +47,20 @@ export default function Attendance() {
       </header>
 
       {error && <div className="mb-4 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{error}</div>}
+
+      <div className="mb-3 flex gap-1.5 overflow-x-auto">
+        {LEVEL_TABS.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setLevel(t.key)}
+            className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold ${
+              level === t.key ? 'bg-brand-500 text-white' : 'bg-white text-ink/60 shadow-sm'
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="rounded-xl bg-white p-3 shadow-card sm:w-64">
@@ -56,8 +85,12 @@ export default function Attendance() {
 
       {activeStudents.length === 0 ? (
         <div className="rounded-xl bg-white p-10 text-center shadow-card">
-          <p className="font-display text-lg font-semibold text-ink">No active students</p>
-          <p className="mt-1 text-sm text-ink/50">Add active students to start taking attendance.</p>
+          <p className="font-display text-lg font-semibold text-ink">
+            {level ? `No active students in Level ${level}` : 'No active students'}
+          </p>
+          <p className="mt-1 text-sm text-ink/50">
+            {level ? 'Try a different level, or switch back to All.' : 'Add active students to start taking attendance.'}
+          </p>
         </div>
       ) : (
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
