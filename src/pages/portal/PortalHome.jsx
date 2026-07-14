@@ -7,7 +7,8 @@
 // needs data a student's own RLS-scoped reads don't include.
 
 import { useState, useEffect, useMemo } from 'react';
-import { CalendarClock } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { CalendarClock, MessageSquare } from 'lucide-react';
 import { useAcademy } from '../../lib/AcademyDataContext';
 import { getLeaderboard } from '../../lib/db';
 
@@ -85,10 +86,18 @@ export default function PortalHome() {
               <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-500">
                 <CalendarClock size={18} />
               </div>
-              <div>
+              <div className="min-w-0 flex-1">
                 <p className="font-semibold text-ink">{l.topic}</p>
                 <p className="text-xs text-ink/50">{new Date(l.scheduled_at).toLocaleString()}</p>
               </div>
+              {l.discussion_enabled && (
+                <Link
+                  to={`/chat?type=lesson&id=${l.id}`}
+                  className="flex flex-shrink-0 items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-semibold text-ink/60 hover:bg-ink/5"
+                >
+                  <MessageSquare size={13} /> Discuss
+                </Link>
+              )}
             </div>
           ))}
         </div>

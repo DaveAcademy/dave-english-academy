@@ -23,8 +23,11 @@ const Certificates = lazy(() => import('./pages/Certificates'));
 const Rankings = lazy(() => import('./pages/Rankings'));
 const Reports = lazy(() => import('./pages/Reports'));
 const Settings = lazy(() => import('./pages/Settings'));
+const Chat = lazy(() => import('./pages/Chat'));
 const PortalHome = lazy(() => import('./pages/portal/PortalHome'));
 const MyProgress = lazy(() => import('./pages/portal/MyProgress'));
+const MyExams = lazy(() => import('./pages/portal/MyExams'));
+const MyHomework = lazy(() => import('./pages/portal/MyHomework'));
 const MyCertificates = lazy(() => import('./pages/portal/MyCertificates'));
 const MyRanking = lazy(() => import('./pages/portal/MyRanking'));
 
@@ -55,8 +58,11 @@ function AppShell() {
                   <Routes>
                     <Route path="/" element={<PortalHome />} />
                     <Route path="/progress" element={<MyProgress />} />
+                    <Route path="/my-exams" element={<MyExams />} />
+                    <Route path="/my-homework" element={<MyHomework />} />
                     <Route path="/my-certificates" element={<MyCertificates />} />
                     <Route path="/my-ranking" element={<MyRanking />} />
+                    <Route path="/chat" element={<Chat />} />
                     <Route path="/settings" element={<Settings />} />
                   </Routes>
                 ) : (
@@ -71,6 +77,7 @@ function AppShell() {
                     <Route path="/certificates" element={<Certificates />} />
                     <Route path="/rankings" element={<Rankings />} />
                     <Route path="/reports" element={<Reports />} />
+                    <Route path="/chat" element={<Chat />} />
                     <Route path="/settings" element={<Settings />} />
                   </Routes>
                 )}
