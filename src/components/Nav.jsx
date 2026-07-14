@@ -16,8 +16,10 @@ import {
   BookOpen,
   Award,
   BarChart3,
+  MessageSquare,
 } from 'lucide-react';
 import { useAuth } from '../lib/AuthContext';
+import { useAcademy } from '../lib/AcademyDataContext';
 
 const NAV_ITEMS = [
   { to: '/', label: 'Home', shortLabel: 'Home', Icon: LayoutDashboard, end: true },
@@ -30,6 +32,7 @@ const NAV_ITEMS = [
   { to: '/certificates', label: 'Certificates', shortLabel: 'Certs', Icon: Award },
   { to: '/rankings', label: 'Rankings', shortLabel: 'Ranks', Icon: Trophy },
   { to: '/reports', label: 'Reports', shortLabel: 'Reports', Icon: BarChart3, adminOnly: true },
+  { to: '/chat', label: 'Messages', shortLabel: 'Chat', Icon: MessageSquare },
   { to: '/settings', label: 'Settings', shortLabel: 'Settings', Icon: Settings },
 ];
 
@@ -38,8 +41,34 @@ function useVisibleNavItems() {
   return NAV_ITEMS.filter((item) => !item.adminOnly || role === 'administrator');
 }
 
+// Count of messages visible to me (already RLS-scoped) that I didn't send
+// and haven't marked read yet - see Chat.jsx, which marks a message read
+// the moment it's shown.
+function useUnreadCount() {
+  const { profile } = useAuth();
+  const { messages, messageReads } = useAcademy();
+  const readIds = new Set(messageReads.filter((r) => r.profile_id === profile.id).map((r) => r.message_id));
+  return messages.filter((m) => m.sender_id !== profile.id && !readIds.has(m.id)).length;
+}
+
+function UnreadBadge({ count, floating }) {
+  if (!count) return null;
+  return (
+    <span
+      className={
+        floating
+          ? 'absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-inactive px-1 text-[10px] font-bold text-white'
+          : 'ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-inactive px-1.5 text-[10px] font-bold text-white'
+      }
+    >
+      {count > 9 ? '9+' : count}
+    </span>
+  );
+}
+
 export function Sidebar() {
   const items = useVisibleNavItems();
+  const unread = useUnreadCount();
   return (
     <aside className="ruled-texture hidden h-screen w-64 flex-shrink-0 flex-col bg-brand-600 text-white md:flex">
       <div className="flex items-center gap-2 px-6 py-6">
@@ -66,6 +95,7 @@ export function Sidebar() {
           >
             <Icon className="h-4 w-4 flex-shrink-0" />
             {label}
+            {to === '/chat' && <UnreadBadge count={unread} />}
           </NavLink>
         ))}
       </nav>
@@ -77,6 +107,7 @@ export function Sidebar() {
 
 export function BottomNav() {
   const items = useVisibleNavItems();
+  const unread = useUnreadCount();
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-20 flex overflow-x-auto border-t border-ink/10 bg-white pb-[env(safe-area-inset-bottom)] md:hidden">
       {items.map(({ to, shortLabel, Icon, end }) => (
@@ -85,13 +116,14 @@ export function BottomNav() {
           to={to}
           end={end}
           className={({ isActive }) =>
-            `flex flex-1 flex-shrink-0 flex-col items-center gap-0.5 px-3 py-2.5 text-xs font-medium ${
+            `relative flex flex-1 flex-shrink-0 flex-col items-center gap-0.5 px-3 py-2.5 text-xs font-medium ${
               isActive ? 'text-brand-500' : 'text-ink/40'
             }`
           }
         >
           <Icon size={19} />
           {shortLabel}
+          {to === '/chat' && <UnreadBadge count={unread} floating />}
         </NavLink>
       ))}
     </nav>

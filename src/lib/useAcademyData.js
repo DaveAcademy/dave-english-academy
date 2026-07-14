@@ -23,6 +23,9 @@ export function useAcademyData() {
   const [homework, setHomework] = useState([]);
   const [homeworkStatus, setHomeworkStatusState] = useState([]);
   const [certificates, setCertificates] = useState([]);
+  const [certificateTemplate, setCertificateTemplateState] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [messageReads, setMessageReads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -55,6 +58,27 @@ export function useAcademyData() {
         setError('Could not load your saved data.');
       } finally {
         setLoading(false);
+      }
+    })();
+  }, []);
+
+  // Loaded separately from the block above on purpose: these tables come
+  // from a later migration (0009). If that migration hasn't been applied
+  // to a given environment yet, this fetch fails - but it must fail in
+  // isolation, not take the whole app down by rejecting the same
+  // Promise.all that students/payments/attendance load through.
+  useEffect(() => {
+    (async () => {
+      try {
+        const [tmpl, msg, reads] = await Promise.all([db.getCertificateTemplate(), db.listMessages(), db.listMessageReads()]);
+        setCertificateTemplateState(tmpl);
+        setMessages(msg);
+        setMessageReads(reads);
+      } catch (e) {
+        // Messaging/certificate-template are additive features - leave
+        // them at their empty defaults rather than surfacing the shared
+        // error banner over the whole app for what's likely just this
+        // migration not being applied yet in this environment.
       }
     })();
   }, []);
@@ -172,6 +196,17 @@ export function useAcademyData() {
     }
   }, []);
 
+  const editLesson = useCallback(async (id, data) => {
+    try {
+      const record = await db.updateLesson(id, data);
+      setLessons((prev) => prev.map((l) => (l.id === id ? record : l)));
+      return record;
+    } catch (e) {
+      setError('Could not save lesson changes. Please try again.');
+      throw e;
+    }
+  }, []);
+
   const removeLesson = useCallback(async (id) => {
     try {
       await db.deleteLesson(id);
@@ -204,12 +239,44 @@ export function useAcademyData() {
     }
   }, []);
 
+  const editExam = useCallback(async (id, data) => {
+    try {
+      const record = await db.updateExam(id, data);
+      setExams((prev) => prev.map((e) => (e.id === id ? record : e)));
+      return record;
+    } catch (e) {
+      setError('Could not save exam changes. Please try again.');
+      throw e;
+    }
+  }, []);
+
+  const removeExam = useCallback(async (id) => {
+    try {
+      await db.deleteExam(id);
+      setExams((prev) => prev.filter((e) => e.id !== id));
+      setExamScoresState((prev) => prev.filter((s) => s.exam_id !== id));
+    } catch (e) {
+      setError('Could not delete exam. Please try again.');
+      throw e;
+    }
+  }, []);
+
   const setExamScoreForStudent = useCallback(async (examId, studentId, score) => {
     try {
       const updated = await db.setExamScore(examId, studentId, score);
       setExamScoresState(updated);
     } catch (e) {
       setError('Could not save exam score. Please try again.');
+      throw e;
+    }
+  }, []);
+
+  const submitMyExamAnswer = useCallback(async (examId, studentId, file) => {
+    try {
+      const updated = await db.submitExamAnswer(examId, studentId, file);
+      setExamScoresState(updated);
+    } catch (e) {
+      setError('Could not submit your answer. Please try again.');
       throw e;
     }
   }, []);
@@ -225,12 +292,44 @@ export function useAcademyData() {
     }
   }, []);
 
-  const setHomeworkStatusForStudent = useCallback(async (homeworkId, studentId, status, score) => {
+  const editHomework = useCallback(async (id, data) => {
     try {
-      const updated = await db.setHomeworkStatus(homeworkId, studentId, status, score);
+      const record = await db.updateHomework(id, data);
+      setHomework((prev) => prev.map((h) => (h.id === id ? record : h)));
+      return record;
+    } catch (e) {
+      setError('Could not save homework changes. Please try again.');
+      throw e;
+    }
+  }, []);
+
+  const removeHomework = useCallback(async (id) => {
+    try {
+      await db.deleteHomework(id);
+      setHomework((prev) => prev.filter((h) => h.id !== id));
+      setHomeworkStatusState((prev) => prev.filter((s) => s.homework_id !== id));
+    } catch (e) {
+      setError('Could not delete homework. Please try again.');
+      throw e;
+    }
+  }, []);
+
+  const setHomeworkStatusForStudent = useCallback(async (homeworkId, studentId, status, score, feedback) => {
+    try {
+      const updated = await db.setHomeworkStatus(homeworkId, studentId, status, score, feedback);
       setHomeworkStatusState(updated);
     } catch (e) {
       setError('Could not update homework status. Please try again.');
+      throw e;
+    }
+  }, []);
+
+  const submitMyHomeworkAnswer = useCallback(async (homeworkId, studentId, file) => {
+    try {
+      const updated = await db.submitHomeworkAnswer(homeworkId, studentId, file);
+      setHomeworkStatusState(updated);
+    } catch (e) {
+      setError('Could not submit your homework. Please try again.');
       throw e;
     }
   }, []);
@@ -267,6 +366,54 @@ export function useAcademyData() {
     }
   }, []);
 
+  const updateCertificateTemplate = useCallback(async (data) => {
+    try {
+      const record = await db.setCertificateTemplate(data);
+      setCertificateTemplateState(record);
+      return record;
+    } catch (e) {
+      setError('Could not update the certificate template. Please try again.');
+      throw e;
+    }
+  }, []);
+
+  const addMessage = useCallback(async (data) => {
+    try {
+      const record = await db.sendMessage(data);
+      setMessages((prev) => [record, ...prev]);
+      return record;
+    } catch (e) {
+      setError('Could not send message. Please try again.');
+      throw e;
+    }
+  }, []);
+
+  const removeMessage = useCallback(async (id) => {
+    try {
+      await db.deleteMessage(id);
+      setMessages((prev) => prev.filter((m) => m.id !== id));
+    } catch (e) {
+      setError('Could not delete message. Please try again.');
+      throw e;
+    }
+  }, []);
+
+  // Read receipts are a background nicety, not core data - a failure here
+  // (e.g. a message that got deleted between load and click) shouldn't
+  // surface the app's shared error banner.
+  const markRead = useCallback(async (messageId, profileId) => {
+    try {
+      await db.markMessageRead(messageId, profileId);
+      setMessageReads((prev) =>
+        prev.some((r) => r.message_id === messageId && r.profile_id === profileId)
+          ? prev
+          : [...prev, { message_id: messageId, profile_id: profileId, read_at: new Date().toISOString() }]
+      );
+    } catch (e) {
+      // best-effort
+    }
+  }, []);
+
   const reloadAll = useCallback(async () => {
     const [s, p, a, le, la, ex, es, hw, hs, cert] = await Promise.all([
       db.listStudents(),
@@ -290,6 +437,16 @@ export function useAcademyData() {
     setHomework(hw);
     setHomeworkStatusState(hs);
     setCertificates(cert);
+    // Same isolation as the initial load - a restore's core data reload
+    // must not be held hostage by the messaging tables.
+    try {
+      const [tmpl, msg, reads] = await Promise.all([db.getCertificateTemplate(), db.listMessages(), db.listMessageReads()]);
+      setCertificateTemplateState(tmpl);
+      setMessages(msg);
+      setMessageReads(reads);
+    } catch (e) {
+      // best-effort, see the initial-load effect above for why
+    }
   }, []);
 
   return {
@@ -303,6 +460,9 @@ export function useAcademyData() {
     homework,
     homeworkStatus,
     certificates,
+    certificateTemplate,
+    messages,
+    messageReads,
     loading,
     error,
     setError,
@@ -313,15 +473,26 @@ export function useAcademyData() {
     togglePayment,
     setAttendanceStatus,
     addLesson,
+    editLesson,
     removeLesson,
     markLessonAttendance,
     addExam,
+    editExam,
+    removeExam,
     setExamScoreForStudent,
+    submitMyExamAnswer,
     addHomework,
+    editHomework,
+    removeHomework,
     setHomeworkStatusForStudent,
+    submitMyHomeworkAnswer,
     addCertificate,
     editCertificate,
     removeCertificate,
+    updateCertificateTemplate,
+    addMessage,
+    removeMessage,
+    markRead,
     reloadAll,
   };
 }
