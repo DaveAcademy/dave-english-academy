@@ -1,18 +1,25 @@
 // Certificates.jsx
 
 import { useState, useMemo } from 'react';
-import { Award, Plus, Download, Search, Pencil, Trash2, RotateCcw, X, Check } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Award, Plus, Download, Printer, Search, Pencil, Trash2, RotateCcw, X, Check, Image as ImageIcon, MessageSquare } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
+import { useAuth } from '../lib/AuthContext';
 import { LevelBadge } from '../components/Badge';
 import ConfirmDialog from '../components/ConfirmDialog';
-import { downloadCertificatePdf } from '../utils/pdf';
+import { downloadCertificatePdf, printCertificatePdf } from '../utils/pdf';
+import { uploadAttachment, getAttachmentUrl } from '../lib/db';
 
 const EMPTY_FORM = { studentId: '', title: '' };
 
 export default function Certificates() {
-  const { students, certificates, addCertificate, editCertificate, removeCertificate, error } = useAcademy();
+  const { students, certificates, certificateTemplate, addCertificate, editCertificate, removeCertificate, updateCertificateTemplate, error } =
+    useAcademy();
+  const { role } = useAuth();
+  const isAdmin = role === 'administrator';
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
+  const [uploadingTemplate, setUploadingTemplate] = useState(false);
 
   const [filters, setFilters] = useState({ search: '', level: '', studentId: '', type: '' });
   const [editingId, setEditingId] = useState(null);
@@ -107,6 +114,35 @@ export default function Certificates() {
     }
   };
 
+  // certificate_template.file_url is a storage path, not a real URL (the
+  // bucket is private) - resolve a short-lived signed URL right before
+  // generating a PDF rather than caching one, so it can never go stale.
+  const resolveTemplateUrl = async () => {
+    if (!certificateTemplate?.file_url) return null;
+    return getAttachmentUrl(certificateTemplate.file_url);
+  };
+
+  const handleDownload = async (c, student) => {
+    const templateImageUrl = await resolveTemplateUrl();
+    await downloadCertificatePdf({ studentName: student?.real_name || 'Student', title: c.title, issuedDate: c.issued_date, templateImageUrl });
+  };
+
+  const handlePrint = async (c, student) => {
+    const templateImageUrl = await resolveTemplateUrl();
+    await printCertificatePdf({ studentName: student?.real_name || 'Student', title: c.title, issuedDate: c.issued_date, templateImageUrl });
+  };
+
+  const handleTemplateUpload = async (file) => {
+    if (!file) return;
+    setUploadingTemplate(true);
+    try {
+      const uploaded = await uploadAttachment(file, 'certificate-template');
+      await updateCertificateTemplate({ file_url: uploaded.path, file_name: uploaded.name });
+    } finally {
+      setUploadingTemplate(false);
+    }
+  };
+
   return (
     <div>
       <header className="mb-4">
@@ -115,6 +151,30 @@ export default function Certificates() {
       </header>
 
       {error && <div className="mb-4 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{error}</div>}
+
+      {isAdmin && (
+        <section className="mb-4 rounded-xl bg-white p-4 shadow-card">
+          <div className="mb-1 flex items-center gap-2">
+            <ImageIcon size={16} className="text-brand-500" />
+            <h2 className="font-display text-sm font-bold text-ink">Certificate template</h2>
+          </div>
+          <p className="mb-3 text-xs text-ink/50">
+            {certificateTemplate?.file_name
+              ? `Currently using "${certificateTemplate.file_name}" as the background for every generated certificate.`
+              : 'No template uploaded yet - certificates use the built-in design below.'}
+          </p>
+          <label className="flex w-fit cursor-pointer items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-xs font-semibold text-brand-500 hover:bg-brand-50">
+            <ImageIcon size={13} /> {uploadingTemplate ? 'Uploading...' : certificateTemplate?.file_url ? 'Replace template image' : 'Upload template image'}
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              disabled={uploadingTemplate}
+              onChange={(e) => handleTemplateUpload(e.target.files?.[0])}
+            />
+          </label>
+        </section>
+      )}
 
       <form onSubmit={handleIssue} className="mb-6 grid gap-3 rounded-xl bg-white p-4 shadow-card sm:grid-cols-3">
         <select
@@ -256,16 +316,16 @@ export default function Certificates() {
                 </div>
                 <div className="flex flex-shrink-0 flex-wrap items-center gap-1.5">
                   <button
-                    onClick={() =>
-                      downloadCertificatePdf({
-                        studentName: student?.real_name || 'Student',
-                        title: c.title,
-                        issuedDate: c.issued_date,
-                      })
-                    }
+                    onClick={() => handleDownload(c, student)}
                     className="flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-xs font-semibold text-brand-500 hover:bg-brand-50"
                   >
                     <Download size={14} /> PDF
+                  </button>
+                  <button
+                    onClick={() => handlePrint(c, student)}
+                    className="flex items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-semibold text-ink/60 hover:bg-ink/5"
+                  >
+                    <Printer size={14} /> Print
                   </button>
                   <button
                     onClick={() => handleReissue(c)}
@@ -288,6 +348,13 @@ export default function Certificates() {
                   >
                     <Trash2 size={15} />
                   </button>
+                  <Link
+                    to={`/chat?type=certificate&id=${c.id}`}
+                    className="rounded-md p-1.5 text-ink/40 hover:bg-ink/5"
+                    aria-label="Discuss this certificate"
+                  >
+                    <MessageSquare size={15} />
+                  </Link>
                 </div>
               </div>
             );

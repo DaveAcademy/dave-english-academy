@@ -1,14 +1,15 @@
 // Lessons.jsx
 
 import { useState, useMemo } from 'react';
-import { Plus, CheckCircle2, Clock, XCircle, Trash2, CalendarClock } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Plus, CheckCircle2, Clock, XCircle, Trash2, CalendarClock, MessageSquare, MessageSquareOff } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { LevelBadge } from '../components/Badge';
 
-const EMPTY_FORM = { topic: '', group_name: '', level: 'A', scheduled_at: '' };
+const EMPTY_FORM = { topic: '', group_name: '', level: 'A', scheduled_at: '', discussion_enabled: false };
 
 export default function Lessons() {
-  const { students, lessons, lessonAttendance, addLesson, removeLesson, markLessonAttendance, error } = useAcademy();
+  const { students, lessons, lessonAttendance, addLesson, editLesson, removeLesson, markLessonAttendance, error } = useAcademy();
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
@@ -35,6 +36,7 @@ export default function Lessons() {
         group_name: form.group_name || null,
         level: form.level || null,
         scheduled_at: new Date(form.scheduled_at).toISOString(),
+        discussion_enabled: form.discussion_enabled,
       });
       setSelectedLessonId(record.id);
       setForm(EMPTY_FORM);
@@ -93,6 +95,15 @@ export default function Lessons() {
             onChange={(e) => setForm({ ...form, scheduled_at: e.target.value })}
             className="input sm:col-span-2"
           />
+          <label className="flex items-center gap-2 text-sm text-ink/70 sm:col-span-2">
+            <input
+              type="checkbox"
+              checked={form.discussion_enabled}
+              onChange={(e) => setForm({ ...form, discussion_enabled: e.target.checked })}
+              className="h-4 w-4 rounded border-ink/20"
+            />
+            Allow students to discuss this lesson in Messages
+          </label>
           <button
             type="submit"
             disabled={saving}
@@ -119,21 +130,43 @@ export default function Lessons() {
             >
               <div>
                 <p className="font-semibold">{l.topic}</p>
-                <div className="mt-1 flex items-center gap-2 text-xs opacity-80">
+                <div className="mt-1 flex flex-wrap items-center gap-2 text-xs opacity-80">
                   <CalendarClock size={12} /> {new Date(l.scheduled_at).toLocaleString()}
                   {l.group_name && <span>· {l.group_name}</span>}
                   {l.level && <LevelBadge level={l.level} />}
+                  {l.discussion_enabled && <span className="rounded-full bg-active/20 px-1.5 py-0.5 text-[10px] font-bold">Discussion on</span>}
                 </div>
               </div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDelete(l.id);
-                }}
-                className={`rounded-md p-1.5 ${selectedLesson?.id === l.id ? 'text-white/80 hover:bg-white/10' : 'text-inactive hover:bg-inactive/10'}`}
-              >
-                <Trash2 size={15} />
-              </button>
+              <div className="flex flex-shrink-0 items-center gap-1">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    editLesson(l.id, { discussion_enabled: !l.discussion_enabled });
+                  }}
+                  className={`rounded-md p-1.5 ${selectedLesson?.id === l.id ? 'text-white/80 hover:bg-white/10' : 'text-ink/40 hover:bg-ink/5'}`}
+                  aria-label={l.discussion_enabled ? 'Disable discussion' : 'Enable discussion'}
+                  title={l.discussion_enabled ? 'Disable student discussion' : 'Enable student discussion'}
+                >
+                  {l.discussion_enabled ? <MessageSquareOff size={15} /> : <MessageSquare size={15} />}
+                </button>
+                <Link
+                  to={`/chat?type=lesson&id=${l.id}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className={`rounded-md p-1.5 ${selectedLesson?.id === l.id ? 'text-white/80 hover:bg-white/10' : 'text-ink/40 hover:bg-ink/5'}`}
+                  aria-label="Open discussion"
+                >
+                  <MessageSquare size={15} />
+                </Link>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(l.id);
+                  }}
+                  className={`rounded-md p-1.5 ${selectedLesson?.id === l.id ? 'text-white/80 hover:bg-white/10' : 'text-inactive hover:bg-inactive/10'}`}
+                >
+                  <Trash2 size={15} />
+                </button>
+              </div>
             </div>
           ))}
         </div>
