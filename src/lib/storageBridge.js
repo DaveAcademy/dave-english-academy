@@ -179,6 +179,12 @@ export async function createLesson(data) {
   return record;
 }
 
+export async function updateLesson(id, data) {
+  const { data: rows, error } = await supabase.from('lessons').update(data).eq('id', id).select();
+  if (error) throw error;
+  return assertRows(rows, 'edit this lesson')[0];
+}
+
 export async function deleteLesson(id) {
   const { error } = await supabase.from('lessons').delete().eq('id', id);
   if (error) throw error;
@@ -213,6 +219,19 @@ export async function createExam(data) {
   return record;
 }
 
+export async function updateExam(id, data) {
+  const { data: rows, error } = await supabase.from('exams').update(data).eq('id', id).select();
+  if (error) throw error;
+  return assertRows(rows, 'edit this exam')[0];
+}
+
+export async function deleteExam(id) {
+  const { data: rows, error } = await supabase.from('exams').delete().eq('id', id).select();
+  if (error) throw error;
+  assertRows(rows, 'delete this exam');
+  return true;
+}
+
 export async function listExamScores() {
   const { data, error } = await supabase.from('exam_scores').select('*');
   if (error) throw error;
@@ -223,6 +242,24 @@ export async function setExamScore(examId, studentId, score) {
   const { error } = await supabase
     .from('exam_scores')
     .upsert({ exam_id: examId, student_id: studentId, score }, { onConflict: 'exam_id,student_id' });
+  if (error) throw error;
+  return listExamScores();
+}
+
+// Student self-submission (see migration 0009) - only reaches the database
+// while the row is still ungraded; upsert only touches the columns listed
+// here, so it never disturbs a score a teacher has already entered.
+export async function submitExamAnswer(examId, studentId, { fileUrl, fileName }) {
+  const { error } = await supabase.from('exam_scores').upsert(
+    {
+      exam_id: examId,
+      student_id: studentId,
+      answer_file_url: fileUrl,
+      answer_file_name: fileName,
+      submitted_at: new Date().toISOString(),
+    },
+    { onConflict: 'exam_id,student_id' }
+  );
   if (error) throw error;
   return listExamScores();
 }
@@ -241,16 +278,50 @@ export async function createHomework(data) {
   return record;
 }
 
+export async function updateHomework(id, data) {
+  const { data: rows, error } = await supabase.from('homework').update(data).eq('id', id).select();
+  if (error) throw error;
+  return assertRows(rows, 'edit this homework')[0];
+}
+
+export async function deleteHomework(id) {
+  const { data: rows, error } = await supabase.from('homework').delete().eq('id', id).select();
+  if (error) throw error;
+  assertRows(rows, 'delete this homework');
+  return true;
+}
+
 export async function listHomeworkStatus() {
   const { data, error } = await supabase.from('homework_status').select('*');
   if (error) throw error;
   return data;
 }
 
-export async function setHomeworkStatus(homeworkId, studentId, status, score = null) {
+export async function setHomeworkStatus(homeworkId, studentId, status, score = null, feedback = null) {
   const { error } = await supabase
     .from('homework_status')
-    .upsert({ homework_id: homeworkId, student_id: studentId, status, score }, { onConflict: 'homework_id,student_id' });
+    .upsert(
+      { homework_id: homeworkId, student_id: studentId, status, score, feedback },
+      { onConflict: 'homework_id,student_id' }
+    );
+  if (error) throw error;
+  return listHomeworkStatus();
+}
+
+// Student self-submission (see migration 0009) - same protection as
+// submitExamAnswer: blocked by RLS the moment status is 'Graded'.
+export async function submitHomeworkAnswer(homeworkId, studentId, { fileUrl, fileName }) {
+  const { error } = await supabase.from('homework_status').upsert(
+    {
+      homework_id: homeworkId,
+      student_id: studentId,
+      status: 'Submitted',
+      answer_file_url: fileUrl,
+      answer_file_name: fileName,
+      submitted_at: new Date().toISOString(),
+    },
+    { onConflict: 'homework_id,student_id' }
+  );
   if (error) throw error;
   return listHomeworkStatus();
 }
@@ -295,4 +366,82 @@ export async function getLeaderboard() {
   const { data, error } = await supabase.rpc('get_leaderboard');
   if (error) throw error;
   return data;
+}
+
+// ---------- File uploads ----------
+// One shared private bucket for every attachment (chat, exam/homework
+// files and answers, the certificate template) - see migration 0009. The
+// bucket is private, so callers resolve a short-lived signed URL to
+// actually view/download a file rather than storing a permanent public
+// link; the *_file_url columns hold the storage path, not a real URL.
+
+const ATTACHMENTS_BUCKET = 'attachments';
+
+export async function uploadAttachment(file, folder) {
+  const ext = file.name.includes('.') ? file.name.slice(file.name.lastIndexOf('.')) : '';
+  const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`;
+  const { error } = await supabase.storage.from(ATTACHMENTS_BUCKET).upload(path, file);
+  if (error) throw error;
+  return { path, name: file.name, type: file.type || null };
+}
+
+export async function getAttachmentUrl(path) {
+  if (!path) return null;
+  const { data, error } = await supabase.storage.from(ATTACHMENTS_BUCKET).createSignedUrl(path, 3600);
+  if (error) throw error;
+  return data.signedUrl;
+}
+
+// ---------- Messages ----------
+// RLS (see migration 0009, can_send_message/can_read_message) is the real
+// gate on who can send or see what - these functions don't re-check role
+// rules client-side, they just reflect whatever the database allows.
+
+export async function listMessages() {
+  const { data, error } = await supabase.from('messages').select('*').order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function sendMessage(data) {
+  const { data: record, error } = await supabase.from('messages').insert(data).select().single();
+  if (error) throw error;
+  return record;
+}
+
+export async function deleteMessage(id) {
+  const { error } = await supabase.from('messages').delete().eq('id', id);
+  if (error) throw error;
+  return true;
+}
+
+export async function listMessageReads() {
+  const { data, error } = await supabase.from('message_reads').select('*');
+  if (error) throw error;
+  return data;
+}
+
+export async function markMessageRead(messageId, profileId) {
+  const { error } = await supabase
+    .from('message_reads')
+    .upsert({ message_id: messageId, profile_id: profileId }, { onConflict: 'message_id,profile_id' });
+  if (error) throw error;
+}
+
+// ---------- Certificate template ----------
+
+export async function getCertificateTemplate() {
+  const { data, error } = await supabase.from('certificate_template').select('*').eq('id', true).single();
+  if (error) throw error;
+  return data;
+}
+
+export async function setCertificateTemplate({ file_url, file_name }) {
+  const { data: rows, error } = await supabase
+    .from('certificate_template')
+    .update({ file_url, file_name, updated_at: new Date().toISOString() })
+    .eq('id', true)
+    .select();
+  if (error) throw error;
+  return assertRows(rows, 'update the certificate template')[0];
 }
