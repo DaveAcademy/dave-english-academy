@@ -74,6 +74,11 @@ export default function Students() {
     setDeletingStudent(null);
   };
 
+  // monthly_fee is financial information - only administrators see it here
+  // (see fix/hide-financial-fields-from-teachers). This is a UI-level
+  // restriction, not a database one: RLS is row-level, not column-level,
+  // so this column stays out of the table/columns list entirely rather
+  // than being rendered and then hidden.
   const columns = [
     { key: 'real_name', label: 'Real Name' },
     { key: 'english_name', label: 'English Name' },
@@ -81,7 +86,7 @@ export default function Students() {
     { key: 'group_name', label: 'Group' },
     { key: 'phone', label: 'Phone' },
     { key: 'payment_deadline', label: 'Payment Day' },
-    { key: 'monthly_fee', label: 'Fee' },
+    ...(isAdmin ? [{ key: 'monthly_fee', label: 'Fee' }] : []),
     { key: 'status', label: 'Status' },
   ];
 
@@ -191,7 +196,7 @@ export default function Students() {
                       <td className="px-4 py-3 text-ink/70">{s.group_name || '—'}</td>
                       <td className="px-4 py-3 text-ink/70">{s.phone || '—'}</td>
                       <td className="px-4 py-3 text-ink/70">Day {s.payment_deadline}</td>
-                      <td className="px-4 py-3 text-ink/70">{formatUZS(s.monthly_fee)}</td>
+                      {isAdmin && <td className="px-4 py-3 text-ink/70">{formatUZS(s.monthly_fee)}</td>}
                       <td className="px-4 py-3"><StatusBadge status={s.status} /></td>
                       {isAdmin && (
                         <td className="px-4 py-3">
@@ -252,7 +257,7 @@ export default function Students() {
                 </div>
                 <div className="mt-1.5 flex items-center justify-between">
                   {s.phone && <p className="text-xs text-ink/50">{s.phone}</p>}
-                  <p className="text-xs font-semibold text-brand-500">{formatUZS(s.monthly_fee)}/mo</p>
+                  {isAdmin && <p className="text-xs font-semibold text-brand-500">{formatUZS(s.monthly_fee)}/mo</p>}
                 </div>
               </div>
             ))}
