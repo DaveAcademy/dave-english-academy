@@ -440,3 +440,34 @@ export async function setCertificateTemplate({ file_url, file_name }) {
   if (error) throw error;
   return assertRows(rows, 'update the certificate template')[0];
 }
+
+// ---------- File library (Phase 10: centralized file manager) ----------
+// Admin/teacher only - see migration 0010. Files live in the same shared
+// 'attachments' Storage bucket as everything else (uploadAttachment /
+// getAttachmentUrl from earlier in this file), just under a 'library/'
+// path prefix.
+
+export async function listFiles() {
+  const { data, error } = await supabase.from('files').select('*').order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function createFileRecord(data) {
+  const { data: record, error } = await supabase.from('files').insert(data).select().single();
+  if (error) throw error;
+  return record;
+}
+
+export async function updateFileRecord(id, data) {
+  const { data: rows, error } = await supabase.from('files').update(data).eq('id', id).select();
+  if (error) throw error;
+  return assertRows(rows, 'edit this file')[0];
+}
+
+export async function deleteFileRecord(id) {
+  const { data: rows, error } = await supabase.from('files').delete().eq('id', id).select();
+  if (error) throw error;
+  assertRows(rows, 'delete this file');
+  return true;
+}

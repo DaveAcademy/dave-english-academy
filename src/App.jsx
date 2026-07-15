@@ -24,6 +24,7 @@ const Rankings = lazy(() => import('./pages/Rankings'));
 const Reports = lazy(() => import('./pages/Reports'));
 const Settings = lazy(() => import('./pages/Settings'));
 const Chat = lazy(() => import('./pages/Chat'));
+const FileManager = lazy(() => import('./pages/FileManager'));
 const PortalHome = lazy(() => import('./pages/portal/PortalHome'));
 const MyProgress = lazy(() => import('./pages/portal/MyProgress'));
 const MyExams = lazy(() => import('./pages/portal/MyExams'));
@@ -78,6 +79,7 @@ function AppShell() {
                     <Route path="/rankings" element={<Rankings />} />
                     <Route path="/reports" element={<Reports />} />
                     <Route path="/chat" element={<Chat />} />
+                    <Route path="/files" element={<FileManager />} />
                     <Route path="/settings" element={<Settings />} />
                   </Routes>
                 )}
