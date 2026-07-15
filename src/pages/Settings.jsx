@@ -77,27 +77,27 @@ export default function Settings() {
           somewhere safe — that's what actually protects you if you lose your phone or clear your browser data.
         </p>
 
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <button
-            onClick={handleDownload}
-            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600"
-          >
-            <Download size={16} /> Download backup
-          </button>
-          {isAdmin && (
+        {isAdmin ? (
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <button
+              onClick={handleDownload}
+              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600"
+            >
+              <Download size={16} /> Download backup
+            </button>
             <button
               onClick={handleRestoreClick}
               className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-brand-500 px-4 py-2.5 text-sm font-semibold text-brand-500 hover:bg-brand-50"
             >
               <Upload size={16} /> Restore from file
             </button>
-          )}
-          {isAdmin && (
             <input ref={fileInputRef} type="file" accept="application/json" onChange={handleFileChange} className="hidden" />
-          )}
-        </div>
+          </div>
+        ) : (
+          <p className="text-sm text-ink/50">Backups include every student's financial records, so only administrators can download or restore one.</p>
+        )}
 
-        {autoBackupTime && (
+        {isAdmin && autoBackupTime && (
           <p className="mt-3 text-xs text-ink/40">Last automatic local backup: {new Date(autoBackupTime).toLocaleString()}</p>
         )}
       </section>
@@ -121,9 +121,9 @@ export default function Settings() {
             <Info size={14} /> About accounts
           </div>
           <p className="text-brand-700/90">
-            Administrators can see and edit everything. Teachers can view students, mark attendance, and view
-            payments. Students only see their own information. An administrator can create teacher and student
-            accounts above.
+            Administrators can see and edit everything, including payments and financial reports. Teachers can view
+            students and mark attendance, but not payments or financial data. Students only see their own
+            information. An administrator can create teacher and student accounts above.
           </p>
         </div>
       </section>
