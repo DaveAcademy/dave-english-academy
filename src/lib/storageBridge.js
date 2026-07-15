@@ -205,6 +205,36 @@ export async function setLessonAttendance(lessonId, studentId, status) {
   return listLessonAttendance();
 }
 
+// ---------- Lesson templates (see migration 0010) ----------
+// A reusable catalog a teacher/admin picks from when scheduling an actual
+// lesson - separate table from `lessons` itself, so editing a template
+// never touches lessons that were already created from it.
+
+export async function listLessonTemplates() {
+  const { data, error } = await supabase.from('lesson_templates').select('*').order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function createLessonTemplate(data) {
+  const { data: record, error } = await supabase.from('lesson_templates').insert(data).select().single();
+  if (error) throw error;
+  return record;
+}
+
+export async function updateLessonTemplate(id, data) {
+  const { data: rows, error } = await supabase.from('lesson_templates').update(data).eq('id', id).select();
+  if (error) throw error;
+  return assertRows(rows, 'edit this lesson template')[0];
+}
+
+export async function deleteLessonTemplate(id) {
+  const { data: rows, error } = await supabase.from('lesson_templates').delete().eq('id', id).select();
+  if (error) throw error;
+  assertRows(rows, 'delete this lesson template');
+  return true;
+}
+
 // ---------- Exams ----------
 
 export async function listExams() {

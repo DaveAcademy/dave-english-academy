@@ -27,6 +27,7 @@ export function useAcademyData() {
   const [messages, setMessages] = useState([]);
   const [messageReads, setMessageReads] = useState([]);
   const [files, setFiles] = useState([]);
+  const [lessonTemplates, setLessonTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -87,6 +88,20 @@ export function useAcademyData() {
         // surfacing the shared error banner over the whole app for
         // what's likely just a migration not being applied yet in this
         // environment.
+      }
+    })();
+  }, []);
+
+  // Same isolation, one migration later still - lesson_templates is
+  // additive too, so it gets its own effect rather than joining the block
+  // above and risking a not-yet-applied migration masking a genuinely-loaded
+  // certificate template/messages.
+  useEffect(() => {
+    (async () => {
+      try {
+        setLessonTemplates(await db.listLessonTemplates());
+      } catch (e) {
+        // best-effort, see the effect above for why
       }
     })();
   }, []);
@@ -232,6 +247,38 @@ export function useAcademyData() {
       setLessonAttendanceState(updated);
     } catch (e) {
       setError('Could not update lesson attendance. Please try again.');
+      throw e;
+    }
+  }, []);
+
+  const addLessonTemplate = useCallback(async (data) => {
+    try {
+      const record = await db.createLessonTemplate(data);
+      setLessonTemplates((prev) => [record, ...prev]);
+      return record;
+    } catch (e) {
+      setError('Could not add lesson template. Please try again.');
+      throw e;
+    }
+  }, []);
+
+  const editLessonTemplate = useCallback(async (id, data) => {
+    try {
+      const record = await db.updateLessonTemplate(id, data);
+      setLessonTemplates((prev) => prev.map((t) => (t.id === id ? record : t)));
+      return record;
+    } catch (e) {
+      setError('Could not save lesson template changes. Please try again.');
+      throw e;
+    }
+  }, []);
+
+  const removeLessonTemplate = useCallback(async (id) => {
+    try {
+      await db.deleteLessonTemplate(id);
+      setLessonTemplates((prev) => prev.filter((t) => t.id !== id));
+    } catch (e) {
+      setError('Could not delete lesson template. Please try again.');
       throw e;
     }
   }, []);
@@ -493,6 +540,11 @@ export function useAcademyData() {
     } catch (e) {
       // best-effort, see the initial-load effect above for why
     }
+    try {
+      setLessonTemplates(await db.listLessonTemplates());
+    } catch (e) {
+      // best-effort, see the initial-load effect above for why
+    }
   }, []);
 
   return {
@@ -510,6 +562,7 @@ export function useAcademyData() {
     messages,
     messageReads,
     files,
+    lessonTemplates,
     loading,
     error,
     setError,
@@ -523,6 +576,9 @@ export function useAcademyData() {
     editLesson,
     removeLesson,
     markLessonAttendance,
+    addLessonTemplate,
+    editLessonTemplate,
+    removeLessonTemplate,
     addExam,
     editExam,
     removeExam,
