@@ -13,8 +13,13 @@ function assertRows(rows, action) {
 
 // ---------- Students ----------
 
+// Reads go through students_view (see migration 0012), not the base
+// table directly - it returns the same columns/shape, except monthly_fee
+// is nulled out server-side for anyone who isn't an administrator. Every
+// write below still targets public.students directly; only this read
+// path changes.
 export async function listStudents() {
-  const { data, error } = await supabase.from('students').select('*').order('id');
+  const { data, error } = await supabase.from('students_view').select('*').order('id');
   if (error) throw error;
   return data;
 }
