@@ -235,13 +235,34 @@ export function useAcademyData() {
     }
   }, []);
 
-  const addCertificate = useCallback(async (studentId, title) => {
+  const addCertificate = useCallback(async (studentId, title, issuedDate) => {
     try {
-      const record = await db.issueCertificate(studentId, title);
+      const record = await db.issueCertificate(studentId, title, issuedDate);
       setCertificates((prev) => [record, ...prev]);
       return record;
     } catch (e) {
       setError('Could not issue certificate. Please try again.');
+      throw e;
+    }
+  }, []);
+
+  const editCertificate = useCallback(async (id, data) => {
+    try {
+      const record = await db.updateCertificate(id, data);
+      setCertificates((prev) => prev.map((c) => (c.id === id ? record : c)));
+      return record;
+    } catch (e) {
+      setError('Could not save certificate changes. Please try again.');
+      throw e;
+    }
+  }, []);
+
+  const removeCertificate = useCallback(async (id) => {
+    try {
+      await db.deleteCertificate(id);
+      setCertificates((prev) => prev.filter((c) => c.id !== id));
+    } catch (e) {
+      setError('Could not delete certificate. Please try again.');
       throw e;
     }
   }, []);
@@ -299,6 +320,8 @@ export function useAcademyData() {
     addHomework,
     setHomeworkStatusForStudent,
     addCertificate,
+    editCertificate,
+    removeCertificate,
     reloadAll,
   };
 }

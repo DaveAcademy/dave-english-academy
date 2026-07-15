@@ -8,7 +8,6 @@ import { Download, FileBarChart, ShieldAlert } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { useAuth } from '../lib/AuthContext';
 import { formatUZS } from '../utils/format';
-import { rankStudentsByPoints } from '../utils/points';
 import { downloadReportPdf } from '../utils/pdf';
 
 const REPORT_TYPES = [
@@ -34,7 +33,6 @@ export default function Reports() {
     homework,
     homeworkStatus,
     certificates,
-    lessonAttendance,
   } = useAcademy();
 
   const [reportType, setReportType] = useState('attendance');
@@ -113,15 +111,13 @@ export default function Reports() {
       case 'points': {
         const cols = ['Rank', 'Student', 'Points'];
         const activeFiltered = students.filter((s) => s.status === 'Active' && filteredStudentIds.has(s.id));
-        const ranked = rankStudentsByPoints(activeFiltered, { lessonAttendance, examScores, exams, homeworkStatus });
-        const data = ranked.map((r, i) => [i + 1, r.student.real_name, r.points]);
+        const ranked = [...activeFiltered].sort((a, b) => Number(b.points || 0) - Number(a.points || 0) || a.real_name.localeCompare(b.real_name));
+        const data = ranked.map((s, i) => [i + 1, s.real_name, Number(s.points || 0)]);
         return { columns: cols, rows: data };
       }
       case 'monthly': {
         const cols = ['Student', 'Present', 'Late', 'Absent', 'Paid this month', 'Points'];
         const activeFiltered = students.filter((s) => s.status === 'Active' && filteredStudentIds.has(s.id));
-        const ranked = rankStudentsByPoints(activeFiltered, { lessonAttendance, examScores, exams, homeworkStatus });
-        const pointsByStudent = Object.fromEntries(ranked.map((r) => [r.student.id, r.points]));
         const data = activeFiltered.map((s) => {
           const monthRecords = attendance.filter((a) => {
             const [y, m] = a.date.split('-').map(Number);
@@ -134,7 +130,7 @@ export default function Reports() {
             monthRecords.filter((a) => a.status === 'Late').length,
             monthRecords.filter((a) => a.status === 'Absent').length,
             paid ? 'Yes' : 'No',
-            pointsByStudent[s.id] ?? 0,
+            Number(s.points || 0),
           ];
         });
         return { columns: cols, rows: data };
@@ -144,7 +140,7 @@ export default function Reports() {
     }
   }, [
     reportType, students, payments, attendance, exams, examScores, homework, homeworkStatus,
-    certificates, lessonAttendance, filteredStudentIds, studentsById, fromDate, toDate, year, month,
+    certificates, filteredStudentIds, studentsById, fromDate, toDate, year, month,
   ]);
 
   const reportLabel = REPORT_TYPES.find((r) => r.key === reportType)?.label || 'Report';
