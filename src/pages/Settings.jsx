@@ -1,16 +1,19 @@
 // Settings.jsx
 
 import { useState, useEffect, useRef } from 'react';
-import { Download, Upload, Database, Info, LogOut } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { Download, Upload, Database, Info, LogOut, Globe } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { downloadBackup, restoreFromFile, getAutoBackupTimestamp } from '../lib/backup';
 import { useAuth } from '../lib/AuthContext';
 import { signOut } from '../lib/auth';
+import { setLanguage } from '../i18n';
 import CreateUserForm from '../components/admin/CreateUserForm';
 
 export default function Settings() {
   const { reloadAll } = useAcademy();
   const { profile, role } = useAuth();
+  const { t, i18n } = useTranslation('common');
   const isAdmin = role === 'administrator';
   const [message, setMessage] = useState('');
   const [autoBackupTime, setAutoBackupTime] = useState(null);
@@ -60,8 +63,23 @@ export default function Settings() {
           onClick={() => signOut()}
           className="flex items-center gap-2 rounded-lg border border-ink/10 px-4 py-2.5 text-sm font-semibold text-ink/70 hover:bg-ink/5"
         >
-          <LogOut size={16} /> Sign out
+          <LogOut size={16} /> {t('signOut')}
         </button>
+      </section>
+
+      <section className="mb-4 rounded-xl bg-white p-5 shadow-card">
+        <div className="mb-3 flex items-center gap-2">
+          <Globe size={18} className="text-brand-500" />
+          <h2 className="font-display text-base font-bold text-ink">{t('language')}</h2>
+        </div>
+        <select
+          value={i18n.language}
+          onChange={(e) => setLanguage(e.target.value)}
+          className="input sm:w-56"
+        >
+          <option value="en">{t('english')}</option>
+          <option value="uz">{t('uzbek')}</option>
+        </select>
       </section>
 
       {role === 'administrator' && (
