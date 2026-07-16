@@ -5,19 +5,24 @@
 // information, backed underneath by RLS either way.
 
 import { NavLink } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { LayoutDashboard, TrendingUp, FileCheck2, BookOpen, Award, Trophy, Settings, MessageSquare } from 'lucide-react';
 import { useAuth } from '../lib/AuthContext';
 import { useAcademy } from '../lib/AcademyDataContext';
 
+// label/shortLabel are nav-namespace translation keys, looked up at render
+// time (see Nav.jsx's header comment for why this can't happen up here).
+// Several keys are shared with Nav.jsx's staff items where the exact same
+// English word is already used by both (e.g. "Certificates", "Messages").
 const PORTAL_NAV_ITEMS = [
-  { to: '/', label: 'Home', shortLabel: 'Home', Icon: LayoutDashboard, end: true },
-  { to: '/progress', label: 'My Progress', shortLabel: 'Progress', Icon: TrendingUp },
-  { to: '/my-exams', label: 'My Exams', shortLabel: 'Exams', Icon: FileCheck2 },
-  { to: '/my-homework', label: 'My Homework', shortLabel: 'HW', Icon: BookOpen },
-  { to: '/my-certificates', label: 'Certificates', shortLabel: 'Certs', Icon: Award },
-  { to: '/my-ranking', label: 'Ranking', shortLabel: 'Ranks', Icon: Trophy },
-  { to: '/chat', label: 'Messages', shortLabel: 'Chat', Icon: MessageSquare },
-  { to: '/settings', label: 'Settings', shortLabel: 'Settings', Icon: Settings },
+  { to: '/', label: 'home', shortLabel: 'homeShort', Icon: LayoutDashboard, end: true },
+  { to: '/progress', label: 'myProgress', shortLabel: 'myProgressShort', Icon: TrendingUp },
+  { to: '/my-exams', label: 'myExamsFull', shortLabel: 'examsShort', Icon: FileCheck2 },
+  { to: '/my-homework', label: 'myHomeworkFull', shortLabel: 'homeworkShort', Icon: BookOpen },
+  { to: '/my-certificates', label: 'certificates', shortLabel: 'certificatesShort', Icon: Award },
+  { to: '/my-ranking', label: 'ranking', shortLabel: 'rankingsShort', Icon: Trophy },
+  { to: '/chat', label: 'messages', shortLabel: 'messagesShort', Icon: MessageSquare },
+  { to: '/settings', label: 'settings', shortLabel: 'settingsShort', Icon: Settings },
 ];
 
 // Same rule as Nav.jsx's useUnreadCount - kept as a local duplicate rather
@@ -46,6 +51,7 @@ function UnreadBadge({ count, floating }) {
 }
 
 export function PortalSidebar() {
+  const { t } = useTranslation('nav');
   const unread = useUnreadCount();
   return (
     <aside className="ruled-texture hidden h-screen w-64 flex-shrink-0 flex-col bg-brand-600 text-white md:flex">
@@ -72,18 +78,19 @@ export function PortalSidebar() {
             }
           >
             <Icon className="h-4 w-4 flex-shrink-0" />
-            {label}
+            {t(label)}
             {to === '/chat' && <UnreadBadge count={unread} />}
           </NavLink>
         ))}
       </nav>
 
-      <div className="px-6 py-4 text-xs text-white/40">Student portal</div>
+      <div className="px-6 py-4 text-xs text-white/40">{t('studentPortal')}</div>
     </aside>
   );
 }
 
 export function PortalBottomNav() {
+  const { t } = useTranslation('nav');
   const unread = useUnreadCount();
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-20 flex border-t border-ink/10 bg-white pb-[env(safe-area-inset-bottom)] md:hidden">
@@ -99,7 +106,7 @@ export function PortalBottomNav() {
           }
         >
           <Icon size={19} />
-          {shortLabel}
+          {t(shortLabel)}
           {to === '/chat' && <UnreadBadge count={unread} floating />}
         </NavLink>
       ))}
