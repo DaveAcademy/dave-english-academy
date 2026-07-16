@@ -272,95 +272,133 @@ function AdminDashboard() {
   );
 }
 
-// Unchanged from before this PR - teachers keep seeing exactly what they
-// already saw. A distinct Teacher Dashboard (Attendance, Homework, Exam
-// Statistics, Student Performance) is a separate follow-up module.
+// Module 2: Attendance, Homework, Exam Statistics, Student Performance -
+// deliberately no payment/financial widget here, matching the existing
+// RLS boundary (teachers have read-only payment access, and Reports.jsx
+// - the one place with academy-wide financial figures - is already
+// admin-only) and the requested widget list for this dashboard.
 function TeacherDashboard() {
-  const { students, payments, loading } = useAcademy();
+  const { students, attendance, exams, examScores, homework, homeworkStatus, loading } = useAcademy();
 
   const stats = useMemo(() => {
     const today = new Date();
+    const todayISO = today.toISOString().slice(0, 10);
     const curYear = today.getFullYear();
     const curMonth = today.getMonth() + 1;
     const active = students.filter((s) => s.status === 'Active');
-    const paidThisMonth = active.filter((s) =>
-      payments.some((p) => p.student_id === s.id && p.year === curYear && p.month === curMonth && p.paid)
-    );
-    const collected = paidThisMonth.reduce((sum, s) => sum + Number(s.monthly_fee || 0), 0);
-    const expected = active.reduce((sum, s) => sum + Number(s.monthly_fee || 0), 0);
 
-    const groupCounts = {};
-    active.forEach((s) => {
-      const g = s.group_name?.trim() || 'Ungrouped';
-      groupCounts[g] = (groupCounts[g] || 0) + 1;
-    });
-
-    return {
-      total: students.length,
-      active: active.length,
-      inactive: students.length - active.length,
-      levelA: students.filter((s) => s.level === 'A').length,
-      levelB: students.filter((s) => s.level === 'B').length,
-      levelC: students.filter((s) => s.level === 'C').length,
-      paidThisMonth: paidThisMonth.length,
-      unpaidThisMonth: active.length - paidThisMonth.length,
-      collectedThisMonth: collected,
-      expectedThisMonth: expected,
-      groupCounts,
+    // ---- Attendance ----
+    const todayRecords = attendance.filter((a) => a.date === todayISO);
+    const todayCounts = {
+      Present: todayRecords.filter((a) => a.status === 'Present').length,
+      Late: todayRecords.filter((a) => a.status === 'Late').length,
+      Absent: todayRecords.filter((a) => a.status === 'Absent').length,
     };
-  }, [students, payments]);
+    const monthRecords = attendance.filter((a) => {
+      const [y, m] = a.date.split('-').map(Number);
+      return y === curYear && m === curMonth;
+    });
+    const monthScore = monthRecords.reduce((sum, a) => sum + (a.status === 'Present' ? 1 : a.status === 'Late' ? 0.5 : 0), 0);
+    const monthRate = monthRecords.length > 0 ? Math.round((monthScore / monthRecords.length) * 100) : null;
 
-  const topGroups = Object.entries(stats.groupCounts || {})
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 6);
+    // ---- Homework ----
+    const submitted = homeworkStatus.filter((h) => h.status === 'Submitted').length;
+    const graded = homeworkStatus.filter((h) => h.status === 'Graded').length;
+
+    // ---- Exam statistics ----
+    const scored = examScores.filter((s) => s.score != null);
+    const examsById = Object.fromEntries(exams.map((e) => [e.id, e]));
+    const examAvg =
+      scored.length > 0
+        ? Math.round(
+            (scored.reduce((sum, s) => sum + Number(s.score) / (examsById[s.exam_id]?.max_score || 100), 0) / scored.length) * 100
+          )
+        : null;
+    const awaitingGrading = examScores.filter((s) => s.score == null).length;
+
+    // ---- Student performance: lowest attendance rate this month, so a
+    // teacher can see who needs a nudge without digging through Attendance.
+    const performance = active
+      .map((s) => {
+        const records = monthRecords.filter((a) => a.student_id === s.id);
+        const score = records.reduce((sum, a) => sum + (a.status === 'Present' ? 1 : a.status === 'Late' ? 0.5 : 0), 0);
+        const rate = records.length > 0 ? Math.round((score / records.length) * 100) : null;
+        return { ...s, rate, marks: records.length };
+      })
+      .filter((s) => s.rate != null)
+      .sort((a, b) => a.rate - b.rate)
+      .slice(0, 5);
+
+    return { todayCounts, todayTotal: todayRecords.length, monthRate, submitted, graded, homeworkTotal: homework.length, examAvg, examScoredCount: scored.length, awaitingGrading, examTotal: exams.length, performance };
+  }, [students, attendance, exams, examScores, homework, homeworkStatus]);
 
   return (
     <div>
       <header className="mb-6">
         <h1 className="font-display text-2xl font-bold text-ink">Dashboard</h1>
-        <p className="mt-1 text-sm text-ink/50">A quick overview of your student roster.</p>
+        <p className="mt-1 text-sm text-ink/50">Today's attendance, homework, and exam activity.</p>
       </header>
 
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
-        <StatCard label="Total students" value={stats.total} accent="brand" loading={loading} />
-        <StatCard label="Active students" value={stats.active} accent="active" loading={loading} />
-        <StatCard label="Inactive students" value={stats.inactive} accent="inactive" loading={loading} />
-        <StatCard label="Level A" value={stats.levelA} accent="levelA" loading={loading} />
-        <StatCard label="Level B" value={stats.levelB} accent="levelB" loading={loading} />
-        <StatCard label="Level C" value={stats.levelC} accent="levelC" loading={loading} />
-      </div>
-
-      <h2 className="mb-3 mt-6 text-sm font-bold uppercase tracking-wide text-ink/50">This month</h2>
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <StatCard label="Paid" value={stats.paidThisMonth} accent="active" loading={loading} />
-        <StatCard label="Unpaid" value={stats.unpaidThisMonth} accent="inactive" loading={loading} />
-        <div className="relative col-span-2 overflow-hidden rounded-xl bg-white p-4 shadow-card sm:p-5 lg:col-span-1">
-          <span className="absolute left-0 top-0 h-full w-1 bg-brand-500" />
-          <p className="text-xs font-medium text-ink/60 sm:text-sm">Collected</p>
-          <p className="mt-1 font-display text-xl font-bold text-ink sm:mt-2 sm:text-2xl">{formatUZS(stats.collectedThisMonth)}</p>
-        </div>
-        <div className="relative col-span-2 overflow-hidden rounded-xl bg-white p-4 shadow-card sm:p-5 lg:col-span-1">
-          <span className="absolute left-0 top-0 h-full w-1 bg-ink/30" />
-          <p className="text-xs font-medium text-ink/60 sm:text-sm">Expected</p>
-          <p className="mt-1 font-display text-xl font-bold text-ink sm:mt-2 sm:text-2xl">{formatUZS(stats.expectedThisMonth)}</p>
-        </div>
+        <StatCard label="Present today" value={stats.todayCounts.Present} accent="active" loading={loading} />
+        <StatCard label="Late today" value={stats.todayCounts.Late} accent="levelB" loading={loading} />
+        <StatCard label="Absent today" value={stats.todayCounts.Absent} accent="inactive" loading={loading} />
+        <StatCard label="Attendance rate (month)" value={stats.monthRate == null ? 'No data' : `${stats.monthRate}%`} accent="brand" loading={loading} />
       </div>
 
-      {topGroups.length > 0 && (
-        <>
-          <h2 className="mb-3 mt-6 text-sm font-bold uppercase tracking-wide text-ink/50">Groups</h2>
-          <div className="rounded-xl bg-white p-4 shadow-card">
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        <Panel title="Homework">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-ink/60">Assigned</span>
+              <span className="font-semibold text-ink">{stats.homeworkTotal}</span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-ink/60">Awaiting grading</span>
+              <span className="font-semibold text-inactive">{stats.submitted}</span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-ink/60">Graded</span>
+              <span className="font-semibold text-active">{stats.graded}</span>
+            </div>
+          </div>
+        </Panel>
+
+        <Panel title="Exam statistics">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-ink/60">Total exams</span>
+              <span className="font-semibold text-ink">{stats.examTotal}</span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-ink/60">Awaiting grading</span>
+              <span className="font-semibold text-inactive">{stats.awaitingGrading}</span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-ink/60">Average score</span>
+              <span className="font-semibold text-ink">{stats.examAvg == null ? 'No data' : `${stats.examAvg}%`}</span>
+            </div>
+          </div>
+        </Panel>
+      </div>
+
+      <div className="mt-4">
+        <Panel title="Student performance - lowest attendance this month">
+          {stats.performance.length === 0 ? (
+            <p className="text-sm text-ink/50">No attendance recorded this month yet.</p>
+          ) : (
             <div className="space-y-2">
-              {topGroups.map(([name, count]) => (
-                <div key={name} className="flex items-center justify-between text-sm">
-                  <span className="text-ink/70">{name}</span>
-                  <span className="font-semibold text-ink">{count}</span>
+              {stats.performance.map((s) => (
+                <div key={s.id} className="flex items-center gap-3">
+                  <span className="flex-1 truncate text-sm font-medium text-ink">{s.real_name}</span>
+                  <span className="text-xs text-ink/40">{s.marks} marks</span>
+                  <span className={`text-sm font-bold ${s.rate < 50 ? 'text-inactive' : 'text-ink'}`}>{s.rate}%</span>
                 </div>
               ))}
             </div>
-          </div>
-        </>
-      )}
+          )}
+        </Panel>
+      </div>
     </div>
   );
 }
