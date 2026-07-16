@@ -13,5 +13,12 @@
   "settings": "Settings",
   "language": "Language",
   "english": "English",
-  "uzbek": "Uzbek"
+  "uzbek": "Uzbek",
+  "allLevels": "All levels",
+  "levelA": "Level A",
+  "levelB": "Level B",
+  "levelC": "Level C",
+  "allStatuses": "All statuses",
+  "active": "Active",
+  "inactive": "Inactive"
 }
