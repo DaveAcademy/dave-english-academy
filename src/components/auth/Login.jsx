@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { LogIn } from 'lucide-react';
 import { signInWithPassword } from '../../lib/auth';
 
 export default function Login() {
+  const { t } = useTranslation(['auth', 'common']);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -16,7 +18,7 @@ export default function Login() {
       await signInWithPassword({ email, password });
       // onAuthStateChange (in AuthContext) picks up the new session automatically.
     } catch (err) {
-      setError(err.message || 'Could not sign in.');
+      setError(err.message || t('auth:couldNotSignIn'));
     } finally {
       setSubmitting(false);
     }
@@ -28,7 +30,7 @@ export default function Login() {
         <div className="mb-5 text-center">
           <LogIn className="mx-auto mb-2 h-10 w-10 text-brand-500" />
           <h1 className="font-display text-lg font-bold text-ink">Dave Academy</h1>
-          <p className="mt-1 text-sm text-ink/60">Sign in to continue.</p>
+          <p className="mt-1 text-sm text-ink/60">{t('auth:signInToContinue')}</p>
         </div>
 
         {error && (
@@ -39,7 +41,7 @@ export default function Login() {
 
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label className="mb-1 block text-xs font-medium text-ink/60">Email</label>
+            <label className="mb-1 block text-xs font-medium text-ink/60">{t('common:email')}</label>
             <input
               required
               type="email"
@@ -49,7 +51,7 @@ export default function Login() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-ink/60">Password</label>
+            <label className="mb-1 block text-xs font-medium text-ink/60">{t('common:password')}</label>
             <input
               required
               type="password"
@@ -64,7 +66,7 @@ export default function Login() {
             disabled={submitting}
             className="w-full rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-50"
           >
-            {submitting ? 'Signing in...' : 'Sign in'}
+            {submitting ? t('auth:signingIn') : t('common:signIn')}
           </button>
         </form>
       </div>
