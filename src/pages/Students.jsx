@@ -1,6 +1,7 @@
 // Students.jsx
 
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Search, Plus, Upload, Pencil, Trash2, ChevronUp, ChevronDown, ArrowUpDown } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { useAuth } from '../lib/AuthContext';
@@ -11,6 +12,7 @@ import ImportModal from '../components/ImportModal';
 import { formatUZS } from '../utils/format';
 
 export default function Students() {
+  const { t } = useTranslation(['students', 'common']);
   const { students, loading, error, addStudent, editStudent, removeStudent, importStudents } = useAcademy();
   const { role } = useAuth();
   const isAdmin = role === 'administrator';
@@ -75,22 +77,22 @@ export default function Students() {
   };
 
   const columns = [
-    { key: 'real_name', label: 'Real Name' },
-    { key: 'english_name', label: 'English Name' },
-    { key: 'level', label: 'Level' },
-    { key: 'group_name', label: 'Group' },
-    { key: 'phone', label: 'Phone' },
-    { key: 'payment_deadline', label: 'Payment Day' },
-    { key: 'monthly_fee', label: 'Fee' },
-    { key: 'status', label: 'Status' },
+    { key: 'real_name', label: t('colRealName') },
+    { key: 'english_name', label: t('colEnglishName') },
+    { key: 'level', label: t('colLevel') },
+    { key: 'group_name', label: t('colGroup') },
+    { key: 'phone', label: t('colPhone') },
+    { key: 'payment_deadline', label: t('colPaymentDay') },
+    { key: 'monthly_fee', label: t('colFee') },
+    { key: 'status', label: t('colStatus') },
   ];
 
   return (
     <div>
       <header className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h1 className="font-display text-2xl font-bold text-ink">Students</h1>
-          <p className="mt-1 text-sm text-ink/50">Add, edit, search, and filter your roster.</p>
+          <h1 className="font-display text-2xl font-bold text-ink">{t('title')}</h1>
+          <p className="mt-1 text-sm text-ink/50">{t('subtitle')}</p>
         </div>
         {isAdmin && (
           <div className="flex gap-2">
@@ -98,7 +100,7 @@ export default function Students() {
               onClick={() => setImportOpen(true)}
               className="flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-2 text-sm font-semibold text-brand-500 hover:bg-brand-50"
             >
-              <Upload size={16} /> Import
+              <Upload size={16} /> {t('import')}
             </button>
             <button
               onClick={() => {
@@ -107,7 +109,7 @@ export default function Students() {
               }}
               className="flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600"
             >
-              <Plus size={16} /> Add student
+              <Plus size={16} /> {t('addStudent')}
             </button>
           </div>
         )}
@@ -121,24 +123,24 @@ export default function Students() {
           <input
             value={filters.search}
             onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-            placeholder="Search name or phone..."
+            placeholder={t('searchPlaceholder')}
             className="w-full rounded-lg border border-ink/10 bg-white py-2 pl-9 pr-3 text-sm shadow-sm focus:border-brand-500"
           />
         </div>
         <select value={filters.level} onChange={(e) => setFilters({ ...filters, level: e.target.value })} className="input sm:w-40">
-          <option value="">All levels</option>
-          <option value="A">Level A</option>
-          <option value="B">Level B</option>
-          <option value="C">Level C</option>
+          <option value="">{t('common:allLevels')}</option>
+          <option value="A">{t('common:levelA')}</option>
+          <option value="B">{t('common:levelB')}</option>
+          <option value="C">{t('common:levelC')}</option>
         </select>
         <select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })} className="input sm:w-40">
-          <option value="">All statuses</option>
-          <option value="Active">Active</option>
-          <option value="Inactive">Inactive</option>
+          <option value="">{t('common:allStatuses')}</option>
+          <option value="Active">{t('common:active')}</option>
+          <option value="Inactive">{t('common:inactive')}</option>
         </select>
         {groups.length > 0 && (
           <select value={filters.group} onChange={(e) => setFilters({ ...filters, group: e.target.value })} className="input sm:w-40">
-            <option value="">All groups</option>
+            <option value="">{t('allGroups')}</option>
             {groups.map((g) => (
               <option key={g} value={g}>
                 {g}
@@ -149,11 +151,11 @@ export default function Students() {
       </div>
 
       {loading ? (
-        <div className="rounded-xl bg-white p-10 text-center text-sm text-ink/50 shadow-card">Loading students...</div>
+        <div className="rounded-xl bg-white p-10 text-center text-sm text-ink/50 shadow-card">{t('loadingStudents')}</div>
       ) : visible.length === 0 ? (
         <div className="rounded-xl bg-white p-10 text-center shadow-card">
-          <p className="font-display text-lg font-semibold text-ink">No students found</p>
-          <p className="mt-1 text-sm text-ink/50">Try adjusting filters, add a student, or import your roster.</p>
+          <p className="font-display text-lg font-semibold text-ink">{t('noStudentsFound')}</p>
+          <p className="mt-1 text-sm text-ink/50">{t('noStudentsHint')}</p>
         </div>
       ) : (
         <>
@@ -179,7 +181,7 @@ export default function Students() {
                         </span>
                       </th>
                     ))}
-                    {isAdmin && <th className="px-4 py-3 text-right font-semibold text-ink/70">Actions</th>}
+                    {isAdmin && <th className="px-4 py-3 text-right font-semibold text-ink/70">{t('colActions')}</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -190,7 +192,7 @@ export default function Students() {
                       <td className="px-4 py-3"><LevelBadge level={s.level} /></td>
                       <td className="px-4 py-3 text-ink/70">{s.group_name || '—'}</td>
                       <td className="px-4 py-3 text-ink/70">{s.phone || '—'}</td>
-                      <td className="px-4 py-3 text-ink/70">Day {s.payment_deadline}</td>
+                      <td className="px-4 py-3 text-ink/70">{t('dayNumber', { day: s.payment_deadline })}</td>
                       <td className="px-4 py-3 text-ink/70">{formatUZS(s.monthly_fee)}</td>
                       <td className="px-4 py-3"><StatusBadge status={s.status} /></td>
                       {isAdmin && (
@@ -203,10 +205,10 @@ export default function Students() {
                               }}
                               className="rounded-md px-2 py-1 text-xs font-semibold text-brand-500 hover:bg-brand-50"
                             >
-                              Edit
+                              {t('common:edit')}
                             </button>
                             <button onClick={() => setDeletingStudent(s)} className="rounded-md px-2 py-1 text-xs font-semibold text-inactive hover:bg-inactive/10">
-                              Delete
+                              {t('common:delete')}
                             </button>
                           </div>
                         </td>
@@ -248,11 +250,11 @@ export default function Students() {
                   <LevelBadge level={s.level} />
                   <StatusBadge status={s.status} />
                   {s.group_name && <span className="text-xs text-ink/40">{s.group_name}</span>}
-                  <span className="text-xs text-ink/40">Pays day {s.payment_deadline}</span>
+                  <span className="text-xs text-ink/40">{t('paysDay', { day: s.payment_deadline })}</span>
                 </div>
                 <div className="mt-1.5 flex items-center justify-between">
                   {s.phone && <p className="text-xs text-ink/50">{s.phone}</p>}
-                  <p className="text-xs font-semibold text-brand-500">{formatUZS(s.monthly_fee)}/mo</p>
+                  <p className="text-xs font-semibold text-brand-500">{formatUZS(s.monthly_fee)}{t('perMonth')}</p>
                 </div>
               </div>
             ))}
@@ -273,9 +275,9 @@ export default function Students() {
 
       {deletingStudent && (
         <ConfirmDialog
-          title="Delete student?"
-          message={`This will permanently remove ${deletingStudent.real_name} and their payment/attendance history. This can't be undone.`}
-          confirmLabel="Delete"
+          title={t('deleteStudentTitle')}
+          message={t('deleteStudentMessage', { name: deletingStudent.real_name })}
+          confirmLabel={t('common:delete')}
           onConfirm={handleDelete}
           onCancel={() => setDeletingStudent(null)}
         />
