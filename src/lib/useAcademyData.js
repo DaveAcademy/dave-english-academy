@@ -26,6 +26,7 @@ export function useAcademyData() {
   const [certificateTemplate, setCertificateTemplateState] = useState(null);
   const [messages, setMessages] = useState([]);
   const [messageReads, setMessageReads] = useState([]);
+  const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -63,22 +64,29 @@ export function useAcademyData() {
   }, []);
 
   // Loaded separately from the block above on purpose: these tables come
-  // from a later migration (0009). If that migration hasn't been applied
-  // to a given environment yet, this fetch fails - but it must fail in
-  // isolation, not take the whole app down by rejecting the same
+  // from later migrations (0009, 0010). If a migration hasn't been
+  // applied to a given environment yet, this fetch fails - but it must
+  // fail in isolation, not take the whole app down by rejecting the same
   // Promise.all that students/payments/attendance load through.
   useEffect(() => {
     (async () => {
       try {
-        const [tmpl, msg, reads] = await Promise.all([db.getCertificateTemplate(), db.listMessages(), db.listMessageReads()]);
+        const [tmpl, msg, reads, fls] = await Promise.all([
+          db.getCertificateTemplate(),
+          db.listMessages(),
+          db.listMessageReads(),
+          db.listFiles(),
+        ]);
         setCertificateTemplateState(tmpl);
         setMessages(msg);
         setMessageReads(reads);
+        setFiles(fls);
       } catch (e) {
-        // Messaging/certificate-template are additive features - leave
-        // them at their empty defaults rather than surfacing the shared
-        // error banner over the whole app for what's likely just this
-        // migration not being applied yet in this environment.
+        // Messaging/certificate-template/file-library are additive
+        // features - leave them at their empty defaults rather than
+        // surfacing the shared error banner over the whole app for
+        // what's likely just a migration not being applied yet in this
+        // environment.
       }
     })();
   }, []);
@@ -377,6 +385,38 @@ export function useAcademyData() {
     }
   }, []);
 
+  const addFile = useCallback(async (data) => {
+    try {
+      const record = await db.createFileRecord(data);
+      setFiles((prev) => [record, ...prev]);
+      return record;
+    } catch (e) {
+      setError('Could not save that file. Please try again.');
+      throw e;
+    }
+  }, []);
+
+  const editFile = useCallback(async (id, data) => {
+    try {
+      const record = await db.updateFileRecord(id, data);
+      setFiles((prev) => prev.map((f) => (f.id === id ? record : f)));
+      return record;
+    } catch (e) {
+      setError('Could not replace that file. Please try again.');
+      throw e;
+    }
+  }, []);
+
+  const removeFile = useCallback(async (id) => {
+    try {
+      await db.deleteFileRecord(id);
+      setFiles((prev) => prev.filter((f) => f.id !== id));
+    } catch (e) {
+      setError('Could not delete that file. Please try again.');
+      throw e;
+    }
+  }, []);
+
   const addMessage = useCallback(async (data) => {
     try {
       const record = await db.sendMessage(data);
@@ -440,10 +480,16 @@ export function useAcademyData() {
     // Same isolation as the initial load - a restore's core data reload
     // must not be held hostage by the messaging tables.
     try {
-      const [tmpl, msg, reads] = await Promise.all([db.getCertificateTemplate(), db.listMessages(), db.listMessageReads()]);
+      const [tmpl, msg, reads, fls] = await Promise.all([
+        db.getCertificateTemplate(),
+        db.listMessages(),
+        db.listMessageReads(),
+        db.listFiles(),
+      ]);
       setCertificateTemplateState(tmpl);
       setMessages(msg);
       setMessageReads(reads);
+      setFiles(fls);
     } catch (e) {
       // best-effort, see the initial-load effect above for why
     }
@@ -463,6 +509,7 @@ export function useAcademyData() {
     certificateTemplate,
     messages,
     messageReads,
+    files,
     loading,
     error,
     setError,
@@ -493,6 +540,9 @@ export function useAcademyData() {
     addMessage,
     removeMessage,
     markRead,
+    addFile,
+    editFile,
+    removeFile,
     reloadAll,
   };
 }
