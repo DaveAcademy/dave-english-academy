@@ -157,3 +157,30 @@ remaining PRs merge in.
 - Decide how to handle migration application while Supabase tooling is
   disconnected: wait for it to reconnect, or have this plan's author
   hand over exact SQL for manual execution in the Supabase dashboard.
+
+## 8. Finding: duplicate exam/certificate storage-RLS work, resolved
+
+Two branches independently hardened `attachments` storage RLS for the
+same three folders (`exams/`, `certificate-template/`, `exam-answers/`),
+written without visibility into each other - multiple concurrent sessions
+were active on this repo at once. Compared directly (diffed the raw SQL
+of each branch's migration file against the other, not just commit
+messages): the policy logic is byte-for-byte identical between them. The
+only differences were incidental:
+
+- `fix/harden-exam-certificate-storage-rls` (**PR #24 - canonical**) -
+  based on current `main`, correctly numbered `0014_harden_exam_
+  certificate_storage.sql` (the next free slot; `0011` stays reserved for
+  the still-open #15).
+- `fix/exam-certificate-storage-rls` (retired) - based on the
+  now-superseded `feature/chat-exams-homework-uploads`, numbered
+  `0010_harden_exam_certificate_storage.sql`, which collides with
+  `0010_file_manager.sql` already merged into `main`. No PR was ever
+  opened for it; the branch has been removed.
+
+**Storage-RLS hardening for exams/certificates has exactly one remaining
+task: merge PR #24.** No reconciliation needed - there was nothing unique
+to carry forward. If similar duplication turns up elsewhere in this
+stack, diff the actual changed content directly before assuming either
+branch needs work - independent sessions solving the same documented gap
+(see migration 0009's own comments) can converge on identical output.
