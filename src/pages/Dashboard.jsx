@@ -9,6 +9,7 @@ import { useMemo } from 'react';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { useAuth } from '../lib/AuthContext';
 import StatCard from '../components/StatCard';
+import Panel from '../components/Panel';
 import { formatUZS } from '../utils/format';
 
 function lastNMonths(n) {
@@ -30,18 +31,6 @@ function MiniBarRow({ label, value, max, formatValue = (v) => v, color = 'bg-bra
         <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
       </div>
       <span className="w-20 flex-shrink-0 text-right text-xs font-semibold text-ink">{formatValue(value)}</span>
-    </div>
-  );
-}
-
-function Panel({ title, children, action }) {
-  return (
-    <div className="rounded-xl bg-white p-4 shadow-card">
-      <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-sm font-bold uppercase tracking-wide text-ink/50">{title}</h2>
-        {action}
-      </div>
-      {children}
     </div>
   );
 }
