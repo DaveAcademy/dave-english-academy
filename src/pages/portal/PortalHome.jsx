@@ -12,12 +12,14 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { CalendarClock, MessageSquare, Award, Trophy } from 'lucide-react';
 import { useAcademy } from '../../lib/AcademyDataContext';
 import { getLeaderboard } from '../../lib/db';
 import Panel from '../../components/Panel';
 
 export default function PortalHome() {
+  const { t } = useTranslation('dashboard');
   const { students, lessons, attendance, homework, homeworkStatus, examScores, certificates } = useAcademy();
   const me = students[0];
   const [leaderboard, setLeaderboard] = useState(null);
@@ -89,10 +91,8 @@ export default function PortalHome() {
   if (!me) {
     return (
       <div className="rounded-xl bg-white p-10 text-center shadow-card">
-        <p className="font-display text-lg font-semibold text-ink">Not linked yet</p>
-        <p className="mt-1 text-sm text-ink/50">
-          Your account isn't linked to a student record yet - ask your administrator to link it.
-        </p>
+        <p className="font-display text-lg font-semibold text-ink">{t('notLinkedYet')}</p>
+        <p className="mt-1 text-sm text-ink/50">{t('notLinkedSubtitle')}</p>
       </div>
     );
   }
@@ -100,75 +100,75 @@ export default function PortalHome() {
   return (
     <div>
       <header className="mb-6">
-        <h1 className="font-display text-2xl font-bold text-ink">Welcome, {me.real_name}</h1>
-        <p className="mt-1 text-sm text-ink/50">Your progress at a glance.</p>
+        <h1 className="font-display text-2xl font-bold text-ink">{t('welcome', { name: me.real_name })}</h1>
+        <p className="mt-1 text-sm text-ink/50">{t('progressSubtitle')}</p>
       </header>
 
       <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div className="rounded-xl bg-white p-4 shadow-card">
-          <p className="text-xs text-ink/50">My points</p>
+          <p className="text-xs text-ink/50">{t('myPoints')}</p>
           <p className="mt-1 font-display text-2xl font-bold text-brand-500">{points}</p>
         </div>
         <div className="rounded-xl bg-white p-4 shadow-card">
-          <p className="text-xs text-ink/50">My rank</p>
+          <p className="text-xs text-ink/50">{t('myRank')}</p>
           <p className="mt-1 font-display text-2xl font-bold text-ink">{rank ? `#${rank}` : '—'}</p>
         </div>
         <div className="rounded-xl bg-white p-4 shadow-card">
-          <p className="text-xs text-ink/50">Attendance (month)</p>
+          <p className="text-xs text-ink/50">{t('attendanceMonth')}</p>
           <p className="mt-1 font-display text-2xl font-bold text-ink">{stats.attendanceRate == null ? '—' : `${stats.attendanceRate}%`}</p>
         </div>
         <div className="rounded-xl bg-white p-4 shadow-card">
-          <p className="text-xs text-ink/50">Exam average</p>
+          <p className="text-xs text-ink/50">{t('examAverage')}</p>
           <p className="mt-1 font-display text-2xl font-bold text-ink">{stats.examAvg == null ? '—' : stats.examAvg}</p>
         </div>
       </div>
 
       <div className="mb-4 grid gap-4 lg:grid-cols-2">
-        <Panel title="Attendance this month" action={<Link to="/progress" className="text-xs font-semibold text-brand-500 hover:underline">Details</Link>}>
+        <Panel title={t('attendanceThisMonth')} action={<Link to="/progress" className="text-xs font-semibold text-brand-500 hover:underline">{t('details')}</Link>}>
           {stats.attendanceMarks === 0 ? (
-            <p className="text-sm text-ink/50">No attendance recorded yet this month.</p>
+            <p className="text-sm text-ink/50">{t('noAttendanceRecordedYet')}</p>
           ) : (
             <div className="grid grid-cols-3 gap-2 text-center">
               <div>
                 <p className="font-display text-xl font-bold text-active">{stats.attendanceCounts.Present}</p>
-                <p className="text-xs text-ink/50">Present</p>
+                <p className="text-xs text-ink/50">{t('present')}</p>
               </div>
               <div>
                 <p className="font-display text-xl font-bold text-levelB">{stats.attendanceCounts.Late}</p>
-                <p className="text-xs text-ink/50">Late</p>
+                <p className="text-xs text-ink/50">{t('late')}</p>
               </div>
               <div>
                 <p className="font-display text-xl font-bold text-inactive">{stats.attendanceCounts.Absent}</p>
-                <p className="text-xs text-ink/50">Absent</p>
+                <p className="text-xs text-ink/50">{t('absent')}</p>
               </div>
             </div>
           )}
         </Panel>
 
-        <Panel title="Homework" action={<Link to="/my-homework" className="text-xs font-semibold text-brand-500 hover:underline">View all</Link>}>
+        <Panel title={t('homework')} action={<Link to="/my-homework" className="text-xs font-semibold text-brand-500 hover:underline">{t('viewAll')}</Link>}>
           {stats.homeworkTotal === 0 ? (
-            <p className="text-sm text-ink/50">No homework assigned yet.</p>
+            <p className="text-sm text-ink/50">{t('noHomeworkAssignedYet')}</p>
           ) : (
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-ink/60">Awaiting submission</span>
+                <span className="text-ink/60">{t('awaitingSubmission')}</span>
                 <span className="font-semibold text-inactive">{stats.homeworkPending}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-ink/60">Submitted (awaiting grade)</span>
+                <span className="text-ink/60">{t('submittedAwaitingGrade')}</span>
                 <span className="font-semibold text-ink">{stats.homeworkSubmitted}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-ink/60">Graded</span>
+                <span className="text-ink/60">{t('graded')}</span>
                 <span className="font-semibold text-active">{stats.homeworkGraded}</span>
               </div>
             </div>
           )}
         </Panel>
 
-        <Panel title="Certificates" action={<Link to="/my-certificates" className="text-xs font-semibold text-brand-500 hover:underline">View all</Link>}>
+        <Panel title={t('certificatesTitle')} action={<Link to="/my-certificates" className="text-xs font-semibold text-brand-500 hover:underline">{t('viewAll')}</Link>}>
           {certificates.length === 0 ? (
-            <p className="text-sm text-ink/50">No certificates yet.</p>
+            <p className="text-sm text-ink/50">{t('noCertificatesYet')}</p>
           ) : (
             <div className="space-y-2">
               {certificates.slice(0, 3).map((c) => (
@@ -177,14 +177,14 @@ export default function PortalHome() {
                   <span className="truncate text-ink">{c.title}</span>
                 </div>
               ))}
-              {certificates.length > 3 && <p className="text-xs text-ink/40">+{certificates.length - 3} more</p>}
+              {certificates.length > 3 && <p className="text-xs text-ink/40">{t('moreCount', { count: certificates.length - 3 })}</p>}
             </div>
           )}
         </Panel>
 
-        <Panel title="Ranking" action={<Link to="/my-ranking" className="text-xs font-semibold text-brand-500 hover:underline">Full leaderboard</Link>}>
+        <Panel title={t('rankingTitle')} action={<Link to="/my-ranking" className="text-xs font-semibold text-brand-500 hover:underline">{t('fullLeaderboard')}</Link>}>
           {topThree.length === 0 ? (
-            <p className="text-sm text-ink/50">No ranking data yet.</p>
+            <p className="text-sm text-ink/50">{t('noRankingDataYet')}</p>
           ) : (
             <div className="space-y-2">
               {topThree.map((r, i) => (
@@ -192,9 +192,9 @@ export default function PortalHome() {
                   <Trophy size={14} className={i === 0 ? 'text-levelB' : i === 1 ? 'text-ink/40' : 'text-levelA'} />
                   <span className={`flex-1 truncate ${r.student_id === me.id ? 'font-bold text-brand-500' : 'text-ink'}`}>
                     {r.real_name}
-                    {r.student_id === me.id ? ' (you)' : ''}
+                    {r.student_id === me.id ? ` ${t('you')}` : ''}
                   </span>
-                  <span className="font-semibold text-ink">{r.points} pts</span>
+                  <span className="font-semibold text-ink">{r.points} {t('points')}</span>
                 </div>
               ))}
             </div>
@@ -202,9 +202,9 @@ export default function PortalHome() {
         </Panel>
       </div>
 
-      <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-ink/50">Upcoming lessons</h2>
+      <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-ink/50">{t('upcomingLessons')}</h2>
       {upcoming.length === 0 ? (
-        <div className="rounded-xl bg-white p-6 text-center text-sm text-ink/50 shadow-card">No upcoming lessons scheduled.</div>
+        <div className="rounded-xl bg-white p-6 text-center text-sm text-ink/50 shadow-card">{t('noUpcomingLessons')}</div>
       ) : (
         <div className="space-y-2">
           {upcoming.map((l) => (
@@ -221,7 +221,7 @@ export default function PortalHome() {
                   to={`/chat?type=lesson&id=${l.id}`}
                   className="flex flex-shrink-0 items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-semibold text-ink/60 hover:bg-ink/5"
                 >
-                  <MessageSquare size={13} /> Discuss
+                  <MessageSquare size={13} /> {t('discuss')}
                 </Link>
               )}
             </div>
