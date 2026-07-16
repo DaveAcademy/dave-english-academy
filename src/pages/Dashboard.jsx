@@ -6,6 +6,7 @@
 // of this PR.
 
 import { useMemo } from 'react';
+import { useTranslation, Trans } from 'react-i18next';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { useAuth } from '../lib/AuthContext';
 import StatCard from '../components/StatCard';
@@ -41,6 +42,7 @@ export default function Dashboard() {
 }
 
 function AdminDashboard() {
+  const { t } = useTranslation('dashboard');
   const { students, payments, attendance, exams, examScores, homework, homeworkStatus, loading } = useAcademy();
 
   const months = useMemo(() => lastNMonths(6), []);
@@ -153,29 +155,29 @@ function AdminDashboard() {
   return (
     <div>
       <header className="mb-6">
-        <h1 className="font-display text-2xl font-bold text-ink">Administrator Dashboard</h1>
-        <p className="mt-1 text-sm text-ink/50">Academy-wide performance at a glance.</p>
+        <h1 className="font-display text-2xl font-bold text-ink">{t('adminTitle')}</h1>
+        <p className="mt-1 text-sm text-ink/50">{t('adminSubtitle')}</p>
       </header>
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <StatCard label="Active students" value={stats.active} accent="active" loading={loading} />
+        <StatCard label={t('activeStudents')} value={stats.active} accent="active" loading={loading} />
         <StatCard
-          label="Attendance rate"
-          value={stats.attendanceRate == null ? 'No data' : `${stats.attendanceRate}%`}
+          label={t('attendanceRate')}
+          value={stats.attendanceRate == null ? t('noData') : `${stats.attendanceRate}%`}
           accent="brand"
           loading={loading}
         />
-        <StatCard label="Payment collection" value={`${stats.collectionRate}%`} accent="levelA" loading={loading} />
+        <StatCard label={t('paymentCollection')} value={`${stats.collectionRate}%`} accent="levelA" loading={loading} />
         <StatCard
-          label="Homework completion"
-          value={stats.homeworkRate == null ? 'No data' : `${stats.homeworkRate}%`}
+          label={t('homeworkCompletion')}
+          value={stats.homeworkRate == null ? t('noData') : `${stats.homeworkRate}%`}
           accent="levelB"
           loading={loading}
         />
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        <Panel title="Student growth (last 6 months)">
+        <Panel title={t('studentGrowth')}>
           <div className="space-y-2">
             {stats.growth.map((g) => (
               <MiniBarRow key={g.label} label={g.label} value={g.count} max={stats.maxGrowth} color="bg-brand-500" />
@@ -183,10 +185,13 @@ function AdminDashboard() {
           </div>
         </Panel>
 
-        <Panel title="Income overview (last 6 months)">
+        <Panel title={t('incomeOverview')}>
           <p className="mb-3 text-xs text-ink/50">
-            This month: <span className="font-semibold text-ink">{formatUZS(stats.collected)}</span> collected of{' '}
-            {formatUZS(stats.expected)} expected
+            <Trans
+              i18nKey="dashboard:collectedOfExpected"
+              values={{ collected: formatUZS(stats.collected), expected: formatUZS(stats.expected) }}
+              components={[<span className="font-semibold text-ink" key="0" />]}
+            />
           </p>
           <div className="space-y-2">
             {stats.income.map((i) => (
@@ -195,20 +200,20 @@ function AdminDashboard() {
           </div>
         </Panel>
 
-        <Panel title="Exam performance">
+        <Panel title={t('examPerformance')}>
           {stats.examAvg == null ? (
-            <p className="text-sm text-ink/50">No graded exams yet.</p>
+            <p className="text-sm text-ink/50">{t('noGradedExams')}</p>
           ) : (
             <>
               <p className="font-display text-3xl font-bold text-ink">{stats.examAvg}%</p>
-              <p className="mt-1 text-xs text-ink/50">Average score across {stats.examScoredCount} graded exam entries.</p>
+              <p className="mt-1 text-xs text-ink/50">{t('avgScoreAcross', { count: stats.examScoredCount })}</p>
             </>
           )}
         </Panel>
 
-        <Panel title="Top students">
+        <Panel title={t('topStudents')}>
           {stats.topStudents.length === 0 ? (
-            <p className="text-sm text-ink/50">No active students yet.</p>
+            <p className="text-sm text-ink/50">{t('noActiveStudents')}</p>
           ) : (
             <div className="space-y-2">
               {stats.topStudents.map((s, i) => (
@@ -221,7 +226,7 @@ function AdminDashboard() {
                     {i + 1}
                   </span>
                   <span className="flex-1 truncate text-sm font-medium text-ink">{s.real_name}</span>
-                  <span className="text-sm font-bold text-brand-500">{s.points} pts</span>
+                  <span className="text-sm font-bold text-brand-500">{s.points} {t('points')}</span>
                 </div>
               ))}
             </div>
@@ -230,16 +235,16 @@ function AdminDashboard() {
       </div>
 
       <div className="mt-4">
-        <Panel title="Monthly statistics">
+        <Panel title={t('monthlyStatistics')}>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[500px] text-left text-sm">
               <thead>
                 <tr className="border-b border-ink/10 text-xs text-ink/50">
-                  <th className="py-2 pr-4 font-semibold">Month</th>
-                  <th className="py-2 pr-4 font-semibold">Attendance marks</th>
-                  <th className="py-2 pr-4 font-semibold">Exams given</th>
-                  <th className="py-2 pr-4 font-semibold">Homework assigned</th>
-                  <th className="py-2 font-semibold">Collected</th>
+                  <th className="py-2 pr-4 font-semibold">{t('month')}</th>
+                  <th className="py-2 pr-4 font-semibold">{t('attendanceMarks')}</th>
+                  <th className="py-2 pr-4 font-semibold">{t('examsGiven')}</th>
+                  <th className="py-2 pr-4 font-semibold">{t('homeworkAssigned')}</th>
+                  <th className="py-2 font-semibold">{t('collected')}</th>
                 </tr>
               </thead>
               <tbody>
