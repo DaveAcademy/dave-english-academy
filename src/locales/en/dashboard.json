@@ -20,5 +20,21 @@
   "attendanceMarks": "Attendance marks",
   "examsGiven": "Exams given",
   "homeworkAssigned": "Homework assigned",
-  "collected": "Collected"
+  "collected": "Collected",
+  "teacherTitle": "Dashboard",
+  "teacherSubtitle": "Today's attendance, homework, and exam activity.",
+  "presentToday": "Present today",
+  "lateToday": "Late today",
+  "absentToday": "Absent today",
+  "attendanceRateMonth": "Attendance rate (month)",
+  "homework": "Homework",
+  "assigned": "Assigned",
+  "awaitingGrading": "Awaiting grading",
+  "graded": "Graded",
+  "examStatistics": "Exam statistics",
+  "totalExams": "Total exams",
+  "averageScore": "Average score",
+  "studentPerformance": "Student performance - lowest attendance this month",
+  "noAttendanceThisMonth": "No attendance recorded this month yet.",
+  "marks": "marks"
 }

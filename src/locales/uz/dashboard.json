@@ -20,5 +20,21 @@
   "attendanceMarks": "Davomat belgilari",
   "examsGiven": "O'tkazilgan imtihonlar",
   "homeworkAssigned": "Berilgan uy vazifalari",
-  "collected": "Yig'ilgan"
+  "collected": "Yig'ilgan",
+  "teacherTitle": "Boshqaruv paneli",
+  "teacherSubtitle": "Bugungi davomat, uy vazifasi va imtihon faoliyati.",
+  "presentToday": "Bugun kelganlar",
+  "lateToday": "Bugun kechikkanlar",
+  "absentToday": "Bugun kelmaganlar",
+  "attendanceRateMonth": "Davomat darajasi (oy)",
+  "homework": "Uy vazifasi",
+  "assigned": "Berilgan",
+  "awaitingGrading": "Baholanishi kutilmoqda",
+  "graded": "Baholangan",
+  "examStatistics": "Imtihon statistikasi",
+  "totalExams": "Jami imtihonlar",
+  "averageScore": "O'rtacha ball",
+  "studentPerformance": "O'quvchilar samaradorligi - shu oydagi eng past davomat",
+  "noAttendanceThisMonth": "Bu oyda hali davomat qayd etilmagan.",
+  "marks": "belgi"
 }
