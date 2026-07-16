@@ -12,12 +12,15 @@ import { uploadAttachment, getAttachmentUrl } from '../lib/db';
 
 const EMPTY_FORM = { studentId: '', title: '' };
 
-// Quick-pick titles for the two built-in certificate designs (see
-// matchBuiltinDesign in utils/pdf.js) - clicking one just fills the title
-// field below with the exact matching text, same as typing it by hand.
-const CERT_PRESETS = [
-  { title: 'Student of the Month', description: 'Premium gold certificate' },
-  { title: 'Student of the Week', description: 'Weekly achievement certificate' },
+// Certificate type radio options. Month/Week fill the title field below
+// with the exact text matchBuiltinDesign (utils/pdf.js) looks for, so that
+// design is used automatically. Default Certificate clears the title back
+// to free text - it's selected whenever the title doesn't match a preset,
+// including a custom title the admin typed by hand.
+const CERT_TYPE_OPTIONS = [
+  { key: 'month', label: 'Student of the Month', title: 'Student of the Month' },
+  { key: 'week', label: 'Student of the Week', title: 'Student of the Week' },
+  { key: 'default', label: 'Default Certificate', title: '' },
 ];
 
 export default function Certificates() {
@@ -40,6 +43,11 @@ export default function Certificates() {
     () => [...students].filter((s) => s.status === 'Active').sort((a, b) => a.real_name.localeCompare(b.real_name)),
     [students]
   );
+
+  const selectedCertType = useMemo(() => {
+    const match = CERT_TYPE_OPTIONS.find((o) => o.title && o.title === form.title);
+    return match ? match.key : 'default';
+  }, [form.title]);
 
   const typeOptions = useMemo(() => {
     const set = new Set(certificates.map((c) => c.title?.trim()).filter(Boolean));
@@ -184,21 +192,23 @@ export default function Certificates() {
         </section>
       )}
 
-      <div className="mb-3 flex flex-wrap gap-2">
-        {CERT_PRESETS.map((preset) => (
-          <button
-            key={preset.title}
-            type="button"
-            onClick={() => setForm((f) => ({ ...f, title: preset.title }))}
-            className={`flex flex-col items-start rounded-xl border px-3 py-2 text-left transition-colors ${
-              form.title === preset.title ? 'border-brand-500 bg-brand-50' : 'border-ink/10 bg-white hover:bg-ink/5'
-            }`}
-          >
-            <span className="text-sm font-semibold text-ink">{preset.title}</span>
-            <span className="text-xs text-ink/50">{preset.description}</span>
-          </button>
-        ))}
-      </div>
+      <fieldset className="mb-3 rounded-xl bg-white p-4 shadow-card">
+        <legend className="mb-2 px-0 text-sm font-bold text-ink">Certificate Type</legend>
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-5">
+          {CERT_TYPE_OPTIONS.map((opt) => (
+            <label key={opt.key} className="flex cursor-pointer items-center gap-2 text-sm text-ink/80">
+              <input
+                type="radio"
+                name="certType"
+                checked={selectedCertType === opt.key}
+                onChange={() => setForm((f) => ({ ...f, title: opt.title }))}
+                className="h-4 w-4 border-ink/20 text-brand-500 focus:ring-brand-500"
+              />
+              {opt.label}
+            </label>
+          ))}
+        </div>
+      </fieldset>
 
       <form onSubmit={handleIssue} className="mb-6 grid gap-3 rounded-xl bg-white p-4 shadow-card sm:grid-cols-3">
         <select
