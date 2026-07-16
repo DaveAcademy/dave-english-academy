@@ -11,6 +11,10 @@
   "signIn": "Kirish",
   "signOut": "Chiqish",
   "settings": "Sozlamalar",
+  "email": "Email",
+  "password": "Parol",
+  "fullName": "To'liq ism",
+  "tryAgain": "Qayta urinib ko'ring",
   "language": "Til",
   "english": "Ingliz tili",
   "uzbek": "O'zbek tili"
