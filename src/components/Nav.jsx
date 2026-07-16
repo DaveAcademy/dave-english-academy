@@ -25,7 +25,7 @@ import { useAcademy } from '../lib/AcademyDataContext';
 const NAV_ITEMS = [
   { to: '/', label: 'Home', shortLabel: 'Home', Icon: LayoutDashboard, end: true },
   { to: '/students', label: 'Students', shortLabel: 'Students', Icon: Users },
-  { to: '/payments', label: 'Payments', shortLabel: 'Pay', Icon: Wallet },
+  { to: '/payments', label: 'Payments', shortLabel: 'Pay', Icon: Wallet, adminOnly: true },
   { to: '/attendance', label: 'Attendance', shortLabel: 'Attend', Icon: CalendarCheck },
   { to: '/lessons', label: 'Lessons', shortLabel: 'Lessons', Icon: CalendarClock },
   { to: '/exams', label: 'Exams', shortLabel: 'Exams', Icon: FileCheck2 },
