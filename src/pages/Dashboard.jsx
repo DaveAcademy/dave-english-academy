@@ -272,6 +272,7 @@ function AdminDashboard() {
 // - the one place with academy-wide financial figures - is already
 // admin-only) and the requested widget list for this dashboard.
 function TeacherDashboard() {
+  const { t } = useTranslation('dashboard');
   const { students, attendance, exams, examScores, homework, homeworkStatus, loading } = useAcademy();
 
   const stats = useMemo(() => {
@@ -329,63 +330,63 @@ function TeacherDashboard() {
   return (
     <div>
       <header className="mb-6">
-        <h1 className="font-display text-2xl font-bold text-ink">Dashboard</h1>
-        <p className="mt-1 text-sm text-ink/50">Today's attendance, homework, and exam activity.</p>
+        <h1 className="font-display text-2xl font-bold text-ink">{t('teacherTitle')}</h1>
+        <p className="mt-1 text-sm text-ink/50">{t('teacherSubtitle')}</p>
       </header>
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <StatCard label="Present today" value={stats.todayCounts.Present} accent="active" loading={loading} />
-        <StatCard label="Late today" value={stats.todayCounts.Late} accent="levelB" loading={loading} />
-        <StatCard label="Absent today" value={stats.todayCounts.Absent} accent="inactive" loading={loading} />
-        <StatCard label="Attendance rate (month)" value={stats.monthRate == null ? 'No data' : `${stats.monthRate}%`} accent="brand" loading={loading} />
+        <StatCard label={t('presentToday')} value={stats.todayCounts.Present} accent="active" loading={loading} />
+        <StatCard label={t('lateToday')} value={stats.todayCounts.Late} accent="levelB" loading={loading} />
+        <StatCard label={t('absentToday')} value={stats.todayCounts.Absent} accent="inactive" loading={loading} />
+        <StatCard label={t('attendanceRateMonth')} value={stats.monthRate == null ? t('noData') : `${stats.monthRate}%`} accent="brand" loading={loading} />
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        <Panel title="Homework">
+        <Panel title={t('homework')}>
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-ink/60">Assigned</span>
+              <span className="text-ink/60">{t('assigned')}</span>
               <span className="font-semibold text-ink">{stats.homeworkTotal}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-ink/60">Awaiting grading</span>
+              <span className="text-ink/60">{t('awaitingGrading')}</span>
               <span className="font-semibold text-inactive">{stats.submitted}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-ink/60">Graded</span>
+              <span className="text-ink/60">{t('graded')}</span>
               <span className="font-semibold text-active">{stats.graded}</span>
             </div>
           </div>
         </Panel>
 
-        <Panel title="Exam statistics">
+        <Panel title={t('examStatistics')}>
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-ink/60">Total exams</span>
+              <span className="text-ink/60">{t('totalExams')}</span>
               <span className="font-semibold text-ink">{stats.examTotal}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-ink/60">Awaiting grading</span>
+              <span className="text-ink/60">{t('awaitingGrading')}</span>
               <span className="font-semibold text-inactive">{stats.awaitingGrading}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-ink/60">Average score</span>
-              <span className="font-semibold text-ink">{stats.examAvg == null ? 'No data' : `${stats.examAvg}%`}</span>
+              <span className="text-ink/60">{t('averageScore')}</span>
+              <span className="font-semibold text-ink">{stats.examAvg == null ? t('noData') : `${stats.examAvg}%`}</span>
             </div>
           </div>
         </Panel>
       </div>
 
       <div className="mt-4">
-        <Panel title="Student performance - lowest attendance this month">
+        <Panel title={t('studentPerformance')}>
           {stats.performance.length === 0 ? (
-            <p className="text-sm text-ink/50">No attendance recorded this month yet.</p>
+            <p className="text-sm text-ink/50">{t('noAttendanceThisMonth')}</p>
           ) : (
             <div className="space-y-2">
               {stats.performance.map((s) => (
                 <div key={s.id} className="flex items-center gap-3">
                   <span className="flex-1 truncate text-sm font-medium text-ink">{s.real_name}</span>
-                  <span className="text-xs text-ink/40">{s.marks} marks</span>
+                  <span className="text-xs text-ink/40">{s.marks} {t('marks')}</span>
                   <span className={`text-sm font-bold ${s.rate < 50 ? 'text-inactive' : 'text-ink'}`}>{s.rate}%</span>
                 </div>
               ))}
