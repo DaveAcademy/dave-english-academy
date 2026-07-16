@@ -1,7 +1,7 @@
 // Payments.jsx
 
 import { useState, useMemo } from 'react';
-import { Search, ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, Check, ShieldAlert } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { useAuth } from '../lib/AuthContext';
 import { LevelBadge } from '../components/Badge';
@@ -80,6 +80,16 @@ export default function Payments() {
     { key: 'soon', label: 'Due in 7 days' },
     { key: 'overdue', label: 'Overdue' },
   ];
+
+  if (!isAdmin) {
+    return (
+      <div className="rounded-xl bg-white p-10 text-center shadow-card">
+        <ShieldAlert className="mx-auto mb-3 h-10 w-10 text-inactive" />
+        <p className="font-display text-lg font-semibold text-ink">Administrators only</p>
+        <p className="mt-1 text-sm text-ink/50">Payments include financial information.</p>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -177,28 +187,17 @@ export default function Payments() {
                   )}
                 </div>
               </div>
-              {isAdmin ? (
-                <button
-                  onClick={() =>
-                    togglePayment(s.id, quickFilter === 'all' ? viewYear : curYear, quickFilter === 'all' ? viewMonth : curMonth, paid)
-                  }
-                  className={`flex flex-shrink-0 items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold ${
-                    paid ? 'bg-active text-white' : 'bg-ink/5 text-ink/50'
-                  }`}
-                >
-                  {paid && <Check size={14} />}
-                  {paid ? 'Paid' : 'Unpaid'}
-                </button>
-              ) : (
-                <span
-                  className={`flex flex-shrink-0 items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold ${
-                    paid ? 'bg-active text-white' : 'bg-ink/5 text-ink/50'
-                  }`}
-                >
-                  {paid && <Check size={14} />}
-                  {paid ? 'Paid' : 'Unpaid'}
-                </span>
-              )}
+              <button
+                onClick={() =>
+                  togglePayment(s.id, quickFilter === 'all' ? viewYear : curYear, quickFilter === 'all' ? viewMonth : curMonth, paid)
+                }
+                className={`flex flex-shrink-0 items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold ${
+                  paid ? 'bg-active text-white' : 'bg-ink/5 text-ink/50'
+                }`}
+              >
+                {paid && <Check size={14} />}
+                {paid ? 'Paid' : 'Unpaid'}
+              </button>
             </div>
           ))}
         </div>
