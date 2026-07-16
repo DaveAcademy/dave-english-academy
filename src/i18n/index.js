@@ -13,14 +13,16 @@ import enStudents from '../locales/en/students.json';
 import uzStudents from '../locales/uz/students.json';
 import enAttendance from '../locales/en/attendance.json';
 import uzAttendance from '../locales/uz/attendance.json';
+import enHomework from '../locales/en/homework.json';
+import uzHomework from '../locales/uz/homework.json';
 
 const LANGUAGE_KEY = 'dave-academy-language';
 const storedLanguage = localStorage.getItem(LANGUAGE_KEY);
 
 i18n.use(initReactI18next).init({
   resources: {
-    en: { common: enCommon, students: enStudents, attendance: enAttendance },
-    uz: { common: uzCommon, students: uzStudents, attendance: uzAttendance },
+    en: { common: enCommon, students: enStudents, attendance: enAttendance, homework: enHomework },
+    uz: { common: uzCommon, students: uzStudents, attendance: uzAttendance, homework: uzHomework },
   },
   lng: storedLanguage || 'en',
   fallbackLng: 'en',
