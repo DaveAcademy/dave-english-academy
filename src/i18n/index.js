@@ -9,14 +9,16 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import enCommon from '../locales/en/common.json';
 import uzCommon from '../locales/uz/common.json';
+import enDashboard from '../locales/en/dashboard.json';
+import uzDashboard from '../locales/uz/dashboard.json';
 
 const LANGUAGE_KEY = 'dave-academy-language';
 const storedLanguage = localStorage.getItem(LANGUAGE_KEY);
 
 i18n.use(initReactI18next).init({
   resources: {
-    en: { common: enCommon },
-    uz: { common: uzCommon },
+    en: { common: enCommon, dashboard: enDashboard },
+    uz: { common: uzCommon, dashboard: uzDashboard },
   },
   lng: storedLanguage || 'en',
   fallbackLng: 'en',
