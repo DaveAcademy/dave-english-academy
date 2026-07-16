@@ -12,6 +12,14 @@ import { uploadAttachment, getAttachmentUrl } from '../lib/db';
 
 const EMPTY_FORM = { studentId: '', title: '' };
 
+// Quick-pick titles for the two built-in certificate designs (see
+// matchBuiltinDesign in utils/pdf.js) - clicking one just fills the title
+// field below with the exact matching text, same as typing it by hand.
+const CERT_PRESETS = [
+  { title: 'Student of the Month', description: 'Premium gold certificate' },
+  { title: 'Student of the Week', description: 'Weekly achievement certificate' },
+];
+
 export default function Certificates() {
   const { students, certificates, certificateTemplate, addCertificate, editCertificate, removeCertificate, updateCertificateTemplate, error } =
     useAcademy();
@@ -175,6 +183,22 @@ export default function Certificates() {
           </label>
         </section>
       )}
+
+      <div className="mb-3 flex flex-wrap gap-2">
+        {CERT_PRESETS.map((preset) => (
+          <button
+            key={preset.title}
+            type="button"
+            onClick={() => setForm((f) => ({ ...f, title: preset.title }))}
+            className={`flex flex-col items-start rounded-xl border px-3 py-2 text-left transition-colors ${
+              form.title === preset.title ? 'border-brand-500 bg-brand-50' : 'border-ink/10 bg-white hover:bg-ink/5'
+            }`}
+          >
+            <span className="text-sm font-semibold text-ink">{preset.title}</span>
+            <span className="text-xs text-ink/50">{preset.description}</span>
+          </button>
+        ))}
+      </div>
 
       <form onSubmit={handleIssue} className="mb-6 grid gap-3 rounded-xl bg-white p-4 shadow-card sm:grid-cols-3">
         <select
