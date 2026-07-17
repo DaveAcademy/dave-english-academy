@@ -87,7 +87,7 @@ export default function Reports() {
             const exam = examsById[s.exam_id];
             return [exam?.title || '—', studentsById[s.student_id]?.real_name || '—', s.score, exam?.max_score ?? '—', exam?.exam_date || '—'];
           })
-          .filter((row) => !fromDate || !toDate || inDateRange(row[4]));
+          .filter((row) => inDateRange(row[4]));
         return { columns: cols, rows: data };
       }
       case 'homework': {
