@@ -13,8 +13,13 @@ function assertRows(rows, action) {
 
 // ---------- Students ----------
 
+// Reads go through students_view (see migration 0012), not the base
+// table directly - it returns the same columns/shape, except monthly_fee
+// is nulled out server-side for anyone who isn't an administrator. Every
+// write below still targets public.students directly; only this read
+// path changes.
 export async function listStudents() {
-  const { data, error } = await supabase.from('students').select('*').order('id');
+  const { data, error } = await supabase.from('students_view').select('*').order('id');
   if (error) throw error;
   return data;
 }
@@ -198,6 +203,36 @@ export async function setLessonAttendance(lessonId, studentId, status) {
     .upsert({ lesson_id: lessonId, student_id: studentId, status }, { onConflict: 'lesson_id,student_id' });
   if (error) throw error;
   return listLessonAttendance();
+}
+
+// ---------- Lesson templates (see migration 0010) ----------
+// A reusable catalog a teacher/admin picks from when scheduling an actual
+// lesson - separate table from `lessons` itself, so editing a template
+// never touches lessons that were already created from it.
+
+export async function listLessonTemplates() {
+  const { data, error } = await supabase.from('lesson_templates').select('*').order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function createLessonTemplate(data) {
+  const { data: record, error } = await supabase.from('lesson_templates').insert(data).select().single();
+  if (error) throw error;
+  return record;
+}
+
+export async function updateLessonTemplate(id, data) {
+  const { data: rows, error } = await supabase.from('lesson_templates').update(data).eq('id', id).select();
+  if (error) throw error;
+  return assertRows(rows, 'edit this lesson template')[0];
+}
+
+export async function deleteLessonTemplate(id) {
+  const { data: rows, error } = await supabase.from('lesson_templates').delete().eq('id', id).select();
+  if (error) throw error;
+  assertRows(rows, 'delete this lesson template');
+  return true;
 }
 
 // ---------- Exams ----------
@@ -439,4 +474,35 @@ export async function setCertificateTemplate({ file_url, file_name }) {
     .select();
   if (error) throw error;
   return assertRows(rows, 'update the certificate template')[0];
+}
+
+// ---------- File library (Phase 10: centralized file manager) ----------
+// Admin/teacher only - see migration 0010. Files live in the same shared
+// 'attachments' Storage bucket as everything else (uploadAttachment /
+// getAttachmentUrl from earlier in this file), just under a 'library/'
+// path prefix.
+
+export async function listFiles() {
+  const { data, error } = await supabase.from('files').select('*').order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function createFileRecord(data) {
+  const { data: record, error } = await supabase.from('files').insert(data).select().single();
+  if (error) throw error;
+  return record;
+}
+
+export async function updateFileRecord(id, data) {
+  const { data: rows, error } = await supabase.from('files').update(data).eq('id', id).select();
+  if (error) throw error;
+  return assertRows(rows, 'edit this file')[0];
+}
+
+export async function deleteFileRecord(id) {
+  const { data: rows, error } = await supabase.from('files').delete().eq('id', id).select();
+  if (error) throw error;
+  assertRows(rows, 'delete this file');
+  return true;
 }

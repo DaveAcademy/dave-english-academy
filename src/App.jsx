@@ -17,6 +17,7 @@ const Students = lazy(() => import('./pages/Students'));
 const Payments = lazy(() => import('./pages/Payments'));
 const Attendance = lazy(() => import('./pages/Attendance'));
 const Lessons = lazy(() => import('./pages/Lessons'));
+const LessonLibrary = lazy(() => import('./pages/LessonLibrary'));
 const Exams = lazy(() => import('./pages/Exams'));
 const Homework = lazy(() => import('./pages/Homework'));
 const Certificates = lazy(() => import('./pages/Certificates'));
@@ -24,6 +25,7 @@ const Rankings = lazy(() => import('./pages/Rankings'));
 const Reports = lazy(() => import('./pages/Reports'));
 const Settings = lazy(() => import('./pages/Settings'));
 const Chat = lazy(() => import('./pages/Chat'));
+const FileManager = lazy(() => import('./pages/FileManager'));
 const PortalHome = lazy(() => import('./pages/portal/PortalHome'));
 const MyProgress = lazy(() => import('./pages/portal/MyProgress'));
 const MyExams = lazy(() => import('./pages/portal/MyExams'));
@@ -72,12 +74,14 @@ function AppShell() {
                     <Route path="/payments" element={<Payments />} />
                     <Route path="/attendance" element={<Attendance />} />
                     <Route path="/lessons" element={<Lessons />} />
+                    <Route path="/lesson-library" element={<LessonLibrary />} />
                     <Route path="/exams" element={<Exams />} />
                     <Route path="/homework" element={<Homework />} />
                     <Route path="/certificates" element={<Certificates />} />
                     <Route path="/rankings" element={<Rankings />} />
                     <Route path="/reports" element={<Reports />} />
                     <Route path="/chat" element={<Chat />} />
+                    <Route path="/files" element={<FileManager />} />
                     <Route path="/settings" element={<Settings />} />
                   </Routes>
                 )}

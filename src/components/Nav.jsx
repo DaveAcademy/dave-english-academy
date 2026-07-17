@@ -17,6 +17,8 @@ import {
   Award,
   BarChart3,
   MessageSquare,
+  FolderOpen,
+  Library,
 } from 'lucide-react';
 import { useAuth } from '../lib/AuthContext';
 import { useAcademy } from '../lib/AcademyDataContext';
@@ -27,12 +29,14 @@ const NAV_ITEMS = [
   { to: '/payments', label: 'Payments', shortLabel: 'Pay', Icon: Wallet },
   { to: '/attendance', label: 'Attendance', shortLabel: 'Attend', Icon: CalendarCheck },
   { to: '/lessons', label: 'Lessons', shortLabel: 'Lessons', Icon: CalendarClock },
+  { to: '/lesson-library', label: 'Lesson Library', shortLabel: 'Library', Icon: Library },
   { to: '/exams', label: 'Exams', shortLabel: 'Exams', Icon: FileCheck2 },
   { to: '/homework', label: 'Homework', shortLabel: 'HW', Icon: BookOpen },
   { to: '/certificates', label: 'Certificates', shortLabel: 'Certs', Icon: Award },
   { to: '/rankings', label: 'Rankings', shortLabel: 'Ranks', Icon: Trophy },
   { to: '/reports', label: 'Reports', shortLabel: 'Reports', Icon: BarChart3, adminOnly: true },
   { to: '/chat', label: 'Messages', shortLabel: 'Chat', Icon: MessageSquare },
+  { to: '/files', label: 'Files', shortLabel: 'Files', Icon: FolderOpen },
   { to: '/settings', label: 'Settings', shortLabel: 'Settings', Icon: Settings },
 ];
 
