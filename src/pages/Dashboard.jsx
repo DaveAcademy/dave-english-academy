@@ -1,16 +1,40 @@
 // Dashboard.jsx
-// Module 1 of the dashboard work: a richer Administrator Dashboard,
-// computed entirely from data the app already loads (no new tables, no
-// new migration). Teachers still see the original dashboard unchanged -
-// a distinct Teacher Dashboard is a separate follow-up module, not part
-// of this PR.
+// Administrator Dashboard and Teacher Dashboard, computed entirely from
+// data the app already loads via useAcademy() - no new tables, no new
+// migration. Redesigned for visual hierarchy (hero -> KPIs -> quick
+// actions -> attention -> analytics -> detail), but every number here was
+// already being calculated before this pass; the only new metrics are
+// outstanding-payments and month-over-month trends, both derived from the
+// same students/payments/attendance/exams data already in memory.
 
 import { useMemo } from 'react';
+import {
+  Users,
+  CalendarCheck,
+  Wallet,
+  AlertCircle,
+  CalendarClock,
+  BarChart3,
+  Award,
+  FileCheck2,
+  Trophy,
+  BookOpen,
+  ClipboardList,
+  UserPlus,
+  ImagePlus,
+} from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { useAuth } from '../lib/AuthContext';
 import StatCard from '../components/StatCard';
 import Panel from '../components/Panel';
+import DashboardHero from '../components/DashboardHero';
+import QuickActions from '../components/QuickActions';
+import AttentionCard from '../components/AttentionCard';
+import MiniBarChart from '../components/MiniBarChart';
+import SectionLabel from '../components/SectionLabel';
 import { formatUZS } from '../utils/format';
+import { attendanceRate, filterByYearMonth } from '../utils/attendance';
+import { currentAndPreviousMonth, trendFrom } from '../utils/date';
 
 function lastNMonths(n) {
   const months = [];
@@ -22,79 +46,82 @@ function lastNMonths(n) {
   return months;
 }
 
-function MiniBarRow({ label, value, max, formatValue = (v) => v, color = 'bg-brand-500' }) {
-  const pct = max > 0 ? Math.max(2, Math.round((value / max) * 100)) : 0;
-  return (
-    <div className="flex items-center gap-3">
-      <span className="w-10 flex-shrink-0 text-xs text-ink/50">{label}</span>
-      <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-ink/5">
-        <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
-      </div>
-      <span className="w-20 flex-shrink-0 text-right text-xs font-semibold text-ink">{formatValue(value)}</span>
-    </div>
-  );
-}
-
 export default function Dashboard() {
   const { role } = useAuth();
   return role === 'administrator' ? <AdminDashboard /> : <TeacherDashboard />;
 }
 
 function AdminDashboard() {
-  const { students, payments, attendance, exams, examScores, homework, homeworkStatus, loading } = useAcademy();
+  const { profile } = useAuth();
+  const { students, payments, attendance, exams, examScores, homework, loading } = useAcademy();
 
   const months = useMemo(() => lastNMonths(6), []);
+  const { current, previous } = useMemo(() => currentAndPreviousMonth(), []);
 
   const stats = useMemo(() => {
-    const today = new Date();
-    const curYear = today.getFullYear();
-    const curMonth = today.getMonth() + 1;
     const active = students.filter((s) => s.status === 'Active');
 
-    // ---- Payment collection ----
-    const paidThisMonth = active.filter((s) =>
-      payments.some((p) => p.student_id === s.id && p.year === curYear && p.month === curMonth && p.paid)
-    );
-    const collected = paidThisMonth.reduce((sum, s) => sum + Number(s.monthly_fee || 0), 0);
-    const expected = active.reduce((sum, s) => sum + Number(s.monthly_fee || 0), 0);
-    const collectionRate = expected > 0 ? Math.round((collected / expected) * 100) : 0;
+    // ---- Payment collection (this month vs last month) ----
+    const paymentsForMonth = ({ year, month }) => {
+      const paidIds = new Set(payments.filter((p) => p.year === year && p.month === month && p.paid).map((p) => p.student_id));
+      const paid = active.filter((s) => paidIds.has(s.id));
+      const collected = paid.reduce((sum, s) => sum + Number(s.monthly_fee || 0), 0);
+      const expected = active.reduce((sum, s) => sum + Number(s.monthly_fee || 0), 0);
+      return { collected, expected, unpaid: active.filter((s) => !paidIds.has(s.id)) };
+    };
+    const thisMonthPayments = paymentsForMonth(current);
+    const lastMonthPayments = paymentsForMonth(previous);
+    const collectionRate = thisMonthPayments.expected > 0 ? Math.round((thisMonthPayments.collected / thisMonthPayments.expected) * 100) : 0;
+    const lastCollectionRate =
+      lastMonthPayments.expected > 0 ? Math.round((lastMonthPayments.collected / lastMonthPayments.expected) * 100) : null;
+    const outstanding = thisMonthPayments.expected - thisMonthPayments.collected;
+    const unpaidStudents = [...thisMonthPayments.unpaid].sort((a, b) => Number(b.monthly_fee || 0) - Number(a.monthly_fee || 0));
 
-    // ---- Attendance rate (this month) ----
-    const attendanceThisMonth = attendance.filter((a) => {
-      const [y, m] = a.date.split('-').map(Number);
-      return y === curYear && m === curMonth;
-    });
-    const attendanceScore = attendanceThisMonth.reduce(
-      (sum, a) => sum + (a.status === 'Present' ? 1 : a.status === 'Late' ? 0.5 : 0),
-      0
-    );
-    const attendanceRate = attendanceThisMonth.length > 0 ? Math.round((attendanceScore / attendanceThisMonth.length) * 100) : null;
+    // ---- Attendance rate (this month vs last month) ----
+    const attendanceThisMonth = filterByYearMonth(attendance, 'date', current.year, current.month);
+    const attendanceLastMonth = filterByYearMonth(attendance, 'date', previous.year, previous.month);
+    const attendanceRateNow = attendanceRate(attendanceThisMonth);
+    const attendanceRateLast = attendanceRate(attendanceLastMonth);
 
-    // ---- Homework completion ----
-    const submittedOrGraded = homeworkStatus.filter((h) => h.status === 'Submitted' || h.status === 'Graded').length;
-    const homeworkExpected = homework.length * active.length;
-    const homeworkRate = homeworkExpected > 0 ? Math.round((submittedOrGraded / homeworkExpected) * 100) : null;
+    // ---- Attendance concerns: active students under 50% this month ----
+    const attendanceConcerns = active
+      .map((s) => {
+        const records = attendanceThisMonth.filter((a) => a.student_id === s.id);
+        const rate = attendanceRate(records);
+        return { ...s, rate, marks: records.length };
+      })
+      .filter((s) => s.rate != null && s.rate < 50)
+      .sort((a, b) => a.rate - b.rate)
+      .slice(0, 5);
 
-    // ---- Exam performance ----
+    // ---- Upcoming exams (next 7 days) ----
+    const now = new Date();
+    const in7Days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const upcomingExams = exams
+      .filter((e) => {
+        const d = new Date(e.exam_date);
+        return d >= now && d <= in7Days;
+      })
+      .sort((a, b) => new Date(a.exam_date) - new Date(b.exam_date))
+      .slice(0, 5);
+
+    // ---- Exam performance (overall + per-month trend) ----
     const scored = examScores.filter((s) => s.score != null);
     const examsById = Object.fromEntries(exams.map((e) => [e.id, e]));
     const examAvg =
       scored.length > 0
-        ? Math.round(
-            (scored.reduce((sum, s) => sum + Number(s.score) / (examsById[s.exam_id]?.max_score || 100), 0) / scored.length) * 100
-          )
+        ? Math.round((scored.reduce((sum, s) => sum + Number(s.score) / (examsById[s.exam_id]?.max_score || 100), 0) / scored.length) * 100)
         : null;
 
     // ---- Student growth (new active students joined per month) ----
     const growth = months.map(({ year, month, label }) => ({
       label,
-      count: students.filter((s) => {
+      value: students.filter((s) => {
         if (!s.join_date) return false;
         const [y, m] = s.join_date.split('-').map(Number);
         return y === year && m === month;
       }).length,
     }));
-    const maxGrowth = Math.max(1, ...growth.map((g) => g.count));
 
     // ---- Income overview (collected per month, last 6 months) ----
     const income = months.map(({ year, month, label }) => {
@@ -103,16 +130,36 @@ function AdminDashboard() {
         const student = students.find((s) => s.id === p.student_id);
         return sum + Number(student?.monthly_fee || 0);
       }, 0);
-      return { label, total };
+      return { label, value: total };
     });
-    const maxIncome = Math.max(1, ...income.map((i) => i.total));
+
+    // ---- Attendance trend (rate per month, last 6 months) ----
+    const attendanceTrend = months.map(({ year, month, label }) => ({
+      label,
+      value: attendanceRate(filterByYearMonth(attendance, 'date', year, month)) || 0,
+    }));
+
+    // ---- Exam performance trend (avg % per month, last 6 months) ----
+    const examTrend = months.map(({ year, month, label }) => {
+      const examIdsThisMonth = new Set(
+        exams
+          .filter((e) => {
+            const [y, m] = e.exam_date.split('-').map(Number);
+            return y === year && m === month;
+          })
+          .map((e) => e.id)
+      );
+      const monthScores = scored.filter((s) => examIdsThisMonth.has(s.exam_id));
+      const avg =
+        monthScores.length > 0
+          ? Math.round((monthScores.reduce((sum, s) => sum + Number(s.score) / (examsById[s.exam_id]?.max_score || 100), 0) / monthScores.length) * 100)
+          : 0;
+      return { label, value: avg };
+    });
 
     // ---- Monthly statistics table ----
     const monthly = months.map(({ year, month, label }) => {
-      const attendanceMarks = attendance.filter((a) => {
-        const [y, m] = a.date.split('-').map(Number);
-        return y === year && m === month;
-      }).length;
+      const attendanceMarks = filterByYearMonth(attendance, 'date', year, month).length;
       const examsGiven = exams.filter((e) => {
         const [y, m] = e.exam_date.split('-').map(Number);
         return y === year && m === month;
@@ -121,7 +168,7 @@ function AdminDashboard() {
         const [y, m] = h.due_date.split('-').map(Number);
         return y === year && m === month;
       }).length;
-      return { label, attendanceMarks, examsGiven, homeworkAssigned, collected: income.find((i) => i.label === label)?.total || 0 };
+      return { label, attendanceMarks, examsGiven, homeworkAssigned, collected: income.find((i) => i.label === label)?.value || 0 };
     });
 
     // ---- Top students ----
@@ -133,80 +180,161 @@ function AdminDashboard() {
     return {
       active: active.length,
       total: students.length,
-      collected,
-      expected,
+      collected: thisMonthPayments.collected,
+      expected: thisMonthPayments.expected,
       collectionRate,
-      attendanceRate,
-      attendanceThisMonthCount: attendanceThisMonth.length,
-      homeworkRate,
+      collectionTrend: trendFrom(collectionRate, lastCollectionRate, '%'),
+      outstanding,
+      unpaidStudents,
+      attendanceRateNow,
+      attendanceTrendBadge: trendFrom(attendanceRateNow, attendanceRateLast, '%'),
+      attendanceConcerns,
+      upcomingExams,
       examAvg,
       examScoredCount: scored.length,
       growth,
-      maxGrowth,
       income,
-      maxIncome,
+      attendanceTrend,
+      examTrend,
       monthly,
       topStudents,
     };
-  }, [students, payments, attendance, exams, examScores, homework, homeworkStatus, months]);
+  }, [students, payments, attendance, exams, examScores, homework, months, current, previous]);
+
+  const quickActions = [
+    { to: '/students', label: 'Add Student', Icon: Users },
+    { to: '/attendance', label: 'Record Attendance', Icon: CalendarCheck },
+    { to: '/payments', label: 'Add Payment', Icon: Wallet },
+    { to: '/lessons', label: 'Create Lesson', Icon: CalendarClock },
+    { to: '/certificates', label: 'Upload Certificate', Icon: ImagePlus },
+    { to: '/settings', label: 'Create User', Icon: UserPlus },
+    { to: '/reports', label: 'View Reports', Icon: BarChart3 },
+  ];
 
   return (
     <div>
-      <header className="mb-6">
-        <h1 className="font-display text-2xl font-bold text-ink">Administrator Dashboard</h1>
-        <p className="mt-1 text-sm text-ink/50">Academy-wide performance at a glance.</p>
-      </header>
+      <DashboardHero
+        name={profile?.full_name}
+        summary={
+          loading
+            ? undefined
+            : `${stats.active} active students · ${stats.collectionRate}% collected this month · ${
+                stats.attendanceRateNow == null ? 'no attendance data yet' : `${stats.attendanceRateNow}% attendance`
+              }`
+        }
+      />
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <StatCard label="Active students" value={stats.active} accent="active" loading={loading} />
+        <StatCard label="Active students" value={stats.active} hint={`${stats.total} total enrolled`} tone="success" icon={Users} loading={loading} />
         <StatCard
           label="Attendance rate"
-          value={stats.attendanceRate == null ? 'No data' : `${stats.attendanceRate}%`}
-          accent="brand"
+          value={stats.attendanceRateNow == null ? 'No data' : `${stats.attendanceRateNow}%`}
+          trend={stats.attendanceTrendBadge}
+          tone="info"
+          icon={CalendarCheck}
           loading={loading}
         />
-        <StatCard label="Payment collection" value={`${stats.collectionRate}%`} accent="levelA" loading={loading} />
         <StatCard
-          label="Homework completion"
-          value={stats.homeworkRate == null ? 'No data' : `${stats.homeworkRate}%`}
-          accent="levelB"
+          label="Payment collection"
+          value={`${stats.collectionRate}%`}
+          trend={stats.collectionTrend}
+          tone="brand"
+          icon={Wallet}
+          loading={loading}
+        />
+        <StatCard
+          label="Outstanding"
+          value={formatUZS(stats.outstanding)}
+          hint={`${stats.unpaidStudents.length} students unpaid`}
+          tone="danger"
+          icon={AlertCircle}
           loading={loading}
         />
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        <Panel title="Student growth (last 6 months)">
-          <div className="space-y-2">
-            {stats.growth.map((g) => (
-              <MiniBarRow key={g.label} label={g.label} value={g.count} max={stats.maxGrowth} color="bg-brand-500" />
-            ))}
-          </div>
-        </Panel>
+      <div className="mt-6">
+        <SectionLabel>Quick actions</SectionLabel>
+        <QuickActions actions={quickActions} />
+      </div>
 
-        <Panel title="Income overview (last 6 months)">
+      <div className="mt-6">
+        <SectionLabel>Needs attention</SectionLabel>
+        <div className="grid gap-4 lg:grid-cols-3">
+        <AttentionCard
+          title="Unpaid this month"
+          icon={Wallet}
+          items={stats.unpaidStudents.slice(0, 5).map((s) => ({
+            id: s.id,
+            label: s.real_name,
+            detail: formatUZS(s.monthly_fee),
+            tone: 'danger',
+            to: '/payments',
+          }))}
+          emptyText="Everyone is paid up this month."
+          loading={loading}
+        />
+        <AttentionCard
+          title="Attendance concerns"
+          icon={CalendarCheck}
+          items={stats.attendanceConcerns.map((s) => ({
+            id: s.id,
+            label: s.real_name,
+            detail: `${s.rate}% this month (${s.marks} marks)`,
+            tone: 'warning',
+            to: '/attendance',
+          }))}
+          emptyText="No students below 50% attendance this month."
+          loading={loading}
+        />
+        <AttentionCard
+          title="Upcoming exams"
+          icon={FileCheck2}
+          items={stats.upcomingExams.map((e) => ({
+            id: e.id,
+            label: e.title,
+            detail: new Date(e.exam_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+            tone: 'info',
+            to: '/exams',
+          }))}
+          emptyText="No exams scheduled in the next 7 days."
+          loading={loading}
+        />
+        </div>
+      </div>
+
+      <div className="mt-6">
+        <SectionLabel>Analytics</SectionLabel>
+        <div className="grid gap-4 lg:grid-cols-3">
+        <Panel title="Student growth" icon={Users}>
+          <MiniBarChart data={stats.growth} color="bg-brand-500" loading={loading} />
+        </Panel>
+        <Panel title="Income overview">
           <p className="mb-3 text-xs text-ink/50">
-            This month: <span className="font-semibold text-ink">{formatUZS(stats.collected)}</span> collected of{' '}
-            {formatUZS(stats.expected)} expected
+            This month: <span className="font-semibold text-ink">{formatUZS(stats.collected)}</span> collected of {formatUZS(stats.expected)} expected
           </p>
-          <div className="space-y-2">
-            {stats.income.map((i) => (
-              <MiniBarRow key={i.label} label={i.label} value={i.total} max={stats.maxIncome} formatValue={formatUZS} color="bg-active" />
-            ))}
-          </div>
+          <MiniBarChart data={stats.income} formatValue={formatUZS} color="bg-active" loading={loading} />
         </Panel>
+        <Panel title="Attendance trend" icon={CalendarCheck}>
+          <MiniBarChart data={stats.attendanceTrend} formatValue={(v) => `${v}%`} color="bg-levelA" loading={loading} />
+        </Panel>
+        </div>
 
-        <Panel title="Exam performance">
-          {stats.examAvg == null ? (
+        <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        <Panel title="Exam performance" icon={FileCheck2}>
+          {loading ? (
+            <MiniBarChart data={stats.examTrend} formatValue={(v) => `${v}%`} color="bg-levelC" loading />
+          ) : stats.examAvg == null ? (
             <p className="text-sm text-ink/50">No graded exams yet.</p>
           ) : (
             <>
               <p className="font-display text-3xl font-bold text-ink">{stats.examAvg}%</p>
-              <p className="mt-1 text-xs text-ink/50">Average score across {stats.examScoredCount} graded exam entries.</p>
+              <p className="mb-3 mt-1 text-xs text-ink/50">Average score across {stats.examScoredCount} graded exam entries.</p>
+              <MiniBarChart data={stats.examTrend} formatValue={(v) => `${v}%`} color="bg-levelC" />
             </>
           )}
         </Panel>
 
-        <Panel title="Top students">
+        <Panel title="Top students" icon={Trophy}>
           {stats.topStudents.length === 0 ? (
             <p className="text-sm text-ink/50">No active students yet.</p>
           ) : (
@@ -227,10 +355,11 @@ function AdminDashboard() {
             </div>
           )}
         </Panel>
+        </div>
       </div>
 
-      <div className="mt-4">
-        <Panel title="Monthly statistics">
+      <div className="mt-6">
+        <Panel title="Monthly statistics" icon={BarChart3}>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[500px] text-left text-sm">
               <thead>
@@ -261,19 +390,17 @@ function AdminDashboard() {
   );
 }
 
-// Module 2: Attendance, Homework, Exam Statistics, Student Performance -
-// deliberately no payment/financial widget here, matching the existing
-// RLS boundary (teachers have read-only payment access, and Reports.jsx
-// - the one place with academy-wide financial figures - is already
-// admin-only) and the requested widget list for this dashboard.
+// Teacher Dashboard - deliberately no payment/financial widget or import
+// anywhere in this function, matching the existing RLS boundary (teachers
+// have read-only payment access, and Reports.jsx is admin-only).
 function TeacherDashboard() {
-  const { students, attendance, exams, examScores, homework, homeworkStatus, loading } = useAcademy();
+  const { profile } = useAuth();
+  const { students, lessons, attendance, exams, examScores, homework, homeworkStatus, loading } = useAcademy();
+  const { current, previous } = useMemo(() => currentAndPreviousMonth(), []);
 
   const stats = useMemo(() => {
     const today = new Date();
     const todayISO = today.toISOString().slice(0, 10);
-    const curYear = today.getFullYear();
-    const curMonth = today.getMonth() + 1;
     const active = students.filter((s) => s.status === 'Active');
 
     // ---- Attendance ----
@@ -283,12 +410,15 @@ function TeacherDashboard() {
       Late: todayRecords.filter((a) => a.status === 'Late').length,
       Absent: todayRecords.filter((a) => a.status === 'Absent').length,
     };
-    const monthRecords = attendance.filter((a) => {
-      const [y, m] = a.date.split('-').map(Number);
-      return y === curYear && m === curMonth;
-    });
-    const monthScore = monthRecords.reduce((sum, a) => sum + (a.status === 'Present' ? 1 : a.status === 'Late' ? 0.5 : 0), 0);
-    const monthRate = monthRecords.length > 0 ? Math.round((monthScore / monthRecords.length) * 100) : null;
+    const monthRecords = filterByYearMonth(attendance, 'date', current.year, current.month);
+    const lastMonthRecords = filterByYearMonth(attendance, 'date', previous.year, previous.month);
+    const monthRate = attendanceRate(monthRecords);
+    const lastMonthRate = attendanceRate(lastMonthRecords);
+
+    // ---- Today's lessons ----
+    const todaysLessons = lessons
+      .filter((l) => new Date(l.scheduled_at).toISOString().slice(0, 10) === todayISO)
+      .sort((a, b) => new Date(a.scheduled_at) - new Date(b.scheduled_at));
 
     // ---- Homework ----
     const submitted = homeworkStatus.filter((h) => h.status === 'Submitted').length;
@@ -299,44 +429,125 @@ function TeacherDashboard() {
     const examsById = Object.fromEntries(exams.map((e) => [e.id, e]));
     const examAvg =
       scored.length > 0
-        ? Math.round(
-            (scored.reduce((sum, s) => sum + Number(s.score) / (examsById[s.exam_id]?.max_score || 100), 0) / scored.length) * 100
-          )
+        ? Math.round((scored.reduce((sum, s) => sum + Number(s.score) / (examsById[s.exam_id]?.max_score || 100), 0) / scored.length) * 100)
         : null;
     const awaitingGrading = examScores.filter((s) => s.score == null).length;
 
-    // ---- Student performance: lowest attendance rate this month, so a
-    // teacher can see who needs a nudge without digging through Attendance.
+    // ---- Students needing attention: lowest attendance rate this month ----
     const performance = active
       .map((s) => {
         const records = monthRecords.filter((a) => a.student_id === s.id);
-        const score = records.reduce((sum, a) => sum + (a.status === 'Present' ? 1 : a.status === 'Late' ? 0.5 : 0), 0);
-        const rate = records.length > 0 ? Math.round((score / records.length) * 100) : null;
+        const rate = attendanceRate(records);
         return { ...s, rate, marks: records.length };
       })
       .filter((s) => s.rate != null)
       .sort((a, b) => a.rate - b.rate)
       .slice(0, 5);
 
-    return { todayCounts, todayTotal: todayRecords.length, monthRate, submitted, graded, homeworkTotal: homework.length, examAvg, examScoredCount: scored.length, awaitingGrading, examTotal: exams.length, performance };
-  }, [students, attendance, exams, examScores, homework, homeworkStatus]);
+    return {
+      todayCounts,
+      todayTotal: todayRecords.length,
+      todaysLessons,
+      monthRate,
+      monthRateTrend: trendFrom(monthRate, lastMonthRate, '%'),
+      submitted,
+      graded,
+      homeworkTotal: homework.length,
+      examAvg,
+      examScoredCount: scored.length,
+      awaitingGrading,
+      examTotal: exams.length,
+      performance,
+    };
+  }, [students, lessons, attendance, exams, examScores, homework, homeworkStatus, current, previous]);
+
+  const quickActions = [
+    { to: '/attendance', label: 'Take Attendance', Icon: CalendarCheck },
+    { to: '/homework', label: 'Add Homework', Icon: BookOpen },
+    { to: '/exams', label: 'Open Exams', Icon: FileCheck2 },
+    { to: '/students', label: 'View Students', Icon: Users },
+    { to: '/lessons', label: 'View Lessons', Icon: CalendarClock },
+  ];
 
   return (
     <div>
-      <header className="mb-6">
-        <h1 className="font-display text-2xl font-bold text-ink">Dashboard</h1>
-        <p className="mt-1 text-sm text-ink/50">Today's attendance, homework, and exam activity.</p>
-      </header>
+      <DashboardHero
+        name={profile?.full_name}
+        summary={
+          loading
+            ? undefined
+            : `${stats.todayCounts.Present}/${stats.todayTotal || 0} present today · ${stats.submitted + stats.awaitingGrading} items awaiting grading`
+        }
+      />
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <StatCard label="Present today" value={stats.todayCounts.Present} accent="active" loading={loading} />
-        <StatCard label="Late today" value={stats.todayCounts.Late} accent="levelB" loading={loading} />
-        <StatCard label="Absent today" value={stats.todayCounts.Absent} accent="inactive" loading={loading} />
-        <StatCard label="Attendance rate (month)" value={stats.monthRate == null ? 'No data' : `${stats.monthRate}%`} accent="brand" loading={loading} />
+        <StatCard label="Present today" value={stats.todayCounts.Present} tone="success" icon={CalendarCheck} loading={loading} />
+        <StatCard label="Late today" value={stats.todayCounts.Late} tone="warning" loading={loading} />
+        <StatCard label="Absent today" value={stats.todayCounts.Absent} tone="danger" loading={loading} />
+        <StatCard
+          label="Attendance rate (month)"
+          value={stats.monthRate == null ? 'No data' : `${stats.monthRate}%`}
+          trend={stats.monthRateTrend}
+          tone="info"
+          loading={loading}
+        />
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        <Panel title="Homework">
+      <div className="mt-6">
+        <SectionLabel>Quick actions</SectionLabel>
+        <QuickActions actions={quickActions} />
+      </div>
+
+      <div className="mt-6">
+        <SectionLabel>Needs attention</SectionLabel>
+        <div className="grid gap-4 lg:grid-cols-2">
+        <AttentionCard
+          title="Awaiting grading"
+          icon={ClipboardList}
+          items={[
+            ...(stats.submitted > 0
+              ? [{ id: 'hw', label: `${stats.submitted} homework submission${stats.submitted === 1 ? '' : 's'}`, tone: 'warning', to: '/homework' }]
+              : []),
+            ...(stats.awaitingGrading > 0
+              ? [{ id: 'exam', label: `${stats.awaitingGrading} exam answer${stats.awaitingGrading === 1 ? '' : 's'}`, tone: 'warning', to: '/exams' }]
+              : []),
+          ]}
+          emptyText="Nothing waiting on you right now."
+          loading={loading}
+        />
+        <AttentionCard
+          title="Students needing attention"
+          icon={Users}
+          items={stats.performance
+            .filter((s) => s.rate < 70)
+            .map((s) => ({ id: s.id, label: s.real_name, detail: `${s.rate}% attendance this month`, tone: s.rate < 50 ? 'danger' : 'warning', to: '/attendance' }))}
+          emptyText="No attendance concerns this month."
+          loading={loading}
+        />
+        </div>
+      </div>
+
+      <div className="mt-6">
+        <Panel title="Today's lessons" icon={CalendarClock}>
+          {stats.todaysLessons.length === 0 ? (
+            <p className="text-sm text-ink/50">No lessons scheduled today.</p>
+          ) : (
+            <div className="space-y-2">
+              {stats.todaysLessons.map((l) => (
+                <div key={l.id} className="flex items-center justify-between gap-3 text-sm">
+                  <span className="font-medium text-ink">{l.topic}</span>
+                  <span className="flex-shrink-0 text-ink/50">
+                    {new Date(l.scheduled_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </Panel>
+      </div>
+
+      <div className="mt-6 grid gap-4 lg:grid-cols-2">
+        <Panel title="Homework" icon={BookOpen}>
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
               <span className="text-ink/60">Assigned</span>
@@ -344,7 +555,7 @@ function TeacherDashboard() {
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-ink/60">Awaiting grading</span>
-              <span className="font-semibold text-inactive">{stats.submitted}</span>
+              <span className="font-semibold text-levelB">{stats.submitted}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-ink/60">Graded</span>
@@ -353,7 +564,7 @@ function TeacherDashboard() {
           </div>
         </Panel>
 
-        <Panel title="Exam statistics">
+        <Panel title="Exam statistics" icon={FileCheck2}>
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
               <span className="text-ink/60">Total exams</span>
@@ -361,31 +572,13 @@ function TeacherDashboard() {
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-ink/60">Awaiting grading</span>
-              <span className="font-semibold text-inactive">{stats.awaitingGrading}</span>
+              <span className="font-semibold text-levelB">{stats.awaitingGrading}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-ink/60">Average score</span>
               <span className="font-semibold text-ink">{stats.examAvg == null ? 'No data' : `${stats.examAvg}%`}</span>
             </div>
           </div>
-        </Panel>
-      </div>
-
-      <div className="mt-4">
-        <Panel title="Student performance - lowest attendance this month">
-          {stats.performance.length === 0 ? (
-            <p className="text-sm text-ink/50">No attendance recorded this month yet.</p>
-          ) : (
-            <div className="space-y-2">
-              {stats.performance.map((s) => (
-                <div key={s.id} className="flex items-center gap-3">
-                  <span className="flex-1 truncate text-sm font-medium text-ink">{s.real_name}</span>
-                  <span className="text-xs text-ink/40">{s.marks} marks</span>
-                  <span className={`text-sm font-bold ${s.rate < 50 ? 'text-inactive' : 'text-ink'}`}>{s.rate}%</span>
-                </div>
-              ))}
-            </div>
-          )}
         </Panel>
       </div>
     </div>
