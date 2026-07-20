@@ -10,6 +10,14 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import ImportModal from '../components/ImportModal';
 import { formatUZS } from '../utils/format';
 
+// monthly_fee comes back null for non-admin roles (students_view masks it -
+// see migration 0016), which is different from an actual fee of 0.
+// formatUZS(null) would render "0 so'm", falsely implying a free/zero fee,
+// so masked values get their own indicator instead of going through it.
+function formatFee(fee, suffix = '') {
+  return fee == null ? '—' : `${formatUZS(fee)}${suffix}`;
+}
+
 export default function Students() {
   const { students, loading, error, addStudent, editStudent, removeStudent, importStudents } = useAcademy();
   const { role } = useAuth();
@@ -191,7 +199,7 @@ export default function Students() {
                       <td className="px-4 py-3 text-ink/70">{s.group_name || '—'}</td>
                       <td className="px-4 py-3 text-ink/70">{s.phone || '—'}</td>
                       <td className="px-4 py-3 text-ink/70">Day {s.payment_deadline}</td>
-                      <td className="px-4 py-3 text-ink/70">{formatUZS(s.monthly_fee)}</td>
+                      <td className="px-4 py-3 text-ink/70">{formatFee(s.monthly_fee)}</td>
                       <td className="px-4 py-3"><StatusBadge status={s.status} /></td>
                       {isAdmin && (
                         <td className="px-4 py-3">
@@ -252,7 +260,7 @@ export default function Students() {
                 </div>
                 <div className="mt-1.5 flex items-center justify-between">
                   {s.phone && <p className="text-xs text-ink/50">{s.phone}</p>}
-                  <p className="text-xs font-semibold text-brand-500">{formatUZS(s.monthly_fee)}/mo</p>
+                  <p className="text-xs font-semibold text-brand-500">{formatFee(s.monthly_fee, '/mo')}</p>
                 </div>
               </div>
             ))}
