@@ -106,10 +106,15 @@ export function useAcademyData() {
   const addStudent = useCallback(
     async (data) => {
       try {
-        const record = await db.createStudent(data);
-        setStudents((prev) => [...prev, record]);
+        await db.createStudent(data);
+        // students_view now enforces its own row/column masking independent
+        // of the caller's base-table privileges (see migration 0016) - the
+        // insert's own return is scoped to `id` only, so refresh through the
+        // view (same pattern importStudents already used) instead of
+        // splicing a partial record into state.
+        const refreshed = await db.listStudents();
+        setStudents(refreshed);
         touchBackup();
-        return record;
       } catch (e) {
         setError('Could not add student. Please try again.');
         throw e;
@@ -121,10 +126,10 @@ export function useAcademyData() {
   const editStudent = useCallback(
     async (id, data) => {
       try {
-        const record = await db.updateStudent(id, data);
-        setStudents((prev) => prev.map((s) => (s.id === id ? record : s)));
+        await db.updateStudent(id, data);
+        const refreshed = await db.listStudents();
+        setStudents(refreshed);
         touchBackup();
-        return record;
       } catch (e) {
         setError('Could not save changes. Please try again.');
         throw e;
