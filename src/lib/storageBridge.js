@@ -25,7 +25,7 @@ export async function listStudents() {
 }
 
 export async function createStudent(data) {
-  const { data: record, error } = await supabase.from('students').insert(data).select().single();
+  const { data: record, error } = await supabase.from('students').insert(data).select('id').single();
   if (error) throw error;
   return record;
 }
@@ -55,7 +55,7 @@ export async function bulkCreateStudents(rows, { dedupeKey } = {}) {
 }
 
 export async function updateStudent(id, data) {
-  const { data: rows, error } = await supabase.from('students').update(data).eq('id', id).select();
+  const { data: rows, error } = await supabase.from('students').update(data).eq('id', id).select('id');
   if (error) throw error;
   return assertRows(rows, 'edit this student')[0];
 }
@@ -63,7 +63,7 @@ export async function updateStudent(id, data) {
 export async function deleteStudent(id) {
   // payments/attendance reference students(id) on delete cascade, so a
   // single delete here removes their related records too.
-  const { data: rows, error } = await supabase.from('students').delete().eq('id', id).select();
+  const { data: rows, error } = await supabase.from('students').delete().eq('id', id).select('id');
   if (error) throw error;
   assertRows(rows, 'delete this student');
   return true;
