@@ -1,10 +1,13 @@
 // Rankings.jsx
-// Points are a directly-editable total per student (students.points),
-// not computed from attendance/exams/homework - see migration 0008 for
-// why. Editing here updates the same students record everything else
-// reads, so the rank list re-sorts immediately (React state, no reload
-// needed) and the student portal's leaderboard (get_leaderboard(), which
-// now just reads students.points) reflects it on its next load too.
+// Points are shown as a total per student (students.points), still not
+// computed from attendance/exams/homework - see migration 0008 for why.
+// The total itself is now a database-maintained cache over a
+// point_transactions ledger (migrations 0019/0020): the database revokes
+// direct writes to students.points from every application role, so
+// editing here records a bonus/penalty ledger transaction instead of
+// updating the student row - the trigger-maintained cache is what makes
+// the rank list (and the student portal's leaderboard) reflect it, same
+// as before from this page's point of view.
 
 import { useState, useMemo } from 'react';
 import { Minus, Plus } from 'lucide-react';
@@ -13,8 +16,8 @@ import { useAuth } from '../lib/AuthContext';
 import { LevelBadge } from '../components/Badge';
 
 export default function Rankings() {
-  const { students, editStudent, error } = useAcademy();
-  const { role } = useAuth();
+  const { students, awardStudentPoints, error } = useAcademy();
+  const { role, session } = useAuth();
   const isAdmin = role === 'administrator';
 
   const [pendingId, setPendingId] = useState(null);
@@ -29,10 +32,19 @@ export default function Rankings() {
   const commitPoints = async (student, nextPoints) => {
     if (!isAdmin) return;
     const value = Number(nextPoints);
-    if (!Number.isFinite(value) || value === Number(student.points || 0)) return;
+    const current = Number(student.points || 0);
+    const delta = value - current;
+    if (!Number.isFinite(value) || delta === 0) return;
     setPendingId(student.id);
     try {
-      await editStudent(student.id, { points: value });
+      await awardStudentPoints({
+        studentId: student.id,
+        level: student.level,
+        categoryKey: delta > 0 ? 'bonus' : 'penalty',
+        points: delta,
+        reason: 'Manual adjustment via Rankings page',
+        awardedBy: session.user.id,
+      });
     } finally {
       setPendingId(null);
     }

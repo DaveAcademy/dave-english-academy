@@ -138,6 +138,21 @@ export function useAcademyData() {
     [touchBackup]
   );
 
+  const awardStudentPoints = useCallback(
+    async (params) => {
+      try {
+        await db.awardPoints(params);
+        const refreshed = await db.listStudents();
+        setStudents(refreshed);
+        touchBackup();
+      } catch (e) {
+        setError('Could not award points. Please try again.');
+        throw e;
+      }
+    },
+    [touchBackup]
+  );
+
   const removeStudent = useCallback(
     async (id) => {
       try {
@@ -520,6 +535,7 @@ export function useAcademyData() {
     setError,
     addStudent,
     editStudent,
+    awardStudentPoints,
     removeStudent,
     importStudents,
     togglePayment,

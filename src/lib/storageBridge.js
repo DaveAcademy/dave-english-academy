@@ -69,6 +69,26 @@ export async function deleteStudent(id) {
   return true;
 }
 
+// ---------- Points ledger ----------
+// students.points is now a database-maintained cache (see migrations
+// 0019/0020): every award inserts a point_transactions row, and a
+// trigger recomputes the cached total from the ledger. The database
+// itself revokes UPDATE on students.points from every application role,
+// admin included - there is no other way left to change it. `level` must
+// match the target student's own level (enforced by a database trigger
+// too), so callers pass the student's current level, not an arbitrary one.
+export async function awardPoints({ studentId, level, categoryKey, points, reason, awardedBy }) {
+  const { error } = await supabase.from('point_transactions').insert({
+    student_id: studentId,
+    level,
+    category_key: categoryKey,
+    points,
+    reason,
+    awarded_by: awardedBy,
+  });
+  if (error) throw error;
+}
+
 // ---------- Payments ----------
 
 export async function listPayments() {
