@@ -13,16 +13,55 @@ export function daysUntilDue(deadlineDay) {
   return effectiveDeadline - now.getDate();
 }
 
-/** Time-of-day greeting ("Good morning" / "Good afternoon" / "Good evening"). */
+/** Time-of-day greeting, returned as a dashboard-namespace translation key
+ * (greetingMorning/greetingAfternoon/greetingEvening) rather than literal
+ * text, since this is a plain util with no access to `t()` - callers
+ * translate it themselves. */
 export function timeOfDayGreeting(date = new Date()) {
   const hour = date.getHours();
-  if (hour < 12) return 'Good morning';
-  if (hour < 18) return 'Good afternoon';
-  return 'Good evening';
+  if (hour < 12) return 'greetingMorning';
+  if (hour < 18) return 'greetingAfternoon';
+  return 'greetingEvening';
 }
 
-export function formatFullDate(date = new Date()) {
+// Explicit Uzbek date formatting - this runtime's Intl support for the
+// 'uz' locale is unreliable (observed producing malformed output like
+// "M07 21, Tue" from toLocaleDateString('uz', ...), an unlocalized ICU
+// pattern leaking through rather than real month/weekday names), so
+// Uzbek dates are built from fixed name tables instead of depending on
+// ICU locale data for 'uz' at all. English formatting is untouched -
+// still real toLocaleDateString('en-US', ...) calls, same as before.
+const UZ_WEEKDAYS = ['Yakshanba', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba'];
+const UZ_WEEKDAYS_SHORT = ['Yak', 'Dush', 'Sesh', 'Chor', 'Pay', 'Juma', 'Shan'];
+const UZ_MONTHS = ['yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun', 'iyul', 'avgust', 'sentyabr', 'oktyabr', 'noyabr', 'dekabr'];
+
+function uzWeekday(date, short) {
+  return (short ? UZ_WEEKDAYS_SHORT : UZ_WEEKDAYS)[date.getDay()];
+}
+
+function uzDayMonth(date) {
+  return `${date.getDate()}-${UZ_MONTHS[date.getMonth()]}`;
+}
+
+export function formatFullDate(date = new Date(), locale = 'en-US') {
+  if (locale === 'uz') return `${uzWeekday(date, false)}, ${uzDayMonth(date)}`;
   return date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+}
+
+/** Weekday + day-month, for list-style date labels (next lesson). `short`
+ * controls weekday length only - Uzbek month names aren't abbreviated the
+ * way English ones are, so there's no separate short-month form. */
+export function formatWeekdayDate(date, locale = 'en-US', { short = false } = {}) {
+  if (locale === 'uz') return `${uzWeekday(date, short)}, ${uzDayMonth(date)}`;
+  return date.toLocaleDateString('en-US', { weekday: short ? 'short' : 'long', month: 'short', day: 'numeric' });
+}
+
+/** Full date + time, for the upcoming-lessons list timestamp. Uses 'en-GB'
+ * only for the time digits (24-hour format) - a reliably-supported locale
+ * for that purpose, not a dependency on 'uz' Intl support. */
+export function formatDateTime(date, locale = 'en-US') {
+  if (locale === 'uz') return `${uzDayMonth(date)}, ${date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`;
+  return date.toLocaleString('en-US');
 }
 
 /** { year, month } for the current month and the one directly before it. */
@@ -41,7 +80,7 @@ export function currentAndPreviousMonth(date = new Date()) {
 export function trendFrom(current, previous, unit = 'pt') {
   if (current == null || previous == null) return null;
   const delta = Math.round((current - previous) * 10) / 10;
-  if (delta === 0) return { direction: 'flat', text: 'No change vs last month' };
+  if (delta === 0) return { direction: 'flat', key: 'trendNoChange', values: {} };
   const direction = delta > 0 ? 'up' : 'down';
-  return { direction, text: `${Math.abs(delta)}${unit} vs last month` };
+  return { direction, key: 'trendVsLastMonth', values: { delta: Math.abs(delta), unit } };
 }

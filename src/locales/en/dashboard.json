@@ -65,6 +65,14 @@
   "upcomingLessons": "Upcoming lessons",
   "noUpcomingLessons": "No upcoming lessons scheduled.",
   "discuss": "Discuss",
+  "attendancePresentThisMonth": "{{rate}}% present this month",
+  "homeworkCompleteRate": "{{rate}}% complete",
+
+  "greetingMorning": "Good morning",
+  "greetingAfternoon": "Good afternoon",
+  "greetingEvening": "Good evening",
+  "trendVsLastMonth": "{{delta}}{{unit}} vs last month",
+  "trendNoChange": "No change vs last month",
 
   "heroSummaryRanked": "You're ranked #{{rank}} with {{points}} points.",
   "heroSummaryNoRank": "Let's see how you're doing.",

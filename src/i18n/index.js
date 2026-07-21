@@ -92,10 +92,20 @@ export function setLanguage(lang) {
 // immediately pinned to English and that's persisted, so this browser
 // can't hand a teacher/admin a Uzbek preference left behind by a student
 // session (or vice versa hand a student an unwanted forced-English one).
+//
+// Students default to Uzbek on their first-ever session on a browser, but
+// only when nothing has ever been saved - checked via the raw localStorage
+// value (not `i18n.language`, which is already 'en' post-init either way)
+// so an explicit past choice of English is never mistaken for "never
+// chose" and overridden back to Uzbek.
 export function syncLanguageForRole(role) {
   currentRole = role;
-  if (role !== 'student' && i18n.language !== 'en') {
-    applyLanguage('en');
+  if (role !== 'student') {
+    if (i18n.language !== 'en') applyLanguage('en');
+    return;
+  }
+  if (localStorage.getItem(LANGUAGE_KEY) == null) {
+    applyLanguage('uz');
   }
 }
 

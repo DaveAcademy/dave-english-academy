@@ -6,17 +6,19 @@
 // palette (see utils/tone.js) so "success" always looks the same as the
 // same tone in AttentionCard/alerts.
 
+import { useTranslation } from 'react-i18next';
 import { TONE } from '../utils/tone';
 
 function TrendBadge({ trend }) {
+  const { t } = useTranslation('dashboard');
   if (!trend) return null;
-  const { direction, text } = trend;
+  const { direction, key, values } = trend;
   const cls =
     direction === 'up' ? `${TONE.success.text} ${TONE.success.soft}` : direction === 'down' ? `${TONE.danger.text} ${TONE.danger.soft}` : `${TONE.neutral.text} ${TONE.neutral.soft}`;
   const glyph = direction === 'up' ? '↑' : direction === 'down' ? '↓' : '–';
   return (
     <span className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-semibold ${cls}`}>
-      <span aria-hidden="true">{glyph}</span> {text}
+      <span aria-hidden="true">{glyph}</span> {t(key, values)}
     </span>
   );
 }

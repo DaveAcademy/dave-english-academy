@@ -35,7 +35,7 @@ import DashboardHero from '../../components/DashboardHero';
 import QuickActions from '../../components/QuickActions';
 import SectionLabel from '../../components/SectionLabel';
 import { attendanceRate, filterByYearMonth } from '../../utils/attendance';
-import { currentAndPreviousMonth, trendFrom } from '../../utils/date';
+import { currentAndPreviousMonth, trendFrom, formatWeekdayDate, formatDateTime } from '../../utils/date';
 
 function ProgressBar({ value, color = 'bg-brand-500' }) {
   const pct = Math.max(0, Math.min(100, value));
@@ -147,7 +147,7 @@ export default function PortalHome() {
       return { text: t('nextStepHomeworkPending', { count: stats.homeworkPending }), to: '/my-homework', cta: t('ctaSubmitHomework') };
     }
     if (upcoming.length > 0) {
-      const date = new Date(upcoming[0].scheduled_at).toLocaleDateString(dateLocale, { weekday: 'long', month: 'short', day: 'numeric' });
+      const date = formatWeekdayDate(new Date(upcoming[0].scheduled_at), dateLocale);
       return { text: t('nextStepUpcomingLesson', { topic: upcoming[0].topic, date }), to: '/', cta: t('ctaViewSchedule') };
     }
     if (rank != null && rank > 1) {
@@ -224,7 +224,7 @@ export default function PortalHome() {
             <p className="text-sm text-ink/50">{t('noAttendanceRecordedYet')}</p>
           ) : (
             <>
-              <div className="mb-3 text-sm text-ink/60">{stats.attendanceRate}% present this month</div>
+              <div className="mb-3 text-sm text-ink/60">{t('attendancePresentThisMonth', { rate: stats.attendanceRate })}</div>
               <ProgressBar value={stats.attendanceRate} color="bg-active" />
               <div className="mt-3 grid grid-cols-3 gap-2 text-center">
                 <div>
@@ -250,7 +250,7 @@ export default function PortalHome() {
           ) : (
             <>
               <div className="mb-3 flex items-center justify-between text-sm">
-                <span className="text-ink/60">{stats.homeworkDoneRate}% complete</span>
+                <span className="text-ink/60">{t('homeworkCompleteRate', { rate: stats.homeworkDoneRate })}</span>
               </div>
               <ProgressBar value={stats.homeworkDoneRate} />
               <div className="mt-3 space-y-2">
@@ -325,7 +325,7 @@ export default function PortalHome() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-ink">{l.topic}</p>
-                  <p className="text-xs text-ink/50">{new Date(l.scheduled_at).toLocaleString(dateLocale)}</p>
+                  <p className="text-xs text-ink/50">{formatDateTime(new Date(l.scheduled_at), dateLocale)}</p>
                 </div>
                 {l.discussion_enabled && (
                   <Link

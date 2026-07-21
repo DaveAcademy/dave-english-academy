@@ -65,6 +65,14 @@
   "upcomingLessons": "Yaqinlashib kelayotgan darslar",
   "noUpcomingLessons": "Rejalashtirilgan darslar yo'q.",
   "discuss": "Muhokama qilish",
+  "attendancePresentThisMonth": "Bu oy {{rate}}% qatnashdi",
+  "homeworkCompleteRate": "{{rate}}% bajarilgan",
+
+  "greetingMorning": "Xayrli tong",
+  "greetingAfternoon": "Xayrli kun",
+  "greetingEvening": "Xayrli kech",
+  "trendVsLastMonth": "o'tgan oyga nisbatan {{delta}}{{unit}}",
+  "trendNoChange": "o'tgan oyga nisbatan o'zgarish yo'q",
 
   "heroSummaryRanked": "Siz {{points}} ball bilan {{rank}}-o'rindasiz.",
   "heroSummaryNoRank": "Keling, natijalaringizni ko'rib chiqamiz.",
