@@ -1,12 +1,14 @@
 // App.jsx
 
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Sidebar, BottomNav } from './components/Nav';
 import { PortalSidebar, PortalBottomNav } from './components/PortalNav';
 import { AcademyDataProvider } from './lib/AcademyDataContext';
 import { AuthProvider, useAuth } from './lib/AuthContext';
 import AuthGate from './components/auth/AuthGate';
+import { syncLanguageForRole } from './i18n';
 
 // Route-level code splitting - each page is its own chunk, loaded on
 // first visit rather than all bundled into one file up front. This
@@ -45,6 +47,13 @@ export default function App() {
 function AppShell() {
   const { session, role } = useAuth();
   const isStudent = role === 'student';
+
+  // AuthGate only renders AppShell once the profile (and therefore role)
+  // has resolved, so this is the first point role is definitively known -
+  // enforce the role's language rule as soon as that happens.
+  useEffect(() => {
+    syncLanguageForRole(role);
+  }, [role]);
 
   return (
     <AcademyDataProvider key={session.user.id}>
@@ -94,7 +103,8 @@ function AppShell() {
 }
 
 function PageLoading() {
-  return <div className="p-10 text-center text-sm text-ink/40">Loading...</div>;
+  const { t } = useTranslation('common');
+  return <div className="p-10 text-center text-sm text-ink/40">{t('loading')}</div>;
 }
 
 function MobileHeader() {

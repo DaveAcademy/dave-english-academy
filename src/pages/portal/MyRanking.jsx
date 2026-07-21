@@ -6,10 +6,12 @@
 // rows - there's no other-student data to rank against client-side.
 
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAcademy } from '../../lib/AcademyDataContext';
 import { getLeaderboard } from '../../lib/db';
 
 export default function MyRanking() {
+  const { t } = useTranslation(['portal', 'dashboard', 'common']);
   const { students } = useAcademy();
   const me = students[0];
   const [leaderboard, setLeaderboard] = useState(null);
@@ -35,15 +37,15 @@ export default function MyRanking() {
   return (
     <div>
       <header className="mb-6">
-        <h1 className="font-display text-2xl font-bold text-ink">My Ranking</h1>
-        <p className="mt-1 text-sm text-ink/50">Based on lesson attendance, exams, and homework.</p>
+        <h1 className="font-display text-2xl font-bold text-ink">{t('portal:myRankingTitle')}</h1>
+        <p className="mt-1 text-sm text-ink/50">{t('portal:rankingSubtitle')}</p>
       </header>
 
       {leaderboard === null ? (
-        <div className="rounded-xl bg-white p-10 text-center text-sm text-ink/50 shadow-card">Loading...</div>
+        <div className="rounded-xl bg-white p-10 text-center text-sm text-ink/50 shadow-card">{t('common:loading')}</div>
       ) : leaderboard.length === 0 ? (
         <div className="rounded-xl bg-white p-10 text-center shadow-card">
-          <p className="font-display text-lg font-semibold text-ink">No data yet</p>
+          <p className="font-display text-lg font-semibold text-ink">{t('dashboard:noData')}</p>
         </div>
       ) : (
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -60,7 +62,9 @@ export default function MyRanking() {
               <div className="flex-1">
                 <p className="font-semibold">{row.real_name}</p>
               </div>
-              <p className={`text-sm font-bold ${me && row.student_id === me.id ? 'text-white' : 'text-brand-500'}`}>{row.points} pts</p>
+              <p className={`text-sm font-bold ${me && row.student_id === me.id ? 'text-white' : 'text-brand-500'}`}>
+                {row.points} {t('portal:points')}
+              </p>
             </div>
           ))}
         </div>

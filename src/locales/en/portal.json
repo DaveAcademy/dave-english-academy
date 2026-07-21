@@ -1,0 +1,17 @@
+{
+  "myProgressTitle": "My Progress",
+  "attendedOfLessons": "Attended {{count}} of {{total}} lessons.",
+  "lessonAttendance": "Lesson attendance",
+  "noLessonsRecorded": "No lessons recorded yet.",
+  "examScores": "Exam scores",
+  "noExamScoresYet": "No exam scores yet.",
+  "myRankingTitle": "My Ranking",
+  "rankingSubtitle": "Based on lesson attendance, exams, and homework.",
+  "points": "pts",
+  "myCertificatesTitle": "My Certificates",
+  "certificatesSubtitle": "Certificates you've earned.",
+  "noCertificatesYet": "No certificates yet",
+  "issuedOn": "Issued {{date}}",
+  "print": "Print",
+  "discussCertificateAria": "Discuss this certificate"
+}

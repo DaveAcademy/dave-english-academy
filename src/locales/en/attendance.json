@@ -1,0 +1,13 @@
+{
+  "title": "Attendance",
+  "subtitle": "Mark Present, Late, or Absent for each active student.",
+  "allTab": "All",
+  "date": "Date",
+  "present": "Present",
+  "late": "Late",
+  "absent": "Absent",
+  "noActiveStudentsInLevel": "No active students in Level {{level}}",
+  "noActiveStudents": "No active students",
+  "tryDifferentLevel": "Try a different level, or switch back to All.",
+  "addActiveStudentsHint": "Add active students to start taking attendance."
+}

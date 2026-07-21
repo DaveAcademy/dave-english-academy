@@ -7,11 +7,13 @@
 
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { FileCheck2, Download, Upload, MessageSquare } from 'lucide-react';
 import { useAcademy } from '../../lib/AcademyDataContext';
 import { uploadAttachment, getAttachmentUrl } from '../../lib/db';
 
 export default function MyExams() {
+  const { t } = useTranslation(['exams', 'common']);
   const { students, exams, examScores, submitMyExamAnswer } = useAcademy();
   const me = students[0];
   const [submittingId, setSubmittingId] = useState(null);
@@ -44,7 +46,7 @@ export default function MyExams() {
   if (!me) {
     return (
       <div className="rounded-xl bg-white p-10 text-center shadow-card">
-        <p className="font-display text-lg font-semibold text-ink">Not linked yet</p>
+        <p className="font-display text-lg font-semibold text-ink">{t('notLinkedYet')}</p>
       </div>
     );
   }
@@ -52,13 +54,13 @@ export default function MyExams() {
   return (
     <div>
       <header className="mb-6">
-        <h1 className="font-display text-2xl font-bold text-ink">My Exams</h1>
-        <p className="mt-1 text-sm text-ink/50">Download exam files, upload your answers, and see your scores.</p>
+        <h1 className="font-display text-2xl font-bold text-ink">{t('myTitle')}</h1>
+        <p className="mt-1 text-sm text-ink/50">{t('mySubtitle')}</p>
       </header>
 
       {myExams.length === 0 ? (
         <div className="rounded-xl bg-white p-10 text-center shadow-card">
-          <p className="font-display text-lg font-semibold text-ink">No exams assigned yet</p>
+          <p className="font-display text-lg font-semibold text-ink">{t('noExamsAssignedYet')}</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -74,11 +76,11 @@ export default function MyExams() {
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold text-ink">{e.title}</p>
                     <p className="text-xs text-ink/50">
-                      {e.exam_date} · out of {e.max_score}
-                      {e.deadline && ` · due ${e.deadline.slice(0, 10)}`}
+                      {e.exam_date} · {t('outOfScore', { max: e.max_score })}
+                      {e.deadline && ` · ${t('dueDate', { date: e.deadline.slice(0, 10) })}`}
                     </p>
                   </div>
-                  {graded && <p className="flex-shrink-0 text-sm font-bold text-brand-500">{result.score} / {e.max_score}</p>}
+                  {graded && <p className="flex-shrink-0 text-sm font-bold text-brand-500">{t('scoreOutOfMax', { score: result.score, max: e.max_score })}</p>}
                 </div>
 
                 <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -87,13 +89,13 @@ export default function MyExams() {
                       onClick={() => handleOpenFile(e.file_url)}
                       className="flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-xs font-semibold text-brand-500 hover:bg-brand-50"
                     >
-                      <Download size={13} /> {e.file_name || 'Exam file'}
+                      <Download size={13} /> {e.file_name || t('examFileDefault')}
                     </button>
                   )}
                   {!graded && (
                     <label className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-semibold text-ink/60 hover:bg-ink/5">
                       <Upload size={13} />
-                      {submittingId === e.id ? 'Uploading...' : result?.answer_file_name ? 'Replace my answer' : 'Upload my answer'}
+                      {submittingId === e.id ? t('uploading') : result?.answer_file_name ? t('replaceMyAnswer') : t('uploadMyAnswer')}
                       <input
                         type="file"
                         accept=".pdf,.doc,.docx,image/*"
@@ -108,14 +110,14 @@ export default function MyExams() {
                       onClick={() => handleOpenFile(result.answer_file_url)}
                       className="text-xs text-ink/50 hover:underline"
                     >
-                      View my submitted answer
+                      {t('viewMySubmittedAnswer')}
                     </button>
                   )}
                   <Link
                     to={`/chat?type=exam&id=${e.id}`}
                     className="ml-auto flex items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-semibold text-ink/60 hover:bg-ink/5"
                   >
-                    <MessageSquare size={13} /> Discuss
+                    <MessageSquare size={13} /> {t('discuss')}
                   </Link>
                 </div>
               </div>

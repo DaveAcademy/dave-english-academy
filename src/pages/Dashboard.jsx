@@ -6,8 +6,18 @@
 // already being calculated before this pass; the only new metrics are
 // outstanding-payments and month-over-month trends, both derived from the
 // same students/payments/attendance/exams data already in memory.
-
+//
+// i18n: fully localized via the `dashboard` namespace, including the
+// strings introduced by the premium redesign (hero summaries, Outstanding
+// KPI, Quick Actions, Needs Attention/AttentionCard, Analytics section,
+// Today's lessons). Date/time formatting (exam dates, lesson times) uses
+// `dateLocale` - derived from i18n.language - instead of a hardcoded
+// 'en-US', so Uzbek-selecting students see Uzbek-formatted dates. Teachers
+// and Administrators never see 'uz' here because syncLanguageForRole (see
+// App.jsx / i18n/index.js) forces i18n.language back to 'en' for any
+// non-student role, so dateLocale resolves to 'en-US' for them regardless.
 import { useMemo } from 'react';
+import { useTranslation, Trans } from 'react-i18next';
 import {
   Users,
   CalendarCheck,
@@ -52,6 +62,8 @@ export default function Dashboard() {
 }
 
 function AdminDashboard() {
+  const { t, i18n } = useTranslation('dashboard');
+  const dateLocale = i18n.language === 'uz' ? 'uz' : 'en-US';
   const { profile } = useAuth();
   const { students, payments, attendance, exams, examScores, homework, loading } = useAcademy();
 
@@ -202,13 +214,13 @@ function AdminDashboard() {
   }, [students, payments, attendance, exams, examScores, homework, months, current, previous]);
 
   const quickActions = [
-    { to: '/students', label: 'Add Student', Icon: Users },
-    { to: '/attendance', label: 'Record Attendance', Icon: CalendarCheck },
-    { to: '/payments', label: 'Add Payment', Icon: Wallet },
-    { to: '/lessons', label: 'Create Lesson', Icon: CalendarClock },
-    { to: '/certificates', label: 'Upload Certificate', Icon: ImagePlus },
-    { to: '/settings', label: 'Create User', Icon: UserPlus },
-    { to: '/reports', label: 'View Reports', Icon: BarChart3 },
+    { to: '/students', label: t('qaAddStudent'), Icon: Users },
+    { to: '/attendance', label: t('qaRecordAttendance'), Icon: CalendarCheck },
+    { to: '/payments', label: t('qaAddPayment'), Icon: Wallet },
+    { to: '/lessons', label: t('qaCreateLesson'), Icon: CalendarClock },
+    { to: '/certificates', label: t('qaUploadCertificate'), Icon: ImagePlus },
+    { to: '/settings', label: t('qaCreateUser'), Icon: UserPlus },
+    { to: '/reports', label: t('qaViewReports'), Icon: BarChart3 },
   ];
 
   return (
@@ -218,24 +230,29 @@ function AdminDashboard() {
         summary={
           loading
             ? undefined
-            : `${stats.active} active students · ${stats.collectionRate}% collected this month · ${
-                stats.attendanceRateNow == null ? 'no attendance data yet' : `${stats.attendanceRateNow}% attendance`
-              }`
+            : t('adminHeroSummary', {
+                active: stats.active,
+                collectionRate: stats.collectionRate,
+                attendanceFragment:
+                  stats.attendanceRateNow == null
+                    ? t('adminHeroNoAttendance')
+                    : t('adminHeroAttendancePercent', { rate: stats.attendanceRateNow }),
+              })
         }
       />
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <StatCard label="Active students" value={stats.active} hint={`${stats.total} total enrolled`} tone="success" icon={Users} loading={loading} />
+        <StatCard label={t('activeStudents')} value={stats.active} hint={`${stats.total} total enrolled`} tone="success" icon={Users} loading={loading} />
         <StatCard
-          label="Attendance rate"
-          value={stats.attendanceRateNow == null ? 'No data' : `${stats.attendanceRateNow}%`}
+          label={t('attendanceRate')}
+          value={stats.attendanceRateNow == null ? t('noData') : `${stats.attendanceRateNow}%`}
           trend={stats.attendanceTrendBadge}
           tone="info"
           icon={CalendarCheck}
           loading={loading}
         />
         <StatCard
-          label="Payment collection"
+          label={t('paymentCollection')}
           value={`${stats.collectionRate}%`}
           trend={stats.collectionTrend}
           tone="brand"
@@ -243,7 +260,7 @@ function AdminDashboard() {
           loading={loading}
         />
         <StatCard
-          label="Outstanding"
+          label={t('outstandingKpi')}
           value={formatUZS(stats.outstanding)}
           hint={`${stats.unpaidStudents.length} students unpaid`}
           tone="danger"
@@ -253,15 +270,15 @@ function AdminDashboard() {
       </div>
 
       <div className="mt-6">
-        <SectionLabel>Quick actions</SectionLabel>
+        <SectionLabel>{t('quickActionsLabel')}</SectionLabel>
         <QuickActions actions={quickActions} />
       </div>
 
       <div className="mt-6">
-        <SectionLabel>Needs attention</SectionLabel>
+        <SectionLabel>{t('needsAttentionLabel')}</SectionLabel>
         <div className="grid gap-4 lg:grid-cols-3">
         <AttentionCard
-          title="Unpaid this month"
+          title={t('unpaidThisMonth')}
           icon={Wallet}
           items={stats.unpaidStudents.slice(0, 5).map((s) => ({
             id: s.id,
@@ -270,73 +287,77 @@ function AdminDashboard() {
             tone: 'danger',
             to: '/payments',
           }))}
-          emptyText="Everyone is paid up this month."
+          emptyText={t('unpaidEmpty')}
           loading={loading}
         />
         <AttentionCard
-          title="Attendance concerns"
+          title={t('attendanceConcernsTitle')}
           icon={CalendarCheck}
           items={stats.attendanceConcerns.map((s) => ({
             id: s.id,
             label: s.real_name,
-            detail: `${s.rate}% this month (${s.marks} marks)`,
+            detail: t('attendanceConcernDetail', { rate: s.rate, marks: s.marks }),
             tone: 'warning',
             to: '/attendance',
           }))}
-          emptyText="No students below 50% attendance this month."
+          emptyText={t('attendanceConcernsEmpty')}
           loading={loading}
         />
         <AttentionCard
-          title="Upcoming exams"
+          title={t('upcomingExamsTitle')}
           icon={FileCheck2}
           items={stats.upcomingExams.map((e) => ({
             id: e.id,
             label: e.title,
-            detail: new Date(e.exam_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+            detail: new Date(e.exam_date).toLocaleDateString(dateLocale, { weekday: 'short', month: 'short', day: 'numeric' }),
             tone: 'info',
             to: '/exams',
           }))}
-          emptyText="No exams scheduled in the next 7 days."
+          emptyText={t('upcomingExamsEmpty')}
           loading={loading}
         />
         </div>
       </div>
 
       <div className="mt-6">
-        <SectionLabel>Analytics</SectionLabel>
+        <SectionLabel>{t('analyticsLabel')}</SectionLabel>
         <div className="grid gap-4 lg:grid-cols-3">
-        <Panel title="Student growth" icon={Users}>
+        <Panel title={t('studentGrowth')} icon={Users}>
           <MiniBarChart data={stats.growth} color="bg-brand-500" loading={loading} />
         </Panel>
-        <Panel title="Income overview">
+        <Panel title={t('incomeOverview')}>
           <p className="mb-3 text-xs text-ink/50">
-            This month: <span className="font-semibold text-ink">{formatUZS(stats.collected)}</span> collected of {formatUZS(stats.expected)} expected
+            <Trans
+              i18nKey="dashboard:collectedOfExpected"
+              values={{ collected: formatUZS(stats.collected), expected: formatUZS(stats.expected) }}
+              components={[<span className="font-semibold text-ink" key="0" />]}
+            />
           </p>
           <MiniBarChart data={stats.income} formatValue={formatUZS} color="bg-active" loading={loading} />
         </Panel>
-        <Panel title="Attendance trend" icon={CalendarCheck}>
+        <Panel title={t('attendanceTrendTitle')} icon={CalendarCheck}>
           <MiniBarChart data={stats.attendanceTrend} formatValue={(v) => `${v}%`} color="bg-levelA" loading={loading} />
         </Panel>
         </div>
 
         <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        <Panel title="Exam performance" icon={FileCheck2}>
+        <Panel title={t('examPerformance')} icon={FileCheck2}>
           {loading ? (
             <MiniBarChart data={stats.examTrend} formatValue={(v) => `${v}%`} color="bg-levelC" loading />
           ) : stats.examAvg == null ? (
-            <p className="text-sm text-ink/50">No graded exams yet.</p>
+            <p className="text-sm text-ink/50">{t('noGradedExams')}</p>
           ) : (
             <>
               <p className="font-display text-3xl font-bold text-ink">{stats.examAvg}%</p>
-              <p className="mb-3 mt-1 text-xs text-ink/50">Average score across {stats.examScoredCount} graded exam entries.</p>
+              <p className="mb-3 mt-1 text-xs text-ink/50">{t('avgScoreAcross', { count: stats.examScoredCount })}</p>
               <MiniBarChart data={stats.examTrend} formatValue={(v) => `${v}%`} color="bg-levelC" />
             </>
           )}
         </Panel>
 
-        <Panel title="Top students" icon={Trophy}>
+        <Panel title={t('topStudents')} icon={Trophy}>
           {stats.topStudents.length === 0 ? (
-            <p className="text-sm text-ink/50">No active students yet.</p>
+            <p className="text-sm text-ink/50">{t('noActiveStudents')}</p>
           ) : (
             <div className="space-y-2">
               {stats.topStudents.map((s, i) => (
@@ -349,7 +370,7 @@ function AdminDashboard() {
                     {i + 1}
                   </span>
                   <span className="flex-1 truncate text-sm font-medium text-ink">{s.real_name}</span>
-                  <span className="text-sm font-bold text-brand-500">{s.points} pts</span>
+                  <span className="text-sm font-bold text-brand-500">{s.points} {t('points')}</span>
                 </div>
               ))}
             </div>
@@ -359,16 +380,16 @@ function AdminDashboard() {
       </div>
 
       <div className="mt-6">
-        <Panel title="Monthly statistics" icon={BarChart3}>
+        <Panel title={t('monthlyStatistics')} icon={BarChart3}>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[500px] text-left text-sm">
               <thead>
                 <tr className="border-b border-ink/10 text-xs text-ink/50">
-                  <th className="py-2 pr-4 font-semibold">Month</th>
-                  <th className="py-2 pr-4 font-semibold">Attendance marks</th>
-                  <th className="py-2 pr-4 font-semibold">Exams given</th>
-                  <th className="py-2 pr-4 font-semibold">Homework assigned</th>
-                  <th className="py-2 font-semibold">Collected</th>
+                  <th className="py-2 pr-4 font-semibold">{t('month')}</th>
+                  <th className="py-2 pr-4 font-semibold">{t('attendanceMarks')}</th>
+                  <th className="py-2 pr-4 font-semibold">{t('examsGiven')}</th>
+                  <th className="py-2 pr-4 font-semibold">{t('homeworkAssigned')}</th>
+                  <th className="py-2 font-semibold">{t('collected')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -394,6 +415,8 @@ function AdminDashboard() {
 // anywhere in this function, matching the existing RLS boundary (teachers
 // have read-only payment access, and Reports.jsx is admin-only).
 function TeacherDashboard() {
+  const { t, i18n } = useTranslation('dashboard');
+  const dateLocale = i18n.language === 'uz' ? 'uz' : 'en-US';
   const { profile } = useAuth();
   const { students, lessons, attendance, exams, examScores, homework, homeworkStatus, loading } = useAcademy();
   const { current, previous } = useMemo(() => currentAndPreviousMonth(), []);
@@ -462,11 +485,11 @@ function TeacherDashboard() {
   }, [students, lessons, attendance, exams, examScores, homework, homeworkStatus, current, previous]);
 
   const quickActions = [
-    { to: '/attendance', label: 'Take Attendance', Icon: CalendarCheck },
-    { to: '/homework', label: 'Add Homework', Icon: BookOpen },
-    { to: '/exams', label: 'Open Exams', Icon: FileCheck2 },
-    { to: '/students', label: 'View Students', Icon: Users },
-    { to: '/lessons', label: 'View Lessons', Icon: CalendarClock },
+    { to: '/attendance', label: t('qaTakeAttendance'), Icon: CalendarCheck },
+    { to: '/homework', label: t('qaAddHomework'), Icon: BookOpen },
+    { to: '/exams', label: t('qaOpenExams'), Icon: FileCheck2 },
+    { to: '/students', label: t('qaViewStudents'), Icon: Users },
+    { to: '/lessons', label: t('qaViewLessons'), Icon: CalendarClock },
   ];
 
   return (
@@ -476,17 +499,21 @@ function TeacherDashboard() {
         summary={
           loading
             ? undefined
-            : `${stats.todayCounts.Present}/${stats.todayTotal || 0} present today · ${stats.submitted + stats.awaitingGrading} items awaiting grading`
+            : t('teacherHeroSummary', {
+                present: stats.todayCounts.Present,
+                total: stats.todayTotal || 0,
+                count: stats.submitted + stats.awaitingGrading,
+              })
         }
       />
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <StatCard label="Present today" value={stats.todayCounts.Present} tone="success" icon={CalendarCheck} loading={loading} />
-        <StatCard label="Late today" value={stats.todayCounts.Late} tone="warning" loading={loading} />
-        <StatCard label="Absent today" value={stats.todayCounts.Absent} tone="danger" loading={loading} />
+        <StatCard label={t('presentToday')} value={stats.todayCounts.Present} tone="success" icon={CalendarCheck} loading={loading} />
+        <StatCard label={t('lateToday')} value={stats.todayCounts.Late} tone="warning" loading={loading} />
+        <StatCard label={t('absentToday')} value={stats.todayCounts.Absent} tone="danger" loading={loading} />
         <StatCard
-          label="Attendance rate (month)"
-          value={stats.monthRate == null ? 'No data' : `${stats.monthRate}%`}
+          label={t('attendanceRateMonth')}
+          value={stats.monthRate == null ? t('noData') : `${stats.monthRate}%`}
           trend={stats.monthRateTrend}
           tone="info"
           loading={loading}
@@ -494,50 +521,50 @@ function TeacherDashboard() {
       </div>
 
       <div className="mt-6">
-        <SectionLabel>Quick actions</SectionLabel>
+        <SectionLabel>{t('quickActionsLabel')}</SectionLabel>
         <QuickActions actions={quickActions} />
       </div>
 
       <div className="mt-6">
-        <SectionLabel>Needs attention</SectionLabel>
+        <SectionLabel>{t('needsAttentionLabel')}</SectionLabel>
         <div className="grid gap-4 lg:grid-cols-2">
         <AttentionCard
-          title="Awaiting grading"
+          title={t('awaitingGrading')}
           icon={ClipboardList}
           items={[
             ...(stats.submitted > 0
-              ? [{ id: 'hw', label: `${stats.submitted} homework submission${stats.submitted === 1 ? '' : 's'}`, tone: 'warning', to: '/homework' }]
+              ? [{ id: 'hw', label: t('homeworkSubmissionsCount', { count: stats.submitted }), tone: 'warning', to: '/homework' }]
               : []),
             ...(stats.awaitingGrading > 0
-              ? [{ id: 'exam', label: `${stats.awaitingGrading} exam answer${stats.awaitingGrading === 1 ? '' : 's'}`, tone: 'warning', to: '/exams' }]
+              ? [{ id: 'exam', label: t('examAnswersCount', { count: stats.awaitingGrading }), tone: 'warning', to: '/exams' }]
               : []),
           ]}
-          emptyText="Nothing waiting on you right now."
+          emptyText={t('awaitingGradingEmpty')}
           loading={loading}
         />
         <AttentionCard
-          title="Students needing attention"
+          title={t('studentsNeedingAttention')}
           icon={Users}
           items={stats.performance
             .filter((s) => s.rate < 70)
-            .map((s) => ({ id: s.id, label: s.real_name, detail: `${s.rate}% attendance this month`, tone: s.rate < 50 ? 'danger' : 'warning', to: '/attendance' }))}
-          emptyText="No attendance concerns this month."
+            .map((s) => ({ id: s.id, label: s.real_name, detail: t('attendanceThisMonthDetail', { rate: s.rate }), tone: s.rate < 50 ? 'danger' : 'warning', to: '/attendance' }))}
+          emptyText={t('studentsAttentionEmpty')}
           loading={loading}
         />
         </div>
       </div>
 
       <div className="mt-6">
-        <Panel title="Today's lessons" icon={CalendarClock}>
+        <Panel title={t('todaysLessonsTitle')} icon={CalendarClock}>
           {stats.todaysLessons.length === 0 ? (
-            <p className="text-sm text-ink/50">No lessons scheduled today.</p>
+            <p className="text-sm text-ink/50">{t('noLessonsToday')}</p>
           ) : (
             <div className="space-y-2">
               {stats.todaysLessons.map((l) => (
                 <div key={l.id} className="flex items-center justify-between gap-3 text-sm">
                   <span className="font-medium text-ink">{l.topic}</span>
                   <span className="flex-shrink-0 text-ink/50">
-                    {new Date(l.scheduled_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                    {new Date(l.scheduled_at).toLocaleTimeString(dateLocale, { hour: 'numeric', minute: '2-digit' })}
                   </span>
                 </div>
               ))}
@@ -547,36 +574,36 @@ function TeacherDashboard() {
       </div>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
-        <Panel title="Homework" icon={BookOpen}>
+        <Panel title={t('homework')} icon={BookOpen}>
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-ink/60">Assigned</span>
+              <span className="text-ink/60">{t('assigned')}</span>
               <span className="font-semibold text-ink">{stats.homeworkTotal}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-ink/60">Awaiting grading</span>
+              <span className="text-ink/60">{t('awaitingGrading')}</span>
               <span className="font-semibold text-levelB">{stats.submitted}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-ink/60">Graded</span>
+              <span className="text-ink/60">{t('graded')}</span>
               <span className="font-semibold text-active">{stats.graded}</span>
             </div>
           </div>
         </Panel>
 
-        <Panel title="Exam statistics" icon={FileCheck2}>
+        <Panel title={t('examStatistics')} icon={FileCheck2}>
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-ink/60">Total exams</span>
+              <span className="text-ink/60">{t('totalExams')}</span>
               <span className="font-semibold text-ink">{stats.examTotal}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-ink/60">Awaiting grading</span>
+              <span className="text-ink/60">{t('awaitingGrading')}</span>
               <span className="font-semibold text-levelB">{stats.awaitingGrading}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-ink/60">Average score</span>
-              <span className="font-semibold text-ink">{stats.examAvg == null ? 'No data' : `${stats.examAvg}%`}</span>
+              <span className="text-ink/60">{t('averageScore')}</span>
+              <span className="font-semibold text-ink">{stats.examAvg == null ? t('noData') : `${stats.examAvg}%`}</span>
             </div>
           </div>
         </Panel>

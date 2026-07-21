@@ -1,0 +1,17 @@
+{
+  "myProgressTitle": "Mening natijalarim",
+  "attendedOfLessons": "{{total}} ta darsdan {{count}} tasiga qatnashdingiz.",
+  "lessonAttendance": "Darslarga qatnashish",
+  "noLessonsRecorded": "Hali darslar qayd etilmagan.",
+  "examScores": "Imtihon natijalari",
+  "noExamScoresYet": "Hali imtihon natijalari yo'q.",
+  "myRankingTitle": "Mening reytingim",
+  "rankingSubtitle": "Darslarga qatnashish, imtihonlar va uy vazifalari asosida.",
+  "points": "ball",
+  "myCertificatesTitle": "Mening sertifikatlarim",
+  "certificatesSubtitle": "Siz qo'lga kiritgan sertifikatlar.",
+  "noCertificatesYet": "Hali sertifikatlar yo'q",
+  "issuedOn": "Berilgan sana: {{date}}",
+  "print": "Chop etish",
+  "discussCertificateAria": "Ushbu sertifikatni muhokama qilish"
+}

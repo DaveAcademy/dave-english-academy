@@ -1,12 +1,14 @@
 // MyCertificates.jsx
 
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Award, Download, Printer, MessageSquare } from 'lucide-react';
 import { useAcademy } from '../../lib/AcademyDataContext';
 import { downloadCertificatePdf, printCertificatePdf } from '../../utils/pdf';
 import { getAttachmentUrl } from '../../lib/db';
 
 export default function MyCertificates() {
+  const { t } = useTranslation('portal');
   const { students, certificates, certificateTemplate } = useAcademy();
   const me = students[0];
 
@@ -28,13 +30,13 @@ export default function MyCertificates() {
   return (
     <div>
       <header className="mb-6">
-        <h1 className="font-display text-2xl font-bold text-ink">My Certificates</h1>
-        <p className="mt-1 text-sm text-ink/50">Certificates you've earned.</p>
+        <h1 className="font-display text-2xl font-bold text-ink">{t('myCertificatesTitle')}</h1>
+        <p className="mt-1 text-sm text-ink/50">{t('certificatesSubtitle')}</p>
       </header>
 
       {certificates.length === 0 ? (
         <div className="rounded-xl bg-white p-10 text-center shadow-card">
-          <p className="font-display text-lg font-semibold text-ink">No certificates yet</p>
+          <p className="font-display text-lg font-semibold text-ink">{t('noCertificatesYet')}</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -45,7 +47,7 @@ export default function MyCertificates() {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="font-semibold text-ink">{c.title}</p>
-                <p className="text-xs text-ink/50">Issued {c.issued_date}</p>
+                <p className="text-xs text-ink/50">{t('issuedOn', { date: c.issued_date })}</p>
               </div>
               <div className="flex flex-shrink-0 items-center gap-1.5">
                 <button
@@ -58,12 +60,12 @@ export default function MyCertificates() {
                   onClick={() => handlePrint(c)}
                   className="flex items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-semibold text-ink/60 hover:bg-ink/5"
                 >
-                  <Printer size={14} /> Print
+                  <Printer size={14} /> {t('print')}
                 </button>
                 <Link
                   to={`/chat?type=certificate&id=${c.id}`}
                   className="rounded-md p-1.5 text-ink/40 hover:bg-ink/5"
-                  aria-label="Discuss this certificate"
+                  aria-label={t('discussCertificateAria')}
                 >
                   <MessageSquare size={15} />
                 </Link>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation, Trans } from 'react-i18next';
 import { ShieldCheck } from 'lucide-react';
 import { signUp } from '../../lib/auth';
 import { claimFirstAdmin } from '../../lib/auth';
@@ -8,6 +9,7 @@ import Login from './Login';
 const EMPTY = { fullName: '', email: '', password: '' };
 
 export default function FirstTimeSetup({ onSetupComplete }) {
+  const { t } = useTranslation(['auth', 'common']);
   const { refreshProfile } = useAuth();
   const [form, setForm] = useState(EMPTY);
   const [error, setError] = useState('');
@@ -40,7 +42,7 @@ export default function FirstTimeSetup({ onSetupComplete }) {
         setPendingConfirmation(true);
       }
     } catch (err) {
-      setError(err.message || 'Could not create the administrator account.');
+      setError(err.message || t('auth:couldNotCreateAdmin'));
     } finally {
       setSubmitting(false);
     }
@@ -51,16 +53,19 @@ export default function FirstTimeSetup({ onSetupComplete }) {
       <div className="flex min-h-screen items-center justify-center bg-paper px-4">
         <div className="w-full max-w-sm rounded-xl bg-white p-6 text-center shadow-card">
           <ShieldCheck className="mx-auto mb-3 h-10 w-10 text-brand-500" />
-          <h1 className="mb-2 font-display text-lg font-bold text-ink">Check your email</h1>
+          <h1 className="mb-2 font-display text-lg font-bold text-ink">{t('auth:checkYourEmail')}</h1>
           <p className="mb-4 text-sm text-ink/60">
-            We sent a confirmation link to <span className="font-semibold">{form.email}</span>. Confirm it, then
-            sign in below.
+            <Trans
+              i18nKey="auth:confirmationSent"
+              values={{ email: form.email }}
+              components={[<span className="font-semibold" key="0" />]}
+            />
           </p>
           <button
             onClick={() => setShowLoginInstead(true)}
             className="w-full rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600"
           >
-            I've confirmed - sign in
+            {t('auth:confirmedSignIn')}
           </button>
         </div>
       </div>
@@ -72,10 +77,8 @@ export default function FirstTimeSetup({ onSetupComplete }) {
       <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-card">
         <div className="mb-5 text-center">
           <ShieldCheck className="mx-auto mb-2 h-10 w-10 text-brand-500" />
-          <h1 className="font-display text-lg font-bold text-ink">First-time setup</h1>
-          <p className="mt-1 text-sm text-ink/60">
-            No administrator exists yet. Create the first admin account for Dave Academy.
-          </p>
+          <h1 className="font-display text-lg font-bold text-ink">{t('auth:firstTimeSetupTitle')}</h1>
+          <p className="mt-1 text-sm text-ink/60">{t('auth:firstTimeSetupSubtitle')}</p>
         </div>
 
         {error && (
@@ -86,7 +89,7 @@ export default function FirstTimeSetup({ onSetupComplete }) {
 
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label className="mb-1 block text-xs font-medium text-ink/60">Full name</label>
+            <label className="mb-1 block text-xs font-medium text-ink/60">{t('common:fullName')}</label>
             <input
               required
               value={form.fullName}
@@ -95,7 +98,7 @@ export default function FirstTimeSetup({ onSetupComplete }) {
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-ink/60">Email</label>
+            <label className="mb-1 block text-xs font-medium text-ink/60">{t('common:email')}</label>
             <input
               required
               type="email"
@@ -105,7 +108,7 @@ export default function FirstTimeSetup({ onSetupComplete }) {
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-ink/60">Password</label>
+            <label className="mb-1 block text-xs font-medium text-ink/60">{t('common:password')}</label>
             <input
               required
               minLength={6}
@@ -121,18 +124,16 @@ export default function FirstTimeSetup({ onSetupComplete }) {
             disabled={submitting}
             className="w-full rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-50"
           >
-            {submitting ? 'Creating...' : 'Create administrator account'}
+            {submitting ? t('auth:creatingAdmin') : t('auth:createAdminAccount')}
           </button>
         </form>
 
-        <p className="mt-4 text-center text-xs text-ink/40">
-          Only do this once - whoever completes it first becomes the permanent administrator.
-        </p>
+        <p className="mt-4 text-center text-xs text-ink/40">{t('auth:onlyOnceWarning')}</p>
         <button
           onClick={() => setShowLoginInstead(true)}
           className="mt-3 w-full text-center text-xs text-brand-500 hover:underline"
         >
-          Already set up? Sign in instead
+          {t('auth:alreadySetUp')}
         </button>
       </div>
     </div>
