@@ -90,6 +90,28 @@ export async function awardPoints({ studentId, level, categoryId, categoryKey, p
   if (error) throw error;
 }
 
+// Same ledger, same RLS/trigger enforcement per row as awardPoints() above -
+// just N rows in one request instead of N requests, for the class/group
+// award workflow. Each entry is independently subject to the teacher-level
+// RLS check and the level-matches-student trigger, so a batch spanning
+// students a caller isn't allowed to award for fails atomically (the whole
+// insert rolls back), not partially.
+export async function bulkAwardPoints(entries) {
+  if (!entries.length) return;
+  const { error } = await supabase.from('point_transactions').insert(
+    entries.map(({ studentId, level, categoryId, categoryKey, points, reason, awardedBy }) => ({
+      student_id: studentId,
+      level,
+      category_id: categoryId ?? null,
+      category_key: categoryKey,
+      points,
+      reason,
+      awarded_by: awardedBy,
+    }))
+  );
+  if (error) throw error;
+}
+
 // Active categories in display order - id is what makes get_my_point_history()
 // resolve the real name/icon instead of falling back to a generic one (see
 // migration 0023); category_key alone (the pre-existing quick +/- flow) only
@@ -458,6 +480,20 @@ export async function deleteCertificate(id) {
 
 export async function getLeaderboard() {
   const { data, error } = await supabase.rpc('get_leaderboard');
+  if (error) throw error;
+  return data;
+}
+
+// Level + period-scoped leaderboard (see migration 0023) - rank_change vs.
+// the prior equivalent period and attendance_rate are null for 'all_time'
+// (there's no "previous all-time" to compare against). periodStart is only
+// meaningful for week/month; omit it to mean "the period containing today".
+export async function getGroupLeaderboard(level, periodType, periodStart = null) {
+  const { data, error } = await supabase.rpc('get_group_leaderboard', {
+    p_level: level,
+    p_period_type: periodType,
+    p_period_start: periodStart,
+  });
   if (error) throw error;
   return data;
 }

@@ -7,9 +7,12 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ArrowUp, ArrowDown } from 'lucide-react';
 import { useAcademy } from '../../lib/AcademyDataContext';
-import { getLeaderboard, getMyPointHistory, getRecognitionAwards } from '../../lib/db';
+import { getGroupLeaderboard, getMyPointHistory, getRecognitionAwards } from '../../lib/db';
 import { formatMonthDay } from '../../utils/date';
+
+const PERIODS = ['week', 'month', 'all_time'];
 
 // Fixed sets from the database (point_categories.key / recognition_awards
 // .award_type's check constraint) - translated locally by name/key match
@@ -44,16 +47,21 @@ export default function MyRanking() {
   const dateLocale = i18n.language === 'uz' ? 'uz' : 'en-US';
   const { students } = useAcademy();
   const me = students[0];
+  const [period, setPeriod] = useState('week');
   const [leaderboard, setLeaderboard] = useState(null);
   const [history, setHistory] = useState(null);
   const [awards, setAwards] = useState(null);
 
+  // Scoped to the student's own level - ranking against students in other
+  // levels wouldn't mean anything (see get_group_leaderboard()'s pt.level
+  // join in migration 0023).
   useEffect(() => {
+    if (!me?.level) return undefined;
     let cancelled = false;
-    getLeaderboard()
+    setLeaderboard(null);
+    getGroupLeaderboard(me.level, period)
       .then((rows) => {
-        if (cancelled) return;
-        setLeaderboard([...(rows || [])].sort((a, b) => b.points - a.points || a.real_name.localeCompare(b.real_name)));
+        if (!cancelled) setLeaderboard(rows || []);
       })
       .catch(() => {
         if (!cancelled) setLeaderboard([]);
@@ -61,7 +69,7 @@ export default function MyRanking() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [me?.level, period]);
 
   useEffect(() => {
     let cancelled = false;
@@ -135,6 +143,22 @@ export default function MyRanking() {
         )}
       </section>
 
+      <h2 className="mb-2 font-display text-base font-bold text-ink">{t('portal:leaderboardTitle', { level: me?.level })}</h2>
+      <section className="mb-2 flex gap-1.5">
+        {PERIODS.map((p) => (
+          <button
+            key={p}
+            type="button"
+            onClick={() => setPeriod(p)}
+            className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition ${
+              period === p ? 'bg-brand-500 text-white' : 'bg-white text-ink/60 shadow-card hover:text-ink'
+            }`}
+          >
+            {t(`portal:period_${p}`)}
+          </button>
+        ))}
+      </section>
+
       {leaderboard === null ? (
         <div className="rounded-xl bg-white p-10 text-center text-sm text-ink/50 shadow-card">{t('common:loading')}</div>
       ) : leaderboard.length === 0 ? (
@@ -143,24 +167,42 @@ export default function MyRanking() {
         </div>
       ) : (
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {leaderboard.map((row, i) => (
-            <div
-              key={row.student_id}
-              className={`flex items-center gap-3 rounded-xl p-3 shadow-card ${
-                me && row.student_id === me.id ? 'bg-brand-500 text-white' : 'bg-white text-ink'
-              }`}
-            >
-              <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold ${medal(i)} ${medalText(i)}`}>
-                {i + 1}
+          {leaderboard.map((row, i) => {
+            const isMe = me && row.student_id === me.id;
+            return (
+              <div
+                key={row.student_id}
+                className={`flex items-center gap-3 rounded-xl p-3 shadow-card ${isMe ? 'bg-brand-500 text-white' : 'bg-white text-ink'}`}
+              >
+                <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold ${medal(i)} ${medalText(i)}`}>
+                  {row.rank}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-semibold">{row.real_name}</p>
+                  {row.attendance_rate != null && (
+                    <p className={`text-xs ${isMe ? 'text-white/70' : 'text-ink/40'}`}>
+                      {t('portal:attendanceRateLabel', { rate: row.attendance_rate })}
+                    </p>
+                  )}
+                </div>
+                <div className="flex flex-shrink-0 flex-col items-end gap-0.5">
+                  <p className={`text-sm font-bold ${isMe ? 'text-white' : 'text-brand-500'}`}>
+                    {row.points} {t('portal:points')}
+                  </p>
+                  {row.rank_change != null && row.rank_change !== 0 && (
+                    <span
+                      className={`flex items-center gap-0.5 text-xs font-semibold ${
+                        row.rank_change > 0 ? (isMe ? 'text-white' : 'text-active') : isMe ? 'text-white/80' : 'text-inactive'
+                      }`}
+                    >
+                      {row.rank_change > 0 ? <ArrowUp size={11} /> : <ArrowDown size={11} />}
+                      {Math.abs(row.rank_change)}
+                    </span>
+                  )}
+                </div>
               </div>
-              <div className="flex-1">
-                <p className="font-semibold">{row.real_name}</p>
-              </div>
-              <p className={`text-sm font-bold ${me && row.student_id === me.id ? 'text-white' : 'text-brand-500'}`}>
-                {row.points} {t('portal:points')}
-              </p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
