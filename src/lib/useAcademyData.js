@@ -404,6 +404,25 @@ export function useAcademyData() {
     }
   }, [touchBackup]);
 
+  // Also deletes the certificate the revoked award held (see
+  // revoke_recognition_award(), migration 0027) - refetch certificates so
+  // Certificates.jsx/MyCertificates.jsx stop showing it without needing
+  // their own reload.
+  const revokeRecognitionAward = useCallback(
+    async (recognitionId, reason) => {
+      try {
+        await db.revokeRecognitionAward(recognitionId, reason);
+        const refreshed = await db.listCertificates();
+        setCertificates(refreshed);
+        touchBackup();
+      } catch (e) {
+        setError('Could not revoke this recognition award. Please try again.');
+        throw e;
+      }
+    },
+    [touchBackup]
+  );
+
   const editCertificate = useCallback(async (id, data) => {
     try {
       const record = await db.updateCertificate(id, data);
@@ -590,6 +609,7 @@ export function useAcademyData() {
     editCertificate,
     removeCertificate,
     finalizeRecognitionWinner,
+    revokeRecognitionAward,
     updateCertificateTemplate,
     addMessage,
     removeMessage,

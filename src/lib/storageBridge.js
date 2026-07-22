@@ -202,11 +202,16 @@ export async function getPeriodBounds(periodType, referenceDate = null) {
 // Same recognition_awards table as getRecognitionAwards() above, just
 // every student's finalized rows instead of one - for the admin
 // Recognition History list, not the student portal.
+// Every status (final/superseded/revoked), not just final - Recognition
+// History (admin) shows the whole correction trail, not just the current
+// state. Callers that only want the current winner per level/period
+// filter client-side (status === 'final'), same as MyRanking's student-
+// facing getRecognitionAwards() already does server-side for its own,
+// narrower purpose.
 export async function listRecognitionAwards() {
   const { data, error } = await supabase
     .from('recognition_awards')
-    .select('id, award_type, level, period_type, period_start, period_end, student_id, points, certificate_id, computed_at')
-    .eq('status', 'final')
+    .select('id, award_type, level, period_type, period_start, period_end, student_id, points, certificate_id, status, superseded_at, computed_at')
     .order('computed_at', { ascending: false });
   if (error) throw error;
   return data;
@@ -230,6 +235,18 @@ export async function finalizeRecognitionWinner({ awardType, level, periodType, 
   });
   if (error) throw error;
   return data[0];
+}
+
+// Cancels a final recognition award outright (no replacement winner) -
+// see migration 0027. Deletes the certificate it held and marks the row
+// 'revoked' rather than deleting it, so recognition_reopen_log's audit
+// trail always has a row to point back to.
+export async function revokeRecognitionAward(recognitionId, reason) {
+  const { error } = await supabase.rpc('revoke_recognition_award', {
+    p_recognition_id: recognitionId,
+    p_reason: reason,
+  });
+  if (error) throw error;
 }
 
 // ---------- Payments ----------
