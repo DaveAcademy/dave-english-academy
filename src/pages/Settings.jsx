@@ -9,6 +9,7 @@ import { useAuth } from '../lib/AuthContext';
 import { signOut } from '../lib/auth';
 import { setLanguage } from '../i18n';
 import CreateUserForm from '../components/admin/CreateUserForm';
+import BulkCreateStudentAccounts from '../components/admin/BulkCreateStudentAccounts';
 
 export default function Settings() {
   const { reloadAll } = useAcademy();
@@ -86,8 +87,9 @@ export default function Settings() {
       )}
 
       {role === 'administrator' && (
-        <div className="mb-4">
+        <div className="mb-4 space-y-4">
           <CreateUserForm />
+          <BulkCreateStudentAccounts />
         </div>
       )}
 

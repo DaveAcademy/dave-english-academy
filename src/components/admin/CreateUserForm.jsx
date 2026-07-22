@@ -15,7 +15,7 @@ export default function CreateUserForm() {
   useEffect(() => {
     if (form.role !== 'student') return;
     supabase
-      .from('students')
+      .from('students_view')
       .select('id, real_name')
       .is('profile_id', null)
       .order('real_name')
