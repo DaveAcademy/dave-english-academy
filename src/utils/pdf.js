@@ -16,11 +16,21 @@ async function loadImageAsDataUrl(url) {
   });
 }
 
-// templateImageUrl is optional - an admin-uploaded background (see
-// Certificates.jsx / migration 0009's certificate_template table). When
-// present it's used full-bleed instead of the built-in design, with the
-// same three text fields overlaid in the same positions either way.
-async function buildCertificateDoc({ studentName, title, issuedDate, templateImageUrl }) {
+// templateImageUrl is optional - an admin-uploaded background, now one per
+// certificate type instead of a single global image (see
+// certificate_templates, migration 0026 - pickCertificateTemplate() below
+// resolves which row applies). When present it's used full-bleed instead
+// of the built-in design.
+//
+// showTitleOverlay defaults to true (matches every template's behavior
+// before 0026) - an admin turns it off per-template when that template's
+// own artwork already states the award, so the title doesn't render
+// twice (or, worse, contradict a different award's template - the actual
+// bug the 2026-07-22 certificate QA pass found: a template already
+// reading "Student Of The Week" with "Student of the Month" overlaid on
+// top of it). studentName and issuedDate always render regardless -
+// neither can ever be baked into a static template image.
+async function buildCertificateDoc({ studentName, title, issuedDate, templateImageUrl, showTitleOverlay = true }) {
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
   const width = doc.internal.pageSize.getWidth();
   const height = doc.internal.pageSize.getHeight();
@@ -47,30 +57,53 @@ async function buildCertificateDoc({ studentName, title, issuedDate, templateIma
     doc.text('This certifies that', width / 2, 75, { align: 'center' });
   }
 
+  doc.setTextColor(15, 55, 63);
+
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(24);
-  doc.setTextColor(15, 55, 63);
   doc.text(studentName, width / 2, 90, { align: 'center' });
 
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(16);
-  doc.text(title, width / 2, 105, { align: 'center' });
+  if (showTitleOverlay) {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(16);
+    doc.text(title, width / 2, 105, { align: 'center' });
+  }
 
+  doc.setFont('helvetica', 'normal');
   doc.setFontSize(11);
   doc.text(`Issued ${issuedDate}`, width / 2, height - 25, { align: 'center' });
 
   return doc;
 }
 
-export async function downloadCertificatePdf({ studentName, title, issuedDate, templateImageUrl }) {
-  const doc = await buildCertificateDoc({ studentName, title, issuedDate, templateImageUrl });
+export async function downloadCertificatePdf({ studentName, title, issuedDate, templateImageUrl, showTitleOverlay }) {
+  const doc = await buildCertificateDoc({ studentName, title, issuedDate, templateImageUrl, showTitleOverlay });
   doc.save(`${studentName.replace(/\s+/g, '-')}-${title.replace(/\s+/g, '-')}.pdf`);
 }
 
-export async function printCertificatePdf({ studentName, title, issuedDate, templateImageUrl }) {
-  const doc = await buildCertificateDoc({ studentName, title, issuedDate, templateImageUrl });
+export async function printCertificatePdf({ studentName, title, issuedDate, templateImageUrl, showTitleOverlay }) {
+  const doc = await buildCertificateDoc({ studentName, title, issuedDate, templateImageUrl, showTitleOverlay });
   doc.autoPrint();
   window.open(doc.output('bloburl'), '_blank');
+}
+
+// Maps a certificate's title to the certificate_templates row it should
+// use. Only the two hardcoded titles finalize_recognition_winner() ever
+// sets (migration 0025) get a dedicated key - any other title (the
+// free-text "Issue certificate" form, or a future award type with no
+// migrated template yet) uses 'default'. Falls back to the 'default' row
+// if the specific key has no image uploaded yet, so an admin can adopt
+// per-type templates gradually - nothing breaks in the meantime.
+const TITLE_TEMPLATE_KEYS = {
+  'Student of the Week': 'student_of_week',
+  'Student of the Month': 'student_of_month',
+};
+
+export function pickCertificateTemplate(templates, title) {
+  const key = TITLE_TEMPLATE_KEYS[title] || 'default';
+  const specific = templates.find((t) => t.key === key);
+  if (specific?.file_url) return specific;
+  return templates.find((t) => t.key === 'default') || null;
 }
 
 export function downloadReportPdf({ title, columns, rows, subtitle }) {

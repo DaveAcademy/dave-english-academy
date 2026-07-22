@@ -185,6 +185,53 @@ export async function getRecognitionAwards(studentId) {
   return data;
 }
 
+// ---------- Recognition (admin Student of the Week/Month workflow) ----------
+// See migration 0025. week_bounds()/month_bounds() (0023) stay the single
+// source of truth for what a "week"/"month" is - the client never computes
+// period boundaries itself, only navigates by passing a reference_date
+// derived from a period_start/period_end it already received back.
+export async function getPeriodBounds(periodType, referenceDate = null) {
+  const { data, error } = await supabase.rpc('get_period_bounds', {
+    p_period_type: periodType,
+    p_reference_date: referenceDate,
+  });
+  if (error) throw error;
+  return data[0];
+}
+
+// Same recognition_awards table as getRecognitionAwards() above, just
+// every student's finalized rows instead of one - for the admin
+// Recognition History list, not the student portal.
+export async function listRecognitionAwards() {
+  const { data, error } = await supabase
+    .from('recognition_awards')
+    .select('id, award_type, level, period_type, period_start, period_end, student_id, points, certificate_id, computed_at')
+    .eq('status', 'final')
+    .order('computed_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+// The only write path into recognition_awards (see migration 0025's RLS
+// note) - a plain client insert would be rejected, this is a
+// SECURITY DEFINER RPC that recomputes the student's period points from
+// the ledger itself (never trusts a client-supplied value), then inserts
+// the recognition_awards row and issues the certificate in one
+// transaction.
+export async function finalizeRecognitionWinner({ awardType, level, periodType, periodStart, periodEnd, studentId, reason }) {
+  const { data, error } = await supabase.rpc('finalize_recognition_winner', {
+    p_award_type: awardType,
+    p_level: level,
+    p_period_type: periodType,
+    p_period_start: periodStart,
+    p_period_end: periodEnd,
+    p_student_id: studentId,
+    p_reason: reason ?? null,
+  });
+  if (error) throw error;
+  return data[0];
+}
+
 // ---------- Payments ----------
 
 export async function listPayments() {
@@ -558,22 +605,26 @@ export async function markMessageRead(messageId, profileId) {
   if (error) throw error;
 }
 
-// ---------- Certificate template ----------
+// ---------- Certificate templates (one row per certificate type) ----------
+// See migration 0026 - replaces a single global template with one row per
+// key ('default', 'student_of_week', 'student_of_month', ...), so
+// different award types can each have their own background image instead
+// of fighting over one shared slot.
 
-export async function getCertificateTemplate() {
-  const { data, error } = await supabase.from('certificate_template').select('*').eq('id', true).single();
+export async function listCertificateTemplates() {
+  const { data, error } = await supabase.from('certificate_templates').select('*').order('id');
   if (error) throw error;
   return data;
 }
 
-export async function setCertificateTemplate({ file_url, file_name }) {
-  const { data: rows, error } = await supabase
-    .from('certificate_template')
-    .update({ file_url, file_name, updated_at: new Date().toISOString() })
-    .eq('id', true)
-    .select();
+export async function setCertificateTemplate(key, { file_url, file_name, show_title_overlay }) {
+  const patch = { updated_at: new Date().toISOString() };
+  if (file_url !== undefined) patch.file_url = file_url;
+  if (file_name !== undefined) patch.file_name = file_name;
+  if (show_title_overlay !== undefined) patch.show_title_overlay = show_title_overlay;
+  const { data: rows, error } = await supabase.from('certificate_templates').update(patch).eq('key', key).select();
   if (error) throw error;
-  return assertRows(rows, 'update the certificate template')[0];
+  return assertRows(rows, 'update this certificate template')[0];
 }
 
 // ---------- File library (Phase 10: centralized file manager) ----------

@@ -19,6 +19,7 @@ import {
   BarChart3,
   MessageSquare,
   FolderOpen,
+  Medal,
 } from 'lucide-react';
 import { useAuth } from '../lib/AuthContext';
 import { useAcademy } from '../lib/AcademyDataContext';
@@ -36,6 +37,7 @@ const NAV_ITEMS = [
   { to: '/homework', label: 'homework', shortLabel: 'homeworkShort', Icon: BookOpen },
   { to: '/certificates', label: 'certificates', shortLabel: 'certificatesShort', Icon: Award },
   { to: '/rankings', label: 'rankings', shortLabel: 'rankingsShort', Icon: Trophy },
+  { to: '/recognition', label: 'recognition', shortLabel: 'recognitionShort', Icon: Medal, adminOnly: true },
   { to: '/reports', label: 'reports', shortLabel: 'reportsShort', Icon: BarChart3, adminOnly: true },
   { to: '/chat', label: 'messages', shortLabel: 'messagesShort', Icon: MessageSquare },
   { to: '/files', label: 'files', shortLabel: 'filesShort', Icon: FolderOpen },

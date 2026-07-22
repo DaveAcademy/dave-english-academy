@@ -4,27 +4,45 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Award, Download, Printer, MessageSquare } from 'lucide-react';
 import { useAcademy } from '../../lib/AcademyDataContext';
-import { downloadCertificatePdf, printCertificatePdf } from '../../utils/pdf';
+import { downloadCertificatePdf, printCertificatePdf, pickCertificateTemplate } from '../../utils/pdf';
 import { getAttachmentUrl } from '../../lib/db';
 
 export default function MyCertificates() {
   const { t } = useTranslation('portal');
-  const { students, certificates, certificateTemplate } = useAcademy();
+  const { students, certificates, certificateTemplates } = useAcademy();
   const me = students[0];
 
-  const resolveTemplateUrl = async () => {
-    if (!certificateTemplate?.file_url) return null;
-    return getAttachmentUrl(certificateTemplate.file_url);
+  // See Certificates.jsx's resolveTemplate() - same per-type resolution
+  // (migration 0026), duplicated here rather than shared since each page
+  // already had its own near-identical copy before that redesign too.
+  const resolveTemplate = async (title) => {
+    const row = pickCertificateTemplate(certificateTemplates, title);
+    return {
+      templateImageUrl: row?.file_url ? await getAttachmentUrl(row.file_url) : null,
+      showTitleOverlay: row?.show_title_overlay ?? true,
+    };
   };
 
   const handleDownload = async (c) => {
-    const templateImageUrl = await resolveTemplateUrl();
-    await downloadCertificatePdf({ studentName: me?.real_name || 'Student', title: c.title, issuedDate: c.issued_date, templateImageUrl });
+    const { templateImageUrl, showTitleOverlay } = await resolveTemplate(c.title);
+    await downloadCertificatePdf({
+      studentName: me?.real_name || 'Student',
+      title: c.title,
+      issuedDate: c.issued_date,
+      templateImageUrl,
+      showTitleOverlay,
+    });
   };
 
   const handlePrint = async (c) => {
-    const templateImageUrl = await resolveTemplateUrl();
-    await printCertificatePdf({ studentName: me?.real_name || 'Student', title: c.title, issuedDate: c.issued_date, templateImageUrl });
+    const { templateImageUrl, showTitleOverlay } = await resolveTemplate(c.title);
+    await printCertificatePdf({
+      studentName: me?.real_name || 'Student',
+      title: c.title,
+      issuedDate: c.issued_date,
+      templateImageUrl,
+      showTitleOverlay,
+    });
   };
 
   return (

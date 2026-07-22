@@ -7,19 +7,19 @@ import { useAcademy } from '../lib/AcademyDataContext';
 import { useAuth } from '../lib/AuthContext';
 import { LevelBadge } from '../components/Badge';
 import ConfirmDialog from '../components/ConfirmDialog';
-import { downloadCertificatePdf, printCertificatePdf } from '../utils/pdf';
+import { downloadCertificatePdf, printCertificatePdf, pickCertificateTemplate } from '../utils/pdf';
 import { uploadAttachment, getAttachmentUrl } from '../lib/db';
 
 const EMPTY_FORM = { studentId: '', title: '' };
 
 export default function Certificates() {
-  const { students, certificates, certificateTemplate, addCertificate, editCertificate, removeCertificate, updateCertificateTemplate, error } =
+  const { students, certificates, certificateTemplates, addCertificate, editCertificate, removeCertificate, updateCertificateTemplate, error } =
     useAcademy();
   const { role } = useAuth();
   const isAdmin = role === 'administrator';
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
-  const [uploadingTemplate, setUploadingTemplate] = useState(false);
+  const [uploadingKey, setUploadingKey] = useState(null);
 
   const [filters, setFilters] = useState({ search: '', level: '', studentId: '', type: '' });
   const [editingId, setEditingId] = useState(null);
@@ -114,33 +114,53 @@ export default function Certificates() {
     }
   };
 
-  // certificate_template.file_url is a storage path, not a real URL (the
-  // bucket is private) - resolve a short-lived signed URL right before
-  // generating a PDF rather than caching one, so it can never go stale.
-  const resolveTemplateUrl = async () => {
-    if (!certificateTemplate?.file_url) return null;
-    return getAttachmentUrl(certificateTemplate.file_url);
+  // Resolves which certificate_templates row applies to this title (see
+  // migration 0026 / pickCertificateTemplate()), then turns its storage
+  // path into a short-lived signed URL right before generating a PDF
+  // rather than caching one, so it can never go stale.
+  const resolveTemplate = async (title) => {
+    const row = pickCertificateTemplate(certificateTemplates, title);
+    return {
+      templateImageUrl: row?.file_url ? await getAttachmentUrl(row.file_url) : null,
+      showTitleOverlay: row?.show_title_overlay ?? true,
+    };
   };
 
   const handleDownload = async (c, student) => {
-    const templateImageUrl = await resolveTemplateUrl();
-    await downloadCertificatePdf({ studentName: student?.real_name || 'Student', title: c.title, issuedDate: c.issued_date, templateImageUrl });
+    const { templateImageUrl, showTitleOverlay } = await resolveTemplate(c.title);
+    await downloadCertificatePdf({
+      studentName: student?.real_name || 'Student',
+      title: c.title,
+      issuedDate: c.issued_date,
+      templateImageUrl,
+      showTitleOverlay,
+    });
   };
 
   const handlePrint = async (c, student) => {
-    const templateImageUrl = await resolveTemplateUrl();
-    await printCertificatePdf({ studentName: student?.real_name || 'Student', title: c.title, issuedDate: c.issued_date, templateImageUrl });
+    const { templateImageUrl, showTitleOverlay } = await resolveTemplate(c.title);
+    await printCertificatePdf({
+      studentName: student?.real_name || 'Student',
+      title: c.title,
+      issuedDate: c.issued_date,
+      templateImageUrl,
+      showTitleOverlay,
+    });
   };
 
-  const handleTemplateUpload = async (file) => {
+  const handleTemplateUpload = async (key, file) => {
     if (!file) return;
-    setUploadingTemplate(true);
+    setUploadingKey(key);
     try {
       const uploaded = await uploadAttachment(file, 'certificate-template');
-      await updateCertificateTemplate({ file_url: uploaded.path, file_name: uploaded.name });
+      await updateCertificateTemplate(key, { file_url: uploaded.path, file_name: uploaded.name });
     } finally {
-      setUploadingTemplate(false);
+      setUploadingKey(null);
     }
+  };
+
+  const handleToggleShowTitle = async (key, checked) => {
+    await updateCertificateTemplate(key, { show_title_overlay: checked });
   };
 
   return (
@@ -156,23 +176,42 @@ export default function Certificates() {
         <section className="mb-4 rounded-xl bg-white p-4 shadow-card">
           <div className="mb-1 flex items-center gap-2">
             <ImageIcon size={16} className="text-brand-500" />
-            <h2 className="font-display text-sm font-bold text-ink">Certificate template</h2>
+            <h2 className="font-display text-sm font-bold text-ink">Certificate templates</h2>
           </div>
           <p className="mb-3 text-xs text-ink/50">
-            {certificateTemplate?.file_name
-              ? `Currently using "${certificateTemplate.file_name}" as the background for every generated certificate.`
-              : 'No template uploaded yet - certificates use the built-in design below.'}
+            Set a background image per certificate type. A type with no image of its own falls back to the default template, then to
+            the built-in design.
           </p>
-          <label className="flex w-fit cursor-pointer items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-xs font-semibold text-brand-500 hover:bg-brand-50">
-            <ImageIcon size={13} /> {uploadingTemplate ? 'Uploading...' : certificateTemplate?.file_url ? 'Replace template image' : 'Upload template image'}
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              disabled={uploadingTemplate}
-              onChange={(e) => handleTemplateUpload(e.target.files?.[0])}
-            />
-          </label>
+          <div className="space-y-2">
+            {certificateTemplates.map((tpl) => (
+              <div key={tpl.key} className="flex flex-wrap items-center gap-3 rounded-lg border border-ink/10 p-3">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-ink">{tpl.label}</p>
+                  <p className="text-xs text-ink/50">{tpl.file_name || 'No image uploaded - falls back to the default template.'}</p>
+                </div>
+                {tpl.file_url && (
+                  <label className="flex flex-shrink-0 cursor-pointer items-center gap-1.5 text-xs text-ink/60">
+                    <input
+                      type="checkbox"
+                      checked={tpl.show_title_overlay}
+                      onChange={(e) => handleToggleShowTitle(tpl.key, e.target.checked)}
+                    />
+                    Show award title text
+                  </label>
+                )}
+                <label className="flex flex-shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-xs font-semibold text-brand-500 hover:bg-brand-50">
+                  <ImageIcon size={13} /> {uploadingKey === tpl.key ? 'Uploading...' : tpl.file_url ? 'Replace image' : 'Upload image'}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={!!uploadingKey}
+                    onChange={(e) => handleTemplateUpload(tpl.key, e.target.files?.[0])}
+                  />
+                </label>
+              </div>
+            ))}
+          </div>
         </section>
       )}
 

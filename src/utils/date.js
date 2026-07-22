@@ -4,6 +4,23 @@ export function todayISO() {
   return new Date().toISOString().slice(0, 10);
 }
 
+// Pure calendar-component arithmetic on a "YYYY-MM-DD" string via
+// Date.UTC, deliberately never touching the browser's local timezone -
+// unlike `new Date(iso)` + local getters, this can't shift the result by
+// a day depending on where the browser is. Used for period navigation
+// (recognition week/month prev/next): the result only needs to land
+// somewhere inside the target period, since the server's week_bounds()/
+// month_bounds() snap it to the real boundaries.
+export function addDaysISO(iso, days) {
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
+}
+
+export function addMonthsISO(iso, months) {
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1 + months, d)).toISOString().slice(0, 10);
+}
+
 /** Days from today until a given day-of-month next occurs.
  * 0 = due today, negative = already passed this month (overdue), positive = upcoming. */
 export function daysUntilDue(deadlineDay) {
