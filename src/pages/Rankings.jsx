@@ -9,11 +9,12 @@
 // the rank list (and the student portal's leaderboard) reflect it, same
 // as before from this page's point of view.
 
-import { useState, useMemo } from 'react';
-import { Minus, Plus } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { Minus, Plus, Tag } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { useAuth } from '../lib/AuthContext';
 import { LevelBadge } from '../components/Badge';
+import { listPointCategories } from '../lib/db';
 
 export default function Rankings() {
   const { students, awardStudentPoints, error } = useAcademy();
@@ -21,6 +22,20 @@ export default function Rankings() {
   const isAdmin = role === 'administrator';
 
   const [pendingId, setPendingId] = useState(null);
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    listPointCategories()
+      .then((rows) => setCategories(rows || []))
+      .catch(() => setCategories([]));
+  }, [isAdmin]);
+
+  const categoryByKey = useMemo(() => {
+    const map = {};
+    for (const c of categories) map[c.key] = c;
+    return map;
+  }, [categories]);
 
   const ranked = useMemo(() => {
     return students
@@ -35,12 +50,14 @@ export default function Rankings() {
     const current = Number(student.points || 0);
     const delta = value - current;
     if (!Number.isFinite(value) || delta === 0) return;
+    const categoryKey = delta > 0 ? 'bonus' : 'penalty';
     setPendingId(student.id);
     try {
       await awardStudentPoints({
         studentId: student.id,
         level: student.level,
-        categoryKey: delta > 0 ? 'bonus' : 'penalty',
+        categoryId: categoryByKey[categoryKey]?.id ?? null,
+        categoryKey,
         points: delta,
         reason: 'Manual adjustment via Rankings page',
         awardedBy: session.user.id,
@@ -51,6 +68,53 @@ export default function Rankings() {
   };
 
   const adjustPoints = (student, delta) => commitPoints(student, Number(student.points || 0) + delta);
+
+  // Deliberate, category-aware awarding - separate from the quick +/-
+  // above, which is for fast one-off adjustments and always tags
+  // generically as bonus/penalty. This is for "Homework +10",
+  // "Behavior -5", etc., with a real reason attached to the ledger row.
+  const [awardStudentId, setAwardStudentId] = useState('');
+  const [awardCategoryId, setAwardCategoryId] = useState('');
+  const [awardPointsValue, setAwardPointsValue] = useState('');
+  const [awardReason, setAwardReason] = useState('');
+  const [awardPending, setAwardPending] = useState(false);
+  const [awardMessage, setAwardMessage] = useState('');
+
+  const handleCategoryChange = (categoryId) => {
+    setAwardCategoryId(categoryId);
+    const cat = categories.find((c) => String(c.id) === String(categoryId));
+    if (cat) setAwardPointsValue(String(cat.default_points));
+  };
+
+  const submitAward = async (e) => {
+    e.preventDefault();
+    const student = students.find((s) => String(s.id) === String(awardStudentId));
+    const category = categories.find((c) => String(c.id) === String(awardCategoryId));
+    const points = Number(awardPointsValue);
+    if (!student || !category || !Number.isFinite(points) || points === 0) return;
+    setAwardPending(true);
+    setAwardMessage('');
+    try {
+      await awardStudentPoints({
+        studentId: student.id,
+        level: student.level,
+        categoryId: category.id,
+        categoryKey: category.key,
+        points,
+        reason: awardReason.trim() || null,
+        awardedBy: session.user.id,
+      });
+      setAwardMessage(`Awarded ${points > 0 ? '+' : ''}${points} to ${student.real_name}.`);
+      setAwardStudentId('');
+      setAwardCategoryId('');
+      setAwardPointsValue('');
+      setAwardReason('');
+    } catch {
+      setAwardMessage('Could not award points. Please try again.');
+    } finally {
+      setAwardPending(false);
+    }
+  };
 
   const medal = (i) => (i === 0 ? 'bg-levelB' : i === 1 ? 'bg-ink/20' : i === 2 ? 'bg-levelA' : 'bg-ink/5');
   const medalText = (i) => (i <= 2 ? 'text-white' : 'text-ink/50');
@@ -65,6 +129,67 @@ export default function Rankings() {
       </header>
 
       {error && <div className="mb-4 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{error}</div>}
+
+      {isAdmin && (
+        <section className="mb-4 rounded-xl bg-white p-4 shadow-card">
+          <div className="mb-3 flex items-center gap-2">
+            <Tag size={16} className="text-brand-500" />
+            <h2 className="font-display text-sm font-bold text-ink">Award points by category</h2>
+          </div>
+          <form onSubmit={submitAward} className="grid gap-2 sm:grid-cols-4">
+            <select
+              value={awardStudentId}
+              onChange={(e) => setAwardStudentId(e.target.value)}
+              className="input sm:col-span-1"
+              required
+            >
+              <option value="">Select student...</option>
+              {ranked.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.real_name}
+                </option>
+              ))}
+            </select>
+            <select
+              value={awardCategoryId}
+              onChange={(e) => handleCategoryChange(e.target.value)}
+              className="input sm:col-span-1"
+              required
+            >
+              <option value="">Select category...</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.icon} {c.name}
+                </option>
+              ))}
+            </select>
+            <input
+              type="number"
+              step="1"
+              value={awardPointsValue}
+              onChange={(e) => setAwardPointsValue(e.target.value)}
+              placeholder="Points"
+              className="input sm:col-span-1"
+              required
+            />
+            <input
+              type="text"
+              value={awardReason}
+              onChange={(e) => setAwardReason(e.target.value)}
+              placeholder="Reason (optional)"
+              className="input sm:col-span-1"
+            />
+            <button
+              type="submit"
+              disabled={awardPending}
+              className="rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-50 sm:col-span-4"
+            >
+              {awardPending ? 'Awarding...' : 'Award points'}
+            </button>
+          </form>
+          {awardMessage && <p className="mt-2 text-sm text-ink/60">{awardMessage}</p>}
+        </section>
+      )}
 
       {ranked.length === 0 ? (
         <div className="rounded-xl bg-white p-10 text-center shadow-card">

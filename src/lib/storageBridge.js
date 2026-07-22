@@ -77,16 +77,31 @@ export async function deleteStudent(id) {
 // admin included - there is no other way left to change it. `level` must
 // match the target student's own level (enforced by a database trigger
 // too), so callers pass the student's current level, not an arbitrary one.
-export async function awardPoints({ studentId, level, categoryKey, points, reason, awardedBy }) {
+export async function awardPoints({ studentId, level, categoryId, categoryKey, points, reason, awardedBy }) {
   const { error } = await supabase.from('point_transactions').insert({
     student_id: studentId,
     level,
+    category_id: categoryId ?? null,
     category_key: categoryKey,
     points,
     reason,
     awarded_by: awardedBy,
   });
   if (error) throw error;
+}
+
+// Active categories in display order - id is what makes get_my_point_history()
+// resolve the real name/icon instead of falling back to a generic one (see
+// migration 0023); category_key alone (the pre-existing quick +/- flow) only
+// gets a guessed name via initcap(), never the configured icon.
+export async function listPointCategories() {
+  const { data, error } = await supabase
+    .from('point_categories')
+    .select('id, key, name, icon, default_points')
+    .eq('active', true)
+    .order('sort_order');
+  if (error) throw error;
+  return data;
 }
 
 // The student's own ledger, newest first - category name/icon already
