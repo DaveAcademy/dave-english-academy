@@ -89,6 +89,29 @@ export async function awardPoints({ studentId, level, categoryKey, points, reaso
   if (error) throw error;
 }
 
+// The student's own ledger, newest first - category name/icon already
+// resolved server-side (see migration 0023) since a student's RLS-scoped
+// reads can't join point_categories themselves.
+export async function getMyPointHistory() {
+  const { data, error } = await supabase.rpc('get_my_point_history');
+  if (error) throw error;
+  return data;
+}
+
+// Finalized (not superseded) recognition awards for one student - the
+// table is readable by any signed-in user (see migration 0022), so this
+// is a plain filtered select rather than an RPC.
+export async function getRecognitionAwards(studentId) {
+  const { data, error } = await supabase
+    .from('recognition_awards')
+    .select('id, award_type, level, period_type, period_start, period_end, points, is_co_winner')
+    .eq('student_id', studentId)
+    .eq('status', 'final')
+    .order('period_start', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
 // ---------- Payments ----------
 
 export async function listPayments() {

@@ -64,6 +64,13 @@ export function formatDateTime(date, locale = 'en-US') {
   return date.toLocaleString('en-US');
 }
 
+/** Compact day-month only, no weekday - for list rows (point history,
+ * recognition period ranges) where a full date reads as clutter. */
+export function formatMonthDay(date, locale = 'en-US') {
+  if (locale === 'uz') return uzDayMonth(date);
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
 /** { year, month } for the current month and the one directly before it. */
 export function currentAndPreviousMonth(date = new Date()) {
   const y = date.getFullYear();
