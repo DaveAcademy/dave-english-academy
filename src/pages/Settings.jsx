@@ -10,6 +10,7 @@ import { signOut } from '../lib/auth';
 import { setLanguage } from '../i18n';
 import CreateUserForm from '../components/admin/CreateUserForm';
 import BulkCreateStudentAccounts from '../components/admin/BulkCreateStudentAccounts';
+import TeacherGroupAssignments from '../components/admin/TeacherGroupAssignments';
 
 export default function Settings() {
   const { reloadAll } = useAcademy();
@@ -90,6 +91,7 @@ export default function Settings() {
         <div className="mb-4 space-y-4">
           <CreateUserForm />
           <BulkCreateStudentAccounts />
+          <TeacherGroupAssignments />
         </div>
       )}
 

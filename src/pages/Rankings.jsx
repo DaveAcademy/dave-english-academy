@@ -14,22 +14,39 @@ import { Minus, Plus, Tag } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { useAuth } from '../lib/AuthContext';
 import { LevelBadge } from '../components/Badge';
-import { listPointCategories } from '../lib/db';
+import { listPointCategories, listMyTeacherLevels } from '../lib/db';
 
 export default function Rankings() {
   const { students, awardStudentPoints, error } = useAcademy();
   const { role, session } = useAuth();
   const isAdmin = role === 'administrator';
+  const isTeacher = role === 'teacher';
+  const canAwardAtAll = isAdmin || isTeacher;
 
   const [pendingId, setPendingId] = useState(null);
   const [categories, setCategories] = useState([]);
+  const [teacherLevels, setTeacherLevels] = useState(null);
 
   useEffect(() => {
-    if (!isAdmin) return;
+    if (!canAwardAtAll) return;
     listPointCategories()
       .then((rows) => setCategories(rows || []))
       .catch(() => setCategories([]));
-  }, [isAdmin]);
+  }, [canAwardAtAll]);
+
+  useEffect(() => {
+    if (!isTeacher || !session?.user?.id) return;
+    listMyTeacherLevels(session.user.id)
+      .then((levels) => setTeacherLevels(levels || []))
+      .catch(() => setTeacherLevels([]));
+  }, [isTeacher, session?.user?.id]);
+
+  // Admin can award for any level. A teacher can only award for levels
+  // they're assigned to (see migration 0017) - this is a UX nicety, not
+  // the actual security boundary, which the database enforces
+  // independently on every insert (RLS policy + a BEFORE INSERT trigger
+  // that checks the target student's real level, see migration 0019).
+  const canAwardLevel = (level) => isAdmin || (isTeacher && (teacherLevels || []).includes(level));
 
   const categoryByKey = useMemo(() => {
     const map = {};
@@ -44,8 +61,10 @@ export default function Rankings() {
       .sort((a, b) => b.points - a.points || a.real_name.localeCompare(b.real_name));
   }, [students]);
 
+  const awardableStudents = useMemo(() => ranked.filter((s) => canAwardLevel(s.level)), [ranked, isAdmin, isTeacher, teacherLevels]);
+
   const commitPoints = async (student, nextPoints) => {
-    if (!isAdmin) return;
+    if (!canAwardLevel(student.level)) return;
     const value = Number(nextPoints);
     const current = Number(student.points || 0);
     const delta = value - current;
@@ -91,7 +110,7 @@ export default function Rankings() {
     const student = students.find((s) => String(s.id) === String(awardStudentId));
     const category = categories.find((c) => String(c.id) === String(awardCategoryId));
     const points = Number(awardPointsValue);
-    if (!student || !category || !Number.isFinite(points) || points === 0) return;
+    if (!student || !category || !Number.isFinite(points) || points === 0 || !canAwardLevel(student.level)) return;
     setAwardPending(true);
     setAwardMessage('');
     try {
@@ -124,13 +143,21 @@ export default function Rankings() {
       <header className="mb-4">
         <h1 className="font-display text-2xl font-bold text-ink">Rankings</h1>
         <p className="mt-1 text-sm text-ink/50">
-          {isAdmin ? 'Points are fully editable - add, subtract, or set an exact total for any student.' : 'Ranked by points.'}
+          {isAdmin
+            ? 'Points are fully editable - add, subtract, or set an exact total for any student.'
+            : isTeacher
+              ? teacherLevels === null
+                ? 'Loading your assigned levels...'
+                : teacherLevels.length > 0
+                  ? `Points are editable for your assigned level(s): ${teacherLevels.join(', ')}.`
+                  : "You haven't been assigned to any levels yet - ask your administrator."
+              : 'Ranked by points.'}
         </p>
       </header>
 
       {error && <div className="mb-4 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{error}</div>}
 
-      {isAdmin && (
+      {canAwardAtAll && awardableStudents.length > 0 && (
         <section className="mb-4 rounded-xl bg-white p-4 shadow-card">
           <div className="mb-3 flex items-center gap-2">
             <Tag size={16} className="text-brand-500" />
@@ -144,7 +171,7 @@ export default function Rankings() {
               required
             >
               <option value="">Select student...</option>
-              {ranked.map((s) => (
+              {awardableStudents.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.real_name}
                 </option>
@@ -219,7 +246,7 @@ export default function Rankings() {
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        {isAdmin ? (
+                        {canAwardLevel(s.level) ? (
                           <div className="flex items-center gap-1.5">
                             <button
                               type="button"
@@ -280,7 +307,7 @@ export default function Rankings() {
                     <LevelBadge level={s.level} />
                   </div>
                 </div>
-                {isAdmin ? (
+                {canAwardLevel(s.level) ? (
                   <div className="flex flex-shrink-0 items-center gap-1">
                     <button
                       type="button"

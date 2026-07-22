@@ -104,6 +104,42 @@ export async function listPointCategories() {
   return data;
 }
 
+// Which levels (A/B/C) a teacher may award points for (see migration
+// 0017) - the database enforces this independently on every insert
+// (RLS + a BEFORE INSERT trigger, see 0019), so this is only for
+// deciding what the UI shows, not the actual security boundary.
+export async function listMyTeacherLevels(teacherId) {
+  const { data, error } = await supabase.from('teacher_group_assignments').select('level').eq('teacher_id', teacherId);
+  if (error) throw error;
+  return (data || []).map((r) => r.level);
+}
+
+// Admin-only: every teacher account, so the assignment UI can show
+// teachers with zero levels assigned too, not just ones already assigned.
+export async function listTeachers() {
+  const { data, error } = await supabase.from('profiles').select('id, full_name, email').eq('role', 'teacher').order('full_name');
+  if (error) throw error;
+  return data;
+}
+
+// Admin-only: every teacher's level assignments, combined client-side
+// with listTeachers() so the UI can show teachers with zero levels too.
+export async function listTeacherGroupAssignments() {
+  const { data, error } = await supabase.from('teacher_group_assignments').select('id, teacher_id, level').order('level');
+  if (error) throw error;
+  return data;
+}
+
+export async function addTeacherGroupAssignment(teacherId, level) {
+  const { error } = await supabase.from('teacher_group_assignments').insert({ teacher_id: teacherId, level });
+  if (error) throw error;
+}
+
+export async function removeTeacherGroupAssignment(id) {
+  const { error } = await supabase.from('teacher_group_assignments').delete().eq('id', id);
+  if (error) throw error;
+}
+
 // The student's own ledger, newest first - category name/icon already
 // resolved server-side (see migration 0023) since a student's RLS-scoped
 // reads can't join point_categories themselves.
