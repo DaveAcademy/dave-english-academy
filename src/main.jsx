@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
 import './index.css';
+import './i18n';
 
 // The PWA service worker updates in the background (registerType:
 // 'autoUpdate'), but an already-open tab keeps running its old JS until
