@@ -69,6 +69,186 @@ export async function deleteStudent(id) {
   return true;
 }
 
+// ---------- Points ledger ----------
+// students.points is now a database-maintained cache (see migrations
+// 0019/0020): every award inserts a point_transactions row, and a
+// trigger recomputes the cached total from the ledger. The database
+// itself revokes UPDATE on students.points from every application role,
+// admin included - there is no other way left to change it. `level` must
+// match the target student's own level (enforced by a database trigger
+// too), so callers pass the student's current level, not an arbitrary one.
+export async function awardPoints({ studentId, level, categoryId, categoryKey, points, reason, awardedBy }) {
+  const { error } = await supabase.from('point_transactions').insert({
+    student_id: studentId,
+    level,
+    category_id: categoryId ?? null,
+    category_key: categoryKey,
+    points,
+    reason,
+    awarded_by: awardedBy,
+  });
+  if (error) throw error;
+}
+
+// Same ledger, same RLS/trigger enforcement per row as awardPoints() above -
+// just N rows in one request instead of N requests, for the class/group
+// award workflow. Each entry is independently subject to the teacher-level
+// RLS check and the level-matches-student trigger, so a batch spanning
+// students a caller isn't allowed to award for fails atomically (the whole
+// insert rolls back), not partially.
+export async function bulkAwardPoints(entries) {
+  if (!entries.length) return;
+  const { error } = await supabase.from('point_transactions').insert(
+    entries.map(({ studentId, level, categoryId, categoryKey, points, reason, awardedBy }) => ({
+      student_id: studentId,
+      level,
+      category_id: categoryId ?? null,
+      category_key: categoryKey,
+      points,
+      reason,
+      awarded_by: awardedBy,
+    }))
+  );
+  if (error) throw error;
+}
+
+// Active categories in display order - id is what makes get_my_point_history()
+// resolve the real name/icon instead of falling back to a generic one (see
+// migration 0023); category_key alone (the pre-existing quick +/- flow) only
+// gets a guessed name via initcap(), never the configured icon.
+export async function listPointCategories() {
+  const { data, error } = await supabase
+    .from('point_categories')
+    .select('id, key, name, icon, default_points')
+    .eq('active', true)
+    .order('sort_order');
+  if (error) throw error;
+  return data;
+}
+
+// Which levels (A/B/C) a teacher may award points for (see migration
+// 0017) - the database enforces this independently on every insert
+// (RLS + a BEFORE INSERT trigger, see 0019), so this is only for
+// deciding what the UI shows, not the actual security boundary.
+export async function listMyTeacherLevels(teacherId) {
+  const { data, error } = await supabase.from('teacher_group_assignments').select('level').eq('teacher_id', teacherId);
+  if (error) throw error;
+  return (data || []).map((r) => r.level);
+}
+
+// Admin-only: every teacher account, so the assignment UI can show
+// teachers with zero levels assigned too, not just ones already assigned.
+export async function listTeachers() {
+  const { data, error } = await supabase.from('profiles').select('id, full_name, email').eq('role', 'teacher').order('full_name');
+  if (error) throw error;
+  return data;
+}
+
+// Admin-only: every teacher's level assignments, combined client-side
+// with listTeachers() so the UI can show teachers with zero levels too.
+export async function listTeacherGroupAssignments() {
+  const { data, error } = await supabase.from('teacher_group_assignments').select('id, teacher_id, level').order('level');
+  if (error) throw error;
+  return data;
+}
+
+export async function addTeacherGroupAssignment(teacherId, level) {
+  const { error } = await supabase.from('teacher_group_assignments').insert({ teacher_id: teacherId, level });
+  if (error) throw error;
+}
+
+export async function removeTeacherGroupAssignment(id) {
+  const { error } = await supabase.from('teacher_group_assignments').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// The student's own ledger, newest first - category name/icon already
+// resolved server-side (see migration 0023) since a student's RLS-scoped
+// reads can't join point_categories themselves.
+export async function getMyPointHistory() {
+  const { data, error } = await supabase.rpc('get_my_point_history');
+  if (error) throw error;
+  return data;
+}
+
+// Finalized (not superseded) recognition awards for one student - the
+// table is readable by any signed-in user (see migration 0022), so this
+// is a plain filtered select rather than an RPC.
+export async function getRecognitionAwards(studentId) {
+  const { data, error } = await supabase
+    .from('recognition_awards')
+    .select('id, award_type, level, period_type, period_start, period_end, points, is_co_winner')
+    .eq('student_id', studentId)
+    .eq('status', 'final')
+    .order('period_start', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+// ---------- Recognition (admin Student of the Week/Month workflow) ----------
+// See migration 0025. week_bounds()/month_bounds() (0023) stay the single
+// source of truth for what a "week"/"month" is - the client never computes
+// period boundaries itself, only navigates by passing a reference_date
+// derived from a period_start/period_end it already received back.
+export async function getPeriodBounds(periodType, referenceDate = null) {
+  const { data, error } = await supabase.rpc('get_period_bounds', {
+    p_period_type: periodType,
+    p_reference_date: referenceDate,
+  });
+  if (error) throw error;
+  return data[0];
+}
+
+// Same recognition_awards table as getRecognitionAwards() above, just
+// every student's finalized rows instead of one - for the admin
+// Recognition History list, not the student portal.
+// Every status (final/superseded/revoked), not just final - Recognition
+// History (admin) shows the whole correction trail, not just the current
+// state. Callers that only want the current winner per level/period
+// filter client-side (status === 'final'), same as MyRanking's student-
+// facing getRecognitionAwards() already does server-side for its own,
+// narrower purpose.
+export async function listRecognitionAwards() {
+  const { data, error } = await supabase
+    .from('recognition_awards')
+    .select('id, award_type, level, period_type, period_start, period_end, student_id, points, certificate_id, status, superseded_at, computed_at')
+    .order('computed_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+// The only write path into recognition_awards (see migration 0025's RLS
+// note) - a plain client insert would be rejected, this is a
+// SECURITY DEFINER RPC that recomputes the student's period points from
+// the ledger itself (never trusts a client-supplied value), then inserts
+// the recognition_awards row and issues the certificate in one
+// transaction.
+export async function finalizeRecognitionWinner({ awardType, level, periodType, periodStart, periodEnd, studentId, reason }) {
+  const { data, error } = await supabase.rpc('finalize_recognition_winner', {
+    p_award_type: awardType,
+    p_level: level,
+    p_period_type: periodType,
+    p_period_start: periodStart,
+    p_period_end: periodEnd,
+    p_student_id: studentId,
+    p_reason: reason ?? null,
+  });
+  if (error) throw error;
+  return data[0];
+}
+
+// Cancels a final recognition award outright (no replacement winner) -
+// see migration 0027. Deletes the certificate it held and marks the row
+// 'revoked' rather than deleting it, so recognition_reopen_log's audit
+// trail always has a row to point back to.
+export async function revokeRecognitionAward(recognitionId, reason) {
+  const { error } = await supabase.rpc('revoke_recognition_award', {
+    p_recognition_id: recognitionId,
+    p_reason: reason,
+  });
+  if (error) throw error;
+}
+
 // ---------- Payments ----------
 
 export async function listPayments() {
@@ -368,6 +548,53 @@ export async function getLeaderboard() {
   return data;
 }
 
+// Level + period-scoped leaderboard (see migration 0023) - rank_change vs.
+// the prior equivalent period and attendance_rate are null for 'all_time'
+// (there's no "previous all-time" to compare against). periodStart is only
+// meaningful for week/month; omit it to mean "the period containing today".
+export async function getGroupLeaderboard(level, periodType, periodStart = null) {
+  const { data, error } = await supabase.rpc('get_group_leaderboard', {
+    p_level: level,
+    p_period_type: periodType,
+    p_period_start: periodStart,
+  });
+  if (error) throw error;
+  return data;
+}
+
+// Single-student week/month/total + per-level-rank snapshot (migration
+// 0023) - kept here (not part of the Rankings per-class breakdown work)
+// solely because src/pages/portal/MyRanking.jsx already depends on it;
+// removing it breaks that file's build. Not otherwise used by anything
+// this session added.
+export async function getStudentRankingSummary(studentId) {
+  const { data, error } = await supabase.rpc('get_student_ranking_summary', { p_student_id: studentId });
+  if (error) throw error;
+  return data[0];
+}
+
+// Per-class breakdown for the Rankings weekly/monthly view - a raw,
+// RLS-scoped select over point_transactions rather than a new RPC: the
+// existing table-level policies (pt_admin_select/pt_teacher_select,
+// migration 0019) already grant exactly the right rows for this, so a
+// wrapper function would just duplicate that check. is_baseline is
+// always excluded (see 0021/0023) so the one-time legacy total never
+// appears as a phantom "class." The caller pivots this into one column
+// per distinct lesson_date - there's no separate class-schedule concept
+// in the schema, so the ledger's own lesson_date values are the only
+// source of truth for "which dates had a class."
+export async function listClassPointTransactions(level, startDate, endDate) {
+  const { data, error } = await supabase
+    .from('point_transactions')
+    .select('student_id, lesson_date, points')
+    .eq('level', level)
+    .eq('is_baseline', false)
+    .gte('lesson_date', startDate)
+    .lte('lesson_date', endDate);
+  if (error) throw error;
+  return data;
+}
+
 // ---------- File uploads ----------
 // One shared private bucket for every attachment (chat, exam/homework
 // files and answers, the certificate template) - see migration 0009. The
@@ -428,22 +655,26 @@ export async function markMessageRead(messageId, profileId) {
   if (error) throw error;
 }
 
-// ---------- Certificate template ----------
+// ---------- Certificate templates (one row per certificate type) ----------
+// See migration 0026 - replaces a single global template with one row per
+// key ('default', 'student_of_week', 'student_of_month', ...), so
+// different award types can each have their own background image instead
+// of fighting over one shared slot.
 
-export async function getCertificateTemplate() {
-  const { data, error } = await supabase.from('certificate_template').select('*').eq('id', true).single();
+export async function listCertificateTemplates() {
+  const { data, error } = await supabase.from('certificate_templates').select('*').order('id');
   if (error) throw error;
   return data;
 }
 
-export async function setCertificateTemplate({ file_url, file_name }) {
-  const { data: rows, error } = await supabase
-    .from('certificate_template')
-    .update({ file_url, file_name, updated_at: new Date().toISOString() })
-    .eq('id', true)
-    .select();
+export async function setCertificateTemplate(key, { file_url, file_name, show_title_overlay }) {
+  const patch = { updated_at: new Date().toISOString() };
+  if (file_url !== undefined) patch.file_url = file_url;
+  if (file_name !== undefined) patch.file_name = file_name;
+  if (show_title_overlay !== undefined) patch.show_title_overlay = show_title_overlay;
+  const { data: rows, error } = await supabase.from('certificate_templates').update(patch).eq('key', key).select();
   if (error) throw error;
-  return assertRows(rows, 'update the certificate template')[0];
+  return assertRows(rows, 'update this certificate template')[0];
 }
 
 // ---------- File library (Phase 10: centralized file manager) ----------

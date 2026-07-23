@@ -7,6 +7,7 @@
 
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Plus, FileCheck2, Pencil, Trash2, Paperclip, MessageSquare, Download } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { LevelBadge } from '../components/Badge';
@@ -16,6 +17,7 @@ import { uploadAttachment, getAttachmentUrl } from '../lib/db';
 const EMPTY_FORM = { title: '', level: 'A', exam_date: new Date().toISOString().slice(0, 10), deadline: '', max_score: 100 };
 
 export default function Exams() {
+  const { t } = useTranslation(['exams', 'common']);
   const { students, exams, examScores, addExam, editExam, removeExam, setExamScoreForStudent, error } = useAcademy();
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -101,14 +103,14 @@ export default function Exams() {
     <div>
       <header className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h1 className="font-display text-2xl font-bold text-ink">Exams</h1>
-          <p className="mt-1 text-sm text-ink/50">Create exams, attach files, set deadlines, and enter scores.</p>
+          <h1 className="font-display text-2xl font-bold text-ink">{t('title')}</h1>
+          <p className="mt-1 text-sm text-ink/50">{t('subtitle')}</p>
         </div>
         <button
           onClick={() => (formOpen ? resetForm() : setFormOpen(true))}
           className="flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600"
         >
-          <Plus size={16} /> New exam
+          <Plus size={16} /> {t('newExam')}
         </button>
       </header>
 
@@ -118,26 +120,26 @@ export default function Exams() {
         <form onSubmit={handleCreate} className="mb-4 grid gap-3 rounded-xl bg-white p-4 shadow-card sm:grid-cols-2">
           <input
             required
-            placeholder="Exam title"
+            placeholder={t('titlePlaceholder')}
             value={form.title}
             onChange={(e) => setForm({ ...form, title: e.target.value })}
             className="input sm:col-span-2"
           />
           <select value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value })} className="input">
-            <option value="A">Level A</option>
-            <option value="B">Level B</option>
-            <option value="C">Level C</option>
+            <option value="A">{t('common:levelA')}</option>
+            <option value="B">{t('common:levelB')}</option>
+            <option value="C">{t('common:levelC')}</option>
           </select>
           <input
             type="number"
             min="1"
-            placeholder="Max score"
+            placeholder={t('maxScorePlaceholder')}
             value={form.max_score}
             onChange={(e) => setForm({ ...form, max_score: e.target.value })}
             className="input"
           />
           <div>
-            <label className="mb-1 block text-xs font-semibold text-ink/50">Exam date</label>
+            <label className="mb-1 block text-xs font-semibold text-ink/50">{t('examDateLabel')}</label>
             <input
               required
               type="date"
@@ -147,7 +149,7 @@ export default function Exams() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-semibold text-ink/50">Answer deadline (optional)</label>
+            <label className="mb-1 block text-xs font-semibold text-ink/50">{t('deadlineLabel')}</label>
             <input
               type="date"
               value={form.deadline}
@@ -157,7 +159,7 @@ export default function Exams() {
           </div>
           <label className="flex cursor-pointer items-center gap-1.5 text-xs font-semibold text-ink/60 hover:text-ink sm:col-span-2">
             <Paperclip size={14} />
-            {file ? file.name : editingId ? 'Replace exam file (PDF, Word, or image)' : 'Attach exam file (PDF, Word, or image)'}
+            {file ? file.name : editingId ? t('replaceFile') : t('attachFile')}
             <input
               type="file"
               accept=".pdf,.doc,.docx,image/*"
@@ -171,11 +173,11 @@ export default function Exams() {
               disabled={saving}
               className="flex-1 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-60"
             >
-              {saving ? 'Saving...' : editingId ? 'Save changes' : 'Add exam'}
+              {saving ? t('common:saving') : editingId ? t('common:saveChanges') : t('addExam')}
             </button>
             {editingId && (
               <button type="button" onClick={resetForm} className="rounded-lg border border-ink/15 px-4 py-2.5 text-sm font-semibold text-ink/60">
-                Cancel
+                {t('common:cancel')}
               </button>
             )}
           </div>
@@ -184,7 +186,7 @@ export default function Exams() {
 
       {sortedExams.length === 0 ? (
         <div className="rounded-xl bg-white p-10 text-center shadow-card">
-          <p className="font-display text-lg font-semibold text-ink">No exams yet</p>
+          <p className="font-display text-lg font-semibold text-ink">{t('noExamsYet')}</p>
         </div>
       ) : (
         <div className="mb-4 flex gap-2 overflow-x-auto">
@@ -200,16 +202,16 @@ export default function Exams() {
                 <div>
                   <p className="text-sm font-semibold">{e.title}</p>
                   <p className="text-xs opacity-70">
-                    {e.exam_date} · out of {e.max_score}
-                    {e.deadline && ` · due ${e.deadline.slice(0, 10)}`}
+                    {e.exam_date} · {t('outOfScore', { max: e.max_score })}
+                    {e.deadline && ` · ${t('dueDate', { date: e.deadline.slice(0, 10) })}`}
                   </p>
                 </div>
                 {e.level && <LevelBadge level={e.level} />}
               </button>
-              <button onClick={() => startEdit(e)} className={selectedExam?.id === e.id ? 'text-white/80 hover:text-white' : 'text-brand-500 hover:bg-brand-50'} aria-label="Edit exam">
+              <button onClick={() => startEdit(e)} className={selectedExam?.id === e.id ? 'text-white/80 hover:text-white' : 'text-brand-500 hover:bg-brand-50'} aria-label={t('editExamAria')}>
                 <Pencil size={14} />
               </button>
-              <button onClick={() => setDeletingExam(e)} className={selectedExam?.id === e.id ? 'text-white/80 hover:text-white' : 'text-inactive hover:bg-inactive/10'} aria-label="Delete exam">
+              <button onClick={() => setDeletingExam(e)} className={selectedExam?.id === e.id ? 'text-white/80 hover:text-white' : 'text-inactive hover:bg-inactive/10'} aria-label={t('deleteExamAria')}>
                 <Trash2 size={14} />
               </button>
             </div>
@@ -221,7 +223,7 @@ export default function Exams() {
         <>
           <div className="mb-2 mt-6 flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-sm font-bold uppercase tracking-wide text-ink/50">
-              Scores for "{selectedExam.title}" (out of {selectedExam.max_score})
+              {t('scoresFor', { title: selectedExam.title, max: selectedExam.max_score })}
             </h2>
             <div className="flex items-center gap-2">
               {selectedExam.file_url && (
@@ -229,14 +231,14 @@ export default function Exams() {
                   onClick={() => handleOpenFile(selectedExam.file_url)}
                   className="flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-xs font-semibold text-brand-500 hover:bg-brand-50"
                 >
-                  <Download size={13} /> {selectedExam.file_name || 'Exam file'}
+                  <Download size={13} /> {selectedExam.file_name || t('examFileDefault')}
                 </button>
               )}
               <Link
                 to={`/chat?type=exam&id=${selectedExam.id}`}
                 className="flex items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-semibold text-ink/60 hover:bg-ink/5"
               >
-                <MessageSquare size={13} /> Discuss
+                <MessageSquare size={13} /> {t('discuss')}
               </Link>
             </div>
           </div>
@@ -252,7 +254,7 @@ export default function Exams() {
                         onClick={() => handleOpenFile(answer.answer_file_url)}
                         className="mt-1 flex items-center gap-1 text-xs text-brand-500 hover:underline"
                       >
-                        <Paperclip size={11} /> {answer.answer_file_name || 'Student answer'}
+                        <Paperclip size={11} /> {answer.answer_file_name || t('studentAnswerDefault')}
                       </button>
                     )}
                   </div>
@@ -267,7 +269,7 @@ export default function Exams() {
                         setExamScoreForStudent(selectedExam.id, s.id, Number(val));
                       }
                     }}
-                    placeholder="Score"
+                    placeholder={t('scorePlaceholder')}
                     className="w-24 rounded-lg border border-ink/10 px-3 py-1.5 text-right text-sm"
                   />
                 </div>
@@ -279,9 +281,9 @@ export default function Exams() {
 
       {deletingExam && (
         <ConfirmDialog
-          title="Delete exam?"
-          message={`This will permanently remove "${deletingExam.title}" and every student's score for it. This can't be undone.`}
-          confirmLabel="Delete"
+          title={t('deleteExamTitle')}
+          message={t('deleteExamMessage', { title: deletingExam.title })}
+          confirmLabel={t('common:delete')}
           onConfirm={handleDelete}
           onCancel={() => setDeletingExam(null)}
         />

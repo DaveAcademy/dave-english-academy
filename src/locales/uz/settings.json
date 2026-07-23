@@ -1,0 +1,22 @@
+{
+  "subtitle": "Ma'lumotlaringizni zaxiralang va saqlash qanday ishlashini bilib oling.",
+  "studentSubtitle": "Til va hisobingizni boshqaring.",
+  "account": "Hisob",
+  "signedInAs": "Kirgan hisobingiz:",
+  "backupRestore": "Zaxira nusxa va tiklash",
+  "backupRestoreDesc": "Ishlayotganingizda ma'lumotlaringiz shu brauzerda avtomatik saqlanadi. Zaxira faylini muntazam yuklab oling va uni xavfsiz joyda saqlang — agar telefoningizni yo'qotsangiz yoki brauzer ma'lumotlarini tozalasangiz, sizni aynan shu narsa himoya qiladi.",
+  "downloadBackup": "Zaxirani yuklab olish",
+  "restoreFromFile": "Fayldan tiklash",
+  "lastAutoBackup": "Oxirgi avtomatik lokal zaxira: {{datetime}}",
+  "howDataStored": "Ma'lumotlaringiz qanday saqlanadi",
+  "dataStoredIntro": "Ma'lumotlaringiz Supabase — haqiqiy onlayn ma'lumotlar bazasida saqlanadi. Bu quyidagini anglatadi:",
+  "bulletSync": "Kirgan har bir qurilmangizda avtomatik sinxronlashadi",
+  "bulletAccess": "Kirish hisobingiz va rolingiz (administrator, o'qituvchi yoki o'quvchi) orqali himoyalangan",
+  "bulletLocalSnapshot": "Qo'shimcha xavfsizlik uchun shu brauzerda mahalliy nusxa ham saqlanadi",
+  "bulletDownloadRegularly": "Har ehtimolga qarshi, zaxira faylini muntazam yuklab oling va xavfsiz joyda saqlang",
+  "aboutAccounts": "Hisoblar haqida",
+  "aboutAccountsDesc": "Administratorlar hamma narsani ko'rishi va tahrirlashi mumkin. O'qituvchilar o'quvchilarni ko'rishi, davomatni belgilashi va to'lovlarni ko'rishi mumkin. O'quvchilar faqat o'zlarining ma'lumotlarini ko'radi. Administrator yuqorida o'qituvchi va o'quvchi hisoblarini yaratishi mumkin.",
+  "backupDownloaded": "Zaxira yuklab olindi. Faylni Google Drive kabi xavfsiz joyda saqlang.",
+  "backupRestored": "Zaxira muvaffaqiyatli tiklandi.",
+  "couldNotRestore": "Faylni tiklab bo'lmadi."
+}

@@ -1,18 +1,22 @@
 // Attendance.jsx
 
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { CheckCircle2, Clock, XCircle } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { todayISO } from '../utils/date';
 
+// labelKey is a translation key (looked up at render time inside the
+// component, not here at module scope - see Nav.jsx for the same pattern).
 const LEVEL_TABS = [
-  { key: '', label: 'All' },
-  { key: 'A', label: 'Level A' },
-  { key: 'B', label: 'Level B' },
-  { key: 'C', label: 'Level C' },
+  { key: '', labelKey: 'allTab' },
+  { key: 'A', labelKey: 'common:levelA' },
+  { key: 'B', labelKey: 'common:levelB' },
+  { key: 'C', labelKey: 'common:levelC' },
 ];
 
 export default function Attendance() {
+  const { t } = useTranslation(['attendance', 'common']);
   const { students, attendance, setAttendanceStatus, error } = useAcademy();
   const [date, setDate] = useState(todayISO());
   const [level, setLevel] = useState('');
@@ -42,42 +46,42 @@ export default function Attendance() {
   return (
     <div>
       <header className="mb-4">
-        <h1 className="font-display text-2xl font-bold text-ink">Attendance</h1>
-        <p className="mt-1 text-sm text-ink/50">Mark Present, Late, or Absent for each active student.</p>
+        <h1 className="font-display text-2xl font-bold text-ink">{t('title')}</h1>
+        <p className="mt-1 text-sm text-ink/50">{t('subtitle')}</p>
       </header>
 
       {error && <div className="mb-4 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{error}</div>}
 
       <div className="mb-3 flex gap-1.5 overflow-x-auto">
-        {LEVEL_TABS.map((t) => (
+        {LEVEL_TABS.map((tab) => (
           <button
-            key={t.key}
-            onClick={() => setLevel(t.key)}
+            key={tab.key}
+            onClick={() => setLevel(tab.key)}
             className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold ${
-              level === t.key ? 'bg-brand-500 text-white' : 'bg-white text-ink/60 shadow-sm'
+              level === tab.key ? 'bg-brand-500 text-white' : 'bg-white text-ink/60 shadow-sm'
             }`}
           >
-            {t.label}
+            {t(tab.labelKey)}
           </button>
         ))}
       </div>
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="rounded-xl bg-white p-3 shadow-card sm:w-64">
-          <label className="mb-1 block text-xs font-semibold text-ink/50">Date</label>
+          <label className="mb-1 block text-xs font-semibold text-ink/50">{t('date')}</label>
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-full rounded-lg border border-ink/10 px-3 py-2 text-sm" />
         </div>
         <div className="grid flex-1 grid-cols-3 gap-3">
           <div className="rounded-xl bg-white p-3 text-center shadow-card">
-            <p className="text-xs text-ink/50">Present</p>
+            <p className="text-xs text-ink/50">{t('present')}</p>
             <p className="text-xl font-bold text-active">{counts.Present}</p>
           </div>
           <div className="rounded-xl bg-white p-3 text-center shadow-card">
-            <p className="text-xs text-ink/50">Late</p>
+            <p className="text-xs text-ink/50">{t('late')}</p>
             <p className="text-xl font-bold text-levelB">{counts.Late}</p>
           </div>
           <div className="rounded-xl bg-white p-3 text-center shadow-card">
-            <p className="text-xs text-ink/50">Absent</p>
+            <p className="text-xs text-ink/50">{t('absent')}</p>
             <p className="text-xl font-bold text-inactive">{counts.Absent}</p>
           </div>
         </div>
@@ -86,10 +90,10 @@ export default function Attendance() {
       {activeStudents.length === 0 ? (
         <div className="rounded-xl bg-white p-10 text-center shadow-card">
           <p className="font-display text-lg font-semibold text-ink">
-            {level ? `No active students in Level ${level}` : 'No active students'}
+            {level ? t('noActiveStudentsInLevel', { level }) : t('noActiveStudents')}
           </p>
           <p className="mt-1 text-sm text-ink/50">
-            {level ? 'Try a different level, or switch back to All.' : 'Add active students to start taking attendance.'}
+            {level ? t('tryDifferentLevel') : t('addActiveStudentsHint')}
           </p>
         </div>
       ) : (
@@ -106,7 +110,7 @@ export default function Attendance() {
                       current === 'Present' ? 'bg-active text-white' : 'bg-ink/5 text-ink/50'
                     }`}
                   >
-                    <CheckCircle2 size={14} /> Present
+                    <CheckCircle2 size={14} /> {t('present')}
                   </button>
                   <button
                     onClick={() => setAttendanceStatus(s.id, date, 'Late')}
@@ -114,7 +118,7 @@ export default function Attendance() {
                       current === 'Late' ? 'bg-levelB text-white' : 'bg-ink/5 text-ink/50'
                     }`}
                   >
-                    <Clock size={14} /> Late
+                    <Clock size={14} /> {t('late')}
                   </button>
                   <button
                     onClick={() => setAttendanceStatus(s.id, date, 'Absent')}
@@ -122,7 +126,7 @@ export default function Attendance() {
                       current === 'Absent' ? 'bg-inactive text-white' : 'bg-ink/5 text-ink/50'
                     }`}
                   >
-                    <XCircle size={14} /> Absent
+                    <XCircle size={14} /> {t('absent')}
                   </button>
                 </div>
               </div>

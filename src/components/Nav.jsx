@@ -4,6 +4,7 @@
 // pages in sync automatically.
 
 import { NavLink } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   LayoutDashboard,
   Users,
@@ -18,24 +19,29 @@ import {
   BarChart3,
   MessageSquare,
   FolderOpen,
+  Medal,
 } from 'lucide-react';
 import { useAuth } from '../lib/AuthContext';
 import { useAcademy } from '../lib/AcademyDataContext';
 
+// label/shortLabel are translation keys (looked up in the nav namespace at
+// render time, inside the component), not literal text - this array is
+// module-level and can't call the useTranslation hook itself.
 const NAV_ITEMS = [
-  { to: '/', label: 'Home', shortLabel: 'Home', Icon: LayoutDashboard, end: true },
-  { to: '/students', label: 'Students', shortLabel: 'Students', Icon: Users },
-  { to: '/payments', label: 'Payments', shortLabel: 'Pay', Icon: Wallet, adminOnly: true },
-  { to: '/attendance', label: 'Attendance', shortLabel: 'Attend', Icon: CalendarCheck },
-  { to: '/lessons', label: 'Lessons', shortLabel: 'Lessons', Icon: CalendarClock },
-  { to: '/exams', label: 'Exams', shortLabel: 'Exams', Icon: FileCheck2 },
-  { to: '/homework', label: 'Homework', shortLabel: 'HW', Icon: BookOpen },
-  { to: '/certificates', label: 'Certificates', shortLabel: 'Certs', Icon: Award },
-  { to: '/rankings', label: 'Rankings', shortLabel: 'Ranks', Icon: Trophy },
-  { to: '/reports', label: 'Reports', shortLabel: 'Reports', Icon: BarChart3, adminOnly: true },
-  { to: '/chat', label: 'Messages', shortLabel: 'Chat', Icon: MessageSquare },
-  { to: '/files', label: 'Files', shortLabel: 'Files', Icon: FolderOpen },
-  { to: '/settings', label: 'Settings', shortLabel: 'Settings', Icon: Settings },
+  { to: '/', label: 'home', shortLabel: 'homeShort', Icon: LayoutDashboard, end: true },
+  { to: '/students', label: 'students', shortLabel: 'studentsShort', Icon: Users },
+  { to: '/payments', label: 'payments', shortLabel: 'paymentsShort', Icon: Wallet, adminOnly: true },
+  { to: '/attendance', label: 'attendance', shortLabel: 'attendanceShort', Icon: CalendarCheck },
+  { to: '/lessons', label: 'lessons', shortLabel: 'lessonsShort', Icon: CalendarClock },
+  { to: '/exams', label: 'exams', shortLabel: 'examsShort', Icon: FileCheck2 },
+  { to: '/homework', label: 'homework', shortLabel: 'homeworkShort', Icon: BookOpen },
+  { to: '/certificates', label: 'certificates', shortLabel: 'certificatesShort', Icon: Award },
+  { to: '/rankings', label: 'rankings', shortLabel: 'rankingsShort', Icon: Trophy },
+  { to: '/recognition', label: 'recognition', shortLabel: 'recognitionShort', Icon: Medal, adminOnly: true },
+  { to: '/reports', label: 'reports', shortLabel: 'reportsShort', Icon: BarChart3, adminOnly: true },
+  { to: '/chat', label: 'messages', shortLabel: 'messagesShort', Icon: MessageSquare },
+  { to: '/files', label: 'files', shortLabel: 'filesShort', Icon: FolderOpen },
+  { to: '/settings', label: 'settings', shortLabel: 'settingsShort', Icon: Settings },
 ];
 
 function useVisibleNavItems() {
@@ -69,6 +75,7 @@ function UnreadBadge({ count, floating }) {
 }
 
 export function Sidebar() {
+  const { t } = useTranslation('nav');
   const items = useVisibleNavItems();
   const unread = useUnreadCount();
   return (
@@ -96,18 +103,19 @@ export function Sidebar() {
             }
           >
             <Icon className="h-4 w-4 flex-shrink-0" />
-            {label}
+            {t(label)}
             {to === '/chat' && <UnreadBadge count={unread} />}
           </NavLink>
         ))}
       </nav>
 
-      <div className="px-6 py-4 text-xs text-white/40">Web app · v1.0</div>
+      <div className="px-6 py-4 text-xs text-white/40">{t('webAppVersion')}</div>
     </aside>
   );
 }
 
 export function BottomNav() {
+  const { t } = useTranslation('nav');
   const items = useVisibleNavItems();
   const unread = useUnreadCount();
   return (
@@ -124,7 +132,7 @@ export function BottomNav() {
           }
         >
           <Icon size={19} />
-          {shortLabel}
+          {t(shortLabel)}
           {to === '/chat' && <UnreadBadge count={unread} floating />}
         </NavLink>
       ))}

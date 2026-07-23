@@ -11,7 +11,21 @@
   "signIn": "Kirish",
   "signOut": "Chiqish",
   "settings": "Sozlamalar",
+  "email": "Email",
+  "password": "Parol",
+  "fullName": "To'liq ism",
+  "tryAgain": "Qayta urinib ko'ring",
   "language": "Til",
   "english": "Ingliz tili",
-  "uzbek": "O'zbek tili"
+  "uzbek": "O'zbek tili",
+  "allLevels": "Barcha darajalar",
+  "levelA": "A darajasi",
+  "levelB": "B darajasi",
+  "levelC": "C darajasi",
+  "allStatuses": "Barcha holatlar",
+  "active": "Faol",
+  "inactive": "Nofaol",
+  "administrator": "Administrator",
+  "teacher": "O'qituvchi",
+  "student": "O'quvchi"
 }

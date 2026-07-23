@@ -1,0 +1,22 @@
+{
+  "subtitle": "Back up your data and see how storage works.",
+  "studentSubtitle": "Manage your language and account.",
+  "account": "Account",
+  "signedInAs": "Signed in as",
+  "backupRestore": "Backup & restore",
+  "backupRestoreDesc": "Your data is saved automatically in this browser as you work. Download a backup file regularly and keep it somewhere safe — that's what actually protects you if you lose your phone or clear your browser data.",
+  "downloadBackup": "Download backup",
+  "restoreFromFile": "Restore from file",
+  "lastAutoBackup": "Last automatic local backup: {{datetime}}",
+  "howDataStored": "How your data is stored",
+  "dataStoredIntro": "Your data is stored in Supabase, a real online database. That means:",
+  "bulletSync": "It syncs automatically across every device you sign in on",
+  "bulletAccess": "Access is protected by your login and role (administrator, teacher, or student)",
+  "bulletLocalSnapshot": "A local snapshot is also kept in this browser as an extra safety net",
+  "bulletDownloadRegularly": "Download a backup file regularly and keep it somewhere safe, just in case",
+  "aboutAccounts": "About accounts",
+  "aboutAccountsDesc": "Administrators can see and edit everything. Teachers can view students, mark attendance, and view payments. Students only see their own information. An administrator can create teacher and student accounts above.",
+  "backupDownloaded": "Backup downloaded. Save that file somewhere safe, like Google Drive.",
+  "backupRestored": "Backup restored successfully.",
+  "couldNotRestore": "Could not restore that file."
+}

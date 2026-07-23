@@ -1,6 +1,7 @@
 // MyProgress.jsx
 
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { CheckCircle2, Clock, XCircle } from 'lucide-react';
 import { useAcademy } from '../../lib/AcademyDataContext';
 
@@ -8,6 +9,7 @@ const STATUS_ICON = { Present: CheckCircle2, Late: Clock, Absent: XCircle };
 const STATUS_COLOR = { Present: 'text-active', Late: 'text-levelB', Absent: 'text-inactive' };
 
 export default function MyProgress() {
+  const { t } = useTranslation(['portal', 'attendance', 'dashboard']);
   const { students, lessons, lessonAttendance, exams, examScores } = useAcademy();
   const me = students[0];
 
@@ -32,7 +34,7 @@ export default function MyProgress() {
   if (!me) {
     return (
       <div className="rounded-xl bg-white p-10 text-center shadow-card">
-        <p className="font-display text-lg font-semibold text-ink">Not linked yet</p>
+        <p className="font-display text-lg font-semibold text-ink">{t('dashboard:notLinkedYet')}</p>
       </div>
     );
   }
@@ -40,15 +42,15 @@ export default function MyProgress() {
   return (
     <div>
       <header className="mb-6">
-        <h1 className="font-display text-2xl font-bold text-ink">My Progress</h1>
+        <h1 className="font-display text-2xl font-bold text-ink">{t('portal:myProgressTitle')}</h1>
         <p className="mt-1 text-sm text-ink/50">
-          Attended {attendedCount} of {attendanceRows.length} lessons.
+          {t('portal:attendedOfLessons', { count: attendedCount, total: attendanceRows.length })}
         </p>
       </header>
 
-      <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-ink/50">Lesson attendance</h2>
+      <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-ink/50">{t('portal:lessonAttendance')}</h2>
       {attendanceRows.length === 0 ? (
-        <div className="mb-6 rounded-xl bg-white p-6 text-center text-sm text-ink/50 shadow-card">No lessons recorded yet.</div>
+        <div className="mb-6 rounded-xl bg-white p-6 text-center text-sm text-ink/50 shadow-card">{t('portal:noLessonsRecorded')}</div>
       ) : (
         <div className="mb-6 space-y-2">
           {attendanceRows.map((a) => {
@@ -60,7 +62,7 @@ export default function MyProgress() {
                   <p className="text-xs text-ink/50">{new Date(a.lesson.scheduled_at).toLocaleDateString()}</p>
                 </div>
                 <span className={`flex items-center gap-1 text-sm font-semibold ${STATUS_COLOR[a.status]}`}>
-                  <Icon size={16} /> {a.status}
+                  <Icon size={16} /> {t(`attendance:${a.status.toLowerCase()}`)}
                 </span>
               </div>
             );
@@ -68,9 +70,9 @@ export default function MyProgress() {
         </div>
       )}
 
-      <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-ink/50">Exam scores</h2>
+      <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-ink/50">{t('portal:examScores')}</h2>
       {examRows.length === 0 ? (
-        <div className="rounded-xl bg-white p-6 text-center text-sm text-ink/50 shadow-card">No exam scores yet.</div>
+        <div className="rounded-xl bg-white p-6 text-center text-sm text-ink/50 shadow-card">{t('portal:noExamScoresYet')}</div>
       ) : (
         <div className="space-y-2">
           {examRows.map((s) => (

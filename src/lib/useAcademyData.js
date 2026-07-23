@@ -23,7 +23,7 @@ export function useAcademyData() {
   const [homework, setHomework] = useState([]);
   const [homeworkStatus, setHomeworkStatusState] = useState([]);
   const [certificates, setCertificates] = useState([]);
-  const [certificateTemplate, setCertificateTemplateState] = useState(null);
+  const [certificateTemplates, setCertificateTemplates] = useState([]);
   const [messages, setMessages] = useState([]);
   const [messageReads, setMessageReads] = useState([]);
   const [files, setFiles] = useState([]);
@@ -72,12 +72,12 @@ export function useAcademyData() {
     (async () => {
       try {
         const [tmpl, msg, reads, fls] = await Promise.all([
-          db.getCertificateTemplate(),
+          db.listCertificateTemplates(),
           db.listMessages(),
           db.listMessageReads(),
           db.listFiles(),
         ]);
-        setCertificateTemplateState(tmpl);
+        setCertificateTemplates(tmpl);
         setMessages(msg);
         setMessageReads(reads);
         setFiles(fls);
@@ -132,6 +132,36 @@ export function useAcademyData() {
         touchBackup();
       } catch (e) {
         setError('Could not save changes. Please try again.');
+        throw e;
+      }
+    },
+    [touchBackup]
+  );
+
+  const awardStudentPoints = useCallback(
+    async (params) => {
+      try {
+        await db.awardPoints(params);
+        const refreshed = await db.listStudents();
+        setStudents(refreshed);
+        touchBackup();
+      } catch (e) {
+        setError('Could not award points. Please try again.');
+        throw e;
+      }
+    },
+    [touchBackup]
+  );
+
+  const bulkAwardStudentPoints = useCallback(
+    async (entries) => {
+      try {
+        await db.bulkAwardPoints(entries);
+        const refreshed = await db.listStudents();
+        setStudents(refreshed);
+        touchBackup();
+      } catch (e) {
+        setError('Could not award points. Please try again.');
         throw e;
       }
     },
@@ -358,6 +388,41 @@ export function useAcademyData() {
     }
   }, []);
 
+  // Also creates a certificate server-side (see finalize_recognition_winner()
+  // in migration 0025) - refetch the certificates list afterward so
+  // Certificates.jsx reflects it without needing its own reload.
+  const finalizeRecognitionWinner = useCallback(async (params) => {
+    try {
+      const result = await db.finalizeRecognitionWinner(params);
+      const refreshed = await db.listCertificates();
+      setCertificates(refreshed);
+      touchBackup();
+      return result;
+    } catch (e) {
+      setError('Could not finalize recognition. Please try again.');
+      throw e;
+    }
+  }, [touchBackup]);
+
+  // Also deletes the certificate the revoked award held (see
+  // revoke_recognition_award(), migration 0027) - refetch certificates so
+  // Certificates.jsx/MyCertificates.jsx stop showing it without needing
+  // their own reload.
+  const revokeRecognitionAward = useCallback(
+    async (recognitionId, reason) => {
+      try {
+        await db.revokeRecognitionAward(recognitionId, reason);
+        const refreshed = await db.listCertificates();
+        setCertificates(refreshed);
+        touchBackup();
+      } catch (e) {
+        setError('Could not revoke this recognition award. Please try again.');
+        throw e;
+      }
+    },
+    [touchBackup]
+  );
+
   const editCertificate = useCallback(async (id, data) => {
     try {
       const record = await db.updateCertificate(id, data);
@@ -379,10 +444,10 @@ export function useAcademyData() {
     }
   }, []);
 
-  const updateCertificateTemplate = useCallback(async (data) => {
+  const updateCertificateTemplate = useCallback(async (key, data) => {
     try {
-      const record = await db.setCertificateTemplate(data);
-      setCertificateTemplateState(record);
+      const record = await db.setCertificateTemplate(key, data);
+      setCertificateTemplates((prev) => prev.map((t) => (t.key === key ? record : t)));
       return record;
     } catch (e) {
       setError('Could not update the certificate template. Please try again.');
@@ -486,12 +551,12 @@ export function useAcademyData() {
     // must not be held hostage by the messaging tables.
     try {
       const [tmpl, msg, reads, fls] = await Promise.all([
-        db.getCertificateTemplate(),
+        db.listCertificateTemplates(),
         db.listMessages(),
         db.listMessageReads(),
         db.listFiles(),
       ]);
-      setCertificateTemplateState(tmpl);
+      setCertificateTemplates(tmpl);
       setMessages(msg);
       setMessageReads(reads);
       setFiles(fls);
@@ -511,7 +576,7 @@ export function useAcademyData() {
     homework,
     homeworkStatus,
     certificates,
-    certificateTemplate,
+    certificateTemplates,
     messages,
     messageReads,
     files,
@@ -520,6 +585,8 @@ export function useAcademyData() {
     setError,
     addStudent,
     editStudent,
+    awardStudentPoints,
+    bulkAwardStudentPoints,
     removeStudent,
     importStudents,
     togglePayment,
@@ -541,6 +608,8 @@ export function useAcademyData() {
     addCertificate,
     editCertificate,
     removeCertificate,
+    finalizeRecognitionWinner,
+    revokeRecognitionAward,
     updateCertificateTemplate,
     addMessage,
     removeMessage,

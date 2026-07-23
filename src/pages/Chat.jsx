@@ -8,20 +8,24 @@
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Send, Paperclip, Trash2, MessageSquare, Megaphone, Users, Mail } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { useAuth } from '../lib/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { uploadAttachment, getAttachmentUrl } from '../lib/db';
 
-const TABS = [
-  { key: 'all', label: 'All', Icon: MessageSquare },
-  { key: 'announcement', label: 'Announcements', Icon: Megaphone },
-  { key: 'level', label: 'Level', Icon: Users },
-  { key: 'direct', label: 'Direct', Icon: Mail },
+const TAB_DEFS = [
+  { key: 'all', labelKey: 'tabAll', Icon: MessageSquare },
+  { key: 'announcement', labelKey: 'tabAnnouncements', Icon: Megaphone },
+  { key: 'level', labelKey: 'tabLevel', Icon: Users },
+  { key: 'direct', labelKey: 'tabDirect', Icon: Mail },
 ];
 
+const DISCUSSION_KEY = { lesson: 'discussionLesson', homework: 'discussionHomework', exam: 'discussionExam', certificate: 'discussionCertificate' };
+
 export default function Chat() {
+  const { t } = useTranslation(['chat', 'common']);
   const { profile, role } = useAuth();
   const {
     students, lessons, homework, exams, certificates,
@@ -65,12 +69,12 @@ export default function Chat() {
 
   const recipientOptions = useMemo(() => {
     if (scope !== 'direct') return [];
-    if (isStudent) return teacherProfiles.map((t) => ({ id: t.id, label: `${t.full_name || t.email} (Teacher)` }));
+    if (isStudent) return teacherProfiles.map((p) => ({ id: p.id, label: `${p.full_name || p.email} (${t('common:teacher')})` }));
     if (isTeacher) return studentRecipients.map((s) => ({ id: s.id, label: s.label }));
     if (isAdmin) {
       return [
-        ...teacherProfiles.map((t) => ({ id: t.id, label: `${t.full_name || t.email} (Teacher)` })),
-        ...studentRecipients.map((s) => ({ id: s.id, label: `${s.label} (Student)` })),
+        ...teacherProfiles.map((p) => ({ id: p.id, label: `${p.full_name || p.email} (${t('common:teacher')})` })),
+        ...studentRecipients.map((s) => ({ id: s.id, label: `${s.label} (${t('common:student')})` })),
       ];
     }
     return [];
@@ -160,22 +164,20 @@ export default function Chat() {
   };
 
   const scopeLabel = (m) => {
-    if (m.scope === 'announcement') return 'Announcement';
-    if (m.scope === 'level') return `Level ${m.level}`;
-    if (m.scope === 'context') return `${m.context_type[0].toUpperCase()}${m.context_type.slice(1)} discussion`;
-    return 'Direct';
+    if (m.scope === 'announcement') return t('chat:announcementLabel');
+    if (m.scope === 'level') return t(`common:level${m.level}`);
+    if (m.scope === 'context') return t(`chat:${DISCUSSION_KEY[m.context_type] || 'discussionLesson'}`);
+    return t('chat:directLabel');
   };
 
   return (
     <div>
       <header className="mb-4">
         <h1 className="font-display text-2xl font-bold text-ink">
-          {isContextView ? `Discussion: ${contextLabel || '...'}` : 'Messages'}
+          {isContextView ? t('chat:discussionTitle', { label: contextLabel || '...' }) : t('chat:messagesTitle')}
         </h1>
         <p className="mt-1 text-sm text-ink/50">
-          {isContextView
-            ? 'Everyone with access to this item can see this thread.'
-            : 'Announcements, level updates, and direct messages.'}
+          {isContextView ? t('chat:contextSubtitle') : t('chat:messagesSubtitle')}
         </p>
       </header>
 
@@ -183,15 +185,15 @@ export default function Chat() {
 
       {!isContextView && (
         <div className="mb-3 flex gap-1.5 overflow-x-auto">
-          {TABS.map((t) => (
+          {TAB_DEFS.map((td) => (
             <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
+              key={td.key}
+              onClick={() => setTab(td.key)}
               className={`flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold ${
-                tab === t.key ? 'bg-brand-500 text-white' : 'bg-white text-ink/60 shadow-sm'
+                tab === td.key ? 'bg-brand-500 text-white' : 'bg-white text-ink/60 shadow-sm'
               }`}
             >
-              <t.Icon size={13} /> {t.label}
+              <td.Icon size={13} /> {t(`chat:${td.labelKey}`)}
             </button>
           ))}
         </div>
@@ -210,13 +212,13 @@ export default function Chat() {
             >
               {scopeOptions.map((s) => (
                 <option key={s} value={s}>
-                  {s === 'direct' ? 'Direct message' : s === 'level' ? 'Level broadcast' : 'Announcement (everyone)'}
+                  {s === 'direct' ? t('chat:scopeDirect') : s === 'level' ? t('chat:scopeLevel') : t('chat:scopeAnnouncement')}
                 </option>
               ))}
             </select>
             {scope === 'direct' && (
               <select value={recipientId} onChange={(e) => setRecipientId(e.target.value)} required className="input w-auto flex-1">
-                <option value="">Select recipient...</option>
+                <option value="">{t('chat:selectRecipient')}</option>
                 {recipientOptions.map((r) => (
                   <option key={r.id} value={r.id}>
                     {r.label}
@@ -226,9 +228,9 @@ export default function Chat() {
             )}
             {scope === 'level' && (
               <select value={level} onChange={(e) => setLevel(e.target.value)} className="input w-auto">
-                <option value="A">Level A</option>
-                <option value="B">Level B</option>
-                <option value="C">Level C</option>
+                <option value="A">{t('common:levelA')}</option>
+                <option value="B">{t('common:levelB')}</option>
+                <option value="C">{t('common:levelC')}</option>
               </select>
             )}
           </div>
@@ -237,13 +239,13 @@ export default function Chat() {
           value={body}
           onChange={(e) => setBody(e.target.value)}
           rows={2}
-          placeholder="Write a message..."
+          placeholder={t('chat:writeMessage')}
           className="input resize-none"
         />
         <div className="flex items-center justify-between gap-2">
           <label className="flex cursor-pointer items-center gap-1.5 text-xs font-semibold text-ink/50 hover:text-ink">
             <Paperclip size={14} />
-            {file ? file.name : 'Attach image or PDF'}
+            {file ? file.name : t('chat:attachImageOrPdf')}
             <input
               type="file"
               accept="image/*,application/pdf"
@@ -256,14 +258,14 @@ export default function Chat() {
             disabled={sending || (!body.trim() && !file) || (!isContextView && scope === 'direct' && !recipientId)}
             className="flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-50"
           >
-            <Send size={15} /> {sending ? 'Sending...' : 'Send'}
+            <Send size={15} /> {sending ? t('chat:sendingMessage') : t('chat:send')}
           </button>
         </div>
       </form>
 
       {visible.length === 0 ? (
         <div className="rounded-xl bg-white p-10 text-center shadow-card">
-          <p className="font-display text-lg font-semibold text-ink">No messages yet</p>
+          <p className="font-display text-lg font-semibold text-ink">{t('chat:noMessagesYet')}</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -273,7 +275,7 @@ export default function Chat() {
               <div key={m.id} className={`rounded-xl p-3 shadow-card ${mine ? 'bg-brand-50' : 'bg-white'}`}>
                 <div className="mb-1 flex items-center justify-between gap-2">
                   <div className="flex items-center gap-1.5 text-xs text-ink/50">
-                    <span className="font-semibold text-ink">{m.sender_name || 'Unknown'}</span>
+                    <span className="font-semibold text-ink">{m.sender_name || t('chat:unknownSender')}</span>
                     <span>·</span>
                     <span>{scopeLabel(m)}</span>
                     <span>·</span>
@@ -283,7 +285,7 @@ export default function Chat() {
                     <button
                       onClick={() => removeMessage(m.id)}
                       className="rounded-md p-1 text-inactive hover:bg-inactive/10"
-                      aria-label="Delete message"
+                      aria-label={t('chat:deleteMessageAria')}
                     >
                       <Trash2 size={14} />
                     </button>
@@ -295,7 +297,7 @@ export default function Chat() {
                     onClick={() => handleOpenAttachment(m.attachment_url)}
                     className="mt-2 flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-xs font-semibold text-brand-500 hover:bg-brand-50"
                   >
-                    <Paperclip size={13} /> {m.attachment_name || 'Attachment'}
+                    <Paperclip size={13} /> {m.attachment_name || t('chat:attachmentLabel')}
                   </button>
                 )}
               </div>

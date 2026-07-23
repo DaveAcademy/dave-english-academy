@@ -1,4 +1,9 @@
 // Badge.jsx
+// Renders a raw data value (level letter, active/inactive status) as a
+// localized label - the prop stays the stable English/DB value, only the
+// on-screen text goes through t().
+
+import { useTranslation } from 'react-i18next';
 
 const LEVEL_STYLES = {
   A: 'bg-levelA/10 text-levelA border-levelA/30',
@@ -7,14 +12,16 @@ const LEVEL_STYLES = {
 };
 
 export function LevelBadge({ level }) {
+  const { t } = useTranslation('common');
   return (
     <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${LEVEL_STYLES[level] || ''}`}>
-      Level {level}
+      {t(`level${level}`, { defaultValue: `Level ${level}` })}
     </span>
   );
 }
 
 export function StatusBadge({ status }) {
+  const { t } = useTranslation('common');
   const isActive = status === 'Active';
   return (
     <span
@@ -23,7 +30,7 @@ export function StatusBadge({ status }) {
       }`}
     >
       <span className={`h-1.5 w-1.5 rounded-full ${isActive ? 'bg-active' : 'bg-inactive'}`} />
-      {status}
+      {t(isActive ? 'active' : 'inactive')}
     </span>
   );
 }
