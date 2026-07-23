@@ -9,7 +9,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowUp, ArrowDown } from 'lucide-react';
 import { useAcademy } from '../../lib/AcademyDataContext';
-import { getGroupLeaderboard, getMyPointHistory, getRecognitionAwards } from '../../lib/db';
+import { getGroupLeaderboard, getMyPointHistory, getRecognitionAwards, getStudentRankingSummary } from '../../lib/db';
 import { formatMonthDay } from '../../utils/date';
 
 const PERIODS = ['week', 'month', 'all_time'];
@@ -51,6 +51,29 @@ export default function MyRanking() {
   const [leaderboard, setLeaderboard] = useState(null);
   const [history, setHistory] = useState(null);
   const [awards, setAwards] = useState(null);
+  const [summary, setSummary] = useState(null);
+
+  // This Week / This Month / Total Points, all three at once - the same
+  // week_bounds()/month_bounds()-summed ledger figures as the leaderboard
+  // below, just for the student's own row and independent of whatever
+  // period tab is selected there. get_student_ranking_summary() (0023)
+  // was built for exactly this (PortalHome's hero stat) so it's reused
+  // as-is rather than composing it from three separate calls.
+  useEffect(() => {
+    if (!me?.id) return undefined;
+    let cancelled = false;
+    setSummary(null);
+    getStudentRankingSummary(me.id)
+      .then((row) => {
+        if (!cancelled) setSummary(row || null);
+      })
+      .catch(() => {
+        if (!cancelled) setSummary(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [me?.id]);
 
   // Scoped to the student's own level - ranking against students in other
   // levels wouldn't mean anything (see get_group_leaderboard()'s pt.level
@@ -111,6 +134,24 @@ export default function MyRanking() {
         <h1 className="font-display text-2xl font-bold text-ink">{t('portal:myRankingTitle')}</h1>
         <p className="mt-1 text-sm text-ink/50">{t('portal:rankingSubtitle')}</p>
       </header>
+
+      <section className="mb-6">
+        <h2 className="mb-2 font-display text-base font-bold text-ink">{t('portal:myPointsSummaryTitle')}</h2>
+        <div className="grid grid-cols-3 gap-2">
+          <div className="rounded-xl bg-white p-3 text-center shadow-card">
+            <p className="text-xs text-ink/50">{t('portal:period_week')}</p>
+            <p className="mt-1 font-display text-xl font-bold text-ink">{summary ? summary.week_points : '…'}</p>
+          </div>
+          <div className="rounded-xl bg-white p-3 text-center shadow-card">
+            <p className="text-xs text-ink/50">{t('portal:period_month')}</p>
+            <p className="mt-1 font-display text-xl font-bold text-ink">{summary ? summary.month_points : '…'}</p>
+          </div>
+          <div className="rounded-xl bg-brand-500 p-3 text-center shadow-card">
+            <p className="text-xs text-white/70">{t('portal:totalPointsLabel')}</p>
+            <p className="mt-1 font-display text-xl font-bold text-white">{summary ? summary.lifetime_points : '…'}</p>
+          </div>
+        </div>
+      </section>
 
       <section className="mb-6">
         <h2 className="mb-2 font-display text-base font-bold text-ink">{t('portal:recognitionTitle')}</h2>

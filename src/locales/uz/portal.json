@@ -12,6 +12,8 @@
   "period_week": "Bu hafta",
   "period_month": "Bu oy",
   "period_all_time": "Barcha vaqt",
+  "totalPointsLabel": "Umumiy ball",
+  "myPointsSummaryTitle": "Mening ballarim",
   "attendanceRateLabel": "{{rate}}% davomat",
   "recognitionTitle": "Mukofotlar",
   "recognitionEmpty": "Hali mukofotlar yo'q - davom eting!",

@@ -12,6 +12,8 @@
   "period_week": "This Week",
   "period_month": "This Month",
   "period_all_time": "All Time",
+  "totalPointsLabel": "Total Points",
+  "myPointsSummaryTitle": "My Points",
   "attendanceRateLabel": "{{rate}}% attendance",
   "recognitionTitle": "Recognition",
   "recognitionEmpty": "No recognitions yet - keep it up!",
