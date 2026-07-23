@@ -56,9 +56,7 @@ export function PortalSidebar() {
   return (
     <aside className="ruled-texture hidden h-screen w-64 flex-shrink-0 flex-col bg-brand-600 text-white md:flex">
       <div className="flex items-center gap-2 px-6 py-6">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 font-display text-lg font-bold">
-          D
-        </div>
+        <img src="/icons/icon-192.png" alt="Dave English Academy" className="h-9 w-9 flex-shrink-0 rounded-lg object-contain" />
         <div>
           <p className="font-display text-sm font-bold leading-tight">Dave</p>
           <p className="text-xs text-white/60">Academy</p>

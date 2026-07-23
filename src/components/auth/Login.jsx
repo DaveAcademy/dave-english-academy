@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { LogIn } from 'lucide-react';
 import { signInWithPassword } from '../../lib/auth';
 
 export default function Login() {
@@ -28,9 +27,8 @@ export default function Login() {
     <div className="flex min-h-screen items-center justify-center bg-paper px-4">
       <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-card">
         <div className="mb-5 text-center">
-          <LogIn className="mx-auto mb-2 h-10 w-10 text-brand-500" />
-          <h1 className="font-display text-lg font-bold text-ink">Dave Academy</h1>
-          <p className="mt-1 text-sm text-ink/60">{t('auth:signInToContinue')}</p>
+          <img src="/brand/logo-full.png" alt="Dave English Academy" className="mx-auto mb-3 h-auto w-48" />
+          <p className="text-sm text-ink/60">{t('auth:signInToContinue')}</p>
         </div>
 
         {error && (

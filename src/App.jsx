@@ -111,7 +111,8 @@ function PageLoading() {
 
 function MobileHeader() {
   return (
-    <header className="sticky top-0 z-10 bg-brand-700 px-4 py-3 text-white shadow-md md:hidden">
+    <header className="sticky top-0 z-10 flex items-center gap-2 bg-brand-700 px-4 py-3 text-white shadow-md md:hidden">
+      <img src="/icons/icon-192.png" alt="" className="h-6 w-6 flex-shrink-0 rounded object-contain" />
       <p className="text-sm font-semibold leading-tight">Dave Academy</p>
     </header>
   );
