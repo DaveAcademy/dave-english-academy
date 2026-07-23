@@ -562,6 +562,39 @@ export async function getGroupLeaderboard(level, periodType, periodStart = null)
   return data;
 }
 
+// Single-student week/month/total + per-level-rank snapshot (migration
+// 0023) - kept here (not part of the Rankings per-class breakdown work)
+// solely because src/pages/portal/MyRanking.jsx already depends on it;
+// removing it breaks that file's build. Not otherwise used by anything
+// this session added.
+export async function getStudentRankingSummary(studentId) {
+  const { data, error } = await supabase.rpc('get_student_ranking_summary', { p_student_id: studentId });
+  if (error) throw error;
+  return data[0];
+}
+
+// Per-class breakdown for the Rankings weekly/monthly view - a raw,
+// RLS-scoped select over point_transactions rather than a new RPC: the
+// existing table-level policies (pt_admin_select/pt_teacher_select,
+// migration 0019) already grant exactly the right rows for this, so a
+// wrapper function would just duplicate that check. is_baseline is
+// always excluded (see 0021/0023) so the one-time legacy total never
+// appears as a phantom "class." The caller pivots this into one column
+// per distinct lesson_date - there's no separate class-schedule concept
+// in the schema, so the ledger's own lesson_date values are the only
+// source of truth for "which dates had a class."
+export async function listClassPointTransactions(level, startDate, endDate) {
+  const { data, error } = await supabase
+    .from('point_transactions')
+    .select('student_id, lesson_date, points')
+    .eq('level', level)
+    .eq('is_baseline', false)
+    .gte('lesson_date', startDate)
+    .lte('lesson_date', endDate);
+  if (error) throw error;
+  return data;
+}
+
 // ---------- File uploads ----------
 // One shared private bucket for every attachment (chat, exam/homework
 // files and answers, the certificate template) - see migration 0009. The

@@ -26,7 +26,7 @@ import { Minus, Plus, Tag, Users, ChevronDown, ChevronUp, ArrowUp, ArrowDown } f
 import { useAcademy } from '../lib/AcademyDataContext';
 import { useAuth } from '../lib/AuthContext';
 import { LevelBadge } from '../components/Badge';
-import { listPointCategories, listMyTeacherLevels, getGroupLeaderboard } from '../lib/db';
+import { listPointCategories, listMyTeacherLevels, getGroupLeaderboard, getPeriodBounds, listClassPointTransactions } from '../lib/db';
 
 const LEVELS = ['A', 'B', 'C'];
 const PERIODS = ['week', 'month', 'all_time'];
@@ -252,6 +252,76 @@ export default function Rankings() {
       cancelled = true;
     };
   }, [boardLevel, boardPeriod]);
+
+  // ---------- Class-by-class breakdown (Week/Month leaderboard views) ----------
+  // week_bounds()/month_bounds() (migration 0023, exposed via
+  // get_period_bounds in 0025) stay the single source of truth for what
+  // "this week"/"this month" means - period_start/period_end are always
+  // asked of the server, never computed here, so this can't quietly drift
+  // from the same boundaries get_group_leaderboard() itself uses.
+  const [classTransactions, setClassTransactions] = useState(null);
+
+  useEffect(() => {
+    if (boardPeriod === 'all_time') {
+      setClassTransactions(null);
+      return;
+    }
+    let cancelled = false;
+    setClassTransactions(null);
+    getPeriodBounds(boardPeriod)
+      .then((bounds) => listClassPointTransactions(boardLevel, bounds.period_start, bounds.period_end))
+      .then((rows) => {
+        if (!cancelled) setClassTransactions(rows || []);
+      })
+      .catch(() => {
+        if (!cancelled) setClassTransactions([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [boardLevel, boardPeriod]);
+
+  // Distinct class dates actually present in the ledger for this
+  // level/period - not hardcoded to 3 or 12, since a real week/month can
+  // have more, fewer, or zero recorded classes.
+  const classDates = useMemo(() => {
+    if (!classTransactions) return [];
+    return [...new Set(classTransactions.map((t) => t.lesson_date))].sort();
+  }, [classTransactions]);
+
+  // Pivoted student x date grid, fully sorted before it's ever rendered -
+  // the sort happens in this same memo as the pivot/total calculation, so
+  // there's no intermediate unsorted render to flash before a "correct"
+  // one replaces it. Every active student in the level is included (not
+  // just students with a transaction) so a student with zero recorded
+  // points still appears, ranked last, with 0 in every class column
+  // rather than being silently omitted.
+  const classRows = useMemo(() => {
+    if (!classTransactions) return [];
+    const byStudent = {};
+    for (const t of classTransactions) {
+      const perDate = byStudent[t.student_id] || (byStudent[t.student_id] = {});
+      perDate[t.lesson_date] = (perDate[t.lesson_date] || 0) + Number(t.points);
+    }
+    const rows = students
+      .filter((s) => s.status === 'Active' && s.level === boardLevel)
+      .map((s) => {
+        const perDate = byStudent[s.id] || {};
+        const total = classDates.reduce((sum, d) => sum + (perDate[d] || 0), 0);
+        return { student: s, perDate, total };
+      });
+    rows.sort((a, b) => b.total - a.total || a.student.real_name.localeCompare(b.student.real_name));
+    return rows;
+  }, [students, classTransactions, classDates, boardLevel]);
+
+  // Date-only formatting via Date.UTC, deliberately never touching the
+  // browser's local timezone - same reasoning as addDaysISO in utils/date.js
+  // (a plain `new Date(iso)` parse-then-local-getter can shift the
+  // displayed day depending on where the browser is).
+  const formatClassDate = (iso) => {
+    const [y, m, d] = iso.split('-').map(Number);
+    return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+  };
 
   const medal = (i) => (i === 0 ? 'bg-levelB' : i === 1 ? 'bg-ink/20' : i === 2 ? 'bg-levelA' : 'bg-ink/5');
   const medalText = (i) => (i <= 2 ? 'text-white' : 'text-ink/50');
@@ -618,43 +688,99 @@ export default function Rankings() {
           </div>
         </div>
 
-        {board === null ? (
+        {boardPeriod === 'all_time' ? (
+          board === null ? (
+            <p className="py-6 text-center text-sm text-ink/50">Loading...</p>
+          ) : board.length === 0 ? (
+            <p className="py-6 text-center text-sm text-ink/50">No active students in Level {boardLevel}.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[520px] text-left text-sm">
+                <thead>
+                  <tr className="border-b border-ink/10">
+                    <th className="px-3 py-2 font-semibold text-ink/70">Rank</th>
+                    <th className="px-3 py-2 font-semibold text-ink/70">Name</th>
+                    <th className="px-3 py-2 font-semibold text-ink/70">Points</th>
+                    <th className="px-3 py-2 font-semibold text-ink/70">Change</th>
+                    <th className="px-3 py-2 font-semibold text-ink/70">Attendance</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {board.map((row) => (
+                    <tr key={row.student_id} className="border-b border-ink/5 last:border-0">
+                      <td className="px-3 py-2 font-bold text-ink/70">{row.rank}</td>
+                      <td className="px-3 py-2 font-medium text-ink">{row.real_name}</td>
+                      <td className="px-3 py-2 font-bold text-brand-500">{row.points}</td>
+                      <td className="px-3 py-2">
+                        {row.rank_change == null || row.rank_change === 0 ? (
+                          <span className="text-ink/30">—</span>
+                        ) : (
+                          <span className={`flex items-center gap-0.5 font-semibold ${row.rank_change > 0 ? 'text-active' : 'text-inactive'}`}>
+                            {row.rank_change > 0 ? <ArrowUp size={13} /> : <ArrowDown size={13} />}
+                            {Math.abs(row.rank_change)}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-3 py-2 text-ink/60">{row.attendance_rate != null ? `${row.attendance_rate}%` : '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )
+        ) : classTransactions === null ? (
           <p className="py-6 text-center text-sm text-ink/50">Loading...</p>
-        ) : board.length === 0 ? (
+        ) : classRows.length === 0 ? (
           <p className="py-6 text-center text-sm text-ink/50">No active students in Level {boardLevel}.</p>
         ) : (
+          // Class-by-class breakdown: one column per actual class date in
+          // the period (never hardcoded to 3/12), a 0 cell wherever a
+          // student has no recorded points for that class rather than a
+          // blank/ambiguous dash, and a Total column that's always exactly
+          // the sum of the cells shown in that row - computed together in
+          // the classRows memo above, so the number can never disagree
+          // with what's visibly added up. The student-name column stays
+          // pinned while the date columns scroll horizontally, which is
+          // what keeps a 12-column monthly table usable on a phone.
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[520px] text-left text-sm">
+            <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-ink/10">
-                  <th className="px-3 py-2 font-semibold text-ink/70">Rank</th>
-                  <th className="px-3 py-2 font-semibold text-ink/70">Name</th>
-                  <th className="px-3 py-2 font-semibold text-ink/70">Points</th>
-                  <th className="px-3 py-2 font-semibold text-ink/70">Change</th>
-                  <th className="px-3 py-2 font-semibold text-ink/70">Attendance</th>
+                  <th className="sticky left-0 z-10 whitespace-nowrap bg-white px-3 py-2 font-semibold text-ink/70">Student</th>
+                  {classDates.map((d) => (
+                    <th key={d} className="whitespace-nowrap px-3 py-2 text-center font-semibold text-ink/70">
+                      {formatClassDate(d)}
+                    </th>
+                  ))}
+                  <th className="whitespace-nowrap px-3 py-2 text-center font-bold text-ink">
+                    {boardPeriod === 'week' ? 'Weekly Total' : 'Monthly Total'}
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {board.map((row) => (
-                  <tr key={row.student_id} className="border-b border-ink/5 last:border-0">
-                    <td className="px-3 py-2 font-bold text-ink/70">{row.rank}</td>
-                    <td className="px-3 py-2 font-medium text-ink">{row.real_name}</td>
-                    <td className="px-3 py-2 font-bold text-brand-500">{row.points}</td>
-                    <td className="px-3 py-2">
-                      {row.rank_change == null || row.rank_change === 0 ? (
-                        <span className="text-ink/30">—</span>
-                      ) : (
-                        <span className={`flex items-center gap-0.5 font-semibold ${row.rank_change > 0 ? 'text-active' : 'text-inactive'}`}>
-                          {row.rank_change > 0 ? <ArrowUp size={13} /> : <ArrowDown size={13} />}
-                          {Math.abs(row.rank_change)}
+                {classRows.map((row, i) => (
+                  <tr key={row.student.id} className="border-b border-ink/5 last:border-0">
+                    <td className="sticky left-0 z-10 whitespace-nowrap bg-white px-3 py-2">
+                      <div className="flex items-center gap-2">
+                        <span className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold ${medal(i)} ${medalText(i)}`}>
+                          {i + 1}
                         </span>
-                      )}
+                        <span className="font-medium text-ink">{row.student.real_name}</span>
+                      </div>
                     </td>
-                    <td className="px-3 py-2 text-ink/60">{row.attendance_rate != null ? `${row.attendance_rate}%` : '—'}</td>
+                    {classDates.map((d) => (
+                      <td key={d} className="px-3 py-2 text-center text-ink/70">
+                        {row.perDate[d] ?? 0}
+                      </td>
+                    ))}
+                    <td className="px-3 py-2 text-center text-base font-bold text-brand-500">{row.total}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            {classDates.length === 0 && (
+              <p className="py-3 text-center text-xs text-ink/40">No classes recorded for Level {boardLevel} in this period yet.</p>
+            )}
           </div>
         )}
       </section>
