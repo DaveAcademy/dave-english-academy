@@ -289,30 +289,32 @@ export default function Rankings() {
     return [...new Set(classTransactions.map((t) => t.lesson_date))].sort();
   }, [classTransactions]);
 
-  // Pivoted student x date grid, fully sorted before it's ever rendered -
-  // the sort happens in this same memo as the pivot/total calculation, so
-  // there's no intermediate unsorted render to flash before a "correct"
-  // one replaces it. Every active student in the level is included (not
-  // just students with a transaction) so a student with zero recorded
-  // points still appears, ranked last, with 0 in every class column
-  // rather than being silently omitted.
+  // Pivoted student x date grid, ordered and ranked from `board` (already
+  // fetched above via get_group_leaderboard for this exact level/period)
+  // rather than re-sorting/re-ranking client-side from the raw
+  // transactions - board's total and rank() already are the authoritative
+  // numbers get_group_leaderboard computes for this level/period, so this
+  // can never show a total that disagrees with them, and two students the
+  // ledger says are genuinely tied get the same rank here too, instead of
+  // a false #1/#2 split from array position. classTransactions is still
+  // needed for the one thing board doesn't have: the per-class-date
+  // breakdown. Every active student in the level is included (board
+  // already includes zero-point students) so nobody is silently omitted.
   const classRows = useMemo(() => {
-    if (!classTransactions) return [];
+    if (!classTransactions || !board) return [];
     const byStudent = {};
     for (const t of classTransactions) {
       const perDate = byStudent[t.student_id] || (byStudent[t.student_id] = {});
       perDate[t.lesson_date] = (perDate[t.lesson_date] || 0) + Number(t.points);
     }
-    const rows = students
-      .filter((s) => s.status === 'Active' && s.level === boardLevel)
-      .map((s) => {
-        const perDate = byStudent[s.id] || {};
-        const total = classDates.reduce((sum, d) => sum + (perDate[d] || 0), 0);
-        return { student: s, perDate, total };
-      });
-    rows.sort((a, b) => b.total - a.total || a.student.real_name.localeCompare(b.student.real_name));
-    return rows;
-  }, [students, classTransactions, classDates, boardLevel]);
+    return board.map((row) => ({
+      studentId: row.student_id,
+      realName: row.real_name,
+      perDate: byStudent[row.student_id] || {},
+      total: row.points,
+      rank: row.rank,
+    }));
+  }, [classTransactions, board]);
 
   // Date-only formatting via Date.UTC, deliberately never touching the
   // browser's local timezone - same reasoning as addDaysISO in utils/date.js
@@ -728,7 +730,7 @@ export default function Rankings() {
               </table>
             </div>
           )
-        ) : classTransactions === null ? (
+        ) : classTransactions === null || board === null ? (
           <p className="py-6 text-center text-sm text-ink/50">Loading...</p>
         ) : classRows.length === 0 ? (
           <p className="py-6 text-center text-sm text-ink/50">No active students in Level {boardLevel}.</p>
@@ -736,12 +738,13 @@ export default function Rankings() {
           // Class-by-class breakdown: one column per actual class date in
           // the period (never hardcoded to 3/12), a 0 cell wherever a
           // student has no recorded points for that class rather than a
-          // blank/ambiguous dash, and a Total column that's always exactly
-          // the sum of the cells shown in that row - computed together in
-          // the classRows memo above, so the number can never disagree
-          // with what's visibly added up. The student-name column stays
-          // pinned while the date columns scroll horizontally, which is
-          // what keeps a 12-column monthly table usable on a phone.
+          // blank/ambiguous dash, and a Rank/Total that are always exactly
+          // what get_group_leaderboard says (board, via the classRows memo
+          // above) - never a client-recomputed number, so this can't
+          // silently disagree with the all_time view's own source, or
+          // flatten a real tie into a fake #1/#2. The student-name column
+          // stays pinned while the date columns scroll horizontally, which
+          // is what keeps a 12-column monthly table usable on a phone.
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
@@ -759,13 +762,13 @@ export default function Rankings() {
               </thead>
               <tbody>
                 {classRows.map((row, i) => (
-                  <tr key={row.student.id} className="border-b border-ink/5 last:border-0">
+                  <tr key={row.studentId} className="border-b border-ink/5 last:border-0">
                     <td className="sticky left-0 z-10 whitespace-nowrap bg-white px-3 py-2">
                       <div className="flex items-center gap-2">
                         <span className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold ${medal(i)} ${medalText(i)}`}>
-                          {i + 1}
+                          {row.rank}
                         </span>
-                        <span className="font-medium text-ink">{row.student.real_name}</span>
+                        <span className="font-medium text-ink">{row.realName}</span>
                       </div>
                     </td>
                     {classDates.map((d) => (

@@ -6,12 +6,18 @@
 // RLS scopes attendance/exam_scores/homework_status/certificates to their
 // own rows, and students_self_read means `students` itself resolves to
 // just their own record, so `students[0]` (if present) IS "me". Rank comes
-// from get_leaderboard() (see MyRanking.jsx) since ranking against
-// classmates needs data a student's own RLS-scoped reads don't include.
-// Every widget here is computed from data already loaded via useAcademy()
-// or the pre-existing getLeaderboard() call - no new table, column, or
-// migration, and no invented streaks/goals beyond what the underlying
-// attendance/homework/exam records genuinely support.
+// from get_group_leaderboard(me.level, 'all_time') (0023) - the same
+// level-scoped source MyRanking.jsx and Rankings.jsx's Level Leaderboard
+// already use - since ranking against classmates needs data a student's
+// own RLS-scoped reads don't include, and ranking against the whole
+// school (mixing levels of very different experience) wouldn't mean
+// anything, per MyRanking.jsx's own reasoning. Was previously
+// getLeaderboard() (all students, every level, unscoped) - fixed as a
+// standalone correctness pass, no other behavior here changed. Every
+// widget here is computed from data already loaded via useAcademy() or
+// that one RPC call - no new table, column, or migration, and no
+// invented streaks/goals beyond what the underlying attendance/homework/
+// exam records genuinely support.
 //
 // i18n: fully localized via the `dashboard` (and a few `nav`) namespaces,
 // including the strings introduced by the premium redesign (hero summary,
@@ -28,7 +34,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { CalendarClock, CalendarCheck, MessageSquare, Award, Trophy, Star, BookOpen, FileCheck2, Flame, ArrowRight } from 'lucide-react';
 import { useAcademy } from '../../lib/AcademyDataContext';
-import { getLeaderboard } from '../../lib/db';
+import { getGroupLeaderboard } from '../../lib/db';
 import Panel from '../../components/Panel';
 import StatCard from '../../components/StatCard';
 import DashboardHero from '../../components/DashboardHero';
@@ -68,12 +74,18 @@ export default function PortalHome() {
   const [leaderboard, setLeaderboard] = useState(null);
   const { current, previous } = useMemo(() => currentAndPreviousMonth(), []);
 
+  // Scoped to the student's own level - same reasoning and same RPC as
+  // MyRanking.jsx's leaderboard. Waits for `me.level` to be known before
+  // fetching (get_group_leaderboard requires a level), unlike the old
+  // unscoped getLeaderboard() call this replaced, which didn't need one.
+  // Rows already come back sorted by rank (server-side `order by rnk`),
+  // so no client-side re-sort is needed here.
   useEffect(() => {
+    if (!me?.level) return undefined;
     let cancelled = false;
-    getLeaderboard()
+    getGroupLeaderboard(me.level, 'all_time')
       .then((rows) => {
-        if (cancelled) return;
-        setLeaderboard([...(rows || [])].sort((a, b) => b.points - a.points || a.real_name.localeCompare(b.real_name)));
+        if (!cancelled) setLeaderboard(rows || []);
       })
       .catch(() => {
         if (!cancelled) setLeaderboard([]);
@@ -81,7 +93,7 @@ export default function PortalHome() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [me?.level]);
 
   const upcoming = useMemo(() => {
     const now = new Date();
@@ -92,10 +104,14 @@ export default function PortalHome() {
       .slice(0, 5);
   }, [lessons, me]);
 
+  // rank comes straight from the RPC's own rank() (ties share a rank,
+  // matching Rankings.jsx/MyRanking.jsx) rather than an array index -
+  // deriving it from position would silently invent a false distinction
+  // between two students who are genuinely tied.
   const { points, rank } = useMemo(() => {
     if (!me || !leaderboard) return { points: 0, rank: null };
-    const idx = leaderboard.findIndex((r) => r.student_id === me.id);
-    return { points: leaderboard[idx]?.points ?? 0, rank: idx >= 0 ? idx + 1 : null };
+    const mine = leaderboard.find((r) => r.student_id === me.id);
+    return { points: mine?.points ?? 0, rank: mine?.rank ?? null };
   }, [leaderboard, me]);
 
   const topThree = useMemo(() => (leaderboard || []).slice(0, 3), [leaderboard]);
