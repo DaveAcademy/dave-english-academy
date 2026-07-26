@@ -55,13 +55,32 @@ function formatCertificateDate(isoDate) {
 // a long name auto-shrink instead of overflowing the underline/rule that
 // is part of the template artwork.
 const VECTOR_TEMPLATE_LAYOUT = {
+  // Confirmed correct against the original PDF and in production - do not
+  // change this template's coordinates/sizes/font/color.
   student_of_week: {
     name: { y: 296, maxWidth: 460, size: 20, minSize: 13 },
     date: { y: 164, x: 286, size: 11 },
   },
   student_of_month: {
     name: { y: 281, maxWidth: 520, size: 20, minSize: 13 },
-    date: { y: 81.9, x: 551, size: 10 },
+    // The "TEACHER'S SIGNATURE"/"DATE:" label row (y 81.9) has its own
+    // blank gold rule above it at y=90 for BOTH fields (confirmed by
+    // rendering test gridlines directly over the original PDF) - same
+    // "value above the rule, label below it" pattern as the Week
+    // template's "Dave"/date, not a value inline with the label. y=95
+    // (~5pt clearance above the rule) is used for both fields below.
+    // Previously the date was drawn at y=81.9 - the same line as the
+    // "DATE:" label itself - which is the misplacement that was reported.
+    date: { y: 95, x: 551.45, size: 10 },
+    // This template's signature line was left entirely blank in the
+    // original artwork (unlike Week's, which already has "Dave" baked in
+    // as static text) - certificates.issued_by exists in the database but
+    // is never joined to a profile name anywhere in the app, so there is
+    // no per-certificate teacher name wired up to draw here. Rendering
+    // the same static "Dave" as Week's baked-in signature keeps both
+    // official templates consistent for this single-instructor academy
+    // without inventing new data plumbing.
+    signature: { y: 95, x: 307.6, size: 12, text: 'Dave' },
   },
 };
 
@@ -71,10 +90,11 @@ const VECTOR_TEMPLATE_LAYOUT = {
 // upload button accepts application/pdf.
 export const VECTOR_TEMPLATE_KEYS = new Set(Object.keys(VECTOR_TEMPLATE_LAYOUT));
 
-// Draws studentName + issuedDate directly onto the actual template PDF's
-// existing page (loaded via pdf-lib, not rasterized) - its vector art,
-// fonts, and layout stay exactly the original design; only these two
-// fields are added.
+// Draws studentName + issuedDate (+ a static signature name, for
+// student_of_month only - see VECTOR_TEMPLATE_LAYOUT) directly onto the
+// actual template PDF's existing page (loaded via pdf-lib, not
+// rasterized) - its vector art, fonts, and layout stay exactly the
+// original design; only these fields are added.
 async function buildVectorCertificateDoc({ studentName, issuedDate, templateFileUrl, layout }) {
   const bytes = await fetchBytes(templateFileUrl);
   const pdfDoc = await PDFDocument.load(bytes);
@@ -106,6 +126,17 @@ async function buildVectorCertificateDoc({ studentName, issuedDate, templateFile
     font: regularFont,
     color: rgb(0.2, 0.2, 0.2),
   });
+
+  if (layout.signature) {
+    const sigWidth = boldFont.widthOfTextAtSize(layout.signature.text, layout.signature.size);
+    page.drawText(layout.signature.text, {
+      x: layout.signature.x - sigWidth / 2,
+      y: layout.signature.y,
+      size: layout.signature.size,
+      font: boldFont,
+      color: rgb(0.06, 0.09, 0.16),
+    });
+  }
 
   return pdfDoc;
 }
