@@ -9,29 +9,10 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowUp, ArrowDown } from 'lucide-react';
 import { useAcademy } from '../../lib/AcademyDataContext';
-import { getGroupLeaderboard, getMyPointHistory, getRecognitionAwards, getStudentRankingSummary } from '../../lib/db';
+import { getGroupLeaderboard, getRecognitionAwards, getStudentRankingSummary } from '../../lib/db';
 import { formatMonthDay } from '../../utils/date';
 
 const PERIODS = ['week', 'month', 'all_time'];
-
-// Fixed sets from the database (point_categories.key / recognition_awards
-// .award_type's check constraint) - translated locally by name/key match
-// rather than plumbing a translation key through the RPC/table, so no
-// migration is needed to localize them. Falls back to the raw English
-// value for anything unrecognized (e.g. a category an admin adds later).
-const CATEGORY_NAME_KEYS = {
-  'Starting Points': 'categoryStartingPoints',
-  Attendance: 'categoryAttendance',
-  Homework: 'categoryHomework',
-  Participation: 'categoryParticipation',
-  Speaking: 'categorySpeaking',
-  Vocabulary: 'categoryVocabulary',
-  'Test/Exam': 'categoryExam',
-  Behavior: 'categoryBehavior',
-  Bonus: 'categoryBonus',
-  Penalty: 'categoryPenalty',
-  Other: 'categoryOther',
-};
 
 const AWARD_TYPE_INFO = {
   student_of_week: { icon: '🏆', key: 'awardStudentOfWeek' },
@@ -49,7 +30,6 @@ export default function MyRanking() {
   const me = students[0];
   const [period, setPeriod] = useState('week');
   const [leaderboard, setLeaderboard] = useState(null);
-  const [history, setHistory] = useState(null);
   const [awards, setAwards] = useState(null);
   const [summary, setSummary] = useState(null);
 
@@ -95,20 +75,6 @@ export default function MyRanking() {
   }, [me?.level, period]);
 
   useEffect(() => {
-    let cancelled = false;
-    getMyPointHistory()
-      .then((rows) => {
-        if (!cancelled) setHistory(rows || []);
-      })
-      .catch(() => {
-        if (!cancelled) setHistory([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
     if (!me) return undefined;
     let cancelled = false;
     getRecognitionAwards(me.id)
@@ -122,8 +88,6 @@ export default function MyRanking() {
       cancelled = true;
     };
   }, [me]);
-
-  const categoryLabel = (name) => t(CATEGORY_NAME_KEYS[name] || 'categoryOther', { defaultValue: name });
 
   const medal = (i) => (i === 0 ? 'bg-levelB' : i === 1 ? 'bg-ink/20' : i === 2 ? 'bg-levelA' : 'bg-ink/5');
   const medalText = (i) => (i <= 2 ? 'text-white' : 'text-ink/50');
@@ -184,7 +148,10 @@ export default function MyRanking() {
         )}
       </section>
 
-      <h2 className="mb-2 font-display text-base font-bold text-ink">{t('portal:leaderboardTitle', { level: me?.level })}</h2>
+      <h2 className="font-display text-base font-bold text-ink">{t('portal:leaderboardTitle', { level: me?.level })}</h2>
+      {leaderboard != null && leaderboard.length > 0 && (
+        <p className="mb-2 text-xs text-ink/40">{leaderboard.length} students in Level {me?.level}</p>
+      )}
       <section className="mb-2 flex gap-1.5">
         {PERIODS.map((p) => (
           <button
@@ -248,41 +215,6 @@ export default function MyRanking() {
           })}
         </div>
       )}
-
-      <section className="mt-6">
-        <h2 className="mb-2 font-display text-base font-bold text-ink">{t('portal:pointHistoryTitle')}</h2>
-        {history === null ? (
-          <div className="rounded-xl bg-white p-6 text-center text-sm text-ink/50 shadow-card">{t('common:loading')}</div>
-        ) : history.length === 0 ? (
-          <div className="rounded-xl bg-white p-6 text-center shadow-card">
-            <p className="text-sm text-ink/50">{t('portal:pointHistoryEmpty')}</p>
-          </div>
-        ) : (
-          <div className="overflow-hidden rounded-xl bg-white shadow-card">
-            {history.map((h, i) => (
-              <div
-                key={`${h.lesson_date}-${i}`}
-                className={`flex items-center gap-3 px-4 py-3 ${i > 0 ? 'border-t border-ink/5' : ''}`}
-              >
-                <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-ink/5 text-base">
-                  {h.category_icon}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-ink">
-                    {categoryLabel(h.category_name)}
-                    {h.reason ? <span className="text-ink/50"> · {h.reason}</span> : null}
-                  </p>
-                  <p className="text-xs text-ink/40">{formatMonthDay(new Date(h.lesson_date), dateLocale)}</p>
-                </div>
-                <span className={`flex-shrink-0 text-sm font-bold ${h.points >= 0 ? 'text-active' : 'text-inactive'}`}>
-                  {h.points >= 0 ? '+' : ''}
-                  {h.points}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
     </div>
   );
 }
