@@ -75,6 +75,7 @@ export default function MyHomework() {
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold text-ink">{h.title}</p>
                     <p className="text-xs text-ink/50">{t('dueStatus', { date: h.due_date, status: statusLabels[status.status] })}</p>
+                    {h.description && <p className="mt-1 whitespace-pre-wrap text-sm text-ink/70">{h.description}</p>}
                   </div>
                   {graded && status.score != null && <p className="flex-shrink-0 text-sm font-bold text-brand-500">{t('scoreOutOf', { score: status.score })}</p>}
                 </div>
