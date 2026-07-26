@@ -36,7 +36,7 @@ export default function MyExams() {
     if (!file || !me) return;
     setSubmittingId(examId);
     try {
-      const uploaded = await uploadAttachment(file, 'exam-answers');
+      const uploaded = await uploadAttachment(file, `exam-answers/${me.id}`);
       await submitMyExamAnswer(examId, me.id, { fileUrl: uploaded.path, fileName: uploaded.name });
     } finally {
       setSubmittingId(null);

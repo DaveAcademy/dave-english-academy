@@ -31,8 +31,11 @@ export default function Exams() {
   const selectedExam = sortedExams.find((e) => e.id === selectedExamId) || sortedExams[0] || null;
 
   const activeStudents = useMemo(
-    () => [...students].filter((s) => s.status === 'Active').sort((a, b) => a.real_name.localeCompare(b.real_name)),
-    [students]
+    () =>
+      [...students]
+        .filter((s) => s.status === 'Active' && (!selectedExam?.level || s.level === selectedExam.level))
+        .sort((a, b) => a.real_name.localeCompare(b.real_name)),
+    [students, selectedExam]
   );
 
   const scoreOf = (studentId) => examScores.find((s) => s.exam_id === selectedExam?.id && s.student_id === studentId)?.score ?? '';
