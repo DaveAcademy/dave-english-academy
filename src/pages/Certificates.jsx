@@ -26,6 +26,7 @@ export default function Certificates() {
   const [editForm, setEditForm] = useState(EMPTY_FORM);
   const [deletingCert, setDeletingCert] = useState(null);
   const [busyId, setBusyId] = useState(null);
+  const [certError, setCertError] = useState('');
 
   const studentsById = useMemo(() => Object.fromEntries(students.map((s) => [s.id, s])), [students]);
   const activeStudents = useMemo(
@@ -135,24 +136,38 @@ export default function Certificates() {
     };
   };
 
+  // pickCertificateTemplate() throws for a Student of the Week/Month
+  // title whose mandatory template hasn't been uploaded - there's no
+  // fallback design for those two, so that must surface as a visible
+  // error rather than fail silently or generate the wrong certificate.
   const handleDownload = async (c, student) => {
-    const template = await resolveTemplate(c.title);
-    await downloadCertificatePdf({
-      studentName: student?.real_name || 'Student',
-      title: c.title,
-      issuedDate: c.issued_date,
-      ...template,
-    });
+    setCertError('');
+    try {
+      const template = await resolveTemplate(c.title);
+      await downloadCertificatePdf({
+        studentName: student?.real_name || 'Student',
+        title: c.title,
+        issuedDate: c.issued_date,
+        ...template,
+      });
+    } catch (e) {
+      setCertError(e.message || 'Could not generate this certificate. Please try again.');
+    }
   };
 
   const handlePrint = async (c, student) => {
-    const template = await resolveTemplate(c.title);
-    await printCertificatePdf({
-      studentName: student?.real_name || 'Student',
-      title: c.title,
-      issuedDate: c.issued_date,
-      ...template,
-    });
+    setCertError('');
+    try {
+      const template = await resolveTemplate(c.title);
+      await printCertificatePdf({
+        studentName: student?.real_name || 'Student',
+        title: c.title,
+        issuedDate: c.issued_date,
+        ...template,
+      });
+    } catch (e) {
+      setCertError(e.message || 'Could not generate this certificate. Please try again.');
+    }
   };
 
   const handleTemplateUpload = async (key, file) => {
@@ -178,6 +193,7 @@ export default function Certificates() {
       </header>
 
       {error && <div className="mb-4 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{error}</div>}
+      {certError && <div className="mb-4 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{certError}</div>}
 
       {isAdmin && (
         <section className="mb-4 rounded-xl bg-white p-4 shadow-card">
@@ -186,15 +202,18 @@ export default function Certificates() {
             <h2 className="font-display text-sm font-bold text-ink">Certificate templates</h2>
           </div>
           <p className="mb-3 text-xs text-ink/50">
-            Set a background image per certificate type. A type with no image of its own falls back to the default template, then to
-            the built-in design.
+            Student of the Week/Month must each use their own official PDF template - there is no fallback design for them, so
+            generating one of those certificates before its template is uploaded here shows an error instead. Any other certificate
+            type uses the plain built-in design when nothing is uploaded.
           </p>
           <div className="space-y-2">
             {certificateTemplates.map((tpl) => (
               <div key={tpl.key} className="flex flex-wrap items-center gap-3 rounded-lg border border-ink/10 p-3">
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold text-ink">{tpl.label}</p>
-                  <p className="text-xs text-ink/50">{tpl.file_name || 'No image uploaded - falls back to the default template.'}</p>
+                  <p className="text-xs text-ink/50">
+                    {tpl.file_name || (VECTOR_TEMPLATE_KEYS.has(tpl.key) ? 'No template uploaded - generating this certificate will show an error.' : 'No image uploaded - falls back to the built-in design.')}
+                  </p>
                 </div>
                 {tpl.file_url && (
                   <label className="flex flex-shrink-0 cursor-pointer items-center gap-1.5 text-xs text-ink/60">

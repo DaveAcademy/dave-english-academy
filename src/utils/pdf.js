@@ -224,21 +224,48 @@ export async function printCertificatePdf(params) {
 
 // Maps a certificate's title to the certificate_templates row it should
 // use. Only the two hardcoded titles finalize_recognition_winner() ever
-// sets (migration 0025) get a dedicated key - any other title (the
-// free-text "Issue certificate" form, or a future award type with no
-// migrated template yet) uses 'default'. Falls back to the 'default' row
-// if the specific key has no file uploaded yet, so an admin can adopt
-// per-type templates gradually - nothing breaks in the meantime.
+// sets (migration 0025) get a dedicated key. Matched case/whitespace-
+// insensitively: finalize_recognition_winner() always sets the exact-case
+// string, but Certificates.jsx's "Issue certificate" title is free text,
+// and a human retyping "Student of the Week" is liable to vary case or
+// add a stray space.
 const TITLE_TEMPLATE_KEYS = {
-  'Student of the Week': 'student_of_week',
-  'Student of the Month': 'student_of_month',
+  'student of the week': 'student_of_week',
+  'student of the month': 'student_of_month',
 };
 
+const RECOGNITION_TEMPLATE_LABELS = {
+  student_of_week: 'Student of the Week',
+  student_of_month: 'Student of the Month',
+};
+
+function normalizeTitleForTemplateLookup(title) {
+  return (title || '').trim().toLowerCase();
+}
+
+// There is deliberately no "default" template to fall back to (removed
+// 2026-07-26, migration 0036) - a Student of the Week/Month certificate
+// is an official award, and silently substituting some other design (or,
+// worse, an unrelated one an admin happened to have uploaded elsewhere)
+// would look like a normal successful certificate while actually being
+// wrong. If the certificate's title matches one of the two recognition
+// award types but that type's template file hasn't been uploaded yet,
+// this throws instead of returning anything - the caller must surface
+// that as an error, not generate a certificate. Any other title (the
+// free-text "Issue certificate" form, for a non-recognition certificate)
+// has no mandatory template and returns null, which renders the plain
+// built-in design (buildRasterCertificateDoc) - that's an honest generic
+// look, not a specific design pretending to be the right one.
 export function pickCertificateTemplate(templates, title) {
-  const key = TITLE_TEMPLATE_KEYS[title] || 'default';
+  const key = TITLE_TEMPLATE_KEYS[normalizeTitleForTemplateLookup(title)];
+  if (!key) return null;
   const specific = templates.find((t) => t.key === key);
-  if (specific?.file_url) return specific;
-  return templates.find((t) => t.key === 'default') || null;
+  if (!specific?.file_url) {
+    throw new Error(
+      `The "${RECOGNITION_TEMPLATE_LABELS[key]}" certificate template hasn't been uploaded yet. Upload it in Certificate templates before generating this certificate.`
+    );
+  }
+  return specific;
 }
 
 export function downloadReportPdf({ title, columns, rows, subtitle }) {

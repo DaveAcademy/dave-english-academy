@@ -42,5 +42,6 @@
   "noCertificatesYet": "No certificates yet",
   "issuedOn": "Issued {{date}}",
   "print": "Print",
-  "discussCertificateAria": "Discuss this certificate"
+  "discussCertificateAria": "Discuss this certificate",
+  "certificateUnavailable": "This certificate isn't ready for download yet. Please check with your teacher or admin."
 }

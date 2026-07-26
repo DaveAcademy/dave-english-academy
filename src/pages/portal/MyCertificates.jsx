@@ -1,5 +1,6 @@
 // MyCertificates.jsx
 
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Award, Download, Printer, MessageSquare } from 'lucide-react';
@@ -11,6 +12,7 @@ export default function MyCertificates() {
   const { t } = useTranslation('portal');
   const { students, certificates, certificateTemplates } = useAcademy();
   const me = students[0];
+  const [certError, setCertError] = useState('');
 
   // See Certificates.jsx's resolveTemplate() - same per-type resolution
   // (migration 0026), duplicated here rather than shared since each page
@@ -28,24 +30,40 @@ export default function MyCertificates() {
     };
   };
 
+  // pickCertificateTemplate() throws for a Student of the Week/Month
+  // title whose mandatory template hasn't been uploaded - there's no
+  // fallback design for those two, so this surfaces a plain "not ready
+  // yet" message rather than failing silently. A student can't fix a
+  // missing template themselves, so the raw admin-facing error message
+  // from pdf.js isn't shown here.
   const handleDownload = async (c) => {
-    const template = await resolveTemplate(c.title);
-    await downloadCertificatePdf({
-      studentName: me?.real_name || 'Student',
-      title: c.title,
-      issuedDate: c.issued_date,
-      ...template,
-    });
+    setCertError('');
+    try {
+      const template = await resolveTemplate(c.title);
+      await downloadCertificatePdf({
+        studentName: me?.real_name || 'Student',
+        title: c.title,
+        issuedDate: c.issued_date,
+        ...template,
+      });
+    } catch {
+      setCertError(t('certificateUnavailable'));
+    }
   };
 
   const handlePrint = async (c) => {
-    const template = await resolveTemplate(c.title);
-    await printCertificatePdf({
-      studentName: me?.real_name || 'Student',
-      title: c.title,
-      issuedDate: c.issued_date,
-      ...template,
-    });
+    setCertError('');
+    try {
+      const template = await resolveTemplate(c.title);
+      await printCertificatePdf({
+        studentName: me?.real_name || 'Student',
+        title: c.title,
+        issuedDate: c.issued_date,
+        ...template,
+      });
+    } catch {
+      setCertError(t('certificateUnavailable'));
+    }
   };
 
   return (
@@ -54,6 +72,8 @@ export default function MyCertificates() {
         <h1 className="font-display text-2xl font-bold text-ink">{t('myCertificatesTitle')}</h1>
         <p className="mt-1 text-sm text-ink/50">{t('certificatesSubtitle')}</p>
       </header>
+
+      {certError && <div className="mb-4 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{certError}</div>}
 
       {certificates.length === 0 ? (
         <div className="rounded-xl bg-white p-10 text-center shadow-card">

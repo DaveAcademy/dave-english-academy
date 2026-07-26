@@ -42,5 +42,6 @@
   "noCertificatesYet": "Hali sertifikatlar yo'q",
   "issuedOn": "Berilgan sana: {{date}}",
   "print": "Chop etish",
-  "discussCertificateAria": "Ushbu sertifikatni muhokama qilish"
+  "discussCertificateAria": "Ushbu sertifikatni muhokama qilish",
+  "certificateUnavailable": "Bu sertifikat hali yuklab olish uchun tayyor emas. Iltimos, o'qituvchi yoki administrator bilan bog'laning."
 }
