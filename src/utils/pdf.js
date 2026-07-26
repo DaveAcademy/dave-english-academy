@@ -71,7 +71,13 @@ const VECTOR_TEMPLATE_LAYOUT = {
     // (~5pt clearance above the rule) is used for both fields below.
     // Previously the date was drawn at y=81.9 - the same line as the
     // "DATE:" label itself - which is the misplacement that was reported.
-    date: { y: 95, x: 551.45, size: 10 },
+    // x re-measured against the rule's own endpoints (not the label
+    // text): the date rule spans x 460-618 (center 539), measured by
+    // drawing candidate tick marks directly over the original PDF and
+    // rendering them until the ticks lined up with the rule's actual
+    // ends - the label text's width alone (used for the first pass) isn't
+    // the same as the rule's, since the rule is wider than its label.
+    date: { y: 95, x: 539, size: 10 },
     // This template's signature line was left entirely blank in the
     // original artwork (unlike Week's, which already has "Dave" baked in
     // as static text) - certificates.issued_by exists in the database but
@@ -79,8 +85,10 @@ const VECTOR_TEMPLATE_LAYOUT = {
     // no per-certificate teacher name wired up to draw here. Rendering
     // the same static "Dave" as Week's baked-in signature keeps both
     // official templates consistent for this single-instructor academy
-    // without inventing new data plumbing.
-    signature: { y: 95, x: 307.6, size: 12, text: 'Dave' },
+    // without inventing new data plumbing. x re-measured the same way as
+    // date above: the signature rule spans x 238-387 (center 312.5), not
+    // the "TEACHER'S SIGNATURE" label text's own (narrower) width.
+    signature: { y: 95, x: 312.5, size: 12, text: 'Dave' },
   },
 };
 
