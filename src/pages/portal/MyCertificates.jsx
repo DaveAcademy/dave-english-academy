@@ -15,33 +15,36 @@ export default function MyCertificates() {
   // See Certificates.jsx's resolveTemplate() - same per-type resolution
   // (migration 0026), duplicated here rather than shared since each page
   // already had its own near-identical copy before that redesign too.
+  // templateKey/templateFileName let pdf.js tell a .pdf master template
+  // (Student of the Week/Month - rendered via pdf-lib, vector-preserving)
+  // apart from an admin-uploaded image template (rendered via jsPDF).
   const resolveTemplate = async (title) => {
     const row = pickCertificateTemplate(certificateTemplates, title);
     return {
-      templateImageUrl: row?.file_url ? await getAttachmentUrl(row.file_url) : null,
+      templateKey: row?.key || null,
+      templateFileUrl: row?.file_url ? await getAttachmentUrl(row.file_url) : null,
+      templateFileName: row?.file_name || null,
       showTitleOverlay: row?.show_title_overlay ?? true,
     };
   };
 
   const handleDownload = async (c) => {
-    const { templateImageUrl, showTitleOverlay } = await resolveTemplate(c.title);
+    const template = await resolveTemplate(c.title);
     await downloadCertificatePdf({
       studentName: me?.real_name || 'Student',
       title: c.title,
       issuedDate: c.issued_date,
-      templateImageUrl,
-      showTitleOverlay,
+      ...template,
     });
   };
 
   const handlePrint = async (c) => {
-    const { templateImageUrl, showTitleOverlay } = await resolveTemplate(c.title);
+    const template = await resolveTemplate(c.title);
     await printCertificatePdf({
       studentName: me?.real_name || 'Student',
       title: c.title,
       issuedDate: c.issued_date,
-      templateImageUrl,
-      showTitleOverlay,
+      ...template,
     });
   };
 

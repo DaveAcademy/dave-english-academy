@@ -7,7 +7,7 @@ import { useAcademy } from '../lib/AcademyDataContext';
 import { useAuth } from '../lib/AuthContext';
 import { LevelBadge } from '../components/Badge';
 import ConfirmDialog from '../components/ConfirmDialog';
-import { downloadCertificatePdf, printCertificatePdf, pickCertificateTemplate } from '../utils/pdf';
+import { downloadCertificatePdf, printCertificatePdf, pickCertificateTemplate, VECTOR_TEMPLATE_KEYS } from '../utils/pdf';
 import { uploadAttachment, getAttachmentUrl } from '../lib/db';
 
 const EMPTY_FORM = { studentId: '', title: '' };
@@ -121,34 +121,37 @@ export default function Certificates() {
   // Resolves which certificate_templates row applies to this title (see
   // migration 0026 / pickCertificateTemplate()), then turns its storage
   // path into a short-lived signed URL right before generating a PDF
-  // rather than caching one, so it can never go stale.
+  // rather than caching one, so it can never go stale. templateKey/
+  // templateFileName let pdf.js tell a .pdf master template (Student of
+  // the Week/Month - rendered via pdf-lib, vector-preserving) apart from
+  // an admin-uploaded image template (rendered via jsPDF, as before).
   const resolveTemplate = async (title) => {
     const row = pickCertificateTemplate(certificateTemplates, title);
     return {
-      templateImageUrl: row?.file_url ? await getAttachmentUrl(row.file_url) : null,
+      templateKey: row?.key || null,
+      templateFileUrl: row?.file_url ? await getAttachmentUrl(row.file_url) : null,
+      templateFileName: row?.file_name || null,
       showTitleOverlay: row?.show_title_overlay ?? true,
     };
   };
 
   const handleDownload = async (c, student) => {
-    const { templateImageUrl, showTitleOverlay } = await resolveTemplate(c.title);
+    const template = await resolveTemplate(c.title);
     await downloadCertificatePdf({
       studentName: student?.real_name || 'Student',
       title: c.title,
       issuedDate: c.issued_date,
-      templateImageUrl,
-      showTitleOverlay,
+      ...template,
     });
   };
 
   const handlePrint = async (c, student) => {
-    const { templateImageUrl, showTitleOverlay } = await resolveTemplate(c.title);
+    const template = await resolveTemplate(c.title);
     await printCertificatePdf({
       studentName: student?.real_name || 'Student',
       title: c.title,
       issuedDate: c.issued_date,
-      templateImageUrl,
-      showTitleOverlay,
+      ...template,
     });
   };
 
@@ -204,10 +207,15 @@ export default function Certificates() {
                   </label>
                 )}
                 <label className="flex flex-shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-xs font-semibold text-brand-500 hover:bg-brand-50">
-                  <ImageIcon size={13} /> {uploadingKey === tpl.key ? 'Uploading...' : tpl.file_url ? 'Replace image' : 'Upload image'}
+                  <ImageIcon size={13} /> {uploadingKey === tpl.key ? 'Uploading...' : tpl.file_url ? 'Replace file' : 'Upload file'}
                   <input
                     type="file"
-                    accept="image/*"
+                    // Only student_of_week/student_of_month have a pdf-lib
+                    // vector-overlay layout (utils/pdf.js) - a .pdf
+                    // uploaded to any other key would silently fail to
+                    // render (the raster/jsPDF path can't embed a PDF as
+                    // an image), so only these two accept application/pdf.
+                    accept={VECTOR_TEMPLATE_KEYS.has(tpl.key) ? 'image/*,application/pdf' : 'image/*'}
                     className="hidden"
                     disabled={!!uploadingKey}
                     onChange={(e) => handleTemplateUpload(tpl.key, e.target.files?.[0])}
