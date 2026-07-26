@@ -79,6 +79,7 @@ export default function MyExams() {
                       {e.exam_date} · {t('outOfScore', { max: e.max_score })}
                       {e.deadline && ` · ${t('dueDate', { date: e.deadline.slice(0, 10) })}`}
                     </p>
+                    {e.description && <p className="mt-1 whitespace-pre-wrap text-sm text-ink/70">{e.description}</p>}
                   </div>
                   {graded && <p className="flex-shrink-0 text-sm font-bold text-brand-500">{t('scoreOutOfMax', { score: result.score, max: e.max_score })}</p>}
                 </div>
