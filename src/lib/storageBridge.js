@@ -222,15 +222,15 @@ export async function getPeriodBounds(periodType, referenceDate = null) {
   return data[0];
 }
 
-// Same recognition_awards table as getRecognitionAwards() above, just
-// every student's finalized rows instead of one - for the admin
-// Recognition History list, not the student portal.
-// Every status (final/superseded/revoked), not just final - Recognition
-// History (admin) shows the whole correction trail, not just the current
-// state. Callers that only want the current winner per level/period
-// filter client-side (status === 'final'), same as MyRanking's student-
-// facing getRecognitionAwards() already does server-side for its own,
-// narrower purpose.
+// Same recognition_awards table as getRecognitionAwards() above, but every
+// student/status instead of one student's finalized rows - powers the
+// admin Recognition page's "is this level's current period already
+// finalized" check (Recognition.jsx), not the student portal.
+// Every status (final/superseded/revoked), not just final, so the caller
+// can filter client-side to just the current winner per level/period
+// (status === 'final') - same as MyRanking's student-facing
+// getRecognitionAwards() already does server-side for its own, narrower
+// purpose.
 export async function listRecognitionAwards() {
   const { data, error } = await supabase
     .from('recognition_awards')

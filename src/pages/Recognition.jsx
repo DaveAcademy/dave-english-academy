@@ -12,18 +12,26 @@
 // the ledger itself (never trusts a client-supplied value), and issues
 // the certificate in the same transaction.
 //
-// "Edit / Change Winner" is the same re-finalize path a not-yet-edited
-// award already uses to become a correction - passing a different
-// student_id and a required reason. The RPC supersedes the old row
-// (never deletes it - status flips to 'superseded', the audit trail
+// "Edit" (on an already-finalized level) is the same re-finalize path a
+// not-yet-edited award already uses to become a correction - passing a
+// different student_id and a required reason. The RPC supersedes the old
+// row (never deletes it - status flips to 'superseded', the audit trail
 // stays in recognition_reopen_log) and deletes the certificate the
 // previous, now-incorrect winner held (0027), so they don't keep a
 // certificate falsely claiming they won. "Revoke" cancels a final award
 // outright via revoke_recognition_award() (0027) - same certificate
 // cleanup, row marked 'revoked' rather than deleted.
+//
+// This page only surfaces the *current* period's award per level (via
+// awardRecords/finalizedByLevel below) - the old "Recognition History" table
+// that listed every past/superseded/revoked row across all periods was
+// removed as unused. awardRecords still comes from every status, not just
+// 'final' - listRecognitionAwards() (storageBridge.js) is the only way to
+// know "is this level's current period already finalized", which both the
+// candidate list and the Edit/Revoke actions below depend on.
 
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Check, History, ShieldAlert, Pencil, Trash2, X } from 'lucide-react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { ChevronLeft, ChevronRight, Check, ShieldAlert, Trash2, X } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { useAuth } from '../lib/AuthContext';
 import { LevelBadge } from '../components/Badge';
@@ -35,9 +43,6 @@ const AWARD_TYPES = [
   { key: 'student_of_week', periodType: 'week', title: 'Student of the Week' },
   { key: 'student_of_month', periodType: 'month', title: 'Student of the Month' },
 ];
-const STATUS_LABEL = { final: 'Final', superseded: 'Superseded', revoked: 'Revoked' };
-const STATUS_STYLE = { final: 'text-active', superseded: 'text-ink/40', revoked: 'text-inactive' };
-
 function awardTitle(awardTypeKey) {
   return awardTypeKey === 'student_of_week' ? 'Student of the Week' : 'Student of the Month';
 }
@@ -63,7 +68,7 @@ export default function Recognition() {
 
   const [bounds, setBounds] = useState(null);
   const [candidates, setCandidates] = useState({});
-  const [history, setHistory] = useState(null);
+  const [awardRecords, setAwardRecords] = useState(null);
   const [editingLevel, setEditingLevel] = useState(null);
   const [pendingConfirm, setPendingConfirm] = useState(null);
   const [confirmReason, setConfirmReason] = useState('');
@@ -73,19 +78,12 @@ export default function Recognition() {
   const [revokeSubmitting, setRevokeSubmitting] = useState(false);
   const [message, setMessage] = useState('');
 
-  // Consulted once by the bounds effect below when jumping to a specific
-  // history row's period (see startEditFromHistory) - null means "load
-  // the current period", same as switching tabs normally does.
-  const nextReferenceRef = useRef(null);
-
   const studentsById = useMemo(() => Object.fromEntries(students.map((s) => [s.id, s])), [students]);
 
   useEffect(() => {
     let cancelled = false;
     setBounds(null);
-    const ref = nextReferenceRef.current;
-    nextReferenceRef.current = null;
-    getPeriodBounds(awardType.periodType, ref).then((b) => {
+    getPeriodBounds(awardType.periodType).then((b) => {
       if (!cancelled) setBounds(b);
     });
     return () => {
@@ -118,23 +116,23 @@ export default function Recognition() {
     };
   }, [bounds, awardType.periodType]);
 
-  const loadHistory = useCallback(() => {
-    setHistory(null);
+  const loadAwardRecords = useCallback(() => {
+    setAwardRecords(null);
     listRecognitionAwards()
-      .then(setHistory)
-      .catch(() => setHistory([]));
+      .then(setAwardRecords)
+      .catch(() => setAwardRecords([]));
   }, []);
   useEffect(() => {
-    loadHistory();
-  }, [loadHistory]);
+    loadAwardRecords();
+  }, [loadAwardRecords]);
 
   // Currently-final winner for the viewed award type + period, per level -
-  // explicitly excludes superseded/revoked rows now that history holds
-  // every status, not just final.
+  // explicitly excludes superseded/revoked rows, since awardRecords holds
+  // every status.
   const finalizedByLevel = useMemo(() => {
-    if (!history || !bounds) return {};
+    if (!awardRecords || !bounds) return {};
     const map = {};
-    for (const h of history) {
+    for (const h of awardRecords) {
       if (
         h.status === 'final' &&
         h.award_type === awardTypeKey &&
@@ -145,7 +143,7 @@ export default function Recognition() {
       }
     }
     return map;
-  }, [history, bounds, awardTypeKey]);
+  }, [awardRecords, bounds, awardTypeKey]);
 
   const switchAwardType = (key) => {
     setEditingLevel(null);
@@ -159,20 +157,6 @@ export default function Recognition() {
       awardType.periodType === 'week' ? addDaysISO(bounds.period_start, direction * 7) : addMonthsISO(bounds.period_start, direction);
     setBounds(null);
     getPeriodBounds(awardType.periodType, nextRef).then(setBounds);
-  };
-
-  // Jumps the whole page (tab + period) to the exact period a history row
-  // belongs to, then opens that level's candidate list for re-selection.
-  const startEditFromHistory = (row) => {
-    setMessage('');
-    setEditingLevel(row.level);
-    if (row.award_type !== awardTypeKey) {
-      nextReferenceRef.current = row.period_start;
-      setAwardTypeKey(row.award_type);
-    } else {
-      setBounds(null);
-      getPeriodBounds(row.period_type, row.period_start).then(setBounds);
-    }
   };
 
   const submitConfirm = async () => {
@@ -198,7 +182,7 @@ export default function Recognition() {
       setPendingConfirm(null);
       setConfirmReason('');
       setEditingLevel(null);
-      loadHistory();
+      loadAwardRecords();
     } catch (e) {
       setMessage(
         e?.message?.toLowerCase().includes('reason')
@@ -219,7 +203,7 @@ export default function Recognition() {
       setMessage(`Revoked the ${awardTitle(pendingRevoke.award_type)} award for ${studentsById[pendingRevoke.student_id]?.real_name || 'this student'}.`);
       setPendingRevoke(null);
       setRevokeReason('');
-      loadHistory();
+      loadAwardRecords();
     } catch (e) {
       setMessage('Could not revoke this recognition award. Please try again.');
     } finally {
@@ -306,10 +290,18 @@ export default function Recognition() {
               {alreadyFinalized && (
                 <div className="mb-2 flex items-start gap-2 rounded-lg bg-active/10 px-3 py-2.5 text-sm text-active">
                   <Check size={16} className="mt-0.5 flex-shrink-0" />
-                  <span>
+                  <span className="flex-1">
                     Currently awarded to <strong>{studentsById[alreadyFinalized.student_id]?.real_name || 'a student'}</strong> ·{' '}
                     {alreadyFinalized.points} pts
                   </span>
+                  <button
+                    type="button"
+                    onClick={() => setPendingRevoke(alreadyFinalized)}
+                    className="flex-shrink-0 rounded-md p-1 text-inactive hover:bg-inactive/10"
+                    aria-label={`Revoke ${awardTitle(alreadyFinalized.award_type)} for ${studentsById[alreadyFinalized.student_id]?.real_name || 'this student'}`}
+                  >
+                    <Trash2 size={14} />
+                  </button>
                 </div>
               )}
 
@@ -355,84 +347,6 @@ export default function Recognition() {
           );
         })}
       </div>
-
-      <section className="mt-6">
-        <div className="mb-2 flex items-center gap-2">
-          <History size={16} className="text-brand-500" />
-          <h2 className="font-display text-base font-bold text-ink">Recognition History</h2>
-        </div>
-        {history === null ? (
-          <p className="py-4 text-center text-sm text-ink/50">Loading...</p>
-        ) : history.length === 0 ? (
-          <div className="rounded-xl bg-white p-6 text-center shadow-card">
-            <p className="text-sm text-ink/50">No recognitions finalized yet.</p>
-          </div>
-        ) : (
-          <div className="overflow-hidden rounded-xl bg-white shadow-card">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[820px] text-left text-sm">
-                <thead>
-                  <tr className="border-b border-ink/10 bg-ink/[0.02]">
-                    <th className="px-4 py-2.5 font-semibold text-ink/70">Award</th>
-                    <th className="px-4 py-2.5 font-semibold text-ink/70">Student</th>
-                    <th className="px-4 py-2.5 font-semibold text-ink/70">Level</th>
-                    <th className="px-4 py-2.5 font-semibold text-ink/70">Period</th>
-                    <th className="px-4 py-2.5 font-semibold text-ink/70">Points</th>
-                    <th className="px-4 py-2.5 font-semibold text-ink/70">Status</th>
-                    <th className="px-4 py-2.5 font-semibold text-ink/70">Certificate</th>
-                    <th className="px-4 py-2.5 font-semibold text-ink/70">Finalized</th>
-                    <th className="px-4 py-2.5 font-semibold text-ink/70">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {history.map((h) => (
-                    <tr key={h.id} className="border-b border-ink/5 last:border-0">
-                      <td className="px-4 py-2.5 text-ink">{awardTitle(h.award_type)}</td>
-                      <td className="px-4 py-2.5 font-medium text-ink">{studentsById[h.student_id]?.real_name || 'Unknown'}</td>
-                      <td className="px-4 py-2.5">
-                        <LevelBadge level={h.level} />
-                      </td>
-                      <td className="px-4 py-2.5 text-ink/60">{formatPeriodLabel(h.period_start, h.period_end)}</td>
-                      <td className="px-4 py-2.5 font-bold text-brand-500">{h.points}</td>
-                      <td className={`px-4 py-2.5 font-semibold ${STATUS_STYLE[h.status] || 'text-ink/60'}`}>
-                        {STATUS_LABEL[h.status] || h.status}
-                      </td>
-                      <td className="px-4 py-2.5">
-                        {h.certificate_id ? <span className="text-active">✓ Issued</span> : <span className="text-ink/40">—</span>}
-                      </td>
-                      <td className="px-4 py-2.5 text-ink/60">
-                        {new Date(h.computed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                      </td>
-                      <td className="px-4 py-2.5">
-                        {h.status === 'final' && (
-                          <div className="flex gap-1">
-                            <button
-                              type="button"
-                              onClick={() => startEditFromHistory(h)}
-                              className="rounded-md p-1.5 text-brand-500 hover:bg-brand-50"
-                              aria-label={`Edit / change winner for ${awardTitle(h.award_type)}, Level ${h.level}`}
-                            >
-                              <Pencil size={14} />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setPendingRevoke(h)}
-                              className="rounded-md p-1.5 text-inactive hover:bg-inactive/10"
-                              aria-label={`Revoke ${awardTitle(h.award_type)} for ${studentsById[h.student_id]?.real_name || 'this student'}`}
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-      </section>
 
       {pendingConfirm && bounds && (
         <div className="fixed inset-0 z-30 flex items-center justify-center bg-ink/40 p-4">
@@ -482,7 +396,7 @@ export default function Recognition() {
 
             <p className="mt-3 text-xs text-ink/50">
               {pendingConfirm.isEdit
-                ? `This supersedes the current award, removes its certificate, and issues a new "${awardType.title}" certificate to the new student. The previous award stays in history marked "Superseded".`
+                ? `This supersedes the current award, removes its certificate, and issues a new "${awardType.title}" certificate to the new student. The previous award record is kept, marked "Superseded".`
                 : `This creates a recognition record and issues a "${awardType.title}" certificate for this student.`}
             </p>
 
@@ -533,7 +447,7 @@ export default function Recognition() {
               This revokes the {awardTitle(pendingRevoke.award_type)} award for{' '}
               <strong>{studentsById[pendingRevoke.student_id]?.real_name || 'this student'}</strong> (Level {pendingRevoke.level},{' '}
               {formatPeriodLabel(pendingRevoke.period_start, pendingRevoke.period_end)}) and removes the certificate it issued. The
-              record stays in history marked &quot;Revoked&quot; - this can&apos;t be silently undone.
+              record is kept, marked &quot;Revoked&quot; - this can&apos;t be silently undone.
             </p>
             <div className="mt-3">
               <label className="mb-1 block text-xs font-semibold text-ink/60">Reason (required)</label>
