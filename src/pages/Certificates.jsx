@@ -105,12 +105,16 @@ export default function Certificates() {
   };
 
   const handleDelete = async () => {
+    if (busyId === deletingCert.id) return;
     setBusyId(deletingCert.id);
     try {
       await removeCertificate(deletingCert.id);
+      setDeletingCert(null);
+    } catch {
+      // error banner is already set by removeCertificate; keep the dialog
+      // open so the admin can see it and retry or cancel.
     } finally {
       setBusyId(null);
-      setDeletingCert(null);
     }
   };
 
@@ -406,6 +410,7 @@ export default function Certificates() {
           title="Delete certificate?"
           message={`This will permanently remove "${deletingCert.title}" issued to ${studentsById[deletingCert.student_id]?.real_name || 'this student'}. This can't be undone.`}
           confirmLabel="Delete"
+          busy={busyId === deletingCert.id}
           onConfirm={handleDelete}
           onCancel={() => setDeletingCert(null)}
         />
