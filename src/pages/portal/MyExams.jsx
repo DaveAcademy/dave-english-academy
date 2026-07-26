@@ -17,6 +17,7 @@ export default function MyExams() {
   const { students, exams, examScores, submitMyExamAnswer } = useAcademy();
   const me = students[0];
   const [submittingId, setSubmittingId] = useState(null);
+  const [actionError, setActionError] = useState(null);
 
   const myExams = useMemo(() => {
     if (!me) return [];
@@ -27,17 +28,43 @@ export default function MyExams() {
 
   const scoreFor = (examId) => examScores.find((s) => s.exam_id === examId && s.student_id === me?.id);
 
+  // graded / awaitingGrading / notSubmitted - purely derived from existing
+  // score/answer_file_url columns, no new field.
+  const statusOf = (result) => {
+    if (result?.score != null) return 'graded';
+    if (result?.answer_file_url) return 'awaitingGrading';
+    return 'notSubmitted';
+  };
+
+  const isOverdue = (exam) => !!exam.deadline && new Date(exam.deadline) < new Date();
+
   const handleOpenFile = async (path) => {
-    const url = await getAttachmentUrl(path);
-    if (url) window.open(url, '_blank', 'noopener');
+    setActionError(null);
+    try {
+      const url = await getAttachmentUrl(path);
+      if (url) window.open(url, '_blank', 'noopener');
+      else setActionError(t('openFileFailed'));
+    } catch {
+      setActionError(t('openFileFailed'));
+    }
   };
 
   const handleUpload = async (examId, file) => {
     if (!file || !me) return;
     setSubmittingId(examId);
+    setActionError(null);
+    let uploaded;
     try {
-      const uploaded = await uploadAttachment(file, `exam-answers/${me.id}`);
+      uploaded = await uploadAttachment(file, `exam-answers/${me.id}`);
+    } catch {
+      setActionError(t('uploadFileFailed'));
+      setSubmittingId(null);
+      return;
+    }
+    try {
       await submitMyExamAnswer(examId, me.id, { fileUrl: uploaded.path, fileName: uploaded.name });
+    } catch {
+      setActionError(t('submitAnswerFailed'));
     } finally {
       setSubmittingId(null);
     }
@@ -58,6 +85,8 @@ export default function MyExams() {
         <p className="mt-1 text-sm text-ink/50">{t('mySubtitle')}</p>
       </header>
 
+      {actionError && <div className="mb-4 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{actionError}</div>}
+
       {myExams.length === 0 ? (
         <div className="rounded-xl bg-white p-10 text-center shadow-card">
           <p className="font-display text-lg font-semibold text-ink">{t('noExamsAssignedYet')}</p>
@@ -67,6 +96,8 @@ export default function MyExams() {
           {myExams.map((e) => {
             const result = scoreFor(e.id);
             const graded = result?.score != null;
+            const status = statusOf(result);
+            const overdue = isOverdue(e);
             return (
               <div key={e.id} className="rounded-xl bg-white p-3 shadow-card">
                 <div className="flex items-start gap-3">
@@ -74,10 +105,28 @@ export default function MyExams() {
                     <FileCheck2 size={18} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-ink">{e.title}</p>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <p className="font-semibold text-ink">{e.title}</p>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                          status === 'graded'
+                            ? 'bg-brand-50 text-brand-600'
+                            : status === 'awaitingGrading'
+                              ? 'bg-active/10 text-active'
+                              : 'bg-ink/5 text-ink/40'
+                        }`}
+                      >
+                        {t(status)}
+                      </span>
+                    </div>
                     <p className="text-xs text-ink/50">
                       {e.exam_date} · {t('outOfScore', { max: e.max_score })}
-                      {e.deadline && ` · ${t('dueDate', { date: e.deadline.slice(0, 10) })}`}
+                      {e.deadline &&
+                        (overdue ? (
+                          <span className="font-semibold text-inactive"> · {t('dueDateOverdue', { date: e.deadline.slice(0, 10) })}</span>
+                        ) : (
+                          ` · ${t('dueDate', { date: e.deadline.slice(0, 10) })}`
+                        ))}
                     </p>
                     {e.description && <p className="mt-1 whitespace-pre-wrap text-sm text-ink/70">{e.description}</p>}
                   </div>
@@ -86,6 +135,10 @@ export default function MyExams() {
 
                 {result?.feedback && (
                   <p className="mt-2 rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-700">{result.feedback}</p>
+                )}
+
+                {overdue && !graded && (
+                  <p className="mt-2 text-xs font-semibold text-inactive">{t('deadlinePassedWarning')}</p>
                 )}
 
                 <div className="mt-2 flex flex-wrap items-center gap-2">

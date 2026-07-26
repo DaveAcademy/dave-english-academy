@@ -44,5 +44,11 @@
   "uploading": "Yuklanmoqda...",
   "replaceMyAnswer": "Javobimni almashtirish",
   "uploadMyAnswer": "Javobimni yuklash",
-  "viewMySubmittedAnswer": "Yuborilgan javobimni ko'rish"
+  "viewMySubmittedAnswer": "Yuborilgan javobimni ko'rish",
+  "awaitingGrading": "Topshirildi, baholanishi kutilmoqda",
+  "dueDateOverdue": "{{date}} dan beri muddati o'tgan",
+  "deadlinePassedWarning": "Bu imtihonning muddati o'tgan. Baribir topshirishingiz mumkin, lekin avval o'qituvchingiz bilan gaplashing.",
+  "openFileFailed": "Faylni ochib bo'lmadi. Qaytadan urinib ko'ring.",
+  "uploadFileFailed": "Faylni yuklab bo'lmadi. Qaytadan urinib ko'ring.",
+  "submitAnswerFailed": "Faylingiz yuklandi, lekin topshiriqni qayd etib bo'lmadi. Qaytadan urinib ko'ring."
 }

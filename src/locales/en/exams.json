@@ -44,5 +44,11 @@
   "uploading": "Uploading...",
   "replaceMyAnswer": "Replace my answer",
   "uploadMyAnswer": "Upload my answer",
-  "viewMySubmittedAnswer": "View my submitted answer"
+  "viewMySubmittedAnswer": "View my submitted answer",
+  "awaitingGrading": "Submitted, awaiting grading",
+  "dueDateOverdue": "Overdue since {{date}}",
+  "deadlinePassedWarning": "The deadline for this exam has passed. You can still submit, but check with your teacher first.",
+  "openFileFailed": "Could not open this file. Please try again.",
+  "uploadFileFailed": "Could not upload your file. Please try again.",
+  "submitAnswerFailed": "Your file uploaded, but we couldn't record your submission. Please try again."
 }
