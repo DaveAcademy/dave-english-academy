@@ -8,21 +8,28 @@
 // students.points update) - the trigger-maintained cache is what makes
 // the rank list (and the student portal's leaderboard) reflect it.
 //
-// Three workflows, same ledger underneath:
-//   - Quick Points (primary): -1/+1/+3/+5 buttons, tagged bonus/penalty
-//     with a fixed reason. No category/reason picker - this is the fast
-//     path for ordinary classroom use.
-//   - Detailed / Advanced Award (collapsed by default): the original
-//     category + custom points + reason form, for when the specific
-//     category matters (Homework, Behavior, etc.) for reporting.
+// Two workflows, same ledger underneath:
+//   - Add Points (primary, open by default): student + custom points +
+//     free-text reason, one confirm. No category picker - category is
+//     inferred from the sign of the points (positive -> bonus, negative
+//     -> penalty), same rule bulkAwardPoints() below already uses, so this
+//     stays a plain 3-field note (who / how many / why) instead of a form.
 //   - Award Class Points (collapsed by default): the same ledger insert,
 //     batched as one request for every student in a level/group at once.
-// All three ultimately call awardStudentPoints()/bulkAwardStudentPoints(),
-// which is a plain point_transactions insert - RLS and the level-match
-// trigger enforce the real security boundary identically for all three.
+// Both ultimately call awardStudentPoints()/bulkAwardStudentPoints(), which
+// is a plain point_transactions insert - RLS and the level-match trigger
+// enforce the real security boundary identically for both.
+//
+// The Level Leaderboard below is read-only: no award controls in its rows.
+// Its Month/Week views show a per-class-date breakdown (capped to the most
+// recent 3 classes - see recentClassDates) alongside the period total, from
+// the same get_group_leaderboard() + listClassPointTransactions() data this
+// page already fetched - the cap only trims which columns render, it never
+// changes the fetched data or the total/rank shown (those still come
+// straight from get_group_leaderboard(), same as always).
 
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { Minus, Plus, Tag, Users, ChevronDown, ChevronUp, ArrowUp, ArrowDown, RotateCcw } from 'lucide-react';
+import { Tag, Users, ChevronDown, ChevronUp, ArrowUp, ArrowDown } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { useAuth } from '../lib/AuthContext';
 import { listPointCategories, listMyTeacherLevels, getGroupLeaderboard, getPeriodBounds, listClassPointTransactions } from '../lib/db';
@@ -30,7 +37,6 @@ import { listPointCategories, listMyTeacherLevels, getGroupLeaderboard, getPerio
 const LEVELS = ['A', 'B', 'C'];
 const PERIODS = ['week', 'month', 'all_time'];
 const PERIOD_LABEL = { week: 'This Week', month: 'This Month', all_time: 'All Time' };
-const QUICK_DELTAS = [1, 3, 5];
 
 export default function Rankings() {
   const { students, awardStudentPoints, bulkAwardStudentPoints, error } = useAcademy();
@@ -39,19 +45,13 @@ export default function Rankings() {
   const isTeacher = role === 'teacher';
   const canAwardAtAll = isAdmin || isTeacher;
 
-  const [pendingId, setPendingId] = useState(null);
   const [categories, setCategories] = useState([]);
   const [teacherLevels, setTeacherLevels] = useState(null);
-  // Bumped after any successful award (quick/detailed/bulk) so the Level
+  // Bumped after any successful award (Add Points / bulk) so the Level
   // Leaderboard and class-by-class breakdown refetch immediately instead
   // of requiring a level/period tab toggle to notice new data.
   const [refreshKey, setRefreshKey] = useState(0);
   const bumpRefresh = useCallback(() => setRefreshKey((k) => k + 1), []);
-  // Session-local undo: only the single most recent quick award, and only
-  // the exact transaction id just returned to this browser session - never
-  // looked up from the database, never reaches into older history.
-  const [lastAward, setLastAward] = useState(null);
-  const [undoPending, setUndoPending] = useState(false);
 
   useEffect(() => {
     if (!canAwardAtAll) return;
@@ -90,96 +90,34 @@ export default function Rankings() {
 
   const awardableStudents = useMemo(() => ranked.filter((s) => canAwardLevel(s.level)), [ranked, isAdmin, isTeacher, teacherLevels]);
 
-  // ---------- Quick Points (primary workflow) ----------
-  // Always tags bonus/penalty with a fixed reason - no category or reason
-  // picker. This is deliberately the fast path: every click is exactly one
-  // point_transactions insert.
-  const quickAdjust = useCallback(
-    async (student, delta) => {
-      if (!canAwardLevel(student.level) || delta === 0) return;
-      const categoryKey = delta > 0 ? 'bonus' : 'penalty';
-      setPendingId(student.id);
-      try {
-        const transactionId = await awardStudentPoints({
-          studentId: student.id,
-          level: student.level,
-          categoryId: categoryByKey[categoryKey]?.id ?? null,
-          categoryKey,
-          points: delta,
-          reason: `Quick ${delta > 0 ? '+' : ''}${delta}`,
-          awardedBy: session.user.id,
-        });
-        setLastAward({ studentId: student.id, level: student.level, transactionId, delta });
-        bumpRefresh();
-      } finally {
-        setPendingId(null);
-      }
-    },
-    [awardStudentPoints, bumpRefresh, categoryByKey, isAdmin, isTeacher, session?.user?.id, teacherLevels]
-  );
-
-  // Reverses only lastAward's exact transaction id - an ordinary insert
-  // under the same RLS policy as any award (is_reversal +
-  // reversed_transaction_id, never an UPDATE/DELETE - see migration 0019).
-  const undoLastAward = useCallback(async () => {
-    if (!lastAward) return;
-    const categoryKey = lastAward.delta > 0 ? 'bonus' : 'penalty';
-    setUndoPending(true);
-    try {
-      await awardStudentPoints({
-        studentId: lastAward.studentId,
-        level: lastAward.level,
-        categoryId: categoryByKey[categoryKey]?.id ?? null,
-        categoryKey,
-        points: -lastAward.delta,
-        reason: `Undo: Quick ${lastAward.delta > 0 ? '+' : ''}${lastAward.delta}`,
-        awardedBy: session.user.id,
-        isReversal: true,
-        reversedTransactionId: lastAward.transactionId,
-      });
-      setLastAward(null);
-      bumpRefresh();
-    } finally {
-      setUndoPending(false);
-    }
-  }, [awardStudentPoints, bumpRefresh, categoryByKey, lastAward, session?.user?.id]);
-
-  // ---------- Detailed / Advanced Award (secondary, collapsed) ----------
-  const [detailedOpen, setDetailedOpen] = useState(false);
+  // ---------- Add Points (primary workflow, open by default) ----------
+  const [detailedOpen, setDetailedOpen] = useState(true);
   const [awardStudentId, setAwardStudentId] = useState('');
-  const [awardCategoryId, setAwardCategoryId] = useState('');
   const [awardPointsValue, setAwardPointsValue] = useState('');
   const [awardReason, setAwardReason] = useState('');
   const [awardPending, setAwardPending] = useState(false);
   const [awardMessage, setAwardMessage] = useState('');
 
-  const handleCategoryChange = (categoryId) => {
-    setAwardCategoryId(categoryId);
-    const cat = categories.find((c) => String(c.id) === String(categoryId));
-    if (cat) setAwardPointsValue(String(cat.default_points));
-  };
-
   const submitAward = async (e) => {
     e.preventDefault();
     const student = students.find((s) => String(s.id) === String(awardStudentId));
-    const category = categories.find((c) => String(c.id) === String(awardCategoryId));
     const points = Number(awardPointsValue);
-    if (!student || !category || !Number.isFinite(points) || points === 0 || !canAwardLevel(student.level)) return;
+    if (!student || !Number.isFinite(points) || points === 0 || !canAwardLevel(student.level)) return;
+    const categoryKey = points > 0 ? 'bonus' : 'penalty';
     setAwardPending(true);
     setAwardMessage('');
     try {
       await awardStudentPoints({
         studentId: student.id,
         level: student.level,
-        categoryId: category.id,
-        categoryKey: category.key,
+        categoryId: categoryByKey[categoryKey]?.id ?? null,
+        categoryKey,
         points,
         reason: awardReason.trim() || null,
         awardedBy: session.user.id,
       });
       setAwardMessage(`Awarded ${points > 0 ? '+' : ''}${points} to ${student.real_name}.`);
       setAwardStudentId('');
-      setAwardCategoryId('');
       setAwardPointsValue('');
       setAwardReason('');
       bumpRefresh();
@@ -269,7 +207,7 @@ export default function Rankings() {
 
   // ---------- Level Leaderboard (read-only, level + period scoped) ----------
   const [boardLevel, setBoardLevel] = useState('A');
-  const [boardPeriod, setBoardPeriod] = useState('week');
+  const [boardPeriod, setBoardPeriod] = useState('month');
   const [board, setBoard] = useState(null);
   const boardLevelInitialized = useRef(false);
 
@@ -324,12 +262,25 @@ export default function Rankings() {
   }, [boardLevel, boardPeriod, refreshKey]);
 
   // Distinct class dates actually present in the ledger for this
-  // level/period - not hardcoded to 3 or 12, since a real week/month can
-  // have more, fewer, or zero recorded classes.
+  // level/period, ascending. recentClassDates below is what actually
+  // renders as columns - capped to the most recent 3 so a full month's
+  // worth of classes doesn't turn into a dozen-plus column table. The
+  // Monthly/Weekly Total column (from `board`, not summed from these
+  // dates) is unaffected by the cap either way.
   const classDates = useMemo(() => {
     if (!classTransactions) return [];
     return [...new Set(classTransactions.map((t) => t.lesson_date))].sort();
   }, [classTransactions]);
+
+  const recentClassDates = useMemo(() => classDates.slice(-3), [classDates]);
+
+  // Classes are held Tue/Thu/Sat, so a complete week has exactly 3 distinct
+  // class dates. classDates (not the display-capped recentClassDates) is
+  // the true count of classes actually recorded so far this week - if it's
+  // under 3, the week's total below is real but partial, not a silent zero
+  // for the missing class(es). Only meaningful for the week tab; a month is
+  // expected to be "incomplete" until it ends, so this doesn't apply there.
+  const isIncompleteWeek = boardPeriod === 'week' && classDates.length > 0 && classDates.length < 3;
 
   // Pivoted student x date grid, ordered and ranked from `board` (already
   // fetched above via get_group_leaderboard for this exact level/period)
@@ -370,74 +321,18 @@ export default function Rankings() {
   const medal = (i) => (i === 0 ? 'bg-levelB' : i === 1 ? 'bg-ink/20' : i === 2 ? 'bg-levelA' : 'bg-ink/5');
   const medalText = (i) => (i <= 2 ? 'text-white' : 'text-ink/50');
 
-  // Quick-award controls for a single leaderboard row - shared by both the
-  // all_time table and the week/month class-breakdown table below, since
-  // awarding must work identically no matter which period is on screen
-  // (a quick award always records against today, regardless of the period
-  // being viewed). Renders nothing if the current user can't award for
-  // this level.
-  const renderQuickPoints = (studentId, level, realName) => {
-    if (!canAwardLevel(level)) return null;
-    return (
-      <div className="flex flex-wrap items-center justify-center gap-1">
-        <button
-          type="button"
-          onClick={() => quickAdjust({ id: studentId, level }, -1)}
-          disabled={pendingId === studentId}
-          className="rounded-md p-1 text-ink/50 hover:bg-ink/5 disabled:opacity-40"
-          aria-label={`Subtract a point from ${realName}`}
-        >
-          <Minus size={14} />
-        </button>
-        <button
-          type="button"
-          onClick={() => quickAdjust({ id: studentId, level }, 1)}
-          disabled={pendingId === studentId}
-          className="rounded-md p-1 text-ink/50 hover:bg-ink/5 disabled:opacity-40"
-          aria-label={`Add a point to ${realName}`}
-        >
-          <Plus size={14} />
-        </button>
-        {QUICK_DELTAS.slice(1).map((d) => (
-          <button
-            key={d}
-            type="button"
-            onClick={() => quickAdjust({ id: studentId, level }, d)}
-            disabled={pendingId === studentId}
-            className="rounded-md px-1.5 py-1 text-xs font-bold text-ink/50 hover:bg-ink/5 hover:text-active disabled:opacity-40"
-            aria-label={`Add ${d} points to ${realName}`}
-          >
-            +{d}
-          </button>
-        ))}
-        {lastAward?.studentId === studentId && (
-          <button
-            type="button"
-            onClick={undoLastAward}
-            disabled={undoPending}
-            className="ml-1 flex items-center gap-1 rounded-md px-1.5 py-1 text-xs font-semibold text-inactive hover:bg-inactive/10 disabled:opacity-40"
-            aria-label={`Undo last award for ${realName}`}
-          >
-            <RotateCcw size={12} />
-            Undo
-          </button>
-        )}
-      </div>
-    );
-  };
-
   return (
     <div>
       <header className="mb-4">
         <h1 className="font-display text-2xl font-bold text-ink">Rankings</h1>
         <p className="mt-1 text-sm text-ink/50">
           {isAdmin
-            ? 'Quick +1/+3/+5 and -1 buttons record an instant ledger adjustment for any student. Use Detailed Award for a specific category, or Award Class Points for a whole level/group at once.'
+            ? 'Use Add Points below to record points for a student, or Award Class Points for a whole level/group at once.'
             : isTeacher
               ? teacherLevels === null
                 ? 'Loading your assigned levels...'
                 : teacherLevels.length > 0
-                  ? `Quick points are editable for your assigned level(s): ${teacherLevels.join(', ')}.`
+                  ? `You can add points for your assigned level(s): ${teacherLevels.join(', ')}.`
                   : "You haven't been assigned to any levels yet - ask your administrator."
               : 'Ranked by points.'}
         </p>
@@ -460,17 +355,16 @@ export default function Rankings() {
           >
             <span className="flex items-center gap-2">
               <Tag size={16} className="text-brand-500" />
-              <h2 className="font-display text-sm font-bold text-ink">Detailed / Advanced Award</h2>
+              <h2 className="font-display text-sm font-bold text-ink">Add Points</h2>
             </span>
             {detailedOpen ? <ChevronUp size={16} className="text-ink/40" /> : <ChevronDown size={16} className="text-ink/40" />}
           </button>
           {detailedOpen && (
             <div className="border-t border-ink/5 p-4 pt-3">
               <p className="mb-3 text-xs text-ink/50">
-                Award points with a specific category and reason - use this when it matters for reporting (Homework, Attendance,
-                Behavior, etc.) instead of a generic bonus/penalty.
+                Pick a student, type the points (use a minus sign to subtract), and write why - one entry, one confirm.
               </p>
-              <form onSubmit={submitAward} className="grid gap-2 sm:grid-cols-4">
+              <form onSubmit={submitAward} className="grid gap-2 sm:grid-cols-3">
                 <select
                   value={awardStudentId}
                   onChange={(e) => setAwardStudentId(e.target.value)}
@@ -484,25 +378,12 @@ export default function Rankings() {
                     </option>
                   ))}
                 </select>
-                <select
-                  value={awardCategoryId}
-                  onChange={(e) => handleCategoryChange(e.target.value)}
-                  className="input sm:col-span-1"
-                  required
-                >
-                  <option value="">Select category...</option>
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.icon} {c.name}
-                    </option>
-                  ))}
-                </select>
                 <input
                   type="number"
                   step="1"
                   value={awardPointsValue}
                   onChange={(e) => setAwardPointsValue(e.target.value)}
-                  placeholder="Points"
+                  placeholder="Points (e.g. 5 or -2)"
                   className="input sm:col-span-1"
                   required
                 />
@@ -510,15 +391,15 @@ export default function Rankings() {
                   type="text"
                   value={awardReason}
                   onChange={(e) => setAwardReason(e.target.value)}
-                  placeholder="Reason (optional)"
+                  placeholder="Reason (e.g. homework, behavior)"
                   className="input sm:col-span-1"
                 />
                 <button
                   type="submit"
                   disabled={awardPending}
-                  className="rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-50 sm:col-span-4"
+                  className="rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-50 sm:col-span-3"
                 >
-                  {awardPending ? 'Awarding...' : 'Award points'}
+                  {awardPending ? 'Saving...' : 'Save'}
                 </button>
               </form>
               {awardMessage && <p className="mt-2 text-sm text-ink/60">{awardMessage}</p>}
@@ -675,7 +556,6 @@ export default function Rankings() {
                     <th className="px-3 py-2 font-semibold text-ink/70">Points</th>
                     <th className="px-3 py-2 font-semibold text-ink/70">Change</th>
                     <th className="px-3 py-2 font-semibold text-ink/70">Attendance</th>
-                    {canAwardLevel(boardLevel) && <th className="px-3 py-2 text-center font-semibold text-ink/70">Quick Points</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -695,9 +575,6 @@ export default function Rankings() {
                         )}
                       </td>
                       <td className="px-3 py-2 text-ink/60">{row.attendance_rate != null ? `${row.attendance_rate}%` : '—'}</td>
-                      {canAwardLevel(boardLevel) && (
-                        <td className="px-3 py-2">{renderQuickPoints(row.student_id, boardLevel, row.real_name)}</td>
-                      )}
                     </tr>
                   ))}
                 </tbody>
@@ -709,32 +586,36 @@ export default function Rankings() {
         ) : classRows.length === 0 ? (
           <p className="py-6 text-center text-sm text-ink/50">No active students in Level {boardLevel}.</p>
         ) : (
-          // Class-by-class breakdown: one column per actual class date in
-          // the period (never hardcoded to 3/12), a 0 cell wherever a
-          // student has no recorded points for that class rather than a
-          // blank/ambiguous dash, and a Rank/Total that are always exactly
-          // what get_group_leaderboard says (board, via the classRows memo
-          // above) - never a client-recomputed number, so this can't
-          // silently disagree with the all_time view's own source, or
-          // flatten a real tie into a fake #1/#2. The student-name column
-          // stays pinned while the date columns scroll horizontally, which
-          // is what keeps a 12-column monthly table usable on a phone.
+          // Class-by-class breakdown: one column per class date, capped to
+          // the most recent 3 (recentClassDates) so this stays readable at
+          // a glance instead of growing to a dozen-plus columns over a full
+          // month. A 0 cell wherever a student has no recorded points for
+          // that class rather than a blank/ambiguous dash. Rank/Total are
+          // always exactly what get_group_leaderboard says (board, via the
+          // classRows memo above) - never a client-recomputed number, so
+          // capping the visible dates can't disagree with the real total,
+          // and a genuine tie still renders identically (medal keys off
+          // row.rank, not array position). The student-name column stays
+          // pinned while date columns scroll horizontally.
           <div className="overflow-x-auto">
+            {isIncompleteWeek && (
+              <p className="mb-2 rounded-lg bg-levelB/10 px-3 py-2 text-xs font-medium text-ink/70">
+                Incomplete week - {classDates.length} of 3 classes recorded so far. The 3-Class Weekly Total below only reflects
+                classes held so far this week, not a zero for the rest.
+              </p>
+            )}
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-ink/10">
                   <th className="sticky left-0 z-10 whitespace-nowrap bg-white px-3 py-2 font-semibold text-ink/70">Student</th>
-                  {classDates.map((d) => (
+                  {recentClassDates.map((d) => (
                     <th key={d} className="whitespace-nowrap px-3 py-2 text-center font-semibold text-ink/70">
                       {formatClassDate(d)}
                     </th>
                   ))}
                   <th className="whitespace-nowrap px-3 py-2 text-center font-bold text-ink">
-                    {boardPeriod === 'week' ? 'Weekly Total' : 'Monthly Total'}
+                    {boardPeriod === 'week' ? '3-Class Weekly Total' : 'Monthly Total'}
                   </th>
-                  {canAwardLevel(boardLevel) && (
-                    <th className="whitespace-nowrap px-3 py-2 text-center font-semibold text-ink/70">Quick Points</th>
-                  )}
                 </tr>
               </thead>
               <tbody>
@@ -750,15 +631,12 @@ export default function Rankings() {
                         <span className="font-medium text-ink">{row.realName}</span>
                       </div>
                     </td>
-                    {classDates.map((d) => (
+                    {recentClassDates.map((d) => (
                       <td key={d} className="px-3 py-2 text-center text-ink/70">
                         {row.perDate[d] ?? 0}
                       </td>
                     ))}
                     <td className="px-3 py-2 text-center text-base font-bold text-brand-500">{row.total}</td>
-                    {canAwardLevel(boardLevel) && (
-                      <td className="px-3 py-2">{renderQuickPoints(row.studentId, boardLevel, row.realName)}</td>
-                    )}
                   </tr>
                 ))}
               </tbody>
