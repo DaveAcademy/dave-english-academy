@@ -77,17 +77,40 @@ export async function deleteStudent(id) {
 // admin included - there is no other way left to change it. `level` must
 // match the target student's own level (enforced by a database trigger
 // too), so callers pass the student's current level, not an arbitrary one.
-export async function awardPoints({ studentId, level, categoryId, categoryKey, points, reason, awardedBy }) {
-  const { error } = await supabase.from('point_transactions').insert({
-    student_id: studentId,
-    level,
-    category_id: categoryId ?? null,
-    category_key: categoryKey,
-    points,
-    reason,
-    awarded_by: awardedBy,
-  });
+//
+// Returns the inserted row's id so a caller can offer an Undo that writes a
+// real reversal row (is_reversal + reversed_transaction_id pointing back at
+// this one) instead of an untraceable second penalty. A reversal row is the
+// only correction the database permits: point_transactions has no UPDATE or
+// DELETE policy for any role, admin included (0019).
+export async function awardPoints({
+  studentId,
+  level,
+  categoryId,
+  categoryKey,
+  points,
+  reason,
+  awardedBy,
+  isReversal = false,
+  reversedTransactionId = null,
+}) {
+  const { data, error } = await supabase
+    .from('point_transactions')
+    .insert({
+      student_id: studentId,
+      level,
+      category_id: categoryId ?? null,
+      category_key: categoryKey,
+      points,
+      reason,
+      awarded_by: awardedBy,
+      is_reversal: isReversal,
+      reversed_transaction_id: reversedTransactionId,
+    })
+    .select('id')
+    .single();
   if (error) throw error;
+  return data.id;
 }
 
 // Same ledger, same RLS/trigger enforcement per row as awardPoints() above -

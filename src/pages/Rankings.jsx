@@ -21,11 +21,10 @@
 // which is a plain point_transactions insert - RLS and the level-match
 // trigger enforce the real security boundary identically for all three.
 
-import { useState, useMemo, useEffect, useRef } from 'react';
-import { Minus, Plus, Tag, Users, ChevronDown, ChevronUp, ArrowUp, ArrowDown } from 'lucide-react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { Minus, Plus, Tag, Users, ChevronDown, ChevronUp, ArrowUp, ArrowDown, RotateCcw } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { useAuth } from '../lib/AuthContext';
-import { LevelBadge } from '../components/Badge';
 import { listPointCategories, listMyTeacherLevels, getGroupLeaderboard, getPeriodBounds, listClassPointTransactions } from '../lib/db';
 
 const LEVELS = ['A', 'B', 'C'];
@@ -43,6 +42,16 @@ export default function Rankings() {
   const [pendingId, setPendingId] = useState(null);
   const [categories, setCategories] = useState([]);
   const [teacherLevels, setTeacherLevels] = useState(null);
+  // Bumped after any successful award (quick/detailed/bulk) so the Level
+  // Leaderboard and class-by-class breakdown refetch immediately instead
+  // of requiring a level/period tab toggle to notice new data.
+  const [refreshKey, setRefreshKey] = useState(0);
+  const bumpRefresh = useCallback(() => setRefreshKey((k) => k + 1), []);
+  // Session-local undo: only the single most recent quick award, and only
+  // the exact transaction id just returned to this browser session - never
+  // looked up from the database, never reaches into older history.
+  const [lastAward, setLastAward] = useState(null);
+  const [undoPending, setUndoPending] = useState(false);
 
   useEffect(() => {
     if (!canAwardAtAll) return;
@@ -85,24 +94,55 @@ export default function Rankings() {
   // Always tags bonus/penalty with a fixed reason - no category or reason
   // picker. This is deliberately the fast path: every click is exactly one
   // point_transactions insert.
-  const quickAdjust = async (student, delta) => {
-    if (!canAwardLevel(student.level) || delta === 0) return;
-    const categoryKey = delta > 0 ? 'bonus' : 'penalty';
-    setPendingId(student.id);
+  const quickAdjust = useCallback(
+    async (student, delta) => {
+      if (!canAwardLevel(student.level) || delta === 0) return;
+      const categoryKey = delta > 0 ? 'bonus' : 'penalty';
+      setPendingId(student.id);
+      try {
+        const transactionId = await awardStudentPoints({
+          studentId: student.id,
+          level: student.level,
+          categoryId: categoryByKey[categoryKey]?.id ?? null,
+          categoryKey,
+          points: delta,
+          reason: `Quick ${delta > 0 ? '+' : ''}${delta}`,
+          awardedBy: session.user.id,
+        });
+        setLastAward({ studentId: student.id, level: student.level, transactionId, delta });
+        bumpRefresh();
+      } finally {
+        setPendingId(null);
+      }
+    },
+    [awardStudentPoints, bumpRefresh, categoryByKey, isAdmin, isTeacher, session?.user?.id, teacherLevels]
+  );
+
+  // Reverses only lastAward's exact transaction id - an ordinary insert
+  // under the same RLS policy as any award (is_reversal +
+  // reversed_transaction_id, never an UPDATE/DELETE - see migration 0019).
+  const undoLastAward = useCallback(async () => {
+    if (!lastAward) return;
+    const categoryKey = lastAward.delta > 0 ? 'bonus' : 'penalty';
+    setUndoPending(true);
     try {
       await awardStudentPoints({
-        studentId: student.id,
-        level: student.level,
+        studentId: lastAward.studentId,
+        level: lastAward.level,
         categoryId: categoryByKey[categoryKey]?.id ?? null,
         categoryKey,
-        points: delta,
-        reason: 'Quick manual adjustment via Rankings',
+        points: -lastAward.delta,
+        reason: `Undo: Quick ${lastAward.delta > 0 ? '+' : ''}${lastAward.delta}`,
         awardedBy: session.user.id,
+        isReversal: true,
+        reversedTransactionId: lastAward.transactionId,
       });
+      setLastAward(null);
+      bumpRefresh();
     } finally {
-      setPendingId(null);
+      setUndoPending(false);
     }
-  };
+  }, [awardStudentPoints, bumpRefresh, categoryByKey, lastAward, session?.user?.id]);
 
   // ---------- Detailed / Advanced Award (secondary, collapsed) ----------
   const [detailedOpen, setDetailedOpen] = useState(false);
@@ -142,6 +182,7 @@ export default function Rankings() {
       setAwardCategoryId('');
       setAwardPointsValue('');
       setAwardReason('');
+      bumpRefresh();
     } catch {
       setAwardMessage('Could not award points. Please try again.');
     } finally {
@@ -218,6 +259,7 @@ export default function Rankings() {
       setBulkMessage(`Awarded points to ${entries.length} student${entries.length === 1 ? '' : 's'}.`);
       setBulkValues({});
       setBulkFillValue('');
+      bumpRefresh();
     } catch {
       setBulkMessage('Could not award bulk points. Please try again.');
     } finally {
@@ -251,7 +293,7 @@ export default function Rankings() {
     return () => {
       cancelled = true;
     };
-  }, [boardLevel, boardPeriod]);
+  }, [boardLevel, boardPeriod, refreshKey]);
 
   // ---------- Class-by-class breakdown (Week/Month leaderboard views) ----------
   // week_bounds()/month_bounds() (migration 0023, exposed via
@@ -279,7 +321,7 @@ export default function Rankings() {
     return () => {
       cancelled = true;
     };
-  }, [boardLevel, boardPeriod]);
+  }, [boardLevel, boardPeriod, refreshKey]);
 
   // Distinct class dates actually present in the ledger for this
   // level/period - not hardcoded to 3 or 12, since a real week/month can
@@ -328,6 +370,62 @@ export default function Rankings() {
   const medal = (i) => (i === 0 ? 'bg-levelB' : i === 1 ? 'bg-ink/20' : i === 2 ? 'bg-levelA' : 'bg-ink/5');
   const medalText = (i) => (i <= 2 ? 'text-white' : 'text-ink/50');
 
+  // Quick-award controls for a single leaderboard row - shared by both the
+  // all_time table and the week/month class-breakdown table below, since
+  // awarding must work identically no matter which period is on screen
+  // (a quick award always records against today, regardless of the period
+  // being viewed). Renders nothing if the current user can't award for
+  // this level.
+  const renderQuickPoints = (studentId, level, realName) => {
+    if (!canAwardLevel(level)) return null;
+    return (
+      <div className="flex flex-wrap items-center justify-center gap-1">
+        <button
+          type="button"
+          onClick={() => quickAdjust({ id: studentId, level }, -1)}
+          disabled={pendingId === studentId}
+          className="rounded-md p-1 text-ink/50 hover:bg-ink/5 disabled:opacity-40"
+          aria-label={`Subtract a point from ${realName}`}
+        >
+          <Minus size={14} />
+        </button>
+        <button
+          type="button"
+          onClick={() => quickAdjust({ id: studentId, level }, 1)}
+          disabled={pendingId === studentId}
+          className="rounded-md p-1 text-ink/50 hover:bg-ink/5 disabled:opacity-40"
+          aria-label={`Add a point to ${realName}`}
+        >
+          <Plus size={14} />
+        </button>
+        {QUICK_DELTAS.slice(1).map((d) => (
+          <button
+            key={d}
+            type="button"
+            onClick={() => quickAdjust({ id: studentId, level }, d)}
+            disabled={pendingId === studentId}
+            className="rounded-md px-1.5 py-1 text-xs font-bold text-ink/50 hover:bg-ink/5 hover:text-active disabled:opacity-40"
+            aria-label={`Add ${d} points to ${realName}`}
+          >
+            +{d}
+          </button>
+        ))}
+        {lastAward?.studentId === studentId && (
+          <button
+            type="button"
+            onClick={undoLastAward}
+            disabled={undoPending}
+            className="ml-1 flex items-center gap-1 rounded-md px-1.5 py-1 text-xs font-semibold text-inactive hover:bg-inactive/10 disabled:opacity-40"
+            aria-label={`Undo last award for ${realName}`}
+          >
+            <RotateCcw size={12} />
+            Undo
+          </button>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div>
       <header className="mb-4">
@@ -347,138 +445,10 @@ export default function Rankings() {
 
       {error && <div className="mb-4 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{error}</div>}
 
-      {ranked.length === 0 ? (
-        <div className="rounded-xl bg-white p-10 text-center shadow-card">
+      {ranked.length === 0 && (
+        <div className="mb-4 rounded-xl bg-white p-10 text-center shadow-card">
           <p className="font-display text-lg font-semibold text-ink">No active students</p>
         </div>
-      ) : (
-        <>
-          {/* Desktop table */}
-          <div className="mb-4 hidden overflow-hidden rounded-xl bg-white shadow-card md:block">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[640px] text-left text-sm">
-                <thead>
-                  <tr className="border-b border-ink/10 bg-ink/[0.02]">
-                    <th className="px-4 py-3 font-semibold text-ink/70">Rank</th>
-                    <th className="px-4 py-3 font-semibold text-ink/70">Real Name</th>
-                    <th className="px-4 py-3 font-semibold text-ink/70">English Name</th>
-                    <th className="px-4 py-3 font-semibold text-ink/70">Level</th>
-                    <th className="px-4 py-3 font-semibold text-ink/70">Quick Points</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {ranked.map((s, i) => (
-                    <tr key={s.id} className="border-b border-ink/5 last:border-0 hover:bg-ink/[0.015]">
-                      <td className="px-4 py-3">
-                        <span className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${medal(i)} ${medalText(i)}`}>
-                          {i + 1}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 font-medium text-ink">{s.real_name}</td>
-                      <td className="px-4 py-3 text-ink/70">{s.english_name || '—'}</td>
-                      <td className="px-4 py-3"><LevelBadge level={s.level} /></td>
-                      <td className="px-4 py-3">
-                        {canAwardLevel(s.level) ? (
-                          <div className="flex items-center gap-1">
-                            <button
-                              type="button"
-                              onClick={() => quickAdjust(s, -1)}
-                              disabled={pendingId === s.id}
-                              className="rounded-md p-1 text-ink/50 hover:bg-ink/5 disabled:opacity-40"
-                              aria-label={`Subtract a point from ${s.real_name}`}
-                            >
-                              <Minus size={14} />
-                            </button>
-                            <span className="w-10 text-center text-sm font-bold text-brand-500">{s.points}</span>
-                            <button
-                              type="button"
-                              onClick={() => quickAdjust(s, 1)}
-                              disabled={pendingId === s.id}
-                              className="rounded-md p-1 text-ink/50 hover:bg-ink/5 disabled:opacity-40"
-                              aria-label={`Add a point to ${s.real_name}`}
-                            >
-                              <Plus size={14} />
-                            </button>
-                            {QUICK_DELTAS.slice(1).map((d) => (
-                              <button
-                                key={d}
-                                type="button"
-                                onClick={() => quickAdjust(s, d)}
-                                disabled={pendingId === s.id}
-                                className="rounded-md px-1.5 py-1 text-xs font-bold text-ink/50 hover:bg-ink/5 hover:text-active disabled:opacity-40"
-                                aria-label={`Add ${d} points to ${s.real_name}`}
-                              >
-                                +{d}
-                              </button>
-                            ))}
-                          </div>
-                        ) : (
-                          <span className="font-bold text-brand-500">{s.points}</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Mobile cards */}
-          <div className="mb-4 space-y-2 md:hidden">
-            {ranked.map((s, i) => (
-              <div key={s.id} className="rounded-xl bg-white p-3 shadow-card">
-                <div className="flex items-center gap-3">
-                  <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold ${medal(i)} ${medalText(i)}`}>
-                    {i + 1}
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-semibold text-ink">{s.real_name}</p>
-                    <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                      {s.english_name && <span className="text-xs text-ink/40">{s.english_name}</span>}
-                      <LevelBadge level={s.level} />
-                    </div>
-                  </div>
-                  {!canAwardLevel(s.level) && <p className="flex-shrink-0 text-sm font-bold text-brand-500">{s.points} pts</p>}
-                </div>
-                {canAwardLevel(s.level) && (
-                  <div className="mt-2 flex flex-wrap items-center gap-1 border-t border-ink/5 pt-2">
-                    <button
-                      type="button"
-                      onClick={() => quickAdjust(s, -1)}
-                      disabled={pendingId === s.id}
-                      className="rounded-md p-1.5 text-ink/50 active:bg-ink/5 disabled:opacity-40"
-                      aria-label={`Subtract a point from ${s.real_name}`}
-                    >
-                      <Minus size={15} />
-                    </button>
-                    <span className="w-10 text-center text-sm font-bold text-brand-500">{s.points}</span>
-                    <button
-                      type="button"
-                      onClick={() => quickAdjust(s, 1)}
-                      disabled={pendingId === s.id}
-                      className="rounded-md p-1.5 text-ink/50 active:bg-ink/5 disabled:opacity-40"
-                      aria-label={`Add a point to ${s.real_name}`}
-                    >
-                      <Plus size={15} />
-                    </button>
-                    {QUICK_DELTAS.slice(1).map((d) => (
-                      <button
-                        key={d}
-                        type="button"
-                        onClick={() => quickAdjust(s, d)}
-                        disabled={pendingId === s.id}
-                        className="rounded-md px-2 py-1.5 text-xs font-bold text-ink/50 active:bg-ink/5 disabled:opacity-40"
-                        aria-label={`Add ${d} points to ${s.real_name}`}
-                      >
-                        +{d}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </>
       )}
 
       {canAwardAtAll && awardableStudents.length > 0 && (
@@ -705,6 +675,7 @@ export default function Rankings() {
                     <th className="px-3 py-2 font-semibold text-ink/70">Points</th>
                     <th className="px-3 py-2 font-semibold text-ink/70">Change</th>
                     <th className="px-3 py-2 font-semibold text-ink/70">Attendance</th>
+                    {canAwardLevel(boardLevel) && <th className="px-3 py-2 text-center font-semibold text-ink/70">Quick Points</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -724,6 +695,9 @@ export default function Rankings() {
                         )}
                       </td>
                       <td className="px-3 py-2 text-ink/60">{row.attendance_rate != null ? `${row.attendance_rate}%` : '—'}</td>
+                      {canAwardLevel(boardLevel) && (
+                        <td className="px-3 py-2">{renderQuickPoints(row.student_id, boardLevel, row.real_name)}</td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
@@ -758,14 +732,19 @@ export default function Rankings() {
                   <th className="whitespace-nowrap px-3 py-2 text-center font-bold text-ink">
                     {boardPeriod === 'week' ? 'Weekly Total' : 'Monthly Total'}
                   </th>
+                  {canAwardLevel(boardLevel) && (
+                    <th className="whitespace-nowrap px-3 py-2 text-center font-semibold text-ink/70">Quick Points</th>
+                  )}
                 </tr>
               </thead>
               <tbody>
-                {classRows.map((row, i) => (
+                {classRows.map((row) => (
                   <tr key={row.studentId} className="border-b border-ink/5 last:border-0">
                     <td className="sticky left-0 z-10 whitespace-nowrap bg-white px-3 py-2">
                       <div className="flex items-center gap-2">
-                        <span className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold ${medal(i)} ${medalText(i)}`}>
+                        <span
+                          className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold ${medal(row.rank - 1)} ${medalText(row.rank - 1)}`}
+                        >
                           {row.rank}
                         </span>
                         <span className="font-medium text-ink">{row.realName}</span>
@@ -777,6 +756,9 @@ export default function Rankings() {
                       </td>
                     ))}
                     <td className="px-3 py-2 text-center text-base font-bold text-brand-500">{row.total}</td>
+                    {canAwardLevel(boardLevel) && (
+                      <td className="px-3 py-2">{renderQuickPoints(row.studentId, boardLevel, row.realName)}</td>
+                    )}
                   </tr>
                 ))}
               </tbody>

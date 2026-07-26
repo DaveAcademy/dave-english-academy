@@ -141,10 +141,12 @@ export function useAcademyData() {
   const awardStudentPoints = useCallback(
     async (params) => {
       try {
-        await db.awardPoints(params);
+        const transactionId = await db.awardPoints(params);
         const refreshed = await db.listStudents();
         setStudents(refreshed);
+        setError('');
         touchBackup();
+        return transactionId;
       } catch (e) {
         setError('Could not award points. Please try again.');
         throw e;
@@ -159,6 +161,7 @@ export function useAcademyData() {
         await db.bulkAwardPoints(entries);
         const refreshed = await db.listStudents();
         setStudents(refreshed);
+        setError('');
         touchBackup();
       } catch (e) {
         setError('Could not award points. Please try again.');

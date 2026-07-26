@@ -208,14 +208,16 @@ export default function MyRanking() {
         </div>
       ) : (
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {leaderboard.map((row, i) => {
+          {leaderboard.map((row) => {
             const isMe = me && row.student_id === me.id;
             return (
               <div
                 key={row.student_id}
                 className={`flex items-center gap-3 rounded-xl p-3 shadow-card ${isMe ? 'bg-brand-500 text-white' : 'bg-white text-ink'}`}
               >
-                <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold ${medal(i)} ${medalText(i)}`}>
+                <div
+                  className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold ${medal(row.rank - 1)} ${medalText(row.rank - 1)}`}
+                >
                   {row.rank}
                 </div>
                 <div className="min-w-0 flex-1">
