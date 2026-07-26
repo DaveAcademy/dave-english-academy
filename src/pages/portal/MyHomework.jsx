@@ -35,7 +35,7 @@ export default function MyHomework() {
     if (!file || !me) return;
     setSubmittingId(homeworkId);
     try {
-      const uploaded = await uploadAttachment(file, 'homework-answers');
+      const uploaded = await uploadAttachment(file, `homework-answers/${me.id}`);
       await submitMyHomeworkAnswer(homeworkId, me.id, { fileUrl: uploaded.path, fileName: uploaded.name });
     } finally {
       setSubmittingId(null);
