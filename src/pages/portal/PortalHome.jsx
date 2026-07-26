@@ -32,9 +32,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { CalendarClock, CalendarCheck, MessageSquare, Award, Trophy, Star, BookOpen, FileCheck2, Flame, ArrowRight } from 'lucide-react';
+import { CalendarClock, CalendarCheck, MessageSquare, Award, Trophy, Star, BookOpen, FileCheck2, Flame, ArrowRight, Download } from 'lucide-react';
 import { useAcademy } from '../../lib/AcademyDataContext';
-import { getGroupLeaderboard } from '../../lib/db';
+import { getGroupLeaderboard, getAttachmentUrl } from '../../lib/db';
 import Panel from '../../components/Panel';
 import StatCard from '../../components/StatCard';
 import DashboardHero from '../../components/DashboardHero';
@@ -115,6 +115,16 @@ export default function PortalHome() {
   }, [leaderboard, me]);
 
   const topThree = useMemo(() => (leaderboard || []).slice(0, 3), [leaderboard]);
+
+  // Opens a lesson's PDF via a short-lived signed URL - actual access is
+  // enforced by the attachments_read storage policy (lesson-pdfs branch,
+  // migration 0032), which checks this student's level against the
+  // lesson's level server-side. This handler doesn't itself decide
+  // whether the student is allowed to see the file.
+  const handleViewPdf = async (path) => {
+    const url = await getAttachmentUrl(path);
+    if (url) window.open(url, '_blank', 'noopener');
+  };
 
   const stats = useMemo(() => {
     // ---- Attendance (this month vs last month) ----
@@ -343,6 +353,15 @@ export default function PortalHome() {
                   <p className="font-semibold text-ink">{l.topic}</p>
                   <p className="text-xs text-ink/50">{formatDateTime(new Date(l.scheduled_at), dateLocale)}</p>
                 </div>
+                {l.pdf_path && (
+                  <button
+                    type="button"
+                    onClick={() => handleViewPdf(l.pdf_path)}
+                    className="flex flex-shrink-0 items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-semibold text-ink/60 transition-colors hover:bg-ink/5 active:bg-ink/10"
+                  >
+                    <Download size={13} aria-hidden="true" /> {t('viewPdf')}
+                  </button>
+                )}
                 {l.discussion_enabled && (
                   <Link
                     to={`/chat?type=lesson&id=${l.id}`}

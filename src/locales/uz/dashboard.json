@@ -65,6 +65,7 @@
   "upcomingLessons": "Yaqinlashib kelayotgan darslar",
   "noUpcomingLessons": "Rejalashtirilgan darslar yo'q.",
   "discuss": "Muhokama qilish",
+  "viewPdf": "PDF ko'rish",
   "attendancePresentThisMonth": "Bu oy {{rate}}% qatnashdi",
   "homeworkCompleteRate": "{{rate}}% bajarilgan",
 

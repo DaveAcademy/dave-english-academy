@@ -65,6 +65,7 @@
   "upcomingLessons": "Upcoming lessons",
   "noUpcomingLessons": "No upcoming lessons scheduled.",
   "discuss": "Discuss",
+  "viewPdf": "View PDF",
   "attendancePresentThisMonth": "{{rate}}% present this month",
   "homeworkCompleteRate": "{{rate}}% complete",
 
