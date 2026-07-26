@@ -80,7 +80,7 @@
   "streakDays": "{{count}}-day streak",
   "nextStepLabel": "Next step",
   "nextStepHomeworkPending": "You have {{count}} homework item(s) to submit.",
-  "nextStepUpcomingLesson": "Your next lesson is \"{{topic}}\" on {{date}}.",
+  "nextStepUpcomingLesson": "Your next lesson is \"{{topic}}\".",
   "nextStepRankClimb": "You're #{{rank}} on the leaderboard - keep going to climb higher.",
   "nextStepAllCaughtUp": "You're all caught up. Great work!",
   "ctaSubmitHomework": "Submit homework",

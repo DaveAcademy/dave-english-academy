@@ -2,12 +2,12 @@
 
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Pencil, Trash2, CalendarClock, MessageSquare, MessageSquareOff, Paperclip, Download, X } from 'lucide-react';
+import { Plus, Pencil, Trash2, MessageSquare, MessageSquareOff, Paperclip, Download, X } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { LevelBadge } from '../components/Badge';
 import { uploadAttachment, getAttachmentUrl } from '../lib/db';
 
-const EMPTY_FORM = { topic: '', group_name: '', level: 'A', scheduled_at: '', discussion_enabled: false };
+const EMPTY_FORM = { topic: '', group_name: '', level: 'A', discussion_enabled: false };
 
 export default function Lessons() {
   const { lessons, addLesson, editLesson, removeLesson, error } = useAcademy();
@@ -21,7 +21,7 @@ export default function Lessons() {
   const [uploadError, setUploadError] = useState(null);
   const [selectedLessonId, setSelectedLessonId] = useState(null);
 
-  const sortedLessons = useMemo(() => [...lessons].sort((a, b) => new Date(b.scheduled_at) - new Date(a.scheduled_at)), [lessons]);
+  const sortedLessons = useMemo(() => [...lessons].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)), [lessons]);
   const selectedLesson = sortedLessons.find((l) => l.id === selectedLessonId) || sortedLessons[0] || null;
   const editingLesson = editingId ? lessons.find((l) => l.id === editingId) : null;
 
@@ -40,7 +40,6 @@ export default function Lessons() {
       topic: lesson.topic,
       group_name: lesson.group_name || '',
       level: lesson.level || 'A',
-      scheduled_at: lesson.scheduled_at ? new Date(lesson.scheduled_at).toISOString().slice(0, 16) : '',
       discussion_enabled: !!lesson.discussion_enabled,
     });
     setFile(null);
@@ -51,7 +50,7 @@ export default function Lessons() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.topic.trim() || !form.scheduled_at) return;
+    if (!form.topic.trim()) return;
     setSaving(true);
     setUploadError(null);
     try {
@@ -59,11 +58,13 @@ export default function Lessons() {
         topic: form.topic,
         group_name: form.group_name || null,
         level: form.level || null,
-        scheduled_at: new Date(form.scheduled_at).toISOString(),
         discussion_enabled: form.discussion_enabled,
       };
 
       if (editingId) {
+        // scheduled_at is intentionally left out of the edit payload - it's
+        // no longer surfaced in this UI, and existing values (real or
+        // otherwise) are left exactly as they are.
         let payload = basePayload;
         if (file) {
           setUploading(true);
@@ -81,7 +82,14 @@ export default function Lessons() {
         }
         await editLesson(editingId, payload);
       } else {
-        const record = await addLesson(basePayload);
+        // lessons.scheduled_at is still a NOT NULL column (see 0005) and
+        // this task deliberately avoids a migration to relax that, so
+        // creation still has to supply a value - it's just no longer
+        // something the admin/teacher sets. Filled with "now" and never
+        // shown or treated as meaningful; sorting/display everywhere else
+        // in this feature uses created_at instead, exactly because this
+        // value is filler.
+        const record = await addLesson({ ...basePayload, scheduled_at: new Date().toISOString() });
         setSelectedLessonId(record.id);
         if (file) {
           setUploading(true);
@@ -117,13 +125,13 @@ export default function Lessons() {
       <header className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <div>
           <h1 className="font-display text-2xl font-bold text-ink">Lessons</h1>
-          <p className="mt-1 text-sm text-ink/50">Schedule and manage lesson sessions.</p>
+          <p className="mt-1 text-sm text-ink/50">Create and manage lessons.</p>
         </div>
         <button
           onClick={() => (formOpen ? resetForm() : setFormOpen(true))}
           className="flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600"
         >
-          <Plus size={16} /> Schedule lesson
+          <Plus size={16} /> Add lesson
         </button>
       </header>
 
@@ -150,13 +158,6 @@ export default function Lessons() {
             <option value="B">Level B</option>
             <option value="C">Level C</option>
           </select>
-          <input
-            required
-            type="datetime-local"
-            value={form.scheduled_at}
-            onChange={(e) => setForm({ ...form, scheduled_at: e.target.value })}
-            className="input sm:col-span-2"
-          />
           <label className="flex items-center gap-2 text-sm text-ink/70 sm:col-span-2">
             <input
               type="checkbox"
@@ -222,7 +223,7 @@ export default function Lessons() {
 
       {sortedLessons.length === 0 ? (
         <div className="rounded-xl bg-white p-10 text-center shadow-card">
-          <p className="font-display text-lg font-semibold text-ink">No lessons scheduled yet</p>
+          <p className="font-display text-lg font-semibold text-ink">No lessons yet</p>
         </div>
       ) : (
         <div className="mb-4 space-y-2">
@@ -237,8 +238,7 @@ export default function Lessons() {
               <div>
                 <p className="font-semibold">{l.topic}</p>
                 <div className="mt-1 flex flex-wrap items-center gap-2 text-xs opacity-80">
-                  <CalendarClock size={12} /> {new Date(l.scheduled_at).toLocaleString()}
-                  {l.group_name && <span>· {l.group_name}</span>}
+                  {l.group_name && <span>{l.group_name}</span>}
                   {l.level && <LevelBadge level={l.level} />}
                   {l.discussion_enabled && <span className="rounded-full bg-active/20 px-1.5 py-0.5 text-[10px] font-bold">Discussion on</span>}
                   {l.pdf_path && <span className="rounded-full bg-active/20 px-1.5 py-0.5 text-[10px] font-bold">PDF attached</span>}

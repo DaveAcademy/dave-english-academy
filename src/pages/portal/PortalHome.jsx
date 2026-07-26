@@ -22,12 +22,9 @@
 // i18n: fully localized via the `dashboard` (and a few `nav`) namespaces,
 // including the strings introduced by the premium redesign (hero summary,
 // streak badge, the "Next step" CTA banner and its four dynamic messages,
-// "Quick actions", "Achievements"). Date/time formatting (next lesson date,
-// upcoming-lessons timestamps) uses `dateLocale` - derived from
-// i18n.language - instead of a hardcoded 'en-US' or the browser default, so
-// Uzbek-selecting students see Uzbek-formatted dates. Teachers/Admins never
-// reach this page (student-only route), but the same derivation is used
-// for consistency with Dashboard.jsx.
+// "Quick actions", "Achievements"). Upcoming-lessons no longer shows a
+// date/time - lessons don't require one (see Lessons.jsx) - so there's no
+// locale-aware date formatting left on this page.
 
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
@@ -41,7 +38,7 @@ import DashboardHero from '../../components/DashboardHero';
 import QuickActions from '../../components/QuickActions';
 import SectionLabel from '../../components/SectionLabel';
 import { attendanceRate, filterByYearMonth } from '../../utils/attendance';
-import { currentAndPreviousMonth, trendFrom, formatWeekdayDate, formatDateTime } from '../../utils/date';
+import { currentAndPreviousMonth, trendFrom } from '../../utils/date';
 
 function ProgressBar({ value, color = 'bg-brand-500' }) {
   const pct = Math.max(0, Math.min(100, value));
@@ -67,8 +64,7 @@ function currentPresentStreak(records) {
 }
 
 export default function PortalHome() {
-  const { t, i18n } = useTranslation(['dashboard', 'nav']);
-  const dateLocale = i18n.language === 'uz' ? 'uz' : 'en-US';
+  const { t } = useTranslation(['dashboard', 'nav']);
   const { students, lessons, attendance, homework, homeworkStatus, examScores, certificates } = useAcademy();
   const me = students[0];
   const [leaderboard, setLeaderboard] = useState(null);
@@ -95,12 +91,16 @@ export default function PortalHome() {
     };
   }, [me?.level]);
 
+  // Lessons no longer require a scheduled time (admin/teacher UI dropped
+  // that field - see Lessons.jsx), so this can no longer filter/sort by
+  // "is scheduled_at in the future": that would silently drop every
+  // lesson created without a real date. Shows the most recently created
+  // lessons for the student's level/group instead - created_at is always
+  // populated, unlike scheduled_at.
   const upcoming = useMemo(() => {
-    const now = new Date();
     return lessons
-      .filter((l) => new Date(l.scheduled_at) >= now)
       .filter((l) => !me || (!l.group_name && !l.level) || l.group_name === me.group_name || l.level === me.level)
-      .sort((a, b) => new Date(a.scheduled_at) - new Date(b.scheduled_at))
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
       .slice(0, 5);
   }, [lessons, me]);
 
@@ -173,14 +173,13 @@ export default function PortalHome() {
       return { text: t('nextStepHomeworkPending', { count: stats.homeworkPending }), to: '/my-homework', cta: t('ctaSubmitHomework') };
     }
     if (upcoming.length > 0) {
-      const date = formatWeekdayDate(new Date(upcoming[0].scheduled_at), dateLocale);
-      return { text: t('nextStepUpcomingLesson', { topic: upcoming[0].topic, date }), to: '/', cta: t('ctaViewSchedule') };
+      return { text: t('nextStepUpcomingLesson', { topic: upcoming[0].topic }), to: '/', cta: t('ctaViewSchedule') };
     }
     if (rank != null && rank > 1) {
       return { text: t('nextStepRankClimb', { rank }), to: '/my-ranking', cta: t('ctaViewLeaderboard') };
     }
     return { text: t('nextStepAllCaughtUp'), to: '/my-ranking', cta: t('ctaViewLeaderboard') };
-  }, [stats.homeworkPending, upcoming, rank, dateLocale, t]);
+  }, [stats.homeworkPending, upcoming, rank, t]);
 
   const quickActions = [
     { to: '/my-homework', label: t('nav:myHomeworkFull'), Icon: BookOpen },
@@ -351,7 +350,7 @@ export default function PortalHome() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-ink">{l.topic}</p>
-                  <p className="text-xs text-ink/50">{formatDateTime(new Date(l.scheduled_at), dateLocale)}</p>
+                  {l.group_name && <p className="text-xs text-ink/50">{l.group_name}</p>}
                 </div>
                 {l.pdf_path && (
                   <button

@@ -80,7 +80,7 @@
   "streakDays": "{{count}} kun ketma-ket",
   "nextStepLabel": "Keyingi qadam",
   "nextStepHomeworkPending": "Sizda topshirilishi kerak bo'lgan {{count}} ta uy vazifasi bor.",
-  "nextStepUpcomingLesson": "Keyingi darsingiz \"{{topic}}\" — {{date}}.",
+  "nextStepUpcomingLesson": "Keyingi darsingiz \"{{topic}}\".",
   "nextStepRankClimb": "Siz reytingda {{rank}}-o'rindasiz — yuqoriga ko'tarilish uchun davom eting!",
   "nextStepAllCaughtUp": "Barcha ishlaringiz bajarilgan. Ajoyib natija!",
   "ctaSubmitHomework": "Uy vazifasini topshirish",
