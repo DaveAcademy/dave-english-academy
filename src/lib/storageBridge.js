@@ -441,10 +441,10 @@ export async function listExamScores() {
   return data;
 }
 
-export async function setExamScore(examId, studentId, score) {
+export async function setExamScore(examId, studentId, score, feedback = null) {
   const { error } = await supabase
     .from('exam_scores')
-    .upsert({ exam_id: examId, student_id: studentId, score }, { onConflict: 'exam_id,student_id' });
+    .upsert({ exam_id: examId, student_id: studentId, score, feedback }, { onConflict: 'exam_id,student_id' });
   if (error) throw error;
   return listExamScores();
 }

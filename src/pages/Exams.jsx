@@ -36,6 +36,7 @@ export default function Exams() {
   const [selectedExamId, setSelectedExamId] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [deletingExam, setDeletingExam] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('all');
 
   const sortedExams = useMemo(() => [...exams].sort((a, b) => new Date(b.exam_date) - new Date(a.exam_date)), [exams]);
   const selectedExam = sortedExams.find((e) => e.id === selectedExamId) || sortedExams[0] || null;
@@ -49,8 +50,22 @@ export default function Exams() {
     [students, selectedExam]
   );
 
-  const scoreOf = (studentId) => examScores.find((s) => s.exam_id === selectedExam?.id && s.student_id === studentId)?.score ?? '';
-  const answerOf = (studentId) => examScores.find((s) => s.exam_id === selectedExam?.id && s.student_id === studentId);
+  const answerOf = (studentId) => examScores.find((s) => s.exam_id === selectedExam?.id && s.student_id === studentId) || {};
+
+  const filteredStudents = useMemo(
+    () =>
+      activeStudents.filter((s) => {
+        const answer = answerOf(s.id);
+        const submitted = !!answer.answer_file_url;
+        const graded = answer.score != null;
+        if (statusFilter === 'submitted') return submitted;
+        if (statusFilter === 'notSubmitted') return !submitted;
+        if (statusFilter === 'graded') return graded;
+        if (statusFilter === 'notGraded') return !graded;
+        return true;
+      }),
+    [activeStudents, examScores, selectedExam, statusFilter]
+  );
 
   const resetForm = () => {
     setForm(EMPTY_FORM);
@@ -300,7 +315,18 @@ export default function Exams() {
             <h2 className="text-sm font-bold uppercase tracking-wide text-ink/50">
               {t('scoresFor', { title: selectedExam.title, max: selectedExam.max_score })}
             </h2>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="rounded-lg border border-ink/10 px-2 py-1.5 text-xs"
+              >
+                <option value="all">{t('filterAll')}</option>
+                <option value="submitted">{t('filterSubmitted')}</option>
+                <option value="notSubmitted">{t('filterNotSubmitted')}</option>
+                <option value="graded">{t('filterGraded')}</option>
+                <option value="notGraded">{t('filterNotGraded')}</option>
+              </select>
               {selectedExam.file_url && (
                 <button
                   onClick={() => handleOpenFile(selectedExam.file_url)}
@@ -318,35 +344,68 @@ export default function Exams() {
             </div>
           </div>
           <div className="space-y-2">
-            {activeStudents.map((s) => {
+            {filteredStudents.map((s) => {
               const answer = answerOf(s.id);
+              const submitted = !!answer.answer_file_url;
+              const graded = answer.score != null;
               return (
-                <div key={s.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white p-3 shadow-card">
-                  <div>
-                    <p className="font-semibold text-ink">{s.real_name}</p>
-                    {answer?.answer_file_url && (
-                      <button
-                        onClick={() => handleOpenFile(answer.answer_file_url)}
-                        className="mt-1 flex items-center gap-1 text-xs text-brand-500 hover:underline"
-                      >
-                        <Paperclip size={11} /> {answer.answer_file_name || t('studentAnswerDefault')}
-                      </button>
-                    )}
+                <div key={s.id} className="rounded-xl bg-white p-3 shadow-card">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <p className="font-semibold text-ink">{s.real_name}</p>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                            submitted ? 'bg-active/10 text-active' : 'bg-ink/5 text-ink/40'
+                          }`}
+                        >
+                          {submitted ? t('submitted') : t('notSubmitted')}
+                        </span>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                            graded ? 'bg-brand-50 text-brand-600' : 'bg-ink/5 text-ink/40'
+                          }`}
+                        >
+                          {graded ? t('graded') : t('notGraded')}
+                        </span>
+                      </div>
+                      {submitted && (
+                        <button
+                          onClick={() => handleOpenFile(answer.answer_file_url)}
+                          className="mt-1 flex items-center gap-1 text-xs text-brand-500 hover:underline"
+                        >
+                          <Paperclip size={11} /> {answer.answer_file_name || t('studentAnswerDefault')}
+                        </button>
+                      )}
+                    </div>
+                    <input
+                      type="number"
+                      min="0"
+                      max={selectedExam.max_score}
+                      defaultValue={answer.score ?? ''}
+                      onBlur={(e) => {
+                        const val = e.target.value;
+                        if (val !== '' && Number(val) !== answer.score) {
+                          setExamScoreForStudent(selectedExam.id, s.id, Number(val), answer.feedback ?? null);
+                        }
+                      }}
+                      placeholder={t('scorePlaceholder')}
+                      className="w-24 rounded-lg border border-ink/10 px-3 py-1.5 text-right text-sm"
+                    />
                   </div>
-                  <input
-                    type="number"
-                    min="0"
-                    max={selectedExam.max_score}
-                    defaultValue={scoreOf(s.id)}
-                    onBlur={(e) => {
-                      const val = e.target.value;
-                      if (val !== '' && val !== String(scoreOf(s.id))) {
-                        setExamScoreForStudent(selectedExam.id, s.id, Number(val));
-                      }
-                    }}
-                    placeholder={t('scorePlaceholder')}
-                    className="w-24 rounded-lg border border-ink/10 px-3 py-1.5 text-right text-sm"
-                  />
+                  {graded && (
+                    <input
+                      key={`${s.id}-${answer.feedback || ''}`}
+                      defaultValue={answer.feedback || ''}
+                      onBlur={(e) => {
+                        if (e.target.value !== (answer.feedback || '')) {
+                          setExamScoreForStudent(selectedExam.id, s.id, answer.score, e.target.value || null);
+                        }
+                      }}
+                      placeholder={t('feedbackPlaceholder')}
+                      className="mt-2 w-full rounded-lg border border-ink/10 px-3 py-1.5 text-sm"
+                    />
+                  )}
                 </div>
               );
             })}

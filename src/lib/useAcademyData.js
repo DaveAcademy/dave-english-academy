@@ -307,9 +307,9 @@ export function useAcademyData() {
     }
   }, []);
 
-  const setExamScoreForStudent = useCallback(async (examId, studentId, score) => {
+  const setExamScoreForStudent = useCallback(async (examId, studentId, score, feedback = null) => {
     try {
-      const updated = await db.setExamScore(examId, studentId, score);
+      const updated = await db.setExamScore(examId, studentId, score, feedback);
       setExamScoresState(updated);
     } catch (e) {
       setError('Could not save exam score. Please try again.');

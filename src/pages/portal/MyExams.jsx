@@ -84,6 +84,10 @@ export default function MyExams() {
                   {graded && <p className="flex-shrink-0 text-sm font-bold text-brand-500">{t('scoreOutOfMax', { score: result.score, max: e.max_score })}</p>}
                 </div>
 
+                {result?.feedback && (
+                  <p className="mt-2 rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-700">{result.feedback}</p>
+                )}
+
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   {e.file_url && (
                     <button
