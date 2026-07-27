@@ -31,5 +31,10 @@
   "noConversations": "Suhbatlar yo'q",
   "readOnlyLevel": "Faqat o'qituvchilar va administrator bu yerga yoza oladi",
   "readOnlyAnnouncement": "Faqat administrator e'lon joylashtira oladi",
-  "backToConversations": "Suhbatlar ro'yxatiga qaytish"
+  "backToConversations": "Suhbatlar ro'yxatiga qaytish",
+  "uploadFailed": "Yuklab bo'lmadi. Qayta urinib ko'ring.",
+  "retry": "Qayta urinish",
+  "uploadingProgress": "Yuklanmoqda... {{percent}}%",
+  "uploadingMessage": "Yuklanmoqda...",
+  "removeAttachment": "Faylni olib tashlash"
 }

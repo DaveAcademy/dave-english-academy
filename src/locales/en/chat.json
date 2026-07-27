@@ -31,5 +31,10 @@
   "noConversations": "No conversations",
   "readOnlyLevel": "Only teachers and the administrator can post here",
   "readOnlyAnnouncement": "Only the administrator can post announcements",
-  "backToConversations": "Back to conversations"
+  "backToConversations": "Back to conversations",
+  "uploadFailed": "Upload failed. Please try again.",
+  "retry": "Retry",
+  "uploadingProgress": "Uploading... {{percent}}%",
+  "uploadingMessage": "Uploading...",
+  "removeAttachment": "Remove attachment"
 }

@@ -689,6 +689,43 @@ export async function getAttachmentUrl(path) {
   return data.signedUrl;
 }
 
+// Chat-only: same upload as uploadAttachment() above, but via a raw XHR
+// against the Storage REST endpoint (mirroring what supabase-js does
+// internally for a Blob body - multipart form with a 'cacheControl'
+// field and the file under an empty-string field name) so we get real
+// xhr.upload.onprogress events. supabase-js's own upload() has no
+// progress callback in this version - this exists only to drive the
+// chat composer's upload progress bar, not as a general replacement.
+export async function uploadAttachmentWithProgress(file, folder, onProgress) {
+  const ext = file.name.includes('.') ? file.name.slice(file.name.lastIndexOf('.')) : '';
+  const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`;
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const form = new FormData();
+  form.append('cacheControl', '3600');
+  form.append('', file);
+
+  await new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/${ATTACHMENTS_BUCKET}/${path}`);
+    xhr.setRequestHeader('apikey', import.meta.env.VITE_SUPABASE_ANON_KEY);
+    xhr.setRequestHeader('Authorization', `Bearer ${session?.access_token}`);
+    xhr.setRequestHeader('x-upsert', 'false');
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable && onProgress) onProgress(Math.round((e.loaded / e.total) * 100));
+    };
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) resolve();
+      else reject(new Error(`Upload failed (${xhr.status})`));
+    };
+    xhr.onerror = () => reject(new Error('Upload failed: network error'));
+    xhr.send(form);
+  });
+
+  return { path, name: file.name, type: file.type || null };
+}
+
 // ---------- Messages ----------
 // RLS (see migration 0009, can_send_message/can_read_message) is the real
 // gate on who can send or see what - these functions don't re-check role

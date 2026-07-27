@@ -14,11 +14,14 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Send, Paperclip, Trash2, Search, ArrowLeft, Megaphone, Users } from 'lucide-react';
+import { Send, Paperclip, Trash2, Search, ArrowLeft, Megaphone, Users, FileText, X, RotateCw } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { useAuth } from '../lib/AuthContext';
 import { supabase } from '../lib/supabaseClient';
-import { uploadAttachment, getAttachmentUrl, listTeacherGroupAssignments } from '../lib/db';
+import { uploadAttachmentWithProgress, getAttachmentUrl, listTeacherGroupAssignments } from '../lib/db';
+
+const isImageAttachment = (m) => (m.attachment_type || '').startsWith('image/');
+const isPdfAttachment = (m) => m.attachment_type === 'application/pdf' || (m.attachment_name || '').toLowerCase().endsWith('.pdf');
 
 const LEVELS = ['A', 'B', 'C'];
 const DISCUSSION_KEY = { lesson: 'discussionLesson', homework: 'discussionHomework', exam: 'discussionExam', certificate: 'discussionCertificate' };
@@ -62,6 +65,9 @@ export default function Chat() {
   const [body, setBody] = useState('');
   const [file, setFile] = useState(null);
   const [sending, setSending] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(null);
+  const [uploadError, setUploadError] = useState(null);
+  const [imageUrls, setImageUrls] = useState({});
   const [teacherProfiles, setTeacherProfiles] = useState([]);
   const [adminProfiles, setAdminProfiles] = useState([]);
   const [assignedTeacherIds, setAssignedTeacherIds] = useState(null);
@@ -208,6 +214,24 @@ export default function Chat() {
     return [...nonContextMessages].filter((m) => matchesConversation(m, activeConversation)).sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
   }, [isContextView, contextThread, activeConversation, nonContextMessages, matchesConversation]);
 
+  // Image attachments are previewed inline, which needs a resolved signed
+  // URL (the bucket is private - see migration 0009). Only resolve for
+  // the thread that's actually open, and only once per path.
+  useEffect(() => {
+    const thread = isContextView ? contextThread : activeThread;
+    const toResolve = thread.filter((m) => m.attachment_url && isImageAttachment(m) && !imageUrls[m.attachment_url]);
+    if (toResolve.length === 0) return;
+    let cancelled = false;
+    Promise.all(toResolve.map((m) => getAttachmentUrl(m.attachment_url).then((url) => [m.attachment_url, url]))).then((pairs) => {
+      if (cancelled) return;
+      setImageUrls((prev) => ({ ...prev, ...Object.fromEntries(pairs) }));
+    });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isContextView, contextThread, activeThread]);
+
   // Opening a thread marks everything currently shown in it as read - a
   // simple "read the thread, it's read" model rather than per-message
   // read toggles.
@@ -226,14 +250,16 @@ export default function Chat() {
 
   const handleSend = useCallback(
     async (e) => {
-      e.preventDefault();
+      e?.preventDefault();
       if (!body.trim() && !file) return;
       if (!isContextView && !activeConversation) return;
       setSending(true);
+      setUploadError(null);
       try {
         let attachment = {};
         if (file) {
-          const uploaded = await uploadAttachment(file, 'chat');
+          setUploadProgress(0);
+          const uploaded = await uploadAttachmentWithProgress(file, 'chat', setUploadProgress);
           attachment = { attachment_url: uploaded.path, attachment_name: uploaded.name, attachment_type: uploaded.type };
         }
         const payload = {
@@ -254,11 +280,14 @@ export default function Chat() {
         await addMessage(payload);
         setBody('');
         setFile(null);
+        setUploadProgress(null);
+      } catch (err) {
+        setUploadError(err.message || t('chat:uploadFailed'));
       } finally {
         setSending(false);
       }
     },
-    [body, file, profile, isContextView, contextType, contextId, activeConversation, addMessage]
+    [body, file, profile, isContextView, contextType, contextId, activeConversation, addMessage, t]
   );
 
   const handleOpenAttachment = async (path) => {
@@ -306,7 +335,28 @@ export default function Chat() {
                   )}
                 </div>
                 {m.body && <p className="whitespace-pre-wrap text-sm text-ink/80">{m.body}</p>}
-                {m.attachment_url && (
+                {m.attachment_url && isImageAttachment(m) && (
+                  <button onClick={() => handleOpenAttachment(m.attachment_url)} className="mt-2 block overflow-hidden rounded-lg border border-ink/10">
+                    {imageUrls[m.attachment_url] ? (
+                      <img src={imageUrls[m.attachment_url]} alt={m.attachment_name || t('chat:attachmentLabel')} className="max-h-64 w-full object-cover" />
+                    ) : (
+                      <div className="flex h-32 w-48 items-center justify-center text-xs text-ink/40">{t('common:loading')}</div>
+                    )}
+                  </button>
+                )}
+                {m.attachment_url && !isImageAttachment(m) && isPdfAttachment(m) && (
+                  <button
+                    onClick={() => handleOpenAttachment(m.attachment_url)}
+                    className="mt-2 flex w-full items-center gap-2 rounded-lg border border-brand-500 p-2 text-left hover:bg-brand-50"
+                  >
+                    <FileText size={22} className="flex-shrink-0 text-brand-500" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-xs font-semibold text-ink">{m.attachment_name || t('chat:attachmentLabel')}</span>
+                      <span className="text-[10px] font-semibold uppercase text-ink/40">PDF</span>
+                    </span>
+                  </button>
+                )}
+                {m.attachment_url && !isImageAttachment(m) && !isPdfAttachment(m) && (
                   <button
                     onClick={() => handleOpenAttachment(m.attachment_url)}
                     className="mt-2 flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-xs font-semibold text-brand-500 hover:bg-brand-50"
@@ -335,6 +385,26 @@ export default function Chat() {
             placeholder={t('chat:writeMessage')}
             className="input resize-none"
           />
+          {uploadError && (
+            <div className="flex items-center justify-between gap-2 rounded-lg border border-inactive/30 bg-inactive/5 px-3 py-2 text-xs text-inactive">
+              <span className="truncate">{uploadError}</span>
+              <button
+                type="button"
+                onClick={() => handleSend()}
+                className="flex flex-shrink-0 items-center gap-1 font-semibold hover:underline"
+              >
+                <RotateCw size={12} /> {t('chat:retry')}
+              </button>
+            </div>
+          )}
+          {sending && file && uploadProgress !== null && (
+            <div className="space-y-1">
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-paper">
+                <div className="h-full rounded-full bg-brand-500 transition-all" style={{ width: `${uploadProgress}%` }} />
+              </div>
+              <p className="text-[10px] text-ink/40">{t('chat:uploadingProgress', { percent: uploadProgress })}</p>
+            </div>
+          )}
           <div className="flex items-center justify-between gap-2">
             <label className="flex cursor-pointer items-center gap-1.5 text-xs font-semibold text-ink/50 hover:text-ink">
               <Paperclip size={14} />
@@ -343,15 +413,31 @@ export default function Chat() {
                 type="file"
                 accept="image/*,application/pdf"
                 className="hidden"
-                onChange={(e) => setFile(e.target.files?.[0] || null)}
+                onChange={(e) => {
+                  setFile(e.target.files?.[0] || null);
+                  setUploadError(null);
+                }}
               />
             </label>
+            {file && !sending && (
+              <button
+                type="button"
+                onClick={() => {
+                  setFile(null);
+                  setUploadError(null);
+                }}
+                className="rounded-md p-1 text-ink/40 hover:bg-paper"
+                aria-label={t('chat:removeAttachment')}
+              >
+                <X size={14} />
+              </button>
+            )}
             <button
               type="submit"
               disabled={sending || (!body.trim() && !file)}
-              className="flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-50"
+              className="ml-auto flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-50"
             >
-              <Send size={15} /> {sending ? t('chat:sendingMessage') : t('chat:send')}
+              <Send size={15} /> {sending ? (file ? t('chat:uploadingMessage') : t('chat:sendingMessage')) : t('chat:send')}
             </button>
           </div>
         </>
