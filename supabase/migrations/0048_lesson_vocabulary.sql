@@ -59,6 +59,7 @@ alter table public.student_vocabulary_favorites enable row level security;
 create or replace function public.set_lesson_vocabulary_updated_at()
 returns trigger
 language plpgsql
+set search_path = 'public'
 as $$
 begin
   new.updated_at = now();
@@ -127,6 +128,7 @@ create or replace function public.storage_vocabulary_lesson_id(p_name text)
 returns bigint
 language sql
 immutable
+set search_path = 'public'
 as $$
   select case
     when (storage.foldername(p_name))[1] = 'vocabulary-images'
