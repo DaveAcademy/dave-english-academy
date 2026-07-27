@@ -8,6 +8,7 @@ import { PortalSidebar, PortalBottomNav } from './components/PortalNav';
 import { AcademyDataProvider } from './lib/AcademyDataContext';
 import { AuthProvider, useAuth } from './lib/AuthContext';
 import AuthGate from './components/auth/AuthGate';
+import RouteErrorBoundary from './components/RouteErrorBoundary';
 import { syncLanguageForRole } from './i18n';
 
 // Route-level code splitting - each page is its own chunk, loaded on
@@ -64,37 +65,39 @@ function AppShell() {
           <div className="flex-1">
             <MobileHeader />
             <main className="mx-auto max-w-6xl px-4 pb-24 pt-4 sm:px-6 sm:pt-6 md:pb-8">
-              <Suspense fallback={<PageLoading />}>
-                {isStudent ? (
-                  <Routes>
-                    <Route path="/" element={<PortalHome />} />
-                    <Route path="/progress" element={<MyProgress />} />
-                    <Route path="/my-exams" element={<MyExams />} />
-                    <Route path="/my-homework" element={<MyHomework />} />
-                    <Route path="/my-certificates" element={<MyCertificates />} />
-                    <Route path="/my-ranking" element={<MyRanking />} />
-                    <Route path="/chat" element={<Chat />} />
-                    <Route path="/settings" element={<Settings />} />
-                  </Routes>
-                ) : (
-                  <Routes>
-                    <Route path="/" element={<Dashboard />} />
-                    <Route path="/students" element={<Students />} />
-                    <Route path="/payments" element={<Payments />} />
-                    <Route path="/attendance" element={<Attendance />} />
-                    <Route path="/lessons" element={<Lessons />} />
-                    <Route path="/exams" element={<Exams />} />
-                    <Route path="/homework" element={<Homework />} />
-                    <Route path="/certificates" element={<Certificates />} />
-                    <Route path="/rankings" element={<Rankings />} />
-                    <Route path="/recognition" element={<Recognition />} />
-                    <Route path="/reports" element={<Reports />} />
-                    <Route path="/chat" element={<Chat />} />
-                    <Route path="/files" element={<FileManager />} />
-                    <Route path="/settings" element={<Settings />} />
-                  </Routes>
-                )}
-              </Suspense>
+              <RouteErrorBoundary>
+                <Suspense fallback={<PageLoading />}>
+                  {isStudent ? (
+                    <Routes>
+                      <Route path="/" element={<PortalHome />} />
+                      <Route path="/progress" element={<MyProgress />} />
+                      <Route path="/my-exams" element={<MyExams />} />
+                      <Route path="/my-homework" element={<MyHomework />} />
+                      <Route path="/my-certificates" element={<MyCertificates />} />
+                      <Route path="/my-ranking" element={<MyRanking />} />
+                      <Route path="/chat" element={<Chat />} />
+                      <Route path="/settings" element={<Settings />} />
+                    </Routes>
+                  ) : (
+                    <Routes>
+                      <Route path="/" element={<Dashboard />} />
+                      <Route path="/students" element={<Students />} />
+                      <Route path="/payments" element={<Payments />} />
+                      <Route path="/attendance" element={<Attendance />} />
+                      <Route path="/lessons" element={<Lessons />} />
+                      <Route path="/exams" element={<Exams />} />
+                      <Route path="/homework" element={<Homework />} />
+                      <Route path="/certificates" element={<Certificates />} />
+                      <Route path="/rankings" element={<Rankings />} />
+                      <Route path="/recognition" element={<Recognition />} />
+                      <Route path="/reports" element={<Reports />} />
+                      <Route path="/chat" element={<Chat />} />
+                      <Route path="/files" element={<FileManager />} />
+                      <Route path="/settings" element={<Settings />} />
+                    </Routes>
+                  )}
+                </Suspense>
+              </RouteErrorBoundary>
             </main>
           </div>
           {isStudent ? <PortalBottomNav /> : <BottomNav />}
