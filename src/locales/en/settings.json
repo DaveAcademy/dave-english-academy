@@ -18,5 +18,11 @@
   "aboutAccountsDesc": "Administrators can see and edit everything. Teachers can view students, mark attendance, and view payments. Students only see their own information. An administrator can create teacher and student accounts above.",
   "backupDownloaded": "Backup downloaded. Save that file somewhere safe, like Google Drive.",
   "backupRestored": "Backup restored successfully.",
-  "couldNotRestore": "Could not restore that file."
+  "couldNotRestore": "Could not restore that file.",
+  "notifications": "Notifications",
+  "notificationsDesc": "Get a browser notification when someone sends you a new chat message and this tab isn't active.",
+  "enableNotifications": "Enable message notifications",
+  "notificationsUnsupported": "Your browser doesn't support notifications.",
+  "notificationsBlocked": "Notifications are blocked in your browser settings. Allow them for this site to turn this on.",
+  "notificationsEnabled": "Notifications enabled."
 }

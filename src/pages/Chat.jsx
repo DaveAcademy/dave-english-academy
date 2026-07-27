@@ -53,18 +53,39 @@ export default function Chat() {
   const { profile, role } = useAuth();
   const {
     students, lessons, homework, exams, certificates,
-    messages, messageReads, messageAttachments, addMessage, addMessageAttachments, removeMessage, markRead, error,
+    messages, messageReads, messageAttachments, addMessage, addMessageAttachments, removeMessage, markRead,
+    setActiveConversationView, error,
   } = useAcademy();
   const [searchParams] = useSearchParams();
   const contextType = searchParams.get('type');
   const contextId = searchParams.get('id') ? Number(searchParams.get('id')) : null;
   const isContextView = Boolean(contextType && contextId);
+  // Set by a notification click (see buildConversationUrl in
+  // useAcademyData.js) to auto-select a direct/level/announcement
+  // conversation that isn't otherwise addressable by URL the way context
+  // discussions already are.
+  const openParam = searchParams.get('open');
+  const openWith = searchParams.get('with');
+  const openLevel = searchParams.get('level');
 
   const isAdmin = role === 'administrator';
   const isTeacher = role === 'teacher';
   const isStudent = role === 'student';
 
   const [activeKey, setActiveKey] = useState(null);
+
+  // A notification click lands here with ?open=direct&with=<id> (or
+  // level/announcement) - not otherwise addressable by URL the way
+  // context discussions already are via ?type=&id=. Runs once on mount;
+  // matches the same key format the conversations list below builds.
+  useEffect(() => {
+    if (!openParam || isContextView) return;
+    if (openParam === 'direct' && openWith) setActiveKey(`direct:${openWith}`);
+    else if (openParam === 'level' && openLevel) setActiveKey(`level:${openLevel}`);
+    else if (openParam === 'announcement') setActiveKey('announcement');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const [search, setSearch] = useState('');
   const [body, setBody] = useState('');
   const [files, setFiles] = useState([]);
@@ -230,6 +251,24 @@ export default function Chat() {
   );
 
   const activeConversation = useMemo(() => conversations.find((c) => c.key === activeKey) || null, [conversations, activeKey]);
+
+  // Tells useAcademyData.js's realtime handler which conversation (if
+  // any) is currently open, so it can skip a browser notification for a
+  // message the user is already looking at - see Chat Phase 3.2.
+  useEffect(() => {
+    if (isContextView) {
+      setActiveConversationView({ kind: 'context', contextType, contextId });
+    } else if (activeConversation?.kind === 'direct') {
+      setActiveConversationView({ kind: 'direct', otherId: activeConversation.recipientId });
+    } else if (activeConversation?.kind === 'level') {
+      setActiveConversationView({ kind: 'level', level: activeConversation.level });
+    } else if (activeConversation?.kind === 'announcement') {
+      setActiveConversationView({ kind: 'announcement' });
+    } else {
+      setActiveConversationView(null);
+    }
+    return () => setActiveConversationView(null);
+  }, [isContextView, contextType, contextId, activeConversation, setActiveConversationView]);
 
   const contextThread = useMemo(() => {
     if (!isContextView) return [];

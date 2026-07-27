@@ -8,8 +8,75 @@ import * as db from '../lib/db';
 import { supabase } from '../lib/supabaseClient';
 import { writeAutoBackup } from '../lib/backup';
 import { studentDedupeKey } from '../utils/roster';
+import { useAuth } from './AuthContext';
+import { isChatNotificationsEnabled } from './notificationPrefs';
+
+// Chat Phase 3.2: browser notifications, built entirely on top of the
+// realtime subscription below - no second subscription, no DB change, no
+// service worker/push. See buildConversationUrl/matchesActiveView for
+// the two things a raw 'messages' INSERT row needs resolved against the
+// currently-open conversation (tracked via activeConversationRef, set by
+// Chat.jsx) to decide whether to actually show a notification.
+function buildConversationUrl(m) {
+  if (m.scope === 'context') return `/chat?type=${m.context_type}&id=${m.context_id}`;
+  if (m.scope === 'direct') return `/chat?open=direct&with=${m.sender_id}`;
+  if (m.scope === 'level') return `/chat?open=level&level=${m.level}`;
+  return `/chat?open=announcement`;
+}
 
 export function useAcademyData() {
+  const { profile } = useAuth();
+  // What conversation (if any) is currently open in Chat.jsx - a ref, not
+  // state, since it only needs to be read at notification time, not drive
+  // any render here. Chat.jsx keeps this in sync via
+  // setActiveConversationView(). null when Chat isn't open or no specific
+  // conversation is selected.
+  const activeConversationRef = useRef(null);
+  const setActiveConversationView = useCallback((descriptor) => {
+    activeConversationRef.current = descriptor;
+  }, []);
+
+  const matchesActiveView = useCallback(
+    (m) => {
+      const view = activeConversationRef.current;
+      if (!view) return false;
+      if (m.scope === 'direct' && view.kind === 'direct') {
+        return (m.sender_id === view.otherId && m.recipient_id === profile.id) || (m.recipient_id === view.otherId && m.sender_id === profile.id);
+      }
+      if (m.scope === 'level' && view.kind === 'level') return m.level === view.level;
+      if (m.scope === 'announcement' && view.kind === 'announcement') return true;
+      if (m.scope === 'context' && view.kind === 'context') return m.context_type === view.contextType && m.context_id === view.contextId;
+      return false;
+    },
+    [profile.id]
+  );
+
+  const maybeNotify = useCallback(
+    (m) => {
+      if (m.sender_id === profile.id) return;
+      if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+      if (!isChatNotificationsEnabled()) return;
+      // Skip only if the tab is visible AND showing this exact
+      // conversation - a hidden tab always notifies regardless of what
+      // was open, and a visible-but-different conversation still notifies
+      // (matches Requirements: notify unless already viewing this thread).
+      if (!document.hidden && matchesActiveView(m)) return;
+
+      const bodyText = m.body || (m.attachment_name ? `📎 ${m.attachment_name}` : '📎 Attachment');
+      const notif = new Notification(m.sender_name || 'New message', {
+        body: bodyText,
+        icon: '/icons/icon-192.png',
+        tag: `chat-message-${m.id}`,
+      });
+      notif.onclick = () => {
+        window.focus();
+        window.location.href = buildConversationUrl(m);
+        notif.close();
+      };
+    },
+    [profile.id, matchesActiveView]
+  );
+
   const [students, setStudents] = useState([]);
   const [payments, setPayments] = useState([]);
   const [attendance, setAttendance] = useState([]);
@@ -108,6 +175,7 @@ export function useAcademyData() {
       .channel('chat-messages')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
         setMessages((prev) => (prev.some((m) => m.id === payload.new.id) ? prev : [payload.new, ...prev]));
+        maybeNotify(payload.new);
       })
       .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'messages' }, (payload) => {
         setMessages((prev) => prev.filter((m) => m.id !== payload.old.id));
@@ -137,7 +205,8 @@ export function useAcademyData() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [maybeNotify]);
 
   useEffect(() => {
     stateRef.current = { students, payments, attendance };
@@ -741,6 +810,7 @@ export function useAcademyData() {
     addMessageAttachments,
     removeMessage,
     markRead,
+    setActiveConversationView,
     addFile,
     editFile,
     removeFile,

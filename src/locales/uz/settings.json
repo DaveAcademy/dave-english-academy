@@ -18,5 +18,11 @@
   "aboutAccountsDesc": "Administratorlar hamma narsani ko'rishi va tahrirlashi mumkin. O'qituvchilar o'quvchilarni ko'rishi, davomatni belgilashi va to'lovlarni ko'rishi mumkin. O'quvchilar faqat o'zlarining ma'lumotlarini ko'radi. Administrator yuqorida o'qituvchi va o'quvchi hisoblarini yaratishi mumkin.",
   "backupDownloaded": "Zaxira yuklab olindi. Faylni Google Drive kabi xavfsiz joyda saqlang.",
   "backupRestored": "Zaxira muvaffaqiyatli tiklandi.",
-  "couldNotRestore": "Faylni tiklab bo'lmadi."
+  "couldNotRestore": "Faylni tiklab bo'lmadi.",
+  "notifications": "Bildirishnomalar",
+  "notificationsDesc": "Sizga yangi chat xabari kelganda, agar bu varaq faol bo'lmasa, brauzer bildirishnomasi olasiz.",
+  "enableNotifications": "Xabar bildirishnomalarini yoqish",
+  "notificationsUnsupported": "Brauzeringiz bildirishnomalarni qo'llab-quvvatlamaydi.",
+  "notificationsBlocked": "Bildirishnomalar brauzer sozlamalarida bloklangan. Buni yoqish uchun ushbu sayt uchun ruxsat bering.",
+  "notificationsEnabled": "Bildirishnomalar yoqildi."
 }

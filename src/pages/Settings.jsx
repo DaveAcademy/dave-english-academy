@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Download, Upload, Database, Info, LogOut, Globe } from 'lucide-react';
+import { Download, Upload, Database, Info, LogOut, Globe, Bell } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { downloadBackup, restoreFromFile, getAutoBackupTimestamp } from '../lib/backup';
 import { useAuth } from '../lib/AuthContext';
 import { signOut } from '../lib/auth';
 import { setLanguage } from '../i18n';
+import { isChatNotificationsEnabled, setChatNotificationsEnabled } from '../lib/notificationPrefs';
 import CreateUserForm from '../components/admin/CreateUserForm';
 import BulkCreateStudentAccounts from '../components/admin/BulkCreateStudentAccounts';
 import TeacherGroupAssignments from '../components/admin/TeacherGroupAssignments';
@@ -28,10 +29,39 @@ export default function Settings() {
   const [message, setMessage] = useState('');
   const [autoBackupTime, setAutoBackupTime] = useState(null);
   const fileInputRef = useRef(null);
+  const notificationsSupported = typeof Notification !== 'undefined';
+  const [notifPermission, setNotifPermission] = useState(notificationsSupported ? Notification.permission : 'unsupported');
+  const [notifEnabled, setNotifEnabled] = useState(isChatNotificationsEnabled());
 
   useEffect(() => {
     setAutoBackupTime(getAutoBackupTimestamp());
   }, []);
+
+  // Permission is only ever requested here, from an explicit user action -
+  // never on page load (see Chat Phase 3.2 scope).
+  const handleToggleNotifications = async () => {
+    if (!notificationsSupported) return;
+    if (notifEnabled) {
+      setChatNotificationsEnabled(false);
+      setNotifEnabled(false);
+      return;
+    }
+    if (Notification.permission === 'denied') {
+      setMessage(t('settings:notificationsBlocked'));
+      return;
+    }
+    const permission = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission();
+    setNotifPermission(permission);
+    if (permission === 'granted') {
+      setChatNotificationsEnabled(true);
+      setNotifEnabled(true);
+      setMessage(t('settings:notificationsEnabled'));
+    } else {
+      setChatNotificationsEnabled(false);
+      setNotifEnabled(false);
+      setMessage(t('settings:notificationsBlocked'));
+    }
+  };
 
   const handleDownload = async () => {
     await downloadBackup();
@@ -77,6 +107,33 @@ export default function Settings() {
         >
           <LogOut size={16} /> {t('signOut')}
         </button>
+      </section>
+
+      <section className="mb-4 rounded-xl bg-white p-5 shadow-card">
+        <div className="mb-1 flex items-center gap-2">
+          <Bell size={18} className="text-brand-500" />
+          <h2 className="font-display text-base font-bold text-ink">{t('settings:notifications')}</h2>
+        </div>
+        <p className="mb-4 text-sm text-ink/60">{t('settings:notificationsDesc')}</p>
+        {!notificationsSupported ? (
+          <p className="text-sm text-ink/40">{t('settings:notificationsUnsupported')}</p>
+        ) : (
+          <label onClick={handleToggleNotifications} className="flex cursor-pointer items-center justify-between gap-4">
+            <span className="text-sm font-semibold text-ink">{t('settings:enableNotifications')}</span>
+            <span
+              role="switch"
+              aria-checked={notifEnabled}
+              className={`relative h-6 w-11 flex-shrink-0 rounded-full transition-colors ${notifEnabled ? 'bg-brand-500' : 'bg-ink/15'}`}
+            >
+              <span
+                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${notifEnabled ? 'translate-x-[22px]' : 'translate-x-0.5'}`}
+              />
+            </span>
+          </label>
+        )}
+        {notifPermission === 'denied' && (
+          <p className="mt-2 text-xs text-inactive">{t('settings:notificationsBlocked')}</p>
+        )}
       </section>
 
       {isStudent && (
