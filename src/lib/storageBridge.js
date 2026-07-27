@@ -512,7 +512,9 @@ export async function setHomeworkStatus(homeworkId, studentId, status, score = n
 }
 
 // Student self-submission (see migration 0009) - same protection as
-// submitExamAnswer: blocked by RLS the moment status is 'Graded'.
+// submitExamAnswer: blocked by RLS the moment status is 'Graded'. Legacy
+// single-file path - kept working, but the student UI now submits via
+// submitHomeworkFiles/addHomeworkSubmissionFile below instead.
 export async function submitHomeworkAnswer(homeworkId, studentId, { fileUrl, fileName }) {
   const { error } = await supabase.from('homework_status').upsert(
     {
@@ -523,6 +525,51 @@ export async function submitHomeworkAnswer(homeworkId, studentId, { fileUrl, fil
       answer_file_name: fileName,
       submitted_at: new Date().toISOString(),
     },
+    { onConflict: 'homework_id,student_id' }
+  );
+  if (error) throw error;
+  return listHomeworkStatus();
+}
+
+// ---------- Homework submission files (H4, multi-image) ----------
+
+export async function listHomeworkSubmissionFiles() {
+  const { data, error } = await supabase.from('homework_submission_files').select('*').order('position', { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+// Inserted one row at a time by the caller (see useAcademyData.js) rather
+// than as a single batch insert - the 5-file cap is enforced by RLS via a
+// COUNT subquery, which only sees rows already committed at the start of
+// each statement. A single multi-row INSERT would let all rows in that
+// one statement see the same pre-insert count and all pass, defeating
+// the cap; sequential single-row inserts each see the previous one.
+export async function addHomeworkSubmissionFile(homeworkId, studentId, { fileUrl, fileName, fileType, position }) {
+  const { data, error } = await supabase
+    .from('homework_submission_files')
+    .insert({ homework_id: homeworkId, student_id: studentId, file_url: fileUrl, file_name: fileName, file_type: fileType, position })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteHomeworkSubmissionFile(id) {
+  const { data, error } = await supabase.from('homework_submission_files').delete().eq('id', id).select();
+  if (error) throw error;
+  assertRows(data, 'remove this file');
+  return true;
+}
+
+// Marks a homework as submitted without touching the legacy
+// answer_file_url/answer_file_name columns - those stay null for every
+// H4-era (multi-image) submission. Only status/submitted_at are set, so
+// an existing score/feedback (there shouldn't be one - RLS already
+// blocks this call once graded) is never disturbed.
+export async function markHomeworkSubmitted(homeworkId, studentId) {
+  const { error } = await supabase.from('homework_status').upsert(
+    { homework_id: homeworkId, student_id: studentId, status: 'Submitted', submitted_at: new Date().toISOString() },
     { onConflict: 'homework_id,student_id' }
   );
   if (error) throw error;

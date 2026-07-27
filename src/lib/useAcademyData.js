@@ -22,6 +22,7 @@ export function useAcademyData() {
   const [examScores, setExamScoresState] = useState([]);
   const [homework, setHomework] = useState([]);
   const [homeworkStatus, setHomeworkStatusState] = useState([]);
+  const [homeworkSubmissionFiles, setHomeworkSubmissionFilesState] = useState([]);
   const [certificates, setCertificates] = useState([]);
   const [certificateTemplates, setCertificateTemplates] = useState([]);
   const [messages, setMessages] = useState([]);
@@ -71,16 +72,18 @@ export function useAcademyData() {
   useEffect(() => {
     (async () => {
       try {
-        const [tmpl, msg, reads, fls] = await Promise.all([
+        const [tmpl, msg, reads, fls, hsf] = await Promise.all([
           db.listCertificateTemplates(),
           db.listMessages(),
           db.listMessageReads(),
           db.listFiles(),
+          db.listHomeworkSubmissionFiles(),
         ]);
         setCertificateTemplates(tmpl);
         setMessages(msg);
         setMessageReads(reads);
         setFiles(fls);
+        setHomeworkSubmissionFilesState(hsf);
       } catch (e) {
         // Messaging/certificate-template/file-library are additive
         // features - leave them at their empty defaults rather than
@@ -380,6 +383,60 @@ export function useAcademyData() {
     }
   }, []);
 
+  // files: array of {fileUrl, fileName, fileType} already uploaded to
+  // storage by the caller. Inserted one at a time (see
+  // addHomeworkSubmissionFile's comment for why) so a failure partway
+  // through - e.g. hitting the 5-file cap, or a transient error - keeps
+  // whatever already succeeded recorded rather than silently discarding
+  // the student's work. Rethrows after recording partial progress so the
+  // caller can show an accurate error.
+  const submitMyHomeworkFiles = useCallback(
+    async (homeworkId, studentId, files) => {
+      const startingPosition = homeworkSubmissionFiles.filter(
+        (f) => f.homework_id === homeworkId && f.student_id === studentId
+      ).length;
+      const inserted = [];
+      try {
+        for (let i = 0; i < files.length; i++) {
+          const record = await db.addHomeworkSubmissionFile(homeworkId, studentId, {
+            ...files[i],
+            position: startingPosition + i,
+          });
+          inserted.push(record);
+        }
+      } catch (e) {
+        if (inserted.length > 0) {
+          setHomeworkSubmissionFilesState((prev) => [...prev, ...inserted]);
+          try {
+            setHomeworkStatusState(await db.markHomeworkSubmitted(homeworkId, studentId));
+          } catch {
+            // best-effort - the files that did save are already visible
+          }
+        }
+        setError('Could not save all of your files. Please try again.');
+        throw e;
+      }
+      setHomeworkSubmissionFilesState((prev) => [...prev, ...inserted]);
+      try {
+        setHomeworkStatusState(await db.markHomeworkSubmitted(homeworkId, studentId));
+      } catch (e) {
+        setError('Your files were saved, but we could not update your submission status. Please try again.');
+        throw e;
+      }
+    },
+    [homeworkSubmissionFiles]
+  );
+
+  const removeMyHomeworkSubmissionFile = useCallback(async (id) => {
+    try {
+      await db.deleteHomeworkSubmissionFile(id);
+      setHomeworkSubmissionFilesState((prev) => prev.filter((f) => f.id !== id));
+    } catch (e) {
+      setError('Could not remove this file. Please try again.');
+      throw e;
+    }
+  }, []);
+
   const addCertificate = useCallback(async (studentId, title, issuedDate) => {
     try {
       const record = await db.issueCertificate(studentId, title, issuedDate);
@@ -553,16 +610,18 @@ export function useAcademyData() {
     // Same isolation as the initial load - a restore's core data reload
     // must not be held hostage by the messaging tables.
     try {
-      const [tmpl, msg, reads, fls] = await Promise.all([
+      const [tmpl, msg, reads, fls, hsf] = await Promise.all([
         db.listCertificateTemplates(),
         db.listMessages(),
         db.listMessageReads(),
         db.listFiles(),
+        db.listHomeworkSubmissionFiles(),
       ]);
       setCertificateTemplates(tmpl);
       setMessages(msg);
       setMessageReads(reads);
       setFiles(fls);
+      setHomeworkSubmissionFilesState(hsf);
     } catch (e) {
       // best-effort, see the initial-load effect above for why
     }
@@ -578,6 +637,7 @@ export function useAcademyData() {
     examScores,
     homework,
     homeworkStatus,
+    homeworkSubmissionFiles,
     certificates,
     certificateTemplates,
     messages,
@@ -608,6 +668,8 @@ export function useAcademyData() {
     removeHomework,
     setHomeworkStatusForStudent,
     submitMyHomeworkAnswer,
+    submitMyHomeworkFiles,
+    removeMyHomeworkSubmissionFile,
     addCertificate,
     editCertificate,
     removeCertificate,

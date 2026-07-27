@@ -7,20 +7,30 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Plus, BookOpen, Pencil, Trash2, Paperclip, MessageSquare, Download, X } from 'lucide-react';
+import { Plus, BookOpen, Pencil, Trash2, Paperclip, MessageSquare, Download, X, Image as ImageIcon } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { LevelBadge } from '../components/Badge';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { uploadAttachment, getAttachmentUrl } from '../lib/db';
 
-const EMPTY_FORM = { title: '', level: 'A', description: '', due_date: new Date().toISOString().slice(0, 10) };
+const EMPTY_FORM = { title: '', level: 'A', description: '', due_date: new Date().toISOString().slice(0, 10), lesson_id: '' };
 const STATUS_OPTIONS = ['Assigned', 'Submitted', 'Graded'];
 
 export default function Homework() {
   const { t } = useTranslation(['homework', 'common']);
   const statusLabels = { Assigned: t('statusAssigned'), Submitted: t('statusSubmitted'), Graded: t('statusGraded') };
-  const { students, homework, homeworkStatus, addHomework, editHomework, removeHomework, setHomeworkStatusForStudent, error } =
-    useAcademy();
+  const {
+    students,
+    homework,
+    homeworkStatus,
+    homeworkSubmissionFiles,
+    lessons,
+    addHomework,
+    editHomework,
+    removeHomework,
+    setHomeworkStatusForStudent,
+    error,
+  } = useAcademy();
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [file, setFile] = useState(null);
@@ -51,19 +61,35 @@ export default function Homework() {
       answer_file_name: null,
     };
 
-  // Badges/filters are derived from answer_file_url/score directly, not
-  // the manually-editable status dropdown - a teacher can freely change
-  // status without that ever desyncing what "submitted"/"graded" means.
+  // H4: a submission may be the legacy single answer_file_url, or one or
+  // more homework_submission_files rows (multi-image) - never both for a
+  // new submission, but both are checked so old and new data read the
+  // same way.
+  const filesOf = (studentId) =>
+    homeworkSubmissionFiles
+      .filter((f) => f.homework_id === selected?.id && f.student_id === studentId)
+      .sort((a, b) => a.position - b.position);
+
+  // Badges/filters are derived from answer_file_url/score/submission
+  // files directly, not the manually-editable status dropdown - a
+  // teacher can freely change status without that ever desyncing what
+  // "submitted"/"graded" means.
   const gradingStateOf = (studentId) => {
     const current = statusOf(studentId);
     if (current.score != null) return 'graded';
-    if (current.answer_file_url) return 'needsGrading';
+    if (current.answer_file_url || filesOf(studentId).length > 0) return 'needsGrading';
     return 'notSubmitted';
   };
 
+  const sortedLessons = useMemo(
+    () => [...lessons].sort((a, b) => new Date(b.scheduled_at) - new Date(a.scheduled_at)),
+    [lessons]
+  );
+  const lessonOf = (lessonId) => (lessonId ? lessons.find((l) => l.id === lessonId) : null);
+
   const filteredStudents = useMemo(
     () => activeStudents.filter((s) => statusFilter === 'all' || gradingStateOf(s.id) === statusFilter),
-    [activeStudents, homeworkStatus, selected, statusFilter]
+    [activeStudents, homeworkStatus, homeworkSubmissionFiles, selected, statusFilter]
   );
 
   const resetForm = () => {
@@ -86,6 +112,7 @@ export default function Homework() {
         level: form.level || null,
         description: form.description || null,
         due_date: form.due_date,
+        lesson_id: form.lesson_id || null,
       };
 
       if (editingId) {
@@ -128,7 +155,13 @@ export default function Homework() {
 
   const startEdit = (hw) => {
     setEditingId(hw.id);
-    setForm({ title: hw.title, level: hw.level || 'A', description: hw.description || '', due_date: hw.due_date });
+    setForm({
+      title: hw.title,
+      level: hw.level || 'A',
+      description: hw.description || '',
+      due_date: hw.due_date,
+      lesson_id: hw.lesson_id || '',
+    });
     setFile(null);
     setRemoveFile(false);
     setUploadError(null);
@@ -184,6 +217,18 @@ export default function Homework() {
             <option value="A">{t('common:levelA')}</option>
             <option value="B">{t('common:levelB')}</option>
             <option value="C">{t('common:levelC')}</option>
+          </select>
+          <select
+            value={form.lesson_id}
+            onChange={(e) => setForm({ ...form, lesson_id: e.target.value })}
+            className="input sm:col-span-2"
+          >
+            <option value="">{t('noLinkedLesson')}</option>
+            {sortedLessons.map((l) => (
+              <option key={l.id} value={l.id}>
+                {l.topic} · {new Date(l.scheduled_at).toLocaleDateString()}
+              </option>
+            ))}
           </select>
           <div>
             <label className="mb-1 block text-xs font-semibold text-ink/50">{t('deadlineLabel')}</label>
@@ -264,7 +309,10 @@ export default function Homework() {
                 <BookOpen size={16} />
                 <div>
                   <p className="text-sm font-semibold">{h.title}</p>
-                  <p className="text-xs opacity-70">{t('due', { date: h.due_date })}</p>
+                  <p className="text-xs opacity-70">
+                    {t('due', { date: h.due_date })}
+                    {lessonOf(h.lesson_id) && ` · ${lessonOf(h.lesson_id).topic}`}
+                  </p>
                 </div>
                 {h.level && <LevelBadge level={h.level} />}
               </button>
@@ -282,7 +330,17 @@ export default function Homework() {
       {selected && (
         <>
           <div className="mb-2 mt-6 flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-sm font-bold uppercase tracking-wide text-ink/50">{t('statusFor', { title: selected.title })}</h2>
+            <div>
+              <h2 className="text-sm font-bold uppercase tracking-wide text-ink/50">{t('statusFor', { title: selected.title })}</h2>
+              {lessonOf(selected.lesson_id) && (
+                <p className="mt-0.5 text-xs text-ink/50">
+                  {t('lessonLabel', {
+                    topic: lessonOf(selected.lesson_id).topic,
+                    date: new Date(lessonOf(selected.lesson_id).scheduled_at).toLocaleDateString(),
+                  })}
+                </p>
+              )}
+            </div>
             <div className="flex flex-wrap items-center gap-2">
               <select
                 value={statusFilter}
@@ -340,6 +398,19 @@ export default function Homework() {
                         >
                           <Paperclip size={11} /> {current.answer_file_name || t('studentSubmissionDefault')}
                         </button>
+                      )}
+                      {filesOf(s.id).length > 0 && (
+                        <div className="mt-1 flex flex-wrap gap-2">
+                          {filesOf(s.id).map((f, i) => (
+                            <button
+                              key={f.id}
+                              onClick={() => handleOpenFile(f.file_url)}
+                              className="flex items-center gap-1 text-xs text-brand-500 hover:underline"
+                            >
+                              <ImageIcon size={11} /> {t('imageN', { n: i + 1 })}
+                            </button>
+                          ))}
+                        </div>
                       )}
                     </div>
                     <div className="flex items-center gap-2">
