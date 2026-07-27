@@ -104,7 +104,7 @@ export default function Settings() {
         </div>
       )}
 
-      {!isStudent && (
+      {isAdmin && (
         <section className="mb-4 rounded-xl bg-white p-5 shadow-card">
           <h2 className="mb-1 font-display text-base font-bold text-ink">{t('settings:backupRestore')}</h2>
           <p className="mb-4 text-sm text-ink/60">{t('settings:backupRestoreDesc')}</p>
@@ -116,17 +116,13 @@ export default function Settings() {
             >
               <Download size={16} /> {t('settings:downloadBackup')}
             </button>
-            {isAdmin && (
-              <button
-                onClick={handleRestoreClick}
-                className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-brand-500 px-4 py-2.5 text-sm font-semibold text-brand-500 hover:bg-brand-50"
-              >
-                <Upload size={16} /> {t('settings:restoreFromFile')}
-              </button>
-            )}
-            {isAdmin && (
-              <input ref={fileInputRef} type="file" accept="application/json" onChange={handleFileChange} className="hidden" />
-            )}
+            <button
+              onClick={handleRestoreClick}
+              className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-brand-500 px-4 py-2.5 text-sm font-semibold text-brand-500 hover:bg-brand-50"
+            >
+              <Upload size={16} /> {t('settings:restoreFromFile')}
+            </button>
+            <input ref={fileInputRef} type="file" accept="application/json" onChange={handleFileChange} className="hidden" />
           </div>
 
           {autoBackupTime && (
