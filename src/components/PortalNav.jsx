@@ -6,7 +6,7 @@
 
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { LayoutDashboard, TrendingUp, FileCheck2, BookOpen, Library, Award, Trophy, Settings, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, TrendingUp, FileCheck2, BookOpen, Library, Award, Trophy, Settings, MessageSquare, Languages } from 'lucide-react';
 import { useAuth } from '../lib/AuthContext';
 import { useAcademy } from '../lib/AcademyDataContext';
 
@@ -19,6 +19,7 @@ const PORTAL_NAV_ITEMS = [
   { to: '/progress', label: 'myProgress', shortLabel: 'myProgressShort', Icon: TrendingUp },
   { to: '/my-exams', label: 'myExamsFull', shortLabel: 'examsShort', Icon: FileCheck2 },
   { to: '/my-lessons', label: 'myLessonsFull', shortLabel: 'lessonsShort', Icon: Library },
+  { to: '/my-vocabulary', label: 'myVocabularyFull', shortLabel: 'vocabularyShort', Icon: Languages },
   { to: '/my-homework', label: 'myHomeworkFull', shortLabel: 'homeworkShort', Icon: BookOpen },
   { to: '/my-certificates', label: 'certificates', shortLabel: 'certificatesShort', Icon: Award },
   { to: '/my-ranking', label: 'ranking', shortLabel: 'rankingsShort', Icon: Trophy },

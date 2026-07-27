@@ -20,6 +20,7 @@ import {
   MessageSquare,
   FolderOpen,
   Medal,
+  Languages,
 } from 'lucide-react';
 import { useAuth } from '../lib/AuthContext';
 import { useAcademy } from '../lib/AcademyDataContext';
@@ -33,6 +34,7 @@ const NAV_ITEMS = [
   { to: '/payments', label: 'payments', shortLabel: 'paymentsShort', Icon: Wallet, adminOnly: true },
   { to: '/attendance', label: 'attendance', shortLabel: 'attendanceShort', Icon: CalendarCheck },
   { to: '/lessons', label: 'lessons', shortLabel: 'lessonsShort', Icon: CalendarClock },
+  { to: '/vocabulary', label: 'vocabulary', shortLabel: 'vocabularyShort', Icon: Languages },
   { to: '/exams', label: 'exams', shortLabel: 'examsShort', Icon: FileCheck2 },
   { to: '/homework', label: 'homework', shortLabel: 'homeworkShort', Icon: BookOpen },
   { to: '/certificates', label: 'certificates', shortLabel: 'certificatesShort', Icon: Award },

@@ -13,7 +13,7 @@ import { Link } from 'react-router-dom';
 import { useAcademy } from '../../lib/AcademyDataContext';
 import { getAttachmentUrl } from '../../lib/db';
 import { LevelBadge } from '../../components/Badge';
-import { BookOpen, Download, MessageSquare } from 'lucide-react';
+import { BookOpen, Download, MessageSquare, Languages } from 'lucide-react';
 
 export default function MyLessons() {
   const { students, lessons } = useAcademy();
@@ -73,6 +73,12 @@ export default function MyLessons() {
                   <Download size={13} /> View PDF
                 </button>
               )}
+              <Link
+                to={`/my-vocabulary?lesson=${l.id}`}
+                className="flex flex-shrink-0 items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-semibold text-ink/60 hover:bg-ink/5"
+              >
+                <Languages size={13} /> Vocabulary
+              </Link>
               {l.discussion_enabled && (
                 <Link
                   to={`/chat?type=lesson&id=${l.id}`}

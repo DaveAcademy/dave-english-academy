@@ -665,6 +665,104 @@ export async function listClassPointTransactions(level, startDate, endDate) {
   return data;
 }
 
+// ---------- Vocabulary (Vocabulary Learning System, Phase 1) ----------
+// See migration 0048. Not part of useAcademyData's bulk initial load -
+// vocabulary is fetched per-lesson (or once for "All Vocabulary") by the
+// pages that need it, same as listFiles()/certificate templates aren't
+// preloaded either. RLS (0048) is the real gate on every one of these;
+// is_active=false rows are simply invisible to students server-side.
+
+export async function listLessonVocabulary(lessonId) {
+  const { data, error } = await supabase
+    .from('lesson_vocabulary')
+    .select('*')
+    .eq('lesson_id', lessonId)
+    .order('display_order');
+  if (error) throw error;
+  return data;
+}
+
+// All vocabulary a student can currently see (RLS already scopes this to
+// active words in lessons matching their level), joined with each word's
+// lesson topic so the "All Vocabulary" page can group/label by lesson
+// without N follow-up queries.
+export async function listAllVocabulary() {
+  const { data, error } = await supabase
+    .from('lesson_vocabulary')
+    .select('*, lessons(id, topic, level)')
+    .order('display_order');
+  if (error) throw error;
+  return data;
+}
+
+// Search across english/uzbek/example - plain ilike, no search index
+// (see design note: fine at this scale). Still RLS-scoped, so a student
+// only ever searches what they could already see via listAllVocabulary().
+export async function searchVocabulary(query) {
+  const q = `%${query}%`;
+  const { data, error } = await supabase
+    .from('lesson_vocabulary')
+    .select('*, lessons(id, topic, level)')
+    .or(`english.ilike.${q},uzbek.ilike.${q},example.ilike.${q}`)
+    .order('display_order');
+  if (error) throw error;
+  return data;
+}
+
+export async function createVocabularyItem(data) {
+  const { data: record, error } = await supabase.from('lesson_vocabulary').insert(data).select().single();
+  if (error) throw error;
+  return record;
+}
+
+export async function updateVocabularyItem(id, data) {
+  const { data: rows, error } = await supabase.from('lesson_vocabulary').update(data).eq('id', id).select();
+  if (error) throw error;
+  return assertRows(rows, 'edit this vocabulary word')[0];
+}
+
+export async function deleteVocabularyItem(id) {
+  const { data: rows, error } = await supabase.from('lesson_vocabulary').delete().eq('id', id).select();
+  if (error) throw error;
+  assertRows(rows, 'delete this vocabulary word');
+  return true;
+}
+
+// Reassigns display_order for every word in a lesson to its index in the
+// given ordered id list - the teacher UI always passes the full
+// already-reordered list (drag/drop or move up/down), never a partial
+// one, so a plain sequential update is enough; no gap-filling needed.
+export async function reorderLessonVocabulary(lessonId, orderedIds) {
+  await Promise.all(
+    orderedIds.map((id, index) =>
+      supabase.from('lesson_vocabulary').update({ display_order: index }).eq('id', id).eq('lesson_id', lessonId)
+    )
+  );
+  return listLessonVocabulary(lessonId);
+}
+
+export async function listMyVocabularyFavorites(studentId) {
+  const { data, error } = await supabase.from('student_vocabulary_favorites').select('*').eq('student_id', studentId);
+  if (error) throw error;
+  return data;
+}
+
+export async function addVocabularyFavorite(studentId, vocabularyId) {
+  const { error } = await supabase
+    .from('student_vocabulary_favorites')
+    .insert({ student_id: studentId, vocabulary_id: vocabularyId });
+  if (error) throw error;
+}
+
+export async function removeVocabularyFavorite(studentId, vocabularyId) {
+  const { error } = await supabase
+    .from('student_vocabulary_favorites')
+    .delete()
+    .eq('student_id', studentId)
+    .eq('vocabulary_id', vocabularyId);
+  if (error) throw error;
+}
+
 // ---------- File uploads ----------
 // One shared private bucket for every attachment (chat, exam/homework
 // files and answers, the certificate template) - see migration 0009. The
