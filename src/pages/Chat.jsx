@@ -273,6 +273,20 @@ export default function Chat() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeThread]);
 
+  // Snapshot of "what was unread the moment this thread was opened", so
+  // the divider has something stable to point at - readIds itself gets
+  // overwritten almost immediately by the markRead effect above, which
+  // would otherwise make the divider vanish on the next render. Keyed on
+  // which conversation is open, not on the thread's contents, so a new
+  // message arriving via realtime while the thread is already open
+  // doesn't reposition or add to the divider.
+  const [unreadSnapshot, setUnreadSnapshot] = useState(() => new Set());
+  useEffect(() => {
+    const thread = isContextView ? contextThread : activeThread;
+    setUnreadSnapshot(new Set(thread.filter((m) => m.sender_id !== profile.id && !readIds.has(m.id)).map((m) => m.id)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isContextView, contextType, contextId, activeKey]);
+
   const canCompose = isContextView
     ? true
     : activeConversation
@@ -400,49 +414,63 @@ export default function Chat() {
     );
   };
 
-  const renderMessages = (thread) => (
-    <div className="space-y-2 overflow-y-auto p-4">
-      {thread.length === 0 ? (
-        <p className="py-10 text-center text-sm text-ink/50">{t('chat:noMessagesYet')}</p>
-      ) : (
-        thread.map((m) => {
-          const mine = m.sender_id === profile.id;
-          const atts = attachmentsFor(m);
-          const images = atts.filter(isImageAttachment);
-          const others = atts.filter((a) => !isImageAttachment(a));
-          return (
-            <div key={m.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[80%] rounded-xl p-3 shadow-card ${mine ? 'bg-brand-50' : 'bg-white'}`}>
-                <div className="mb-1 flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-1.5 text-xs text-ink/50">
-                    <span className="font-semibold text-ink">{m.sender_name || t('chat:unknownSender')}</span>
-                    <span>·</span>
-                    <span>{new Date(m.created_at).toLocaleString()}</span>
-                  </div>
-                  {isAdmin && (
-                    <button
-                      onClick={() => removeMessage(m.id)}
-                      className="rounded-md p-1 text-inactive hover:bg-inactive/10"
-                      aria-label={t('chat:deleteMessageAria')}
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  )}
-                </div>
-                {m.body && <p className="whitespace-pre-wrap text-sm text-ink/80">{m.body}</p>}
-                {images.length > 0 && (
-                  <div className={`mt-2 grid gap-1 ${images.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
-                    {images.map((a, i) => renderAttachment(a, i, images.length === 1))}
+  const firstUnreadId = thread => thread.find((m) => unreadSnapshot.has(m.id))?.id;
+
+  const renderMessages = (thread) => {
+    const dividerId = firstUnreadId(thread);
+    return (
+      <div className="space-y-2 overflow-y-auto p-4">
+        {thread.length === 0 ? (
+          <p className="py-10 text-center text-sm text-ink/50">{t('chat:noMessagesYet')}</p>
+        ) : (
+          thread.map((m) => {
+            const mine = m.sender_id === profile.id;
+            const atts = attachmentsFor(m);
+            const images = atts.filter(isImageAttachment);
+            const others = atts.filter((a) => !isImageAttachment(a));
+            return (
+              <div key={m.id}>
+                {m.id === dividerId && (
+                  <div className="my-3 flex items-center gap-2">
+                    <div className="h-px flex-1 bg-inactive/30" />
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-inactive">{t('chat:newMessagesDivider')}</span>
+                    <div className="h-px flex-1 bg-inactive/30" />
                   </div>
                 )}
-                {others.length > 0 && <div className="mt-2 space-y-1.5">{others.map((a, i) => renderAttachment(a, i, false))}</div>}
+                <div className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[80%] rounded-xl p-3 shadow-card ${mine ? 'bg-brand-50' : 'bg-white'}`}>
+                    <div className="mb-1 flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5 text-xs text-ink/50">
+                        <span className="font-semibold text-ink">{m.sender_name || t('chat:unknownSender')}</span>
+                        <span>·</span>
+                        <span>{new Date(m.created_at).toLocaleString()}</span>
+                      </div>
+                      {isAdmin && (
+                        <button
+                          onClick={() => removeMessage(m.id)}
+                          className="rounded-md p-1 text-inactive hover:bg-inactive/10"
+                          aria-label={t('chat:deleteMessageAria')}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                    </div>
+                    {m.body && <p className="whitespace-pre-wrap text-sm text-ink/80">{m.body}</p>}
+                    {images.length > 0 && (
+                      <div className={`mt-2 grid gap-1 ${images.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                        {images.map((a, i) => renderAttachment(a, i, images.length === 1))}
+                      </div>
+                    )}
+                    {others.length > 0 && <div className="mt-2 space-y-1.5">{others.map((a, i) => renderAttachment(a, i, false))}</div>}
+                  </div>
+                </div>
               </div>
-            </div>
-          );
-        })
-      )}
-    </div>
-  );
+            );
+          })
+        )}
+      </div>
+    );
+  };
 
   const renderComposer = () => (
     <form onSubmit={handleSend} className="space-y-2 border-t border-ink/10 p-3">

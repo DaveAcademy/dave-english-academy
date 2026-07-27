@@ -38,5 +38,6 @@
   "uploadingMessage": "Uploading...",
   "removeAttachment": "Remove attachment",
   "attachmentsCount": "{{count}}/{{max}} attached",
-  "filesCount": "{{count}} files"
+  "filesCount": "{{count}} files",
+  "newMessagesDivider": "New messages"
 }
