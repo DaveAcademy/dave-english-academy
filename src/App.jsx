@@ -1,7 +1,7 @@
 // App.jsx
 
 import { lazy, Suspense, useEffect } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Sidebar, BottomNav } from './components/Nav';
 import { PortalSidebar, PortalBottomNav } from './components/PortalNav';
@@ -33,6 +33,7 @@ const PortalHome = lazy(() => import('./pages/portal/PortalHome'));
 const MyProgress = lazy(() => import('./pages/portal/MyProgress'));
 const MyExams = lazy(() => import('./pages/portal/MyExams'));
 const MyHomework = lazy(() => import('./pages/portal/MyHomework'));
+const MyLessons = lazy(() => import('./pages/portal/MyLessons'));
 const MyCertificates = lazy(() => import('./pages/portal/MyCertificates'));
 const MyRanking = lazy(() => import('./pages/portal/MyRanking'));
 
@@ -65,45 +66,63 @@ function AppShell() {
           <div className="flex-1">
             <MobileHeader />
             <main className="mx-auto max-w-6xl px-4 pb-24 pt-4 sm:px-6 sm:pt-6 md:pb-8">
-              <RouteErrorBoundary>
-                <Suspense fallback={<PageLoading />}>
-                  {isStudent ? (
-                    <Routes>
-                      <Route path="/" element={<PortalHome />} />
-                      <Route path="/progress" element={<MyProgress />} />
-                      <Route path="/my-exams" element={<MyExams />} />
-                      <Route path="/my-homework" element={<MyHomework />} />
-                      <Route path="/my-certificates" element={<MyCertificates />} />
-                      <Route path="/my-ranking" element={<MyRanking />} />
-                      <Route path="/chat" element={<Chat />} />
-                      <Route path="/settings" element={<Settings />} />
-                    </Routes>
-                  ) : (
-                    <Routes>
-                      <Route path="/" element={<Dashboard />} />
-                      <Route path="/students" element={<Students />} />
-                      <Route path="/payments" element={<Payments />} />
-                      <Route path="/attendance" element={<Attendance />} />
-                      <Route path="/lessons" element={<Lessons />} />
-                      <Route path="/exams" element={<Exams />} />
-                      <Route path="/homework" element={<Homework />} />
-                      <Route path="/certificates" element={<Certificates />} />
-                      <Route path="/rankings" element={<Rankings />} />
-                      <Route path="/recognition" element={<Recognition />} />
-                      <Route path="/reports" element={<Reports />} />
-                      <Route path="/chat" element={<Chat />} />
-                      <Route path="/files" element={<FileManager />} />
-                      <Route path="/settings" element={<Settings />} />
-                    </Routes>
-                  )}
-                </Suspense>
-              </RouteErrorBoundary>
+              <RoutedContent isStudent={isStudent} />
             </main>
           </div>
           {isStudent ? <PortalBottomNav /> : <BottomNav />}
         </div>
       </BrowserRouter>
     </AcademyDataProvider>
+  );
+}
+
+// A route that throws is caught by RouteErrorBoundary, but a class error
+// boundary's hasError state does NOT reset on its own when its children
+// change - React Router swaps <Routes>' matched child without ever
+// touching the boundary's own props, so nothing tells it "we're on a
+// different page now, try rendering again". Without this, one failed
+// route (e.g. a stale chunk hiccup) would leave every *other* route -
+// Homework included - stuck on the same "Something went wrong" fallback
+// for the rest of the session, since clicking a different nav item never
+// remounts the boundary. Keying it on the pathname forces a fresh
+// instance (hasError: false) on every navigation.
+function RoutedContent({ isStudent }) {
+  const location = useLocation();
+  return (
+    <RouteErrorBoundary key={location.pathname}>
+      <Suspense fallback={<PageLoading />}>
+        {isStudent ? (
+          <Routes>
+            <Route path="/" element={<PortalHome />} />
+            <Route path="/progress" element={<MyProgress />} />
+            <Route path="/my-exams" element={<MyExams />} />
+            <Route path="/my-homework" element={<MyHomework />} />
+            <Route path="/my-lessons" element={<MyLessons />} />
+            <Route path="/my-certificates" element={<MyCertificates />} />
+            <Route path="/my-ranking" element={<MyRanking />} />
+            <Route path="/chat" element={<Chat />} />
+            <Route path="/settings" element={<Settings />} />
+          </Routes>
+        ) : (
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/students" element={<Students />} />
+            <Route path="/payments" element={<Payments />} />
+            <Route path="/attendance" element={<Attendance />} />
+            <Route path="/lessons" element={<Lessons />} />
+            <Route path="/exams" element={<Exams />} />
+            <Route path="/homework" element={<Homework />} />
+            <Route path="/certificates" element={<Certificates />} />
+            <Route path="/rankings" element={<Rankings />} />
+            <Route path="/recognition" element={<Recognition />} />
+            <Route path="/reports" element={<Reports />} />
+            <Route path="/chat" element={<Chat />} />
+            <Route path="/files" element={<FileManager />} />
+            <Route path="/settings" element={<Settings />} />
+          </Routes>
+        )}
+      </Suspense>
+    </RouteErrorBoundary>
   );
 }
 
