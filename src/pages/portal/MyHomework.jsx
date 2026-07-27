@@ -12,10 +12,10 @@ import { uploadAttachment, getAttachmentUrl } from '../../lib/db';
 
 export default function MyHomework() {
   const { t } = useTranslation(['homework', 'common']);
-  const statusLabels = { Assigned: t('statusAssigned'), Submitted: t('statusSubmitted'), Graded: t('statusGraded') };
   const { students, homework, homeworkStatus, submitMyHomeworkAnswer } = useAcademy();
   const me = students[0];
   const [submittingId, setSubmittingId] = useState(null);
+  const [actionError, setActionError] = useState(null);
 
   const myHomework = useMemo(() => {
     if (!me) return [];
@@ -26,17 +26,59 @@ export default function MyHomework() {
 
   const statusFor = (homeworkId) => homeworkStatus.find((s) => s.homework_id === homeworkId && s.student_id === me?.id);
 
+  // pillOf is derived from answer_file_url/score, not the raw status
+  // field, for the same robustness reason as the teacher-side badges.
+  const pillOf = (status) => {
+    if (status?.score != null) return 'graded';
+    if (status?.answer_file_url) return 'awaitingGrading';
+    return 'notSubmitted';
+  };
+
+  // due_date is a plain DATE column (no time/timezone component) - it
+  // represents a calendar day, not an instant. Comparing
+  // `new Date(due_date) < new Date()` would parse the date as UTC
+  // midnight and mark it overdue hours before the due day even ends for
+  // anyone east of UTC (e.g. Tashkent, UTC+5, sees it flip to overdue at
+  // 5am local on the due date itself). Instead compare local calendar
+  // days directly: overdue only once "today" (in the viewer's own local
+  // time) is strictly after the due date's calendar day.
+  const isOverdue = (dueDateStr) => {
+    if (!dueDateStr) return false;
+    const [y, m, d] = dueDateStr.split('-').map(Number);
+    if (!y || !m || !d) return false;
+    const due = new Date(y, m - 1, d);
+    const today = new Date();
+    const todayLocal = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    return todayLocal > due;
+  };
+
   const handleOpenFile = async (path) => {
-    const url = await getAttachmentUrl(path);
-    if (url) window.open(url, '_blank', 'noopener');
+    setActionError(null);
+    try {
+      const url = await getAttachmentUrl(path);
+      if (url) window.open(url, '_blank', 'noopener');
+      else setActionError(t('openFileFailed'));
+    } catch {
+      setActionError(t('openFileFailed'));
+    }
   };
 
   const handleUpload = async (homeworkId, file) => {
     if (!file || !me) return;
     setSubmittingId(homeworkId);
+    setActionError(null);
+    let uploaded;
     try {
-      const uploaded = await uploadAttachment(file, `homework-answers/${me.id}`);
+      uploaded = await uploadAttachment(file, `homework-answers/${me.id}`);
+    } catch {
+      setActionError(t('uploadFileFailed'));
+      setSubmittingId(null);
+      return;
+    }
+    try {
       await submitMyHomeworkAnswer(homeworkId, me.id, { fileUrl: uploaded.path, fileName: uploaded.name });
+    } catch {
+      setActionError(t('submitAnswerFailed'));
     } finally {
       setSubmittingId(null);
     }
@@ -57,6 +99,8 @@ export default function MyHomework() {
         <p className="mt-1 text-sm text-ink/50">{t('mySubtitle')}</p>
       </header>
 
+      {actionError && <div className="mb-4 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{actionError}</div>}
+
       {myHomework.length === 0 ? (
         <div className="rounded-xl bg-white p-10 text-center shadow-card">
           <p className="font-display text-lg font-semibold text-ink">{t('noHomeworkAssignedYet')}</p>
@@ -65,7 +109,9 @@ export default function MyHomework() {
         <div className="space-y-2">
           {myHomework.map((h) => {
             const status = statusFor(h.id) || { status: 'Assigned' };
-            const graded = status.status === 'Graded';
+            const graded = status.score != null;
+            const pill = pillOf(status);
+            const overdue = isOverdue(h.due_date);
             return (
               <div key={h.id} className="rounded-xl bg-white p-3 shadow-card">
                 <div className="flex items-start gap-3">
@@ -73,15 +119,38 @@ export default function MyHomework() {
                     <BookOpen size={18} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-ink">{h.title}</p>
-                    <p className="text-xs text-ink/50">{t('dueStatus', { date: h.due_date, status: statusLabels[status.status] })}</p>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <p className="font-semibold text-ink">{h.title}</p>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                          pill === 'graded'
+                            ? 'bg-brand-50 text-brand-600'
+                            : pill === 'awaitingGrading'
+                              ? 'bg-active/10 text-active'
+                              : 'bg-ink/5 text-ink/40'
+                        }`}
+                      >
+                        {t(pill === 'notSubmitted' ? 'notSubmitted' : pill === 'awaitingGrading' ? 'awaitingGrading' : 'statusGraded')}
+                      </span>
+                    </div>
+                    <p className="text-xs text-ink/50">
+                      {overdue ? (
+                        <span className="font-semibold text-inactive">{t('dueDateOverdue', { date: h.due_date })}</span>
+                      ) : (
+                        t('due', { date: h.due_date })
+                      )}
+                    </p>
                     {h.description && <p className="mt-1 whitespace-pre-wrap text-sm text-ink/70">{h.description}</p>}
                   </div>
-                  {graded && status.score != null && <p className="flex-shrink-0 text-sm font-bold text-brand-500">{t('scoreOutOf', { score: status.score })}</p>}
+                  {graded && <p className="flex-shrink-0 text-sm font-bold text-brand-500">{t('scoreOutOf', { score: status.score })}</p>}
                 </div>
 
                 {graded && status.feedback && (
                   <p className="mt-2 rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-700">{status.feedback}</p>
+                )}
+
+                {overdue && !graded && (
+                  <p className="mt-2 text-xs font-semibold text-inactive">{t('deadlinePassedWarning')}</p>
                 )}
 
                 <div className="mt-2 flex flex-wrap items-center gap-2">

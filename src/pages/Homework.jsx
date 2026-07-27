@@ -31,6 +31,7 @@ export default function Homework() {
   const [selectedHomeworkId, setSelectedHomeworkId] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [deletingHomework, setDeletingHomework] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('all');
 
   const sortedHomework = useMemo(() => [...homework].sort((a, b) => new Date(b.due_date) - new Date(a.due_date)), [homework]);
   const selected = sortedHomework.find((h) => h.id === selectedHomeworkId) || sortedHomework[0] || null;
@@ -49,6 +50,21 @@ export default function Homework() {
       answer_file_url: null,
       answer_file_name: null,
     };
+
+  // Badges/filters are derived from answer_file_url/score directly, not
+  // the manually-editable status dropdown - a teacher can freely change
+  // status without that ever desyncing what "submitted"/"graded" means.
+  const gradingStateOf = (studentId) => {
+    const current = statusOf(studentId);
+    if (current.score != null) return 'graded';
+    if (current.answer_file_url) return 'needsGrading';
+    return 'notSubmitted';
+  };
+
+  const filteredStudents = useMemo(
+    () => activeStudents.filter((s) => statusFilter === 'all' || gradingStateOf(s.id) === statusFilter),
+    [activeStudents, homeworkStatus, selected, statusFilter]
+  );
 
   const resetForm = () => {
     setForm(EMPTY_FORM);
@@ -267,7 +283,17 @@ export default function Homework() {
         <>
           <div className="mb-2 mt-6 flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-sm font-bold uppercase tracking-wide text-ink/50">{t('statusFor', { title: selected.title })}</h2>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="rounded-lg border border-ink/10 px-2 py-1.5 text-xs"
+              >
+                <option value="all">{t('filterAll')}</option>
+                <option value="notSubmitted">{t('notSubmitted')}</option>
+                <option value="needsGrading">{t('needsGrading')}</option>
+                <option value="graded">{t('statusGraded')}</option>
+              </select>
               {selected.file_url && (
                 <button
                   onClick={() => handleOpenFile(selected.file_url)}
@@ -285,13 +311,28 @@ export default function Homework() {
             </div>
           </div>
           <div className="space-y-2">
-            {activeStudents.map((s) => {
+            {filteredStudents.map((s) => {
               const current = statusOf(s.id);
+              const graded = current.score != null;
+              const gradingState = gradingStateOf(s.id);
               return (
                 <div key={s.id} className="rounded-xl bg-white p-3 shadow-card">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div>
-                      <p className="font-semibold text-ink">{s.real_name}</p>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <p className="font-semibold text-ink">{s.real_name}</p>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                            gradingState === 'graded'
+                              ? 'bg-brand-50 text-brand-600'
+                              : gradingState === 'needsGrading'
+                                ? 'bg-active/10 text-active'
+                                : 'bg-ink/5 text-ink/40'
+                          }`}
+                        >
+                          {gradingState === 'graded' ? t('statusGraded') : gradingState === 'needsGrading' ? t('needsGrading') : t('notSubmitted')}
+                        </span>
+                      </div>
                       {current.answer_file_url && (
                         <button
                           onClick={() => handleOpenFile(current.answer_file_url)}
@@ -313,23 +354,23 @@ export default function Homework() {
                           </option>
                         ))}
                       </select>
-                      {current.status === 'Graded' && (
-                        <input
-                          type="number"
-                          min="0"
-                          max="100"
-                          defaultValue={current.score ?? ''}
-                          onBlur={(e) => {
-                            const val = e.target.value;
-                            if (val !== '') setHomeworkStatusForStudent(selected.id, s.id, 'Graded', Number(val), current.feedback);
-                          }}
-                          placeholder={t('scorePlaceholder')}
-                          className="w-24 rounded-lg border border-ink/10 px-3 py-1.5 text-right text-sm"
-                        />
-                      )}
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        defaultValue={current.score ?? ''}
+                        onBlur={(e) => {
+                          const val = e.target.value;
+                          if (val !== '' && Number(val) !== current.score) {
+                            setHomeworkStatusForStudent(selected.id, s.id, 'Graded', Number(val), current.feedback);
+                          }
+                        }}
+                        placeholder={t('scorePlaceholder')}
+                        className="w-24 rounded-lg border border-ink/10 px-3 py-1.5 text-right text-sm"
+                      />
                     </div>
                   </div>
-                  {current.status === 'Graded' && (
+                  {graded && (
                     <input
                       defaultValue={current.feedback || ''}
                       key={`${s.id}-${current.feedback || ''}`}
