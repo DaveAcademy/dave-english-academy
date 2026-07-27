@@ -715,6 +715,23 @@ export async function createVocabularyItem(data) {
   return record;
 }
 
+// Bulk import: one INSERT with every row (PostgREST/Postgres runs a
+// multi-row insert as a single statement/transaction - it either all
+// succeeds or all rolls back, never a partial batch), instead of one
+// request per word.
+export async function bulkCreateVocabularyItems(lessonId, items, startOrder = 0) {
+  if (!items.length) return [];
+  const rows = items.map((item, i) => ({
+    lesson_id: lessonId,
+    english: item.english,
+    uzbek: item.uzbek,
+    display_order: startOrder + i,
+  }));
+  const { data, error } = await supabase.from('lesson_vocabulary').insert(rows).select();
+  if (error) throw error;
+  return data;
+}
+
 export async function updateVocabularyItem(id, data) {
   const { data: rows, error } = await supabase.from('lesson_vocabulary').update(data).eq('id', id).select();
   if (error) throw error;
