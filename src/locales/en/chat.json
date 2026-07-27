@@ -36,5 +36,7 @@
   "retry": "Retry",
   "uploadingProgress": "Uploading... {{percent}}%",
   "uploadingMessage": "Uploading...",
-  "removeAttachment": "Remove attachment"
+  "removeAttachment": "Remove attachment",
+  "attachmentsCount": "{{count}}/{{max}} attached",
+  "filesCount": "{{count}} files"
 }

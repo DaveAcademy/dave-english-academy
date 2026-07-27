@@ -20,9 +20,13 @@ import { useAuth } from '../lib/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { uploadAttachmentWithProgress, getAttachmentUrl, listTeacherGroupAssignments } from '../lib/db';
 
-const isImageAttachment = (m) => (m.attachment_type || '').startsWith('image/');
-const isPdfAttachment = (m) => m.attachment_type === 'application/pdf' || (m.attachment_name || '').toLowerCase().endsWith('.pdf');
+// Attachments are normalized to { url, name, type } whether they come
+// from the legacy single-attachment columns on messages (0009) or from
+// message_attachments (0047, used when a message has more than one file).
+const isImageAttachment = (a) => (a.type || '').startsWith('image/');
+const isPdfAttachment = (a) => a.type === 'application/pdf' || (a.name || '').toLowerCase().endsWith('.pdf');
 
+const MAX_ATTACHMENTS = 5;
 const LEVELS = ['A', 'B', 'C'];
 const DISCUSSION_KEY = { lesson: 'discussionLesson', homework: 'discussionHomework', exam: 'discussionExam', certificate: 'discussionCertificate' };
 
@@ -49,7 +53,7 @@ export default function Chat() {
   const { profile, role } = useAuth();
   const {
     students, lessons, homework, exams, certificates,
-    messages, messageReads, addMessage, removeMessage, markRead, error,
+    messages, messageReads, messageAttachments, addMessage, addMessageAttachments, removeMessage, markRead, error,
   } = useAcademy();
   const [searchParams] = useSearchParams();
   const contextType = searchParams.get('type');
@@ -63,7 +67,7 @@ export default function Chat() {
   const [activeKey, setActiveKey] = useState(null);
   const [search, setSearch] = useState('');
   const [body, setBody] = useState('');
-  const [file, setFile] = useState(null);
+  const [files, setFiles] = useState([]);
   const [sending, setSending] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(null);
   const [uploadError, setUploadError] = useState(null);
@@ -162,6 +166,32 @@ export default function Chat() {
 
   const nonContextMessages = useMemo(() => messages.filter((m) => m.scope !== 'context'), [messages]);
 
+  // Multi-attachment messages (0047) - keyed by message_id, ordered by
+  // position. A message with a single attachment never has rows here; it
+  // uses the legacy attachment_url/name/type columns instead.
+  const attachmentsByMessage = useMemo(() => {
+    const map = {};
+    messageAttachments.forEach((a) => {
+      (map[a.message_id] ||= []).push(a);
+    });
+    Object.values(map).forEach((list) => list.sort((a, b) => a.position - b.position));
+    return map;
+  }, [messageAttachments]);
+
+  // Normalized { url, name, type } list for a message. A multi-attachment
+  // send stores its first file in the legacy columns (so the messages
+  // table's body-or-attachment check constraint is satisfied even with
+  // no caption text) and the rest in message_attachments - so a message
+  // can have both at once.
+  const attachmentsFor = useCallback(
+    (m) => {
+      const legacy = m.attachment_url ? [{ url: m.attachment_url, name: m.attachment_name, type: m.attachment_type }] : [];
+      const extra = (attachmentsByMessage[m.id] || []).map((a) => ({ url: a.url, name: a.name, type: a.type }));
+      return [...legacy, ...extra];
+    },
+    [attachmentsByMessage]
+  );
+
   const matchesConversation = useCallback(
     (m, conv) => {
       if (conv.kind === 'direct') {
@@ -219,10 +249,11 @@ export default function Chat() {
   // the thread that's actually open, and only once per path.
   useEffect(() => {
     const thread = isContextView ? contextThread : activeThread;
-    const toResolve = thread.filter((m) => m.attachment_url && isImageAttachment(m) && !imageUrls[m.attachment_url]);
+    const allAttachments = thread.flatMap(attachmentsFor);
+    const toResolve = allAttachments.filter((a) => isImageAttachment(a) && !imageUrls[a.url]);
     if (toResolve.length === 0) return;
     let cancelled = false;
-    Promise.all(toResolve.map((m) => getAttachmentUrl(m.attachment_url).then((url) => [m.attachment_url, url]))).then((pairs) => {
+    Promise.all(toResolve.map((a) => getAttachmentUrl(a.url).then((url) => [a.url, url]))).then((pairs) => {
       if (cancelled) return;
       setImageUrls((prev) => ({ ...prev, ...Object.fromEntries(pairs) }));
     });
@@ -230,7 +261,7 @@ export default function Chat() {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isContextView, contextThread, activeThread]);
+  }, [isContextView, contextThread, activeThread, attachmentsFor]);
 
   // Opening a thread marks everything currently shown in it as read - a
   // simple "read the thread, it's read" model rather than per-message
@@ -251,16 +282,34 @@ export default function Chat() {
   const handleSend = useCallback(
     async (e) => {
       e?.preventDefault();
-      if (!body.trim() && !file) return;
+      if (!body.trim() && files.length === 0) return;
       if (!isContextView && !activeConversation) return;
       setSending(true);
       setUploadError(null);
       try {
         let attachment = {};
-        if (file) {
+        let extraAttachments = [];
+        if (files.length === 1) {
+          // Single attachment keeps using the legacy columns on messages
+          // itself (0009) - unchanged from before multi-attachment support.
           setUploadProgress(0);
-          const uploaded = await uploadAttachmentWithProgress(file, 'chat', setUploadProgress);
+          const uploaded = await uploadAttachmentWithProgress(files[0], 'chat', setUploadProgress);
           attachment = { attachment_url: uploaded.path, attachment_name: uploaded.name, attachment_type: uploaded.type };
+        } else if (files.length > 1) {
+          // First file keeps the legacy columns (so the message row still
+          // satisfies messages_body_or_attachment even with no caption
+          // text); the rest go to message_attachments.
+          setUploadProgress(0);
+          for (let i = 0; i < files.length; i++) {
+            const uploaded = await uploadAttachmentWithProgress(files[i], 'chat', (pct) => {
+              setUploadProgress(Math.round((i * 100 + pct) / files.length));
+            });
+            if (i === 0) {
+              attachment = { attachment_url: uploaded.path, attachment_name: uploaded.name, attachment_type: uploaded.type };
+            } else {
+              extraAttachments.push(uploaded);
+            }
+          }
         }
         const payload = {
           sender_id: profile.id,
@@ -277,9 +326,12 @@ export default function Chat() {
         } else if (activeConversation.kind === 'level') {
           payload.level = activeConversation.level;
         }
-        await addMessage(payload);
+        const record = await addMessage(payload);
+        if (extraAttachments.length > 0) {
+          await addMessageAttachments(record.id, extraAttachments);
+        }
         setBody('');
-        setFile(null);
+        setFiles([]);
         setUploadProgress(null);
       } catch (err) {
         setUploadError(err.message || t('chat:uploadFailed'));
@@ -287,7 +339,7 @@ export default function Chat() {
         setSending(false);
       }
     },
-    [body, file, profile, isContextView, contextType, contextId, activeConversation, addMessage, t]
+    [body, files, profile, isContextView, contextType, contextId, activeConversation, addMessage, addMessageAttachments, t]
   );
 
   const handleOpenAttachment = async (path) => {
@@ -299,6 +351,8 @@ export default function Chat() {
     if (!m) return t('chat:noMessagesYet');
     if (m.body) return m.body;
     if (m.attachment_name) return `📎 ${m.attachment_name}`;
+    const extra = attachmentsByMessage[m.id];
+    if (extra?.length) return `📎 ${t('chat:filesCount', { count: extra.length })}`;
     return t('chat:attachmentLabel');
   };
 
@@ -308,6 +362,44 @@ export default function Chat() {
     ? t('chat:readOnlyLevel')
     : null;
 
+  const renderAttachment = (a, idx, large) => {
+    if (isImageAttachment(a)) {
+      return (
+        <button key={`${a.url}-${idx}`} onClick={() => handleOpenAttachment(a.url)} className="block overflow-hidden rounded-lg border border-ink/10">
+          {imageUrls[a.url] ? (
+            <img src={imageUrls[a.url]} alt={a.name || t('chat:attachmentLabel')} className={`w-full object-cover ${large ? 'max-h-64' : 'h-28'}`} />
+          ) : (
+            <div className={`flex w-full items-center justify-center text-xs text-ink/40 ${large ? 'h-32' : 'h-28'}`}>{t('common:loading')}</div>
+          )}
+        </button>
+      );
+    }
+    if (isPdfAttachment(a)) {
+      return (
+        <button
+          key={`${a.url}-${idx}`}
+          onClick={() => handleOpenAttachment(a.url)}
+          className="flex w-full items-center gap-2 rounded-lg border border-brand-500 p-2 text-left hover:bg-brand-50"
+        >
+          <FileText size={22} className="flex-shrink-0 text-brand-500" />
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-xs font-semibold text-ink">{a.name || t('chat:attachmentLabel')}</span>
+            <span className="text-[10px] font-semibold uppercase text-ink/40">PDF</span>
+          </span>
+        </button>
+      );
+    }
+    return (
+      <button
+        key={`${a.url}-${idx}`}
+        onClick={() => handleOpenAttachment(a.url)}
+        className="flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-xs font-semibold text-brand-500 hover:bg-brand-50"
+      >
+        <Paperclip size={13} /> {a.name || t('chat:attachmentLabel')}
+      </button>
+    );
+  };
+
   const renderMessages = (thread) => (
     <div className="space-y-2 overflow-y-auto p-4">
       {thread.length === 0 ? (
@@ -315,6 +407,9 @@ export default function Chat() {
       ) : (
         thread.map((m) => {
           const mine = m.sender_id === profile.id;
+          const atts = attachmentsFor(m);
+          const images = atts.filter(isImageAttachment);
+          const others = atts.filter((a) => !isImageAttachment(a));
           return (
             <div key={m.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
               <div className={`max-w-[80%] rounded-xl p-3 shadow-card ${mine ? 'bg-brand-50' : 'bg-white'}`}>
@@ -335,35 +430,12 @@ export default function Chat() {
                   )}
                 </div>
                 {m.body && <p className="whitespace-pre-wrap text-sm text-ink/80">{m.body}</p>}
-                {m.attachment_url && isImageAttachment(m) && (
-                  <button onClick={() => handleOpenAttachment(m.attachment_url)} className="mt-2 block overflow-hidden rounded-lg border border-ink/10">
-                    {imageUrls[m.attachment_url] ? (
-                      <img src={imageUrls[m.attachment_url]} alt={m.attachment_name || t('chat:attachmentLabel')} className="max-h-64 w-full object-cover" />
-                    ) : (
-                      <div className="flex h-32 w-48 items-center justify-center text-xs text-ink/40">{t('common:loading')}</div>
-                    )}
-                  </button>
+                {images.length > 0 && (
+                  <div className={`mt-2 grid gap-1 ${images.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                    {images.map((a, i) => renderAttachment(a, i, images.length === 1))}
+                  </div>
                 )}
-                {m.attachment_url && !isImageAttachment(m) && isPdfAttachment(m) && (
-                  <button
-                    onClick={() => handleOpenAttachment(m.attachment_url)}
-                    className="mt-2 flex w-full items-center gap-2 rounded-lg border border-brand-500 p-2 text-left hover:bg-brand-50"
-                  >
-                    <FileText size={22} className="flex-shrink-0 text-brand-500" />
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-xs font-semibold text-ink">{m.attachment_name || t('chat:attachmentLabel')}</span>
-                      <span className="text-[10px] font-semibold uppercase text-ink/40">PDF</span>
-                    </span>
-                  </button>
-                )}
-                {m.attachment_url && !isImageAttachment(m) && !isPdfAttachment(m) && (
-                  <button
-                    onClick={() => handleOpenAttachment(m.attachment_url)}
-                    className="mt-2 flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-xs font-semibold text-brand-500 hover:bg-brand-50"
-                  >
-                    <Paperclip size={13} /> {m.attachment_name || t('chat:attachmentLabel')}
-                  </button>
-                )}
+                {others.length > 0 && <div className="mt-2 space-y-1.5">{others.map((a, i) => renderAttachment(a, i, false))}</div>}
               </div>
             </div>
           );
@@ -397,7 +469,7 @@ export default function Chat() {
               </button>
             </div>
           )}
-          {sending && file && uploadProgress !== null && (
+          {sending && files.length > 0 && uploadProgress !== null && (
             <div className="space-y-1">
               <div className="h-1.5 w-full overflow-hidden rounded-full bg-paper">
                 <div className="h-full rounded-full bg-brand-500 transition-all" style={{ width: `${uploadProgress}%` }} />
@@ -405,39 +477,51 @@ export default function Chat() {
               <p className="text-[10px] text-ink/40">{t('chat:uploadingProgress', { percent: uploadProgress })}</p>
             </div>
           )}
+          {files.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {files.map((f, i) => (
+                <span key={`${f.name}-${i}`} className="flex items-center gap-1 rounded-full bg-paper px-2 py-1 text-[11px] text-ink/60">
+                  {f.name}
+                  {!sending && (
+                    <button
+                      type="button"
+                      onClick={() => setFiles((prev) => prev.filter((_, idx) => idx !== i))}
+                      aria-label={t('chat:removeAttachment')}
+                    >
+                      <X size={11} />
+                    </button>
+                  )}
+                </span>
+              ))}
+            </div>
+          )}
           <div className="flex items-center justify-between gap-2">
-            <label className="flex cursor-pointer items-center gap-1.5 text-xs font-semibold text-ink/50 hover:text-ink">
+            <label
+              className={`flex items-center gap-1.5 text-xs font-semibold text-ink/50 hover:text-ink ${
+                files.length >= MAX_ATTACHMENTS ? 'pointer-events-none opacity-40' : 'cursor-pointer'
+              }`}
+            >
               <Paperclip size={14} />
-              {file ? file.name : t('chat:attachImageOrPdf')}
+              {files.length > 0 ? t('chat:attachmentsCount', { count: files.length, max: MAX_ATTACHMENTS }) : t('chat:attachImageOrPdf')}
               <input
                 type="file"
                 accept="image/*,application/pdf"
+                multiple
                 className="hidden"
                 onChange={(e) => {
-                  setFile(e.target.files?.[0] || null);
+                  const picked = Array.from(e.target.files || []);
+                  if (picked.length > 0) setFiles((prev) => [...prev, ...picked].slice(0, MAX_ATTACHMENTS));
                   setUploadError(null);
+                  e.target.value = '';
                 }}
               />
             </label>
-            {file && !sending && (
-              <button
-                type="button"
-                onClick={() => {
-                  setFile(null);
-                  setUploadError(null);
-                }}
-                className="rounded-md p-1 text-ink/40 hover:bg-paper"
-                aria-label={t('chat:removeAttachment')}
-              >
-                <X size={14} />
-              </button>
-            )}
             <button
               type="submit"
-              disabled={sending || (!body.trim() && !file)}
+              disabled={sending || (!body.trim() && files.length === 0)}
               className="ml-auto flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-50"
             >
-              <Send size={15} /> {sending ? (file ? t('chat:uploadingMessage') : t('chat:sendingMessage')) : t('chat:send')}
+              <Send size={15} /> {sending ? (files.length > 0 ? t('chat:uploadingMessage') : t('chat:sendingMessage')) : t('chat:send')}
             </button>
           </div>
         </>

@@ -36,5 +36,7 @@
   "retry": "Qayta urinish",
   "uploadingProgress": "Yuklanmoqda... {{percent}}%",
   "uploadingMessage": "Yuklanmoqda...",
-  "removeAttachment": "Faylni olib tashlash"
+  "removeAttachment": "Faylni olib tashlash",
+  "attachmentsCount": "{{count}}/{{max}} biriktirilgan",
+  "filesCount": "{{count}} fayl"
 }

@@ -749,6 +749,22 @@ export async function deleteMessage(id) {
   return true;
 }
 
+// Only used for messages with more than one attachment - a single
+// attachment still goes through the attachment_url/name/type columns on
+// messages itself (see migration 0009). See migration 0047.
+export async function listMessageAttachments() {
+  const { data, error } = await supabase.from('message_attachments').select('*');
+  if (error) throw error;
+  return data;
+}
+
+export async function addMessageAttachments(messageId, attachments) {
+  const rows = attachments.map((a, i) => ({ message_id: messageId, url: a.path, name: a.name, type: a.type, position: i }));
+  const { data, error } = await supabase.from('message_attachments').insert(rows).select();
+  if (error) throw error;
+  return data;
+}
+
 export async function listMessageReads() {
   const { data, error } = await supabase.from('message_reads').select('*');
   if (error) throw error;

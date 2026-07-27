@@ -28,6 +28,7 @@ export function useAcademyData() {
   const [certificateTemplates, setCertificateTemplates] = useState([]);
   const [messages, setMessages] = useState([]);
   const [messageReads, setMessageReads] = useState([]);
+  const [messageAttachments, setMessageAttachments] = useState([]);
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -73,16 +74,18 @@ export function useAcademyData() {
   useEffect(() => {
     (async () => {
       try {
-        const [tmpl, msg, reads, fls, hsf] = await Promise.all([
+        const [tmpl, msg, reads, atts, fls, hsf] = await Promise.all([
           db.listCertificateTemplates(),
           db.listMessages(),
           db.listMessageReads(),
+          db.listMessageAttachments(),
           db.listFiles(),
           db.listHomeworkSubmissionFiles(),
         ]);
         setCertificateTemplates(tmpl);
         setMessages(msg);
         setMessageReads(reads);
+        setMessageAttachments(atts);
         setFiles(fls);
         setHomeworkSubmissionFilesState(hsf);
       } catch (e) {
@@ -122,6 +125,12 @@ export function useAcademyData() {
             r.message_id === payload.new.message_id && r.profile_id === payload.new.profile_id ? payload.new : r
           )
         );
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'message_attachments' }, (payload) => {
+        setMessageAttachments((prev) => (prev.some((a) => a.id === payload.new.id) ? prev : [...prev, payload.new]));
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'message_attachments' }, (payload) => {
+        setMessageAttachments((prev) => prev.filter((a) => a.id !== payload.old.id));
       })
       .subscribe();
 
@@ -594,6 +603,19 @@ export function useAcademyData() {
     }
   }, []);
 
+  // Only used for messages sent with more than one file - see migration
+  // 0047. Called after addMessage() returns the new message's id.
+  const addMessageAttachments = useCallback(async (messageId, attachments) => {
+    try {
+      const rows = await db.addMessageAttachments(messageId, attachments);
+      setMessageAttachments((prev) => [...prev, ...rows]);
+      return rows;
+    } catch (e) {
+      setError('Could not attach files. Please try again.');
+      throw e;
+    }
+  }, []);
+
   const removeMessage = useCallback(async (id) => {
     try {
       await db.deleteMessage(id);
@@ -646,16 +668,18 @@ export function useAcademyData() {
     // Same isolation as the initial load - a restore's core data reload
     // must not be held hostage by the messaging tables.
     try {
-      const [tmpl, msg, reads, fls, hsf] = await Promise.all([
+      const [tmpl, msg, reads, atts, fls, hsf] = await Promise.all([
         db.listCertificateTemplates(),
         db.listMessages(),
         db.listMessageReads(),
+        db.listMessageAttachments(),
         db.listFiles(),
         db.listHomeworkSubmissionFiles(),
       ]);
       setCertificateTemplates(tmpl);
       setMessages(msg);
       setMessageReads(reads);
+      setMessageAttachments(atts);
       setFiles(fls);
       setHomeworkSubmissionFilesState(hsf);
     } catch (e) {
@@ -678,6 +702,7 @@ export function useAcademyData() {
     certificateTemplates,
     messages,
     messageReads,
+    messageAttachments,
     files,
     loading,
     error,
@@ -713,6 +738,7 @@ export function useAcademyData() {
     revokeRecognitionAward,
     updateCertificateTemplate,
     addMessage,
+    addMessageAttachments,
     removeMessage,
     markRead,
     addFile,
