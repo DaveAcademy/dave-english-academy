@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import * as db from '../lib/db';
+import { supabase } from '../lib/supabaseClient';
 import { writeAutoBackup } from '../lib/backup';
 import { studentDedupeKey } from '../utils/roster';
 
@@ -92,6 +93,41 @@ export function useAcademyData() {
         // environment.
       }
     })();
+  }, []);
+
+  // Realtime: messages/message_reads are published via supabase_realtime
+  // (see migration 0044). Subscribe once for the life of the app instead
+  // of polling; dedupe by primary key since addMessage()/markRead() below
+  // already apply their own optimistic update and would otherwise double
+  // up with the echo of their own write coming back through this channel.
+  useEffect(() => {
+    const channel = supabase
+      .channel('chat-messages')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
+        setMessages((prev) => (prev.some((m) => m.id === payload.new.id) ? prev : [payload.new, ...prev]));
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'messages' }, (payload) => {
+        setMessages((prev) => prev.filter((m) => m.id !== payload.old.id));
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'message_reads' }, (payload) => {
+        setMessageReads((prev) =>
+          prev.some((r) => r.message_id === payload.new.message_id && r.profile_id === payload.new.profile_id)
+            ? prev
+            : [...prev, payload.new]
+        );
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'message_reads' }, (payload) => {
+        setMessageReads((prev) =>
+          prev.map((r) =>
+            r.message_id === payload.new.message_id && r.profile_id === payload.new.profile_id ? payload.new : r
+          )
+        );
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   useEffect(() => {

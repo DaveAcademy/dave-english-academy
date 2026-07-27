@@ -24,5 +24,12 @@
   "discussionLesson": "Lesson discussion",
   "discussionHomework": "Homework discussion",
   "discussionExam": "Exam discussion",
-  "discussionCertificate": "Certificate discussion"
+  "discussionCertificate": "Certificate discussion",
+  "searchConversations": "Search conversations",
+  "noConversationSelected": "Select a conversation to start messaging",
+  "levelGroupLabel": "{{level}} Group",
+  "noConversations": "No conversations",
+  "readOnlyLevel": "Only teachers and the administrator can post here",
+  "readOnlyAnnouncement": "Only the administrator can post announcements",
+  "backToConversations": "Back to conversations"
 }

@@ -1,28 +1,45 @@
 // Chat.jsx
-// One page covers every messaging mode (direct, level broadcast, admin
-// announcements, and context discussions tied to a lesson/homework/exam/
-// certificate) rather than separate pages per mode - who can do what is
-// enforced by RLS (see migration 0009, can_send_message/can_read_message),
-// this page just reflects whatever the database allows for the signed-in
-// role and renders the right compose controls for it.
+// Inbox-style UI over the existing messaging architecture - nothing here
+// changes what a role can read/send (still enforced server-side, see
+// migrations 0009/0044/0045: can_send_message/can_read_message), just how
+// it's presented. "Conversations" are a client-side grouping of the flat
+// messages table (by direct counterpart, by level, or the single
+// announcement stream) - there is no conversations table.
+//
+// Context discussions (tied to a lesson/homework/exam/certificate, opened
+// via ?type=&id= from other pages) keep their own single-thread view
+// below, unchanged - they're a different entry point, not part of the
+// inbox list.
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Send, Paperclip, Trash2, MessageSquare, Megaphone, Users, Mail } from 'lucide-react';
+import { Send, Paperclip, Trash2, Search, ArrowLeft, Megaphone, Users } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { useAuth } from '../lib/AuthContext';
 import { supabase } from '../lib/supabaseClient';
-import { uploadAttachment, getAttachmentUrl } from '../lib/db';
+import { uploadAttachment, getAttachmentUrl, listTeacherGroupAssignments } from '../lib/db';
 
-const TAB_DEFS = [
-  { key: 'all', labelKey: 'tabAll', Icon: MessageSquare },
-  { key: 'announcement', labelKey: 'tabAnnouncements', Icon: Megaphone },
-  { key: 'level', labelKey: 'tabLevel', Icon: Users },
-  { key: 'direct', labelKey: 'tabDirect', Icon: Mail },
-];
-
+const LEVELS = ['A', 'B', 'C'];
 const DISCUSSION_KEY = { lesson: 'discussionLesson', homework: 'discussionHomework', exam: 'discussionExam', certificate: 'discussionCertificate' };
+
+function initials(label) {
+  return (label || '?')
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase())
+    .join('') || '?';
+}
+
+function Avatar({ label, kind }) {
+  const bg = kind === 'level' ? 'bg-brand-600' : kind === 'announcement' ? 'bg-inactive' : 'bg-brand-500';
+  return (
+    <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ${bg}`}>
+      {kind === 'level' ? <Users size={16} /> : kind === 'announcement' ? <Megaphone size={16} /> : initials(label)}
+    </div>
+  );
+}
 
 export default function Chat() {
   const { t } = useTranslation(['chat', 'common']);
@@ -40,14 +57,14 @@ export default function Chat() {
   const isTeacher = role === 'teacher';
   const isStudent = role === 'student';
 
-  const [tab, setTab] = useState('all');
-  const [scope, setScope] = useState('direct');
-  const [recipientId, setRecipientId] = useState('');
-  const [level, setLevel] = useState('A');
+  const [activeKey, setActiveKey] = useState(null);
+  const [search, setSearch] = useState('');
   const [body, setBody] = useState('');
   const [file, setFile] = useState(null);
   const [sending, setSending] = useState(false);
   const [teacherProfiles, setTeacherProfiles] = useState([]);
+  const [adminProfiles, setAdminProfiles] = useState([]);
+  const [assignedTeacherIds, setAssignedTeacherIds] = useState(null);
 
   useEffect(() => {
     supabase
@@ -58,6 +75,28 @@ export default function Chat() {
       .then(({ data }) => setTeacherProfiles(data || []));
   }, []);
 
+  // Students can always message the administrator (see can_send_message
+  // in migration 0045) - unlike teachers, this isn't level-scoped.
+  useEffect(() => {
+    if (!isStudent) return;
+    supabase
+      .from('profiles')
+      .select('id, full_name, email')
+      .eq('role', 'administrator')
+      .order('full_name')
+      .then(({ data }) => setAdminProfiles(data || []));
+  }, [isStudent]);
+
+  // Students can only direct-message a teacher assigned to their own
+  // level (RLS enforces this server-side too - see can_send_message in
+  // migration 0044). teacher_group_assignments RLS already scopes rows
+  // to the caller's own level for a student, so no extra filtering by
+  // level is needed here - whatever comes back is the assigned set.
+  useEffect(() => {
+    if (!isStudent) return;
+    listTeacherGroupAssignments().then((rows) => setAssignedTeacherIds(new Set(rows.map((r) => r.teacher_id))));
+  }, [isStudent]);
+
   const studentRecipients = useMemo(
     () =>
       students
@@ -67,24 +106,39 @@ export default function Chat() {
     [students]
   );
 
-  const recipientOptions = useMemo(() => {
-    if (scope !== 'direct') return [];
-    if (isStudent) return teacherProfiles.map((p) => ({ id: p.id, label: `${p.full_name || p.email} (${t('common:teacher')})` }));
-    if (isTeacher) return studentRecipients.map((s) => ({ id: s.id, label: s.label }));
+  // Every valid direct-message counterpart for the signed-in role,
+  // independent of anything already messaged - mirrors exactly who
+  // can_send_message('direct', ...) would accept, so a contact always
+  // shown here is always sendable.
+  const directContacts = useMemo(() => {
+    if (isStudent) {
+      const assigned = assignedTeacherIds ? teacherProfiles.filter((p) => assignedTeacherIds.has(p.id)) : [];
+      return [
+        ...assigned.map((p) => ({ id: p.id, label: p.full_name || p.email, roleLabel: t('common:teacher') })),
+        ...adminProfiles.map((p) => ({ id: p.id, label: p.full_name || p.email, roleLabel: t('common:administrator') })),
+      ];
+    }
+    if (isTeacher) return studentRecipients.map((s) => ({ id: s.id, label: s.label, roleLabel: t('common:student') }));
     if (isAdmin) {
       return [
-        ...teacherProfiles.map((p) => ({ id: p.id, label: `${p.full_name || p.email} (${t('common:teacher')})` })),
-        ...studentRecipients.map((s) => ({ id: s.id, label: `${s.label} (${t('common:student')})` })),
+        ...teacherProfiles.map((p) => ({ id: p.id, label: p.full_name || p.email, roleLabel: t('common:teacher') })),
+        ...studentRecipients.map((s) => ({ id: s.id, label: s.label, roleLabel: t('common:student') })),
       ];
     }
     return [];
-  }, [scope, isStudent, isTeacher, isAdmin, teacherProfiles, studentRecipients]);
+  }, [isStudent, isTeacher, isAdmin, teacherProfiles, adminProfiles, assignedTeacherIds, studentRecipients, t]);
 
-  const scopeOptions = isAdmin
-    ? ['direct', 'level', 'announcement']
-    : isTeacher
-    ? ['direct', 'level']
-    : ['direct'];
+  // Which level "group" conversations to show: a student only ever sees
+  // their own level's broadcasts (can_read_message enforces this too);
+  // teachers/admin can post to and read all three.
+  const levelKeys = useMemo(() => {
+    if (isStudent) {
+      const myLevel = students.find((s) => s.profile_id === profile.id)?.level;
+      return myLevel ? [myLevel] : [];
+    }
+    if (isTeacher || isAdmin) return LEVELS;
+    return [];
+  }, [isStudent, isTeacher, isAdmin, students, profile.id]);
 
   const contextLabel = useMemo(() => {
     if (!isContextView) return null;
@@ -95,36 +149,86 @@ export default function Chat() {
     return null;
   }, [isContextView, contextType, contextId, lessons, homework, exams, certificates]);
 
-  const visible = useMemo(() => {
-    let list = messages;
-    if (isContextView) {
-      list = list.filter((m) => m.scope === 'context' && m.context_type === contextType && m.context_id === contextId);
-    } else {
-      list = list.filter((m) => m.scope !== 'context');
-      if (tab !== 'all') list = list.filter((m) => m.scope === tab);
-    }
-    return [...list].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-  }, [messages, isContextView, contextType, contextId, tab]);
-
   const readIds = useMemo(
     () => new Set(messageReads.filter((r) => r.profile_id === profile.id).map((r) => r.message_id)),
     [messageReads, profile.id]
   );
 
-  // Opening a view marks everything currently shown in it as read - a
+  const nonContextMessages = useMemo(() => messages.filter((m) => m.scope !== 'context'), [messages]);
+
+  const matchesConversation = useCallback(
+    (m, conv) => {
+      if (conv.kind === 'direct') {
+        return m.scope === 'direct' && ((m.sender_id === profile.id && m.recipient_id === conv.recipientId) || (m.sender_id === conv.recipientId && m.recipient_id === profile.id));
+      }
+      if (conv.kind === 'level') return m.scope === 'level' && m.level === conv.level;
+      if (conv.kind === 'announcement') return m.scope === 'announcement';
+      return false;
+    },
+    [profile.id]
+  );
+
+  // The inbox list: one row per possible direct contact, per visible
+  // level, plus the single announcement stream - each annotated with its
+  // latest message and unread count purely from the flat messages table.
+  const conversations = useMemo(() => {
+    const build = (conv, title, subtitle) => {
+      const msgs = nonContextMessages.filter((m) => matchesConversation(m, conv));
+      const last = msgs.reduce((acc, m) => (!acc || new Date(m.created_at) > new Date(acc.created_at) ? m : acc), null);
+      const unread = msgs.filter((m) => m.sender_id !== profile.id && !readIds.has(m.id)).length;
+      return { ...conv, title, subtitle, last, unread };
+    };
+
+    const list = [
+      ...directContacts.map((c) => build({ key: `direct:${c.id}`, kind: 'direct', recipientId: c.id }, c.label, c.roleLabel)),
+      ...levelKeys.map((lvl) => build({ key: `level:${lvl}`, kind: 'level', level: lvl }, t('chat:levelGroupLabel', { level: t(`common:level${lvl}`) }))),
+      build({ key: 'announcement', kind: 'announcement' }, t('chat:tabAnnouncements')),
+    ];
+
+    return list.sort((a, b) => new Date(b.last?.created_at || 0) - new Date(a.last?.created_at || 0));
+  }, [directContacts, levelKeys, nonContextMessages, matchesConversation, profile.id, readIds, t]);
+
+  const filteredConversations = useMemo(
+    () => conversations.filter((c) => c.title.toLowerCase().includes(search.trim().toLowerCase())),
+    [conversations, search]
+  );
+
+  const activeConversation = useMemo(() => conversations.find((c) => c.key === activeKey) || null, [conversations, activeKey]);
+
+  const contextThread = useMemo(() => {
+    if (!isContextView) return [];
+    return [...messages]
+      .filter((m) => m.scope === 'context' && m.context_type === contextType && m.context_id === contextId)
+      .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+  }, [isContextView, messages, contextType, contextId]);
+
+  const activeThread = useMemo(() => {
+    if (isContextView) return contextThread;
+    if (!activeConversation) return [];
+    return [...nonContextMessages].filter((m) => matchesConversation(m, activeConversation)).sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+  }, [isContextView, contextThread, activeConversation, nonContextMessages, matchesConversation]);
+
+  // Opening a thread marks everything currently shown in it as read - a
   // simple "read the thread, it's read" model rather than per-message
   // read toggles.
   useEffect(() => {
-    visible.forEach((m) => {
+    activeThread.forEach((m) => {
       if (!readIds.has(m.id)) markRead(m.id, profile.id);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visible]);
+  }, [activeThread]);
+
+  const canCompose = isContextView
+    ? true
+    : activeConversation
+    ? activeConversation.kind === 'direct' || ((activeConversation.kind === 'level' || activeConversation.kind === 'announcement') && (isTeacher || isAdmin) && !(activeConversation.kind === 'announcement' && !isAdmin))
+    : false;
 
   const handleSend = useCallback(
     async (e) => {
       e.preventDefault();
       if (!body.trim() && !file) return;
+      if (!isContextView && !activeConversation) return;
       setSending(true);
       try {
         let attachment = {};
@@ -135,18 +239,17 @@ export default function Chat() {
         const payload = {
           sender_id: profile.id,
           sender_name: profile.full_name || profile.email,
-          scope: isContextView ? 'context' : scope,
+          scope: isContextView ? 'context' : activeConversation.kind,
           body: body.trim() || null,
           ...attachment,
         };
         if (isContextView) {
           payload.context_type = contextType;
           payload.context_id = contextId;
-        } else if (scope === 'direct') {
-          if (!recipientId) return;
-          payload.recipient_id = recipientId;
-        } else if (scope === 'level') {
-          payload.level = level;
+        } else if (activeConversation.kind === 'direct') {
+          payload.recipient_id = activeConversation.recipientId;
+        } else if (activeConversation.kind === 'level') {
+          payload.level = activeConversation.level;
         }
         await addMessage(payload);
         setBody('');
@@ -155,7 +258,7 @@ export default function Chat() {
         setSending(false);
       }
     },
-    [body, file, profile, scope, isContextView, contextType, contextId, recipientId, level, addMessage]
+    [body, file, profile, isContextView, contextType, contextId, activeConversation, addMessage]
   );
 
   const handleOpenAttachment = async (path) => {
@@ -163,121 +266,32 @@ export default function Chat() {
     if (url) window.open(url, '_blank', 'noopener');
   };
 
-  const scopeLabel = (m) => {
-    if (m.scope === 'announcement') return t('chat:announcementLabel');
-    if (m.scope === 'level') return t(`common:level${m.level}`);
-    if (m.scope === 'context') return t(`chat:${DISCUSSION_KEY[m.context_type] || 'discussionLesson'}`);
-    return t('chat:directLabel');
+  const previewText = (m) => {
+    if (!m) return t('chat:noMessagesYet');
+    if (m.body) return m.body;
+    if (m.attachment_name) return `📎 ${m.attachment_name}`;
+    return t('chat:attachmentLabel');
   };
 
-  return (
-    <div>
-      <header className="mb-4">
-        <h1 className="font-display text-2xl font-bold text-ink">
-          {isContextView ? t('chat:discussionTitle', { label: contextLabel || '...' }) : t('chat:messagesTitle')}
-        </h1>
-        <p className="mt-1 text-sm text-ink/50">
-          {isContextView ? t('chat:contextSubtitle') : t('chat:messagesSubtitle')}
-        </p>
-      </header>
+  const readOnlyNote = activeConversation?.kind === 'announcement' && !isAdmin
+    ? t('chat:readOnlyAnnouncement')
+    : activeConversation?.kind === 'level' && isStudent
+    ? t('chat:readOnlyLevel')
+    : null;
 
-      {error && <div className="mb-4 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{error}</div>}
-
-      {!isContextView && (
-        <div className="mb-3 flex gap-1.5 overflow-x-auto">
-          {TAB_DEFS.map((td) => (
-            <button
-              key={td.key}
-              onClick={() => setTab(td.key)}
-              className={`flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold ${
-                tab === td.key ? 'bg-brand-500 text-white' : 'bg-white text-ink/60 shadow-sm'
-              }`}
-            >
-              <td.Icon size={13} /> {t(`chat:${td.labelKey}`)}
-            </button>
-          ))}
-        </div>
-      )}
-
-      <form onSubmit={handleSend} className="mb-4 space-y-2 rounded-xl bg-white p-4 shadow-card">
-        {!isContextView && (
-          <div className="flex flex-wrap gap-2">
-            <select
-              value={scope}
-              onChange={(e) => {
-                setScope(e.target.value);
-                setRecipientId('');
-              }}
-              className="input w-auto"
-            >
-              {scopeOptions.map((s) => (
-                <option key={s} value={s}>
-                  {s === 'direct' ? t('chat:scopeDirect') : s === 'level' ? t('chat:scopeLevel') : t('chat:scopeAnnouncement')}
-                </option>
-              ))}
-            </select>
-            {scope === 'direct' && (
-              <select value={recipientId} onChange={(e) => setRecipientId(e.target.value)} required className="input w-auto flex-1">
-                <option value="">{t('chat:selectRecipient')}</option>
-                {recipientOptions.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.label}
-                  </option>
-                ))}
-              </select>
-            )}
-            {scope === 'level' && (
-              <select value={level} onChange={(e) => setLevel(e.target.value)} className="input w-auto">
-                <option value="A">{t('common:levelA')}</option>
-                <option value="B">{t('common:levelB')}</option>
-                <option value="C">{t('common:levelC')}</option>
-              </select>
-            )}
-          </div>
-        )}
-        <textarea
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-          rows={2}
-          placeholder={t('chat:writeMessage')}
-          className="input resize-none"
-        />
-        <div className="flex items-center justify-between gap-2">
-          <label className="flex cursor-pointer items-center gap-1.5 text-xs font-semibold text-ink/50 hover:text-ink">
-            <Paperclip size={14} />
-            {file ? file.name : t('chat:attachImageOrPdf')}
-            <input
-              type="file"
-              accept="image/*,application/pdf"
-              className="hidden"
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
-            />
-          </label>
-          <button
-            type="submit"
-            disabled={sending || (!body.trim() && !file) || (!isContextView && scope === 'direct' && !recipientId)}
-            className="flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-50"
-          >
-            <Send size={15} /> {sending ? t('chat:sendingMessage') : t('chat:send')}
-          </button>
-        </div>
-      </form>
-
-      {visible.length === 0 ? (
-        <div className="rounded-xl bg-white p-10 text-center shadow-card">
-          <p className="font-display text-lg font-semibold text-ink">{t('chat:noMessagesYet')}</p>
-        </div>
+  const renderMessages = (thread) => (
+    <div className="space-y-2 overflow-y-auto p-4">
+      {thread.length === 0 ? (
+        <p className="py-10 text-center text-sm text-ink/50">{t('chat:noMessagesYet')}</p>
       ) : (
-        <div className="space-y-2">
-          {visible.map((m) => {
-            const mine = m.sender_id === profile.id;
-            return (
-              <div key={m.id} className={`rounded-xl p-3 shadow-card ${mine ? 'bg-brand-50' : 'bg-white'}`}>
+        thread.map((m) => {
+          const mine = m.sender_id === profile.id;
+          return (
+            <div key={m.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-[80%] rounded-xl p-3 shadow-card ${mine ? 'bg-brand-50' : 'bg-white'}`}>
                 <div className="mb-1 flex items-center justify-between gap-2">
                   <div className="flex items-center gap-1.5 text-xs text-ink/50">
                     <span className="font-semibold text-ink">{m.sender_name || t('chat:unknownSender')}</span>
-                    <span>·</span>
-                    <span>{scopeLabel(m)}</span>
                     <span>·</span>
                     <span>{new Date(m.created_at).toLocaleString()}</span>
                   </div>
@@ -301,10 +315,142 @@ export default function Chat() {
                   </button>
                 )}
               </div>
-            );
-          })}
-        </div>
+            </div>
+          );
+        })
       )}
+    </div>
+  );
+
+  const renderComposer = () => (
+    <form onSubmit={handleSend} className="space-y-2 border-t border-ink/10 p-3">
+      {readOnlyNote ? (
+        <p className="text-center text-xs text-ink/40">{readOnlyNote}</p>
+      ) : (
+        <>
+          <textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            rows={2}
+            placeholder={t('chat:writeMessage')}
+            className="input resize-none"
+          />
+          <div className="flex items-center justify-between gap-2">
+            <label className="flex cursor-pointer items-center gap-1.5 text-xs font-semibold text-ink/50 hover:text-ink">
+              <Paperclip size={14} />
+              {file ? file.name : t('chat:attachImageOrPdf')}
+              <input
+                type="file"
+                accept="image/*,application/pdf"
+                className="hidden"
+                onChange={(e) => setFile(e.target.files?.[0] || null)}
+              />
+            </label>
+            <button
+              type="submit"
+              disabled={sending || (!body.trim() && !file)}
+              className="flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-50"
+            >
+              <Send size={15} /> {sending ? t('chat:sendingMessage') : t('chat:send')}
+            </button>
+          </div>
+        </>
+      )}
+    </form>
+  );
+
+  if (isContextView) {
+    return (
+      <div>
+        <header className="mb-4">
+          <h1 className="font-display text-2xl font-bold text-ink">{t('chat:discussionTitle', { label: contextLabel || '...' })}</h1>
+          <p className="mt-1 text-sm text-ink/50">{t('chat:contextSubtitle')}</p>
+        </header>
+        {error && <div className="mb-4 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{error}</div>}
+        <div className="flex h-[70vh] flex-col overflow-hidden rounded-xl bg-white shadow-card">
+          {renderMessages(contextThread)}
+          {renderComposer()}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <header className="mb-4">
+        <h1 className="font-display text-2xl font-bold text-ink">{t('chat:messagesTitle')}</h1>
+        <p className="mt-1 text-sm text-ink/50">{t('chat:messagesSubtitle')}</p>
+      </header>
+
+      {error && <div className="mb-4 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{error}</div>}
+
+      <div className="flex h-[70vh] gap-4">
+        <div className={`w-full flex-shrink-0 flex-col overflow-hidden rounded-xl bg-white shadow-card md:flex md:w-80 ${activeKey ? 'hidden' : 'flex'}`}>
+          <div className="border-b border-ink/10 p-3">
+            <div className="flex items-center gap-2 rounded-lg bg-paper px-3 py-2">
+              <Search size={14} className="text-ink/40" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder={t('chat:searchConversations')}
+                className="w-full bg-transparent text-sm outline-none"
+              />
+            </div>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            {filteredConversations.length === 0 ? (
+              <p className="p-6 text-center text-sm text-ink/50">{t('chat:noConversations')}</p>
+            ) : (
+              filteredConversations.map((c) => (
+                <button
+                  key={c.key}
+                  onClick={() => setActiveKey(c.key)}
+                  className={`flex w-full items-center gap-3 border-b border-ink/5 p-3 text-left hover:bg-paper ${activeKey === c.key ? 'bg-paper' : ''}`}
+                >
+                  <Avatar label={c.title} kind={c.kind} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="truncate font-display text-sm font-semibold text-ink">
+                        {c.title}
+                        {c.subtitle && <span className="ml-1 font-sans text-xs font-normal text-ink/40">({c.subtitle})</span>}
+                      </p>
+                      {c.unread > 0 && (
+                        <span className="flex h-5 min-w-[20px] flex-shrink-0 items-center justify-center rounded-full bg-inactive px-1.5 text-[10px] font-bold text-white">
+                          {c.unread > 9 ? '9+' : c.unread}
+                        </span>
+                      )}
+                    </div>
+                    <p className="truncate text-xs text-ink/50">{previewText(c.last)}</p>
+                  </div>
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+
+        <div className={`flex-1 flex-col overflow-hidden rounded-xl bg-white shadow-card md:flex ${activeKey ? 'flex' : 'hidden'}`}>
+          {activeConversation ? (
+            <>
+              <div className="flex items-center gap-2 border-b border-ink/10 p-3">
+                <button onClick={() => setActiveKey(null)} className="rounded-md p-1 text-ink/50 hover:bg-paper md:hidden" aria-label={t('chat:backToConversations')}>
+                  <ArrowLeft size={18} />
+                </button>
+                <Avatar label={activeConversation.title} kind={activeConversation.kind} />
+                <div>
+                  <p className="font-display text-sm font-semibold text-ink">{activeConversation.title}</p>
+                  {activeConversation.subtitle && <p className="text-xs text-ink/40">{activeConversation.subtitle}</p>}
+                </div>
+              </div>
+              {renderMessages(activeThread)}
+              {renderComposer()}
+            </>
+          ) : (
+            <div className="flex flex-1 items-center justify-center">
+              <p className="text-sm text-ink/40">{t('chat:noConversationSelected')}</p>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
