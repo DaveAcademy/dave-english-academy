@@ -32,6 +32,8 @@ const Settings = lazy(() => import('./pages/Settings'));
 const Chat = lazy(() => import('./pages/Chat'));
 const FileManager = lazy(() => import('./pages/FileManager'));
 const PortalHome = lazy(() => import('./pages/portal/PortalHome'));
+const PortalHomeV2 = lazy(() => import('./pages/portal/PortalHomeV2'));
+const PortalHomeV3 = lazy(() => import('./pages/portal/PortalHomeV3'));
 const MyProgress = lazy(() => import('./pages/portal/MyProgress'));
 const MyExams = lazy(() => import('./pages/portal/MyExams'));
 const MyHomework = lazy(() => import('./pages/portal/MyHomework'));
@@ -96,7 +98,10 @@ function RoutedContent({ isStudent }) {
       <Suspense fallback={<PageLoading />}>
         {isStudent ? (
           <Routes>
-            <Route path="/" element={<PortalHome />} />
+            <Route path="/" element={<PortalHomeV3 />} />
+            <Route path="/dashboard-v1" element={<PortalHome />} />
+            <Route path="/dashboard-v2" element={<PortalHomeV2 />} />
+            <Route path="/dashboard-v3" element={<PortalHomeV3 />} />
             <Route path="/progress" element={<MyProgress />} />
             <Route path="/my-exams" element={<MyExams />} />
             <Route path="/my-homework" element={<MyHomework />} />

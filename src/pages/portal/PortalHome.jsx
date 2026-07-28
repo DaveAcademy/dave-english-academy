@@ -39,6 +39,7 @@ import QuickActions from '../../components/QuickActions';
 import SectionLabel from '../../components/SectionLabel';
 import { attendanceRate, filterByYearMonth } from '../../utils/attendance';
 import { currentAndPreviousMonth, trendFrom } from '../../utils/date';
+import { computeBadges } from '../../utils/badges';
 
 function ProgressBar({ value, color = 'bg-brand-500' }) {
   const pct = Math.max(0, Math.min(100, value));
@@ -126,6 +127,7 @@ export default function PortalHome() {
     if (url) window.open(url, '_blank', 'noopener');
   };
 
+
   const stats = useMemo(() => {
     // ---- Attendance (this month vs last month) ----
     const monthRecords = filterByYearMonth(attendance, 'date', current.year, current.month);
@@ -166,6 +168,20 @@ export default function PortalHome() {
       homeworkDoneRate,
     };
   }, [attendance, examScores, homework, homeworkStatus, me, current, previous]);
+
+  const badges = useMemo(
+    () =>
+      computeBadges({
+        attendanceRate: stats.attendanceRate,
+        attendanceStreak: stats.attendanceStreak,
+        homeworkTotal: stats.homeworkTotal,
+        homeworkDoneRate: stats.homeworkDoneRate,
+        examAvg: stats.examAvg,
+        lessonsCompleted: stats.lessonsCompleted,
+        rank,
+      }),
+    [stats, rank]
+  );
 
   // ---- Next step: one honest, actionable suggestion based on real state ----
   const nextStep = useMemo(() => {
