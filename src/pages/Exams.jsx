@@ -14,6 +14,8 @@ import { LevelBadge } from '../components/Badge';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { uploadAttachment, getAttachmentUrl } from '../lib/db';
 
+const EXAM_TYPES = ['Written', 'Oral', 'Vocabulary', 'Grammar', 'Reading', 'Listening', 'Final', 'Mock'];
+
 const EMPTY_FORM = {
   title: '',
   level: 'A',
@@ -21,11 +23,13 @@ const EMPTY_FORM = {
   exam_date: new Date().toISOString().slice(0, 10),
   deadline: '',
   max_score: 100,
+  exam_type: 'Written',
+  lesson_id: '',
 };
 
 export default function Exams() {
   const { t } = useTranslation(['exams', 'common']);
-  const { students, exams, examScores, addExam, editExam, removeExam, setExamScoreForStudent, error } = useAcademy();
+  const { students, exams, examScores, lessons, addExam, editExam, removeExam, setExamScoreForStudent, error } = useAcademy();
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [file, setFile] = useState(null);
@@ -41,6 +45,13 @@ export default function Exams() {
   const sortedExams = useMemo(() => [...exams].sort((a, b) => new Date(b.exam_date) - new Date(a.exam_date)), [exams]);
   const selectedExam = sortedExams.find((e) => e.id === selectedExamId) || sortedExams[0] || null;
   const editingExam = editingId ? exams.find((e) => e.id === editingId) : null;
+
+  const sortedLessons = useMemo(
+    () => [...lessons].sort((a, b) => new Date(b.scheduled_at) - new Date(a.scheduled_at)),
+    [lessons]
+  );
+  const lessonOf = (lessonId) => (lessonId ? lessons.find((l) => l.id === lessonId) : null);
+  const studentCountOf = (exam) => students.filter((s) => s.status === 'Active' && (!exam.level || s.level === exam.level)).length;
 
   const activeStudents = useMemo(
     () =>
@@ -89,6 +100,8 @@ export default function Exams() {
         exam_date: form.exam_date,
         deadline: form.deadline || null,
         max_score: Number(form.max_score) || 100,
+        exam_type: form.exam_type || 'Written',
+        lesson_id: form.lesson_id || null,
       };
 
       if (editingId) {
@@ -138,6 +151,8 @@ export default function Exams() {
       exam_date: exam.exam_date,
       deadline: exam.deadline ? exam.deadline.slice(0, 10) : '',
       max_score: exam.max_score,
+      exam_type: exam.exam_type || 'Written',
+      lesson_id: exam.lesson_id || '',
     });
     setFile(null);
     setRemoveFile(false);
@@ -195,6 +210,13 @@ export default function Exams() {
             <option value="B">{t('common:levelB')}</option>
             <option value="C">{t('common:levelC')}</option>
           </select>
+          <select value={form.exam_type} onChange={(e) => setForm({ ...form, exam_type: e.target.value })} className="input">
+            {EXAM_TYPES.map((type) => (
+              <option key={type} value={type}>
+                {t(`examType.${type}`)}
+              </option>
+            ))}
+          </select>
           <input
             type="number"
             min="1"
@@ -203,6 +225,14 @@ export default function Exams() {
             onChange={(e) => setForm({ ...form, max_score: e.target.value })}
             className="input"
           />
+          <select value={form.lesson_id} onChange={(e) => setForm({ ...form, lesson_id: e.target.value })} className="input">
+            <option value="">{t('noLinkedLesson')}</option>
+            {sortedLessons.map((l) => (
+              <option key={l.id} value={l.id}>
+                {l.topic} · {new Date(l.scheduled_at).toLocaleDateString()}
+              </option>
+            ))}
+          </select>
           <div>
             <label className="mb-1 block text-xs font-semibold text-ink/50">{t('examDateLabel')}</label>
             <input
@@ -279,33 +309,66 @@ export default function Exams() {
           <p className="font-display text-lg font-semibold text-ink">{t('noExamsYet')}</p>
         </div>
       ) : (
-        <div className="mb-4 flex gap-2 overflow-x-auto">
-          {sortedExams.map((e) => (
-            <div
-              key={e.id}
-              className={`flex flex-shrink-0 items-center gap-2 rounded-xl px-3 py-2 shadow-card ${
-                selectedExam?.id === e.id ? 'bg-brand-500 text-white' : 'bg-white text-ink'
-              }`}
-            >
-              <button onClick={() => setSelectedExamId(e.id)} className="flex items-center gap-2 text-left">
-                <FileCheck2 size={16} />
-                <div>
-                  <p className="text-sm font-semibold">{e.title}</p>
-                  <p className="text-xs opacity-70">
-                    {e.exam_date} · {t('outOfScore', { max: e.max_score })}
-                    {e.deadline && ` · ${t('dueDate', { date: e.deadline.slice(0, 10) })}`}
-                  </p>
-                </div>
-                {e.level && <LevelBadge level={e.level} />}
-              </button>
-              <button onClick={() => startEdit(e)} className={selectedExam?.id === e.id ? 'text-white/80 hover:text-white' : 'text-brand-500 hover:bg-brand-50'} aria-label={t('editExamAria')}>
-                <Pencil size={14} />
-              </button>
-              <button onClick={() => setDeletingExam(e)} className={selectedExam?.id === e.id ? 'text-white/80 hover:text-white' : 'text-inactive hover:bg-inactive/10'} aria-label={t('deleteExamAria')}>
-                <Trash2 size={14} />
-              </button>
-            </div>
-          ))}
+        <div className="mb-4 overflow-x-auto rounded-xl bg-white shadow-card">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="border-b border-ink/10 text-xs font-semibold uppercase tracking-wide text-ink/40">
+                <th className="px-3 py-2">{t('colTitle')}</th>
+                <th className="px-3 py-2">{t('colType')}</th>
+                <th className="px-3 py-2">{t('colLesson')}</th>
+                <th className="px-3 py-2">{t('colDate')}</th>
+                <th className="px-3 py-2">{t('colStudentCount')}</th>
+                <th className="px-3 py-2" />
+              </tr>
+            </thead>
+            <tbody>
+              {sortedExams.map((e) => (
+                <tr
+                  key={e.id}
+                  onClick={() => setSelectedExamId(e.id)}
+                  className={`cursor-pointer border-b border-ink/5 last:border-0 ${
+                    selectedExam?.id === e.id ? 'bg-brand-50' : 'hover:bg-ink/5'
+                  }`}
+                >
+                  <td className="px-3 py-2">
+                    <div className="flex items-center gap-2">
+                      <FileCheck2 size={15} className="flex-shrink-0 text-brand-500" />
+                      <span className="font-semibold text-ink">{e.title}</span>
+                      {e.level && <LevelBadge level={e.level} />}
+                    </div>
+                  </td>
+                  <td className="px-3 py-2 text-ink/70">{t(`examType.${e.exam_type || 'Written'}`)}</td>
+                  <td className="px-3 py-2 text-ink/70">{lessonOf(e.lesson_id)?.topic || '—'}</td>
+                  <td className="px-3 py-2 text-ink/70">{e.exam_date}</td>
+                  <td className="px-3 py-2 text-ink/70">{studentCountOf(e)}</td>
+                  <td className="px-3 py-2">
+                    <div className="flex items-center justify-end gap-1">
+                      <button
+                        onClick={(ev) => {
+                          ev.stopPropagation();
+                          startEdit(e);
+                        }}
+                        className="text-brand-500 hover:bg-brand-50"
+                        aria-label={t('editExamAria')}
+                      >
+                        <Pencil size={14} />
+                      </button>
+                      <button
+                        onClick={(ev) => {
+                          ev.stopPropagation();
+                          setDeletingExam(e);
+                        }}
+                        className="text-inactive hover:bg-inactive/10"
+                        aria-label={t('deleteExamAria')}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 
