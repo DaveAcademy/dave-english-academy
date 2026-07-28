@@ -64,6 +64,12 @@ export default function MyLessons() {
                   {l.level && <LevelBadge level={l.level} />}
                 </div>
               </div>
+              <Link
+                to={`/my-lessons/${l.id}`}
+                className="flex flex-shrink-0 items-center gap-1.5 rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-600"
+              >
+                <BookOpen size={13} /> Open Lesson
+              </Link>
               {l.pdf_path && (
                 <button
                   type="button"

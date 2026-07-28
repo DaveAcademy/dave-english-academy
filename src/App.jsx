@@ -20,6 +20,7 @@ const Students = lazy(() => import('./pages/Students'));
 const Payments = lazy(() => import('./pages/Payments'));
 const Attendance = lazy(() => import('./pages/Attendance'));
 const Lessons = lazy(() => import('./pages/Lessons'));
+const LessonHub = lazy(() => import('./pages/LessonHub'));
 const Vocabulary = lazy(() => import('./pages/Vocabulary'));
 const Exams = lazy(() => import('./pages/Exams'));
 const Homework = lazy(() => import('./pages/Homework'));
@@ -100,6 +101,7 @@ function RoutedContent({ isStudent }) {
             <Route path="/my-exams" element={<MyExams />} />
             <Route path="/my-homework" element={<MyHomework />} />
             <Route path="/my-lessons" element={<MyLessons />} />
+            <Route path="/my-lessons/:id" element={<LessonHub />} />
             <Route path="/my-vocabulary" element={<MyVocabulary />} />
             <Route path="/my-certificates" element={<MyCertificates />} />
             <Route path="/my-ranking" element={<MyRanking />} />
@@ -113,6 +115,7 @@ function RoutedContent({ isStudent }) {
             <Route path="/payments" element={<Payments />} />
             <Route path="/attendance" element={<Attendance />} />
             <Route path="/lessons" element={<Lessons />} />
+            <Route path="/lessons/:id" element={<LessonHub />} />
             <Route path="/vocabulary" element={<Vocabulary />} />
             <Route path="/exams" element={<Exams />} />
             <Route path="/homework" element={<Homework />} />

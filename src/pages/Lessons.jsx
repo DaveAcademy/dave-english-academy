@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Pencil, Trash2, MessageSquare, MessageSquareOff, Paperclip, Download, X } from 'lucide-react';
+import { Plus, Pencil, Trash2, MessageSquare, MessageSquareOff, Paperclip, Download, X, BookOpen } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { LevelBadge } from '../components/Badge';
 import { uploadAttachment, getAttachmentUrl } from '../lib/db';
@@ -245,6 +245,15 @@ export default function Lessons() {
                 </div>
               </div>
               <div className="flex flex-shrink-0 items-center gap-1">
+                <Link
+                  to={`/lessons/${l.id}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className={`rounded-md p-1.5 ${selectedLesson?.id === l.id ? 'text-white/80 hover:bg-white/10' : 'text-ink/40 hover:bg-ink/5'}`}
+                  aria-label="Open Lesson Hub"
+                  title="Open Lesson Hub"
+                >
+                  <BookOpen size={15} />
+                </Link>
                 {l.pdf_path && (
                   <button
                     onClick={(e) => {

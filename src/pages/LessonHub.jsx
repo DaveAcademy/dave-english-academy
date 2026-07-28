@@ -1,0 +1,548 @@
+// LessonHub.jsx
+// Single-page "learning center" for one lesson: PDF, Homework, Vocabulary,
+// Quiz, and Notes all together, so a student never has to jump between
+// pages to find what a lesson needs. One component serves both roles -
+// teacher/admin route /lessons/:id, student route /my-lessons/:id - via
+// AuthContext's role, so the two views can never drift out of sync.
+//
+// Deliberately reuses existing data/RLS instead of duplicating it:
+// - PDF: same uploadAttachment/getAttachmentUrl + editLesson pattern as
+//   Lessons.jsx/MyLessons.jsx.
+// - Homework/Quiz: create/edit/submit happen here, scoped to this lesson's
+//   items only. Per-student grading rosters stay on the existing
+//   /homework and /exams pages (linked out) rather than re-implementing
+//   their full grading UIs a second time.
+// - Vocabulary: inline preview only (listLessonVocabulary) - full
+//   study/search/favorites stays on /vocabulary (teacher) or
+//   /my-vocabulary?lesson=<id> (student - this query param already works,
+//   see MyLessons.jsx).
+// - Quiz uses the exams table + its lesson_id column (migration 0051)
+//   instead of a separate quiz table - no new schema beyond that link.
+
+import { useState, useEffect, useMemo } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import {
+  ArrowLeft, FileText, Download, Upload, BookOpen, Languages, FileCheck2,
+  StickyNote, Pencil, Trash2, X, Plus,
+} from 'lucide-react';
+import { useAuth } from '../lib/AuthContext';
+import { useAcademy } from '../lib/AcademyDataContext';
+import { LevelBadge } from '../components/Badge';
+import ConfirmDialog from '../components/ConfirmDialog';
+import { uploadAttachment, getAttachmentUrl, listLessonVocabulary } from '../lib/db';
+
+function HubCard({ icon: Icon, title, action, children }) {
+  return (
+    <section className="rounded-xl bg-white p-4 shadow-card">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <h2 className="flex items-center gap-2 font-display text-base font-bold text-ink">
+          <Icon size={18} className="text-brand-500" /> {title}
+        </h2>
+        {action}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+const EMPTY_HOMEWORK_FORM = { title: '', description: '', due_date: new Date().toISOString().slice(0, 10) };
+const EMPTY_QUIZ_FORM = { title: '', description: '', exam_date: new Date().toISOString().slice(0, 10), max_score: 100 };
+
+export default function LessonHub() {
+  const { id } = useParams();
+  const lessonId = Number(id);
+  const { role } = useAuth();
+  const isStudent = role === 'student';
+  const {
+    lessons, students, editLesson,
+    homework, homeworkStatus, addHomework, editHomework, removeHomework, submitMyHomeworkFiles,
+    exams, examScores, addExam, editExam, removeExam, submitMyExamAnswer,
+  } = useAcademy();
+
+  const lesson = lessons.find((l) => l.id === lessonId);
+  const me = students[0];
+  const backHref = isStudent ? '/my-lessons' : '/lessons';
+
+  // --- PDF ---
+  const [pdfFile, setPdfFile] = useState(null);
+  const [pdfUploading, setPdfUploading] = useState(false);
+  const [pdfError, setPdfError] = useState(null);
+
+  const handleOpenPdf = async () => {
+    const url = await getAttachmentUrl(lesson.pdf_path);
+    if (url) window.open(url, '_blank', 'noopener');
+  };
+
+  const handlePdfPick = async (file) => {
+    if (!file) return;
+    setPdfUploading(true);
+    setPdfError(null);
+    try {
+      const uploaded = await uploadAttachment(file, `lesson-pdfs/${lessonId}`);
+      await editLesson(lessonId, { pdf_path: uploaded.path, pdf_name: uploaded.name });
+    } catch {
+      setPdfError('Could not upload the PDF - please try again.');
+    } finally {
+      setPdfUploading(false);
+      setPdfFile(null);
+    }
+  };
+
+  const handlePdfRemove = async () => {
+    await editLesson(lessonId, { pdf_path: null, pdf_name: null });
+  };
+
+  // --- Homework (scoped to this lesson) ---
+  const lessonHomework = useMemo(
+    () => homework.filter((h) => h.lesson_id === lessonId).sort((a, b) => new Date(b.due_date) - new Date(a.due_date)),
+    [homework, lessonId]
+  );
+  const [hwFormOpen, setHwFormOpen] = useState(false);
+  const [hwForm, setHwForm] = useState(EMPTY_HOMEWORK_FORM);
+  const [hwEditingId, setHwEditingId] = useState(null);
+  const [hwSaving, setHwSaving] = useState(false);
+  const [deletingHomework, setDeletingHomework] = useState(null);
+  const [hwUploading, setHwUploading] = useState(null); // homework id currently uploading
+
+  const startHwEdit = (h) => {
+    setHwEditingId(h.id);
+    setHwForm({ title: h.title, description: h.description || '', due_date: h.due_date });
+    setHwFormOpen(true);
+  };
+  const resetHwForm = () => {
+    setHwForm(EMPTY_HOMEWORK_FORM);
+    setHwFormOpen(false);
+    setHwEditingId(null);
+  };
+  const handleHwSubmit = async (e) => {
+    e.preventDefault();
+    if (!hwForm.title.trim()) return;
+    setHwSaving(true);
+    try {
+      const payload = { title: hwForm.title, description: hwForm.description || null, due_date: hwForm.due_date, lesson_id: lessonId, level: lesson?.level || null };
+      if (hwEditingId) await editHomework(hwEditingId, payload);
+      else await addHomework(payload);
+      resetHwForm();
+    } finally {
+      setHwSaving(false);
+    }
+  };
+  const handleHwDelete = async () => {
+    await removeHomework(deletingHomework.id);
+    setDeletingHomework(null);
+  };
+  const myHwStatus = (homeworkId) => homeworkStatus.find((s) => s.homework_id === homeworkId && s.student_id === me?.id);
+  const handleHwFilePick = async (homeworkId, file) => {
+    if (!file || !me) return;
+    setHwUploading(homeworkId);
+    try {
+      const uploaded = await uploadAttachment(file, `homework-answers/${me.id}`);
+      await submitMyHomeworkFiles(homeworkId, me.id, [{ fileUrl: uploaded.path, fileName: uploaded.name, fileType: uploaded.type }]);
+    } finally {
+      setHwUploading(null);
+    }
+  };
+
+  // --- Quiz (exams scoped to this lesson) ---
+  const lessonQuizzes = useMemo(
+    () => exams.filter((ex) => ex.lesson_id === lessonId).sort((a, b) => new Date(b.exam_date) - new Date(a.exam_date)),
+    [exams, lessonId]
+  );
+  const [quizFormOpen, setQuizFormOpen] = useState(false);
+  const [quizForm, setQuizForm] = useState(EMPTY_QUIZ_FORM);
+  const [quizEditingId, setQuizEditingId] = useState(null);
+  const [quizSaving, setQuizSaving] = useState(false);
+  const [deletingQuiz, setDeletingQuiz] = useState(null);
+  const [quizUploading, setQuizUploading] = useState(null);
+
+  const startQuizEdit = (ex) => {
+    setQuizEditingId(ex.id);
+    setQuizForm({ title: ex.title, description: ex.description || '', exam_date: ex.exam_date, max_score: ex.max_score });
+    setQuizFormOpen(true);
+  };
+  const resetQuizForm = () => {
+    setQuizForm(EMPTY_QUIZ_FORM);
+    setQuizFormOpen(false);
+    setQuizEditingId(null);
+  };
+  const handleQuizSubmit = async (e) => {
+    e.preventDefault();
+    if (!quizForm.title.trim()) return;
+    setQuizSaving(true);
+    try {
+      const payload = {
+        title: quizForm.title,
+        description: quizForm.description || null,
+        exam_date: quizForm.exam_date,
+        max_score: Number(quizForm.max_score) || 100,
+        lesson_id: lessonId,
+        level: lesson?.level || null,
+      };
+      if (quizEditingId) await editExam(quizEditingId, payload);
+      else await addExam(payload);
+      resetQuizForm();
+    } finally {
+      setQuizSaving(false);
+    }
+  };
+  const handleQuizDelete = async () => {
+    await removeExam(deletingQuiz.id);
+    setDeletingQuiz(null);
+  };
+  const myQuizScore = (examId) => examScores.find((s) => s.exam_id === examId && s.student_id === me?.id);
+  const handleQuizFilePick = async (examId, file) => {
+    if (!file || !me) return;
+    setQuizUploading(examId);
+    try {
+      const uploaded = await uploadAttachment(file, `exam-answers/${me.id}`);
+      await submitMyExamAnswer(examId, me.id, { fileUrl: uploaded.path, fileName: uploaded.name });
+    } finally {
+      setQuizUploading(null);
+    }
+  };
+
+  // --- Vocabulary preview ---
+  const [vocabWords, setVocabWords] = useState([]);
+  const [vocabLoading, setVocabLoading] = useState(true);
+  useEffect(() => {
+    let cancelled = false;
+    setVocabLoading(true);
+    listLessonVocabulary(lessonId)
+      .then((words) => { if (!cancelled) setVocabWords(words); })
+      .finally(() => { if (!cancelled) setVocabLoading(false); });
+    return () => { cancelled = true; };
+  }, [lessonId]);
+
+  // --- Notes ---
+  const [notesEditing, setNotesEditing] = useState(false);
+  const [notesDraft, setNotesDraft] = useState('');
+  const [notesSaving, setNotesSaving] = useState(false);
+  const startNotesEdit = () => {
+    setNotesDraft(lesson?.notes || '');
+    setNotesEditing(true);
+  };
+  const handleNotesSave = async () => {
+    setNotesSaving(true);
+    try {
+      await editLesson(lessonId, { notes: notesDraft || null });
+      setNotesEditing(false);
+    } finally {
+      setNotesSaving(false);
+    }
+  };
+
+  if (!lesson) {
+    return (
+      <div className="rounded-xl bg-white p-10 text-center shadow-card">
+        <p className="font-display text-lg font-semibold text-ink">Lesson not found.</p>
+        <Link to={backHref} className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-brand-500 hover:underline">
+          <ArrowLeft size={14} /> Back to lessons
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <header>
+        <Link to={backHref} className="mb-2 flex items-center gap-1 text-xs font-semibold text-brand-500 hover:underline">
+          <ArrowLeft size={13} /> Back to lessons
+        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <h1 className="font-display text-2xl font-bold text-ink">{lesson.topic}</h1>
+          {lesson.level && <LevelBadge level={lesson.level} />}
+        </div>
+        {lesson.group_name && <p className="mt-1 text-sm text-ink/50">{lesson.group_name}</p>}
+      </header>
+
+      {/* PDF */}
+      <HubCard icon={FileText} title="PDF">
+        {pdfError && <p className="mb-2 text-xs font-semibold text-inactive">{pdfError}</p>}
+        <div className="flex flex-wrap items-center gap-2">
+          {lesson.pdf_path ? (
+            <button
+              onClick={handleOpenPdf}
+              className="flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-sm font-semibold text-brand-500 hover:bg-brand-50"
+            >
+              <Download size={14} /> {lesson.pdf_name || 'Open PDF'}
+            </button>
+          ) : (
+            <p className="text-sm text-ink/40">No PDF uploaded yet.</p>
+          )}
+          {!isStudent && (
+            <>
+              <label className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-semibold text-ink/60 hover:bg-ink/5">
+                <Upload size={13} />
+                {pdfUploading ? 'Uploading...' : lesson.pdf_path ? 'Replace PDF' : 'Upload PDF'}
+                <input
+                  type="file"
+                  accept="application/pdf"
+                  className="hidden"
+                  disabled={pdfUploading}
+                  onChange={(e) => handlePdfPick(e.target.files?.[0] || null)}
+                />
+              </label>
+              {lesson.pdf_path && (
+                <button onClick={handlePdfRemove} className="flex items-center gap-1 text-xs font-semibold text-inactive hover:underline">
+                  <X size={13} /> Remove
+                </button>
+              )}
+            </>
+          )}
+        </div>
+      </HubCard>
+
+      {/* Homework */}
+      <HubCard
+        icon={BookOpen}
+        title="Homework"
+        action={
+          !isStudent && (
+            <button
+              onClick={() => (hwFormOpen ? resetHwForm() : setHwFormOpen(true))}
+              className="flex items-center gap-1 rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-600"
+            >
+              <Plus size={13} /> Add homework
+            </button>
+          )
+        }
+      >
+        {hwFormOpen && (
+          <form onSubmit={handleHwSubmit} className="mb-3 grid gap-2 rounded-lg border border-ink/10 p-3 sm:grid-cols-2">
+            <input required placeholder="Title" value={hwForm.title} onChange={(e) => setHwForm({ ...hwForm, title: e.target.value })} className="input sm:col-span-2" />
+            <textarea placeholder="Description (optional)" rows={2} value={hwForm.description} onChange={(e) => setHwForm({ ...hwForm, description: e.target.value })} className="input sm:col-span-2" />
+            <input required type="date" value={hwForm.due_date} onChange={(e) => setHwForm({ ...hwForm, due_date: e.target.value })} className="input" />
+            <div className="flex gap-2">
+              <button type="submit" disabled={hwSaving} className="flex-1 rounded-lg bg-brand-500 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-60">
+                {hwSaving ? 'Saving...' : hwEditingId ? 'Save changes' : 'Add'}
+              </button>
+              {hwEditingId && (
+                <button type="button" onClick={resetHwForm} className="rounded-lg border border-ink/15 px-3 py-2 text-sm font-semibold text-ink/60">Cancel</button>
+              )}
+            </div>
+          </form>
+        )}
+
+        {lessonHomework.length === 0 ? (
+          <p className="text-sm text-ink/40">No homework assigned for this lesson yet.</p>
+        ) : (
+          <div className="space-y-2">
+            {lessonHomework.map((h) => {
+              const status = isStudent ? myHwStatus(h.id) : null;
+              const graded = status?.score != null;
+              return (
+                <div key={h.id} className="rounded-lg border border-ink/10 p-3">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-ink">{h.title}</p>
+                      <p className="text-xs text-ink/50">Due {h.due_date}</p>
+                      {h.description && <p className="mt-1 whitespace-pre-wrap text-sm text-ink/70">{h.description}</p>}
+                    </div>
+                    {!isStudent ? (
+                      <div className="flex flex-shrink-0 items-center gap-1">
+                        <button onClick={() => startHwEdit(h)} className="rounded p-1 text-brand-500 hover:bg-brand-50" aria-label="Edit homework"><Pencil size={14} /></button>
+                        <button onClick={() => setDeletingHomework(h)} className="rounded p-1 text-inactive hover:bg-inactive/10" aria-label="Delete homework"><Trash2 size={14} /></button>
+                      </div>
+                    ) : (
+                      graded && <p className="flex-shrink-0 text-sm font-bold text-brand-500">{status.score}/100</p>
+                    )}
+                  </div>
+                  {isStudent && (
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <span className="rounded-full bg-ink/5 px-2 py-0.5 text-[10px] font-bold text-ink/40">
+                        {graded ? 'Graded' : status?.answer_file_url ? 'Awaiting grading' : 'Not submitted'}
+                      </span>
+                      {status?.feedback && <span className="text-xs text-ink/60">{status.feedback}</span>}
+                      {!graded && (
+                        <label className="flex cursor-pointer items-center gap-1 text-xs font-semibold text-brand-500 hover:underline">
+                          <Upload size={12} /> {hwUploading === h.id ? 'Uploading...' : 'Submit'}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            disabled={hwUploading === h.id}
+                            onChange={(e) => handleHwFilePick(h.id, e.target.files?.[0] || null)}
+                          />
+                        </label>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+        {!isStudent && lessonHomework.length > 0 && (
+          <Link to="/homework" className="mt-3 inline-block text-xs font-semibold text-ink/50 hover:underline">Manage grading &rarr;</Link>
+        )}
+      </HubCard>
+
+      {/* Vocabulary */}
+      <HubCard
+        icon={Languages}
+        title={`Vocabulary${vocabWords.length ? ` (${vocabWords.length})` : ''}`}
+        action={
+          <Link
+            to={isStudent ? `/my-vocabulary?lesson=${lessonId}` : '/vocabulary'}
+            className="flex items-center gap-1 rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-semibold text-ink/60 hover:bg-ink/5"
+          >
+            {isStudent ? 'Study Vocabulary' : 'Manage Vocabulary'}
+          </Link>
+        }
+      >
+        {vocabLoading ? (
+          <p className="text-sm text-ink/40">Loading...</p>
+        ) : vocabWords.length === 0 ? (
+          <p className="text-sm text-ink/40">No vocabulary added for this lesson yet.</p>
+        ) : (
+          <ul className="grid gap-1 sm:grid-cols-2">
+            {vocabWords.slice(0, 6).map((w) => (
+              <li key={w.id} className="truncate text-sm text-ink/70">
+                <span className="font-semibold text-ink">{w.english}</span> — {w.uzbek}
+              </li>
+            ))}
+          </ul>
+        )}
+      </HubCard>
+
+      {/* Quiz */}
+      <HubCard
+        icon={FileCheck2}
+        title="Quiz"
+        action={
+          !isStudent && (
+            <button
+              onClick={() => (quizFormOpen ? resetQuizForm() : setQuizFormOpen(true))}
+              className="flex items-center gap-1 rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-600"
+            >
+              <Plus size={13} /> Add quiz
+            </button>
+          )
+        }
+      >
+        {quizFormOpen && (
+          <form onSubmit={handleQuizSubmit} className="mb-3 grid gap-2 rounded-lg border border-ink/10 p-3 sm:grid-cols-2">
+            <input required placeholder="Title" value={quizForm.title} onChange={(e) => setQuizForm({ ...quizForm, title: e.target.value })} className="input sm:col-span-2" />
+            <textarea placeholder="Description (optional)" rows={2} value={quizForm.description} onChange={(e) => setQuizForm({ ...quizForm, description: e.target.value })} className="input sm:col-span-2" />
+            <input required type="date" value={quizForm.exam_date} onChange={(e) => setQuizForm({ ...quizForm, exam_date: e.target.value })} className="input" />
+            <input required type="number" min="1" placeholder="Max score" value={quizForm.max_score} onChange={(e) => setQuizForm({ ...quizForm, max_score: e.target.value })} className="input" />
+            <div className="flex gap-2 sm:col-span-2">
+              <button type="submit" disabled={quizSaving} className="flex-1 rounded-lg bg-brand-500 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-60">
+                {quizSaving ? 'Saving...' : quizEditingId ? 'Save changes' : 'Add'}
+              </button>
+              {quizEditingId && (
+                <button type="button" onClick={resetQuizForm} className="rounded-lg border border-ink/15 px-3 py-2 text-sm font-semibold text-ink/60">Cancel</button>
+              )}
+            </div>
+          </form>
+        )}
+
+        {lessonQuizzes.length === 0 ? (
+          <p className="text-sm text-ink/40">No quiz for this lesson yet.</p>
+        ) : (
+          <div className="space-y-2">
+            {lessonQuizzes.map((ex) => {
+              const result = isStudent ? myQuizScore(ex.id) : null;
+              const graded = result?.score != null;
+              return (
+                <div key={ex.id} className="rounded-lg border border-ink/10 p-3">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-ink">{ex.title}</p>
+                      <p className="text-xs text-ink/50">{ex.exam_date} · out of {ex.max_score}</p>
+                      {ex.description && <p className="mt-1 whitespace-pre-wrap text-sm text-ink/70">{ex.description}</p>}
+                    </div>
+                    {!isStudent ? (
+                      <div className="flex flex-shrink-0 items-center gap-1">
+                        <button onClick={() => startQuizEdit(ex)} className="rounded p-1 text-brand-500 hover:bg-brand-50" aria-label="Edit quiz"><Pencil size={14} /></button>
+                        <button onClick={() => setDeletingQuiz(ex)} className="rounded p-1 text-inactive hover:bg-inactive/10" aria-label="Delete quiz"><Trash2 size={14} /></button>
+                      </div>
+                    ) : (
+                      graded && <p className="flex-shrink-0 text-sm font-bold text-brand-500">{result.score}/{ex.max_score}</p>
+                    )}
+                  </div>
+                  {isStudent && (
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <span className="rounded-full bg-ink/5 px-2 py-0.5 text-[10px] font-bold text-ink/40">
+                        {graded ? 'Completed' : result?.answer_file_url ? 'Awaiting grading' : 'Available'}
+                      </span>
+                      {result?.feedback && <span className="text-xs text-ink/60">{result.feedback}</span>}
+                      {!graded && (
+                        <label className="flex cursor-pointer items-center gap-1 text-xs font-semibold text-brand-500 hover:underline">
+                          <Upload size={12} /> {quizUploading === ex.id ? 'Uploading...' : 'Start Quiz'}
+                          <input
+                            type="file"
+                            className="hidden"
+                            disabled={quizUploading === ex.id}
+                            onChange={(e) => handleQuizFilePick(ex.id, e.target.files?.[0] || null)}
+                          />
+                        </label>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+        {!isStudent && lessonQuizzes.length > 0 && (
+          <Link to="/exams" className="mt-3 inline-block text-xs font-semibold text-ink/50 hover:underline">Manage grading &rarr;</Link>
+        )}
+      </HubCard>
+
+      {/* Notes */}
+      <HubCard
+        icon={StickyNote}
+        title="Notes"
+        action={
+          !isStudent && !notesEditing && (
+            <button onClick={startNotesEdit} className="flex items-center gap-1 rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-semibold text-ink/60 hover:bg-ink/5">
+              <Pencil size={13} /> Edit
+            </button>
+          )
+        }
+      >
+        {notesEditing ? (
+          <div>
+            <textarea
+              value={notesDraft}
+              onChange={(e) => setNotesDraft(e.target.value)}
+              rows={5}
+              placeholder="Lesson summary, teacher notes, extra resources..."
+              className="input w-full"
+            />
+            <div className="mt-2 flex gap-2">
+              <button onClick={handleNotesSave} disabled={notesSaving} className="rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-600 disabled:opacity-60">
+                {notesSaving ? 'Saving...' : 'Save'}
+              </button>
+              <button onClick={() => setNotesEditing(false)} className="rounded-lg border border-ink/15 px-3 py-1.5 text-xs font-semibold text-ink/60">Cancel</button>
+            </div>
+          </div>
+        ) : lesson.notes ? (
+          <p className="whitespace-pre-wrap text-sm text-ink/70">{lesson.notes}</p>
+        ) : (
+          <p className="text-sm text-ink/40">No notes for this lesson yet.</p>
+        )}
+      </HubCard>
+
+      {deletingHomework && (
+        <ConfirmDialog
+          title="Delete homework"
+          message={`Delete "${deletingHomework.title}"? This cannot be undone.`}
+          confirmLabel="Delete"
+          onConfirm={handleHwDelete}
+          onCancel={() => setDeletingHomework(null)}
+        />
+      )}
+      {deletingQuiz && (
+        <ConfirmDialog
+          title="Delete quiz"
+          message={`Delete "${deletingQuiz.title}"? This cannot be undone.`}
+          confirmLabel="Delete"
+          onConfirm={handleQuizDelete}
+          onCancel={() => setDeletingQuiz(null)}
+        />
+      )}
+    </div>
+  );
+}
