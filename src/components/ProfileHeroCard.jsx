@@ -1,14 +1,24 @@
 // ProfileHeroCard.jsx
-// V3 "Progress Studio" hero: avatar with a level ring, XP bar, rank, and
-// streak. Level/XP are a simple, honest derivation from real cumulative
-// points (level = floor(points/200)+1) - not a separate stored concept.
+// V4 hero: a welcome section (time-of-day greeting, live local date/time,
+// rotating motivation) on top of the V3 identity + Academy Level progress
+// row, so the first impression is "welcome back" before any statistics.
+// Level is a pure, honest derivation from real cumulative Academy Points
+// (calculateLevel/calculateLevelProgress in utils/level.js) - not a
+// separate stored concept, no XP, no new table. The ticking clock lives in
+// its own HeroClock child so the 15s interval only re-renders that block,
+// not the level ring/points/motivation/rank/streak below it.
 
-import { Flame } from 'lucide-react';
+import { Flame, X } from 'lucide-react';
+import { calculateLevelProgress } from '../utils/level';
+import { useLevelUpCelebration } from '../hooks/useLevelUpCelebration';
+import { useMotivation } from '../hooks/useMotivation';
+import HeroClock from './HeroClock';
 
-export default function ProfileHeroCard({ name, meta, points, rank, streak }) {
-  const xpIntoLevel = points % 200;
-  const level = Math.floor(points / 200) + 1;
-  const pct = (xpIntoLevel / 200) * 100;
+export default function ProfileHeroCard({ studentId, name, meta, points, rank, streak }) {
+  const { level, pointsToNextLevel, percent, nextLevel } = calculateLevelProgress(points);
+  const { celebrateLevel, dismiss } = useLevelUpCelebration(studentId, level);
+  const motivation = useMotivation();
+  const firstName = name.split(' ')[0];
   const initials = name
     .split(' ')
     .map((p) => p[0])
@@ -17,10 +27,30 @@ export default function ProfileHeroCard({ name, meta, points, rank, streak }) {
     .toUpperCase();
 
   return (
-    <div className="rounded-xl border border-ink/[0.06] bg-gradient-to-br from-brand-50 to-white p-4 shadow-card sm:p-5">
-      <div className="flex flex-wrap items-center gap-4">
+    <div className="relative rounded-xl border border-ink/[0.06] bg-gradient-to-br from-brand-50 to-white p-4 shadow-card sm:p-5">
+      {celebrateLevel != null && (
+        <div className="mb-4 flex items-start gap-3 rounded-lg border border-levelB/30 bg-levelB/10 p-3">
+          <span className="text-2xl" aria-hidden="true">🎉</span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold text-ink">Level Up!</p>
+            <p className="text-xs text-ink/60">
+              Congratulations! You reached Level {celebrateLevel}. Keep learning to reach Level {celebrateLevel + 1}.
+            </p>
+          </div>
+          <button type="button" onClick={dismiss} aria-label="Dismiss" className="flex-shrink-0 rounded p-1 text-ink/40 hover:bg-white/60 hover:text-ink">
+            <X size={14} />
+          </button>
+        </div>
+      )}
+
+      <div className="mb-4">
+        <HeroClock firstName={firstName} />
+        <p className="mt-2 text-sm italic text-ink/60">"{motivation}"</p>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-4 border-t border-ink/[0.06] pt-4">
         <div className="relative h-14 w-14 flex-shrink-0 sm:h-16 sm:w-16">
-          <div className="absolute inset-[-4px] rounded-full" style={{ background: `conic-gradient(#F2A93B ${pct * 3.6}deg, #CFE4E3 0)` }} />
+          <div className="absolute inset-[-4px] rounded-full" style={{ background: `conic-gradient(#F2A93B ${percent * 3.6}deg, #CFE4E3 0)` }} />
           <div className="absolute inset-1 flex items-center justify-center rounded-full bg-gradient-to-br from-brand-600 to-brand-500 text-base font-bold text-white sm:text-lg">
             {initials}
           </div>
@@ -33,9 +63,9 @@ export default function ProfileHeroCard({ name, meta, points, rank, streak }) {
           <p className="truncate font-display text-base font-bold text-ink sm:text-lg">{name}</p>
           <p className="text-xs text-ink/50">{meta}</p>
           <div className="mt-2 h-2 w-full max-w-[220px] overflow-hidden rounded-full bg-brand-50">
-            <div className="h-full rounded-full bg-gradient-to-r from-brand-500 to-levelB" style={{ width: `${pct}%` }} />
+            <div className="h-full rounded-full bg-gradient-to-r from-brand-500 to-levelB" style={{ width: `${percent}%` }} />
           </div>
-          <p className="mt-1 text-[11px] text-ink/40">{200 - xpIntoLevel} XP to Level {level + 1}</p>
+          <p className="mt-1 text-[11px] text-ink/40">{pointsToNextLevel} points until Level {nextLevel}</p>
         </div>
 
         <div className="flex flex-shrink-0 items-center gap-4 text-center">

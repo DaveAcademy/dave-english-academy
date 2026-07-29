@@ -88,6 +88,24 @@ export function formatMonthDay(date, locale = 'en-US') {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
+/** Day-month-year spellout for the dashboard hero card ("30 July 2026") -
+ * distinct from formatFullDate (weekday + month/day, no year) which serves
+ * a different label elsewhere. Uses 'en-GB' deliberately: 'en-US' ignores
+ * the day/month/year option order and always renders "July 30, 2026" -
+ * 'en-GB' is what reliably gives day-first with no comma. */
+export function formatFullDateNumeric(date = new Date()) {
+  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+/** Zero-padded 12-hour clock ("09:45 AM") - toLocaleTimeString's hour12
+ * output isn't reliably zero-padded across engines, so this pads by hand. */
+export function formatClockTime(date = new Date()) {
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const period = date.getHours() >= 12 ? 'PM' : 'AM';
+  const hours = date.getHours() % 12 || 12;
+  return `${String(hours).padStart(2, '0')}:${minutes} ${period}`;
+}
+
 /** { year, month } for the current month and the one directly before it. */
 export function currentAndPreviousMonth(date = new Date()) {
   const y = date.getFullYear();

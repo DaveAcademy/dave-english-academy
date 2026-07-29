@@ -239,8 +239,9 @@ export default function PortalHomeV3() {
 
       <div className="mb-6">
         <ProfileHeroCard
+          studentId={me.id}
           name={me.real_name}
-          meta={`Level ${me.level} · ${me.group_name || 'No group'} · ${points} XP`}
+          meta={`Class ${me.level} · ${me.group_name || 'No group'} · ${points} Academy Points`}
           points={points}
           rank={rank}
           streak={stats.attendanceStreak}
