@@ -121,21 +121,22 @@ export default function CreateUserForm() {
 
         {form.role === 'student' && (
           <div>
-            <label className="mb-1 block text-xs font-medium text-ink/60">Link to student (optional)</label>
+            <label className="mb-1 block text-xs font-medium text-ink/60">Student record</label>
             <select
               value={form.studentId}
               onChange={handleChange('studentId')}
               className="w-full rounded-lg border border-ink/10 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
             >
-              <option value="">Don't link yet</option>
+              <option value="">Create a new student record for {form.fullName || 'this student'}</option>
               {unlinkedStudents.map((s) => (
                 <option key={s.id} value={s.id}>
-                  {s.real_name}
+                  Link to existing: {s.real_name}
                 </option>
               ))}
             </select>
             <p className="mt-1 text-xs text-ink/40">
-              Linking lets this login see that student's own lessons, exam scores, certificates, and ranking.
+              Every student login is tied to exactly one student record, created automatically if you don't pick an
+              existing one - you can fill in level, payment day, and other details on the Students page afterward.
             </p>
           </div>
         )}
