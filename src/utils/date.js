@@ -65,6 +65,14 @@ export function formatFullDate(date = new Date(), locale = 'en-US') {
   return date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 }
 
+/** Weekday name alone, full length ("Wednesday" / "Chorshanba") - for the
+ * dashboard hero card, which shows weekday, date, and time as separate
+ * pieces rather than one combined string. */
+export function formatWeekdayName(date = new Date(), locale = 'en-US') {
+  if (locale === 'uz') return uzWeekday(date, false);
+  return date.toLocaleDateString('en-US', { weekday: 'long' });
+}
+
 /** Weekday + day-month, for list-style date labels (next lesson). `short`
  * controls weekday length only - Uzbek month names aren't abbreviated the
  * way English ones are, so there's no separate short-month form. */
@@ -88,19 +96,26 @@ export function formatMonthDay(date, locale = 'en-US') {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-/** Day-month-year spellout for the dashboard hero card ("30 July 2026") -
- * distinct from formatFullDate (weekday + month/day, no year) which serves
- * a different label elsewhere. Uses 'en-GB' deliberately: 'en-US' ignores
- * the day/month/year option order and always renders "July 30, 2026" -
- * 'en-GB' is what reliably gives day-first with no comma. */
-export function formatFullDateNumeric(date = new Date()) {
+/** Day-month-year spellout for the dashboard hero card ("30 July 2026" /
+ * "30-iyul 2026") - distinct from formatFullDate (weekday + month/day, no
+ * year) which serves a different label elsewhere. Uses 'en-GB' for English
+ * deliberately: 'en-US' ignores the day/month/year option order and always
+ * renders "July 30, 2026" - 'en-GB' is what reliably gives day-first with
+ * no comma. Uzbek reuses the same uzDayMonth table as the rest of this
+ * file rather than depending on ICU 'uz' support (see header comment). */
+export function formatFullDateNumeric(date = new Date(), locale = 'en-US') {
+  if (locale === 'uz') return `${uzDayMonth(date)} ${date.getFullYear()}`;
   return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
-/** Zero-padded 12-hour clock ("09:45 AM") - toLocaleTimeString's hour12
- * output isn't reliably zero-padded across engines, so this pads by hand. */
-export function formatClockTime(date = new Date()) {
+/** Clock time for the dashboard hero card. English: zero-padded 12-hour
+ * ("09:45 AM") - toLocaleTimeString's hour12 output isn't reliably
+ * zero-padded across engines, so this pads by hand. Uzbek: 24-hour
+ * ("09:45"), matching the 24-hour convention formatDateTime already uses
+ * for Uzbek elsewhere in this file - no AM/PM concept to translate. */
+export function formatClockTime(date = new Date(), locale = 'en-US') {
   const minutes = String(date.getMinutes()).padStart(2, '0');
+  if (locale === 'uz') return `${String(date.getHours()).padStart(2, '0')}:${minutes}`;
   const period = date.getHours() >= 12 ? 'PM' : 'AM';
   const hours = date.getHours() % 12 || 12;
   return `${String(hours).padStart(2, '0')}:${minutes} ${period}`;

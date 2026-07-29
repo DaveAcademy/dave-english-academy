@@ -12,9 +12,15 @@
 // dropped them for scope - the "information completeness" requirement
 // from the V3 spec means this page should not be thinner than the
 // current dashboard.
+//
+// i18n: fully localized via the dashboard/nav namespaces, same pattern as
+// PortalHome.jsx. Status/next-step/insight helpers below return
+// translation keys rather than literal text (this is plain logic, no
+// access to useTranslation()) - the component resolves them via t().
 
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { CalendarClock, MessageSquare, Award, Trophy, BookOpen, FileCheck2 } from 'lucide-react';
 import { useAcademy } from '../../lib/AcademyDataContext';
 import { getLeaderboard } from '../../lib/db';
@@ -46,9 +52,9 @@ import { currentAndPreviousMonth, trendFrom } from '../../utils/date';
 // is a normal "needs work but not failing" band rather than alarming.
 //   >=70 good, 50-69 watch, <50 attention
 function attendanceStatus(rate) {
-  if (rate >= 90) return { tone: 'good', label: 'On track' };
-  if (rate >= 75) return { tone: 'watch', label: 'Watch' };
-  return { tone: 'attention', label: 'Needs attention' };
+  if (rate >= 90) return { tone: 'good', key: 'statusOnTrack' };
+  if (rate >= 75) return { tone: 'watch', key: 'statusWatch' };
+  return { tone: 'attention', key: 'needsAttentionLabel' };
 }
 // Named homeworkStatusFor (not homeworkStatus) deliberately - useAcademy()
 // returns a field also called `homeworkStatus` (the raw per-item status
@@ -59,14 +65,14 @@ function attendanceStatus(rate) {
 // account checked during development had no homework data at all, so the
 // crashing branch never ran. Found during this review's code-quality pass.
 function homeworkStatusFor(rate) {
-  if (rate >= 80) return { tone: 'good', label: 'On track' };
-  if (rate >= 50) return { tone: 'watch', label: 'Watch' };
-  return { tone: 'attention', label: 'Needs attention' };
+  if (rate >= 80) return { tone: 'good', key: 'statusOnTrack' };
+  if (rate >= 50) return { tone: 'watch', key: 'statusWatch' };
+  return { tone: 'attention', key: 'needsAttentionLabel' };
 }
 function examStatus(avg) {
-  if (avg >= 70) return { tone: 'good', label: 'On track' };
-  if (avg >= 50) return { tone: 'watch', label: 'Watch' };
-  return { tone: 'attention', label: 'Needs attention' };
+  if (avg >= 70) return { tone: 'good', key: 'statusOnTrack' };
+  if (avg >= 50) return { tone: 'watch', key: 'statusWatch' };
+  return { tone: 'attention', key: 'needsAttentionLabel' };
 }
 
 // Rule-based "next step" - never just a stack of red pills. Priority order
@@ -80,14 +86,14 @@ function nextStepFor(attendance, homework, exam) {
   const candidates = [attendance, homework, exam];
   if (candidates.some((c) => c?.tone === 'attention' || c?.tone === 'watch')) {
     if (attendance?.tone === 'attention' || attendance?.tone === 'watch') {
-      return { icon: '📅', to: '/progress', title: 'Improve your attendance', text: 'Attend your next 3 classes to rebuild your learning streak.' };
+      return { icon: '📅', to: '/progress', titleKey: 'v3NextStepAttendanceTitle', textKey: 'v3NextStepAttendanceText' };
     }
     if (homework?.tone === 'attention' || homework?.tone === 'watch') {
-      return { icon: '📝', to: '/my-homework', title: 'Complete more homework', text: 'Finish your next assignment to improve your progress score.' };
+      return { icon: '📝', to: '/my-homework', titleKey: 'v3NextStepHomeworkTitle', textKey: 'v3NextStepHomeworkText' };
     }
-    return { icon: '📚', to: '/my-exams', title: 'Review recent lessons', text: 'Practice vocabulary and grammar before the next test.' };
+    return { icon: '📚', to: '/my-exams', titleKey: 'v3NextStepExamTitle', textKey: 'v3NextStepExamText' };
   }
-  return { icon: '⭐', to: '/my-ranking', title: 'Keep your momentum', text: 'You are close to your next achievement.' };
+  return { icon: '⭐', to: '/my-ranking', titleKey: 'v3NextStepMomentumTitle', textKey: 'v3NextStepMomentumText' };
 }
 
 function currentPresentStreak(records) {
@@ -101,6 +107,7 @@ function currentPresentStreak(records) {
 }
 
 export default function PortalHomeV3() {
+  const { t } = useTranslation(['dashboard', 'nav']);
   const { students, lessons, attendance, homework, homeworkStatus, examScores, certificates } = useAcademy();
   const me = students[0];
   const [leaderboard, setLeaderboard] = useState(null);
@@ -189,23 +196,24 @@ export default function PortalHomeV3() {
   const insights = useMemo(() => {
     const list = [];
     if (stats.attendanceTrend) {
-      const dir = stats.attendanceTrend.direction;
-      if (dir === 'up') list.push({ tag: 'Momentum', text: `Attendance is up ${stats.attendanceTrend.text.split(' ')[0]} vs last month.` });
-      else if (dir === 'down') list.push({ tag: 'Attention', text: `Attendance is down ${stats.attendanceTrend.text.split(' ')[0]} vs last month.` });
+      const { direction, values } = stats.attendanceTrend;
+      const delta = `${values.delta}${values.unit}`;
+      if (direction === 'up') list.push({ tag: t('insightTagMomentum'), text: t('insightAttendanceUp', { delta }) });
+      else if (direction === 'down') list.push({ tag: t('insightTagAttention'), text: t('insightAttendanceDown', { delta }) });
     }
     if (stats.homeworkPending > 0) {
-      list.push({ tag: 'Action', text: `${stats.homeworkPending} homework item${stats.homeworkPending === 1 ? '' : 's'} still need submitting.` });
+      list.push({ tag: t('insightTagAction'), text: t('insightHomeworkPending', { count: stats.homeworkPending }) });
     }
     if (stats.examAvg != null) {
       list.push(
         stats.examAvg >= 80
-          ? { tag: 'Strength', text: `Exam average is ${stats.examAvg}% across ${stats.examCount} graded exams.` }
-          : { tag: 'Suggestion', text: `Exam average is ${stats.examAvg}% - a short review before the next test could help.` }
+          ? { tag: t('insightTagStrength'), text: t('insightExamStrength', { avg: stats.examAvg, count: stats.examCount }) }
+          : { tag: t('insightTagSuggestion'), text: t('insightExamSuggestion', { avg: stats.examAvg }) }
       );
     }
-    if (list.length === 0) list.push({ tag: 'Status', text: 'Not enough recorded activity yet to generate insights.' });
+    if (list.length === 0) list.push({ tag: t('insightTagStatus'), text: t('insightNotEnoughActivity') });
     return list.slice(0, 3);
-  }, [stats]);
+  }, [stats, t]);
 
   // Computed once here and reused below for both the status pills and the
   // next-step recommendation, instead of each caller re-deriving the same
@@ -217,31 +225,31 @@ export default function PortalHomeV3() {
   const nextStep = nextStepFor(attendanceStatusValue, homeworkStatusValue, examStatusValue);
 
   const quickActions = [
-    { to: '/my-homework', label: 'My Homework', Icon: BookOpen },
-    { to: '/my-exams', label: 'My Exams', Icon: FileCheck2 },
-    { to: '/my-certificates', label: 'Certificates', Icon: Award },
-    { to: '/my-ranking', label: 'Leaderboard', Icon: Trophy },
-    { to: '/chat', label: 'Messages', Icon: MessageSquare },
+    { to: '/my-homework', label: t('nav:myHomeworkFull'), Icon: BookOpen },
+    { to: '/my-exams', label: t('nav:myExamsFull'), Icon: FileCheck2 },
+    { to: '/my-certificates', label: t('nav:certificates'), Icon: Award },
+    { to: '/my-ranking', label: t('leaderboard'), Icon: Trophy },
+    { to: '/chat', label: t('nav:messages'), Icon: MessageSquare },
   ];
 
   if (!me) {
     return (
       <div className="rounded-xl bg-white p-10 text-center shadow-card">
-        <p className="font-display text-lg font-semibold text-ink">Not linked yet</p>
-        <p className="mt-1 text-sm text-ink/50">Your account isn't linked to a student record yet.</p>
+        <p className="font-display text-lg font-semibold text-ink">{t('notLinkedYet')}</p>
+        <p className="mt-1 text-sm text-ink/50">{t('notLinkedSubtitle')}</p>
       </div>
     );
   }
 
   return (
     <div>
-      <p className="mb-4 text-[10px] font-bold uppercase tracking-widest text-brand-500">Prototype · Dashboard V3 (Progress Studio)</p>
+      <p className="mb-4 text-[10px] font-bold uppercase tracking-widest text-brand-500">{t('v3PrototypeLabel')}</p>
 
       <div className="mb-6">
         <ProfileHeroCard
           studentId={me.id}
           name={me.real_name}
-          meta={`Class ${me.level} · ${me.group_name || 'No group'} · ${points} Academy Points`}
+          meta={t('v3ClassMeta', { level: me.level, group: me.group_name || t('v3NoGroup'), points })}
           points={points}
           rank={rank}
           streak={stats.attendanceStreak}
@@ -250,30 +258,30 @@ export default function PortalHomeV3() {
 
       <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <div>
-          <StatCard label="Attendance" value={stats.attendanceRate == null ? '—' : `${stats.attendanceRate}%`} trend={stats.attendanceTrend} tone="success" icon={CalendarClock} />
+          <StatCard label={t('nav:attendance')} value={stats.attendanceRate == null ? '—' : `${stats.attendanceRate}%`} trend={stats.attendanceTrend} tone="success" icon={CalendarClock} />
           {attendanceStatusValue && (
-            <div className="mt-1.5"><StatusPill tone={attendanceStatusValue.tone}>{attendanceStatusValue.label}</StatusPill></div>
+            <div className="mt-1.5"><StatusPill tone={attendanceStatusValue.tone}>{t(attendanceStatusValue.key)}</StatusPill></div>
           )}
         </div>
         {!homeworkStatusValue ? (
           <div className="rounded-xl border border-ink/[0.06] bg-white p-4 shadow-card sm:p-5">
-            <p className="text-xs font-medium text-ink/60 sm:text-sm">Homework</p>
-            <p className="mt-1.5 text-sm font-semibold text-ink sm:mt-2">No assignments yet</p>
-            <div className="mt-1.5"><StatusPill tone="info">ℹ️ Waiting for homework</StatusPill></div>
+            <p className="text-xs font-medium text-ink/60 sm:text-sm">{t('homework')}</p>
+            <p className="mt-1.5 text-sm font-semibold text-ink sm:mt-2">{t('v3NoAssignmentsYet')}</p>
+            <div className="mt-1.5"><StatusPill tone="info">ℹ️ {t('v3WaitingForHomework')}</StatusPill></div>
           </div>
         ) : (
           <div>
-            <StatCard label="Homework" value={`${stats.homeworkDoneRate}%`} tone="info" icon={BookOpen} />
-            <div className="mt-1.5"><StatusPill tone={homeworkStatusValue.tone}>{homeworkStatusValue.label}</StatusPill></div>
+            <StatCard label={t('homework')} value={`${stats.homeworkDoneRate}%`} tone="info" icon={BookOpen} />
+            <div className="mt-1.5"><StatusPill tone={homeworkStatusValue.tone}>{t(homeworkStatusValue.key)}</StatusPill></div>
           </div>
         )}
         <div>
-          <StatCard label="Exam average" value={stats.examAvg == null ? '—' : `${stats.examAvg}%`} tone="brand" icon={FileCheck2} />
+          <StatCard label={t('examAverage')} value={stats.examAvg == null ? '—' : `${stats.examAvg}%`} tone="brand" icon={FileCheck2} />
           {examStatusValue && (
-            <div className="mt-1.5"><StatusPill tone={examStatusValue.tone}>{examStatusValue.label}</StatusPill></div>
+            <div className="mt-1.5"><StatusPill tone={examStatusValue.tone}>{t(examStatusValue.key)}</StatusPill></div>
           )}
         </div>
-        <StatCard label="Lessons completed" value={stats.lessonsCompleted} tone="info" icon={CalendarClock} />
+        <StatCard label={t('v3LessonsCompletedLabel')} value={stats.lessonsCompleted} tone="info" icon={CalendarClock} />
       </div>
 
       <Link
@@ -282,24 +290,24 @@ export default function PortalHomeV3() {
       >
         <span className="text-2xl" aria-hidden="true">{nextStep.icon}</span>
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-bold uppercase tracking-wide text-brand-500">Your next step</p>
-          <p className="mt-0.5 text-sm font-semibold text-ink">{nextStep.title}</p>
-          <p className="text-xs text-ink/60">{nextStep.text}</p>
+          <p className="text-xs font-bold uppercase tracking-wide text-brand-500">{t('v3YourNextStepLabel')}</p>
+          <p className="mt-0.5 text-sm font-semibold text-ink">{t(nextStep.titleKey)}</p>
+          <p className="text-xs text-ink/60">{t(nextStep.textKey)}</p>
         </div>
       </Link>
 
       <div className="mb-6">
-        <SectionLabel>Quick actions</SectionLabel>
+        <SectionLabel>{t('quickActionsLabel')}</SectionLabel>
         <QuickActions actions={quickActions} />
       </div>
 
       <div className="mb-6">
-        <SectionLabel>Achievements</SectionLabel>
+        <SectionLabel>{t('achievementsTitle')}</SectionLabel>
         <BadgeShelf badges={badges} />
       </div>
 
       <div className="mb-6 grid gap-4 lg:grid-cols-2">
-        <Panel title="Smart insights">
+        <Panel title={t('v3SmartInsightsTitle')}>
           <div className="space-y-2">
             {insights.map((ins, i) => (
               <div key={i} className="rounded-lg border border-brand-100 bg-brand-50 p-2.5">
@@ -310,18 +318,18 @@ export default function PortalHomeV3() {
           </div>
         </Panel>
 
-        <Panel title="Class leaderboard" action={<Link to="/my-ranking" className="text-xs font-semibold text-brand-500 hover:underline">Full leaderboard</Link>}>
+        <Panel title={t('v3ClassLeaderboardTitle')} action={<Link to="/my-ranking" className="text-xs font-semibold text-brand-500 hover:underline">{t('fullLeaderboard')}</Link>}>
           {topFour.length === 0 ? (
-            <p className="text-sm text-ink/50">No ranking data yet.</p>
+            <p className="text-sm text-ink/50">{t('noRankingDataYet')}</p>
           ) : (
             <div className="space-y-2">
               {topFour.map((r, i) => (
                 <div key={r.student_id} className={`flex items-center gap-2 rounded-lg px-2 py-1 text-sm ${r.student_id === me.id ? 'bg-brand-50' : ''}`}>
                   <span className="w-5 font-mono text-xs font-bold text-levelB">{i + 1}</span>
                   <span className={`flex-1 truncate ${r.student_id === me.id ? 'font-bold text-brand-500' : 'text-ink'}`}>
-                    {r.student_id === me.id ? 'You' : r.real_name}
+                    {r.student_id === me.id ? t('v3YouLabel') : r.real_name}
                   </span>
-                  <span className="font-mono text-xs text-ink/50">{r.points} pts</span>
+                  <span className="font-mono text-xs text-ink/50">{r.points} {t('points')}</span>
                 </div>
               ))}
             </div>
@@ -330,9 +338,9 @@ export default function PortalHomeV3() {
       </div>
 
       <div className="mb-6 grid gap-4 lg:grid-cols-2">
-        <Panel title="Certificates" icon={Award} action={<Link to="/my-certificates" className="text-xs font-semibold text-brand-500 hover:underline">View all</Link>}>
+        <Panel title={t('certificatesTitle')} icon={Award} action={<Link to="/my-certificates" className="text-xs font-semibold text-brand-500 hover:underline">{t('viewAll')}</Link>}>
           {certificates.length === 0 ? (
-            <p className="text-sm text-ink/50">No certificates yet.</p>
+            <p className="text-sm text-ink/50">{t('noCertificatesYet')}</p>
           ) : (
             <div className="grid grid-cols-2 gap-2">
               {certificates.slice(0, 4).map((c) => (
@@ -345,9 +353,9 @@ export default function PortalHomeV3() {
           )}
         </Panel>
 
-        <Panel title="Upcoming lessons" icon={CalendarClock}>
+        <Panel title={t('upcomingLessons')} icon={CalendarClock}>
           {upcoming.length === 0 ? (
-            <p className="text-sm text-ink/50">No upcoming lessons scheduled.</p>
+            <p className="text-sm text-ink/50">{t('noUpcomingLessons')}</p>
           ) : (
             <div className="space-y-2">
               {upcoming.map((l) => (

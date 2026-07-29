@@ -4,60 +4,64 @@
 // Week/Month, Rising Star) need backend state that doesn't exist yet
 // (persisted weekly/monthly winners, historical point snapshots to diff
 // against) - marked unavailable rather than faked.
+//
+// Returns labelKey/descriptionKey (dashboard-namespace translation keys)
+// rather than literal text - this is a plain util with no access to
+// useTranslation(), so the caller (BadgeShelf) resolves the actual text.
 
 export function computeBadges({ attendanceRate, attendanceStreak, homeworkTotal, homeworkDoneRate, examAvg, lessonsCompleted, rank }) {
   return [
     {
       id: 'perfect-attendance',
       emoji: '🏅',
-      label: 'Perfect Attendance',
-      description: '100% attendance this month',
+      labelKey: 'badgePerfectAttendanceLabel',
+      descriptionKey: 'badgePerfectAttendanceDescription',
       unlocked: attendanceRate === 100,
     },
     {
       id: 'homework-hero',
       emoji: '📚',
-      label: 'Homework Hero',
-      description: 'Every homework item done',
+      labelKey: 'badgeHomeworkHeroLabel',
+      descriptionKey: 'badgeHomeworkHeroDescription',
       unlocked: homeworkTotal > 0 && homeworkDoneRate === 100,
     },
     {
       id: 'exam-master',
       emoji: '📝',
-      label: 'Exam Master',
-      description: 'Average exam score ≥ 90%',
+      labelKey: 'badgeExamMasterLabel',
+      descriptionKey: 'badgeExamMasterDescription',
       unlocked: examAvg != null && examAvg >= 90,
     },
     {
       id: 'streak-7',
       emoji: '🔥',
-      label: '7-Day Streak',
-      description: 'Study streak reaches 7 days',
+      labelKey: 'badgeStreak7Label',
+      descriptionKey: 'badgeStreak7Description',
       unlocked: attendanceStreak >= 7,
     },
     {
       id: 'streak-30',
       emoji: '💎',
-      label: '30-Day Streak',
-      description: 'Study streak reaches 30 days',
+      labelKey: 'badgeStreak30Label',
+      descriptionKey: 'badgeStreak30Description',
       unlocked: attendanceStreak >= 30,
     },
     {
       id: 'top-3',
       emoji: '⭐',
-      label: 'Top 3',
-      description: 'Finish in the Top 3 (all-time ranking)',
+      labelKey: 'badgeTop3Label',
+      descriptionKey: 'badgeTop3Description',
       unlocked: rank != null && rank <= 3,
     },
     {
       id: 'lesson-explorer',
       emoji: '📖',
-      label: 'Lesson Explorer',
-      description: 'Finish 10 lessons',
+      labelKey: 'badgeLessonExplorerLabel',
+      descriptionKey: 'badgeLessonExplorerDescription',
       unlocked: lessonsCompleted >= 10,
     },
-    { id: 'student-of-week', emoji: '👑', label: 'Student of the Week', description: 'Weekly winner', unavailable: true },
-    { id: 'student-of-month', emoji: '🏆', label: 'Student of the Month', description: 'Monthly winner', unavailable: true },
-    { id: 'rising-star', emoji: '🚀', label: 'Rising Star', description: 'Biggest monthly improvement', unavailable: true },
+    { id: 'student-of-week', emoji: '👑', labelKey: 'badgeStudentOfWeekLabel', descriptionKey: 'badgeStudentOfWeekDescription', unavailable: true },
+    { id: 'student-of-month', emoji: '🏆', labelKey: 'badgeStudentOfMonthLabel', descriptionKey: 'badgeStudentOfMonthDescription', unavailable: true },
+    { id: 'rising-star', emoji: '🚀', labelKey: 'badgeRisingStarLabel', descriptionKey: 'badgeRisingStarDescription', unavailable: true },
   ];
 }

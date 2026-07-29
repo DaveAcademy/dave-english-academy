@@ -8,6 +8,7 @@
 // its own HeroClock child so the 15s interval only re-renders that block,
 // not the level ring/points/motivation/rank/streak below it.
 
+import { useTranslation } from 'react-i18next';
 import { Flame, X } from 'lucide-react';
 import { calculateLevelProgress } from '../utils/level';
 import { useLevelUpCelebration } from '../hooks/useLevelUpCelebration';
@@ -15,6 +16,7 @@ import { useMotivation } from '../hooks/useMotivation';
 import HeroClock from './HeroClock';
 
 export default function ProfileHeroCard({ studentId, name, meta, points, rank, streak }) {
+  const { t } = useTranslation('dashboard');
   const { level, pointsToNextLevel, percent, nextLevel } = calculateLevelProgress(points);
   const { celebrateLevel, dismiss } = useLevelUpCelebration(studentId, level);
   const motivation = useMotivation();
@@ -32,10 +34,8 @@ export default function ProfileHeroCard({ studentId, name, meta, points, rank, s
         <div className="mb-4 flex items-start gap-3 rounded-lg border border-levelB/30 bg-levelB/10 p-3">
           <span className="text-2xl" aria-hidden="true">🎉</span>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-bold text-ink">Level Up!</p>
-            <p className="text-xs text-ink/60">
-              Congratulations! You reached Level {celebrateLevel}. Keep learning to reach Level {celebrateLevel + 1}.
-            </p>
+            <p className="text-sm font-bold text-ink">{t('v3LevelUpTitle')}</p>
+            <p className="text-xs text-ink/60">{t('v3LevelUpBody', { level: celebrateLevel, nextLevel: celebrateLevel + 1 })}</p>
           </div>
           <button type="button" onClick={dismiss} aria-label="Dismiss" className="flex-shrink-0 rounded p-1 text-ink/40 hover:bg-white/60 hover:text-ink">
             <X size={14} />
@@ -65,20 +65,20 @@ export default function ProfileHeroCard({ studentId, name, meta, points, rank, s
           <div className="mt-2 h-2 w-full max-w-[220px] overflow-hidden rounded-full bg-brand-50">
             <div className="h-full rounded-full bg-gradient-to-r from-brand-500 to-levelB" style={{ width: `${percent}%` }} />
           </div>
-          <p className="mt-1 text-[11px] text-ink/40">{pointsToNextLevel} points until Level {nextLevel}</p>
+          <p className="mt-1 text-[11px] text-ink/40">{t('v3PointsUntilNextLevel', { points: pointsToNextLevel, level: nextLevel })}</p>
         </div>
 
         <div className="flex flex-shrink-0 items-center gap-4 text-center">
           <div>
             <p className="font-display text-lg font-bold text-ink">{rank ? `#${rank}` : '—'}</p>
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-ink/40">Rank</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-ink/40">{t('v3RankLabel')}</p>
           </div>
           {streak >= 2 && (
             <div>
               <p className="flex items-center gap-1 font-display text-lg font-bold text-levelB">
                 <Flame size={16} aria-hidden="true" /> {streak}
               </p>
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-ink/40">Day streak</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-ink/40">{t('v3DayStreakLabel')}</p>
             </div>
           )}
         </div>
