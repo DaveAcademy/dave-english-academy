@@ -50,7 +50,15 @@ function attendanceStatus(rate) {
   if (rate >= 75) return { tone: 'watch', label: 'Watch' };
   return { tone: 'attention', label: 'Needs attention' };
 }
-function homeworkStatus(rate) {
+// Named homeworkStatusFor (not homeworkStatus) deliberately - useAcademy()
+// returns a field also called `homeworkStatus` (the raw per-item status
+// array), and destructuring that inside the component would have shadowed
+// a same-named function here for the entire component body. That's not a
+// hypothetical: it happened, and crashed with a TypeError for any student
+// whose homeworkDoneRate wasn't null - untested because the only live
+// account checked during development had no homework data at all, so the
+// crashing branch never ran. Found during this review's code-quality pass.
+function homeworkStatusFor(rate) {
   if (rate >= 80) return { tone: 'good', label: 'On track' };
   if (rate >= 50) return { tone: 'watch', label: 'Watch' };
   return { tone: 'attention', label: 'Needs attention' };
@@ -199,15 +207,14 @@ export default function PortalHomeV3() {
     return list.slice(0, 3);
   }, [stats]);
 
-  const nextStep = useMemo(
-    () =>
-      nextStepFor(
-        stats.attendanceRate == null ? null : attendanceStatus(stats.attendanceRate),
-        stats.homeworkDoneRate == null ? null : homeworkStatus(stats.homeworkDoneRate),
-        stats.examAvg == null ? null : examStatus(stats.examAvg)
-      ),
-    [stats]
-  );
+  // Computed once here and reused below for both the status pills and the
+  // next-step recommendation, instead of each caller re-deriving the same
+  // status from the same rate - was previously called 2-3x per metric per
+  // render for identical inputs.
+  const attendanceStatusValue = stats.attendanceRate == null ? null : attendanceStatus(stats.attendanceRate);
+  const homeworkStatusValue = stats.homeworkDoneRate == null ? null : homeworkStatusFor(stats.homeworkDoneRate);
+  const examStatusValue = stats.examAvg == null ? null : examStatus(stats.examAvg);
+  const nextStep = nextStepFor(attendanceStatusValue, homeworkStatusValue, examStatusValue);
 
   const quickActions = [
     { to: '/my-homework', label: 'My Homework', Icon: BookOpen },
@@ -243,11 +250,11 @@ export default function PortalHomeV3() {
       <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <div>
           <StatCard label="Attendance" value={stats.attendanceRate == null ? '—' : `${stats.attendanceRate}%`} trend={stats.attendanceTrend} tone="success" icon={CalendarClock} />
-          {stats.attendanceRate != null && (
-            <div className="mt-1.5"><StatusPill tone={attendanceStatus(stats.attendanceRate).tone}>{attendanceStatus(stats.attendanceRate).label}</StatusPill></div>
+          {attendanceStatusValue && (
+            <div className="mt-1.5"><StatusPill tone={attendanceStatusValue.tone}>{attendanceStatusValue.label}</StatusPill></div>
           )}
         </div>
-        {stats.homeworkDoneRate == null ? (
+        {!homeworkStatusValue ? (
           <div className="rounded-xl border border-ink/[0.06] bg-white p-4 shadow-card sm:p-5">
             <p className="text-xs font-medium text-ink/60 sm:text-sm">Homework</p>
             <p className="mt-1.5 text-sm font-semibold text-ink sm:mt-2">No assignments yet</p>
@@ -256,13 +263,13 @@ export default function PortalHomeV3() {
         ) : (
           <div>
             <StatCard label="Homework" value={`${stats.homeworkDoneRate}%`} tone="info" icon={BookOpen} />
-            <div className="mt-1.5"><StatusPill tone={homeworkStatus(stats.homeworkDoneRate).tone}>{homeworkStatus(stats.homeworkDoneRate).label}</StatusPill></div>
+            <div className="mt-1.5"><StatusPill tone={homeworkStatusValue.tone}>{homeworkStatusValue.label}</StatusPill></div>
           </div>
         )}
         <div>
           <StatCard label="Exam average" value={stats.examAvg == null ? '—' : `${stats.examAvg}%`} tone="brand" icon={FileCheck2} />
-          {stats.examAvg != null && (
-            <div className="mt-1.5"><StatusPill tone={examStatus(stats.examAvg).tone}>{examStatus(stats.examAvg).label}</StatusPill></div>
+          {examStatusValue && (
+            <div className="mt-1.5"><StatusPill tone={examStatusValue.tone}>{examStatusValue.label}</StatusPill></div>
           )}
         </div>
         <StatCard label="Lessons completed" value={stats.lessonsCompleted} tone="info" icon={CalendarClock} />
