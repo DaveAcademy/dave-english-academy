@@ -128,7 +128,7 @@
   "qaViewStudents": "View Students",
   "qaViewLessons": "View Lessons",
 
-  "v3PrototypeLabel": "Prototype · Dashboard V3 (Progress Studio)",
+  "v3Tagline": "Track your progress. Reach your goals.",
   "v3ClassMeta": "Class {{level}} · {{group}} · {{points}} Academy Points",
   "v3NoGroup": "No group",
   "v3AcademyPoints": "Academy Points",

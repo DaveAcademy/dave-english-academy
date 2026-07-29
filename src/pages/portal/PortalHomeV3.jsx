@@ -243,7 +243,7 @@ export default function PortalHomeV3() {
 
   return (
     <div>
-      <p className="mb-4 text-[10px] font-bold uppercase tracking-widest text-brand-500">{t('v3PrototypeLabel')}</p>
+      <p className="mb-4 text-sm font-medium text-ink/50">{t('v3Tagline')}</p>
 
       <div className="mb-6">
         <ProfileHeroCard
