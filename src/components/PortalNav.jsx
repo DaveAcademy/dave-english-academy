@@ -6,7 +6,7 @@
 
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { LayoutDashboard, Sparkles, Archive, TrendingUp, FileCheck2, BookOpen, Library, Award, Trophy, Settings, MessageSquare, Languages } from 'lucide-react';
+import { LayoutDashboard, TrendingUp, FileCheck2, BookOpen, Library, Award, Trophy, Settings, MessageSquare, Languages } from 'lucide-react';
 import { useAuth } from '../lib/AuthContext';
 import { useAcademy } from '../lib/AcademyDataContext';
 
@@ -15,14 +15,11 @@ import { useAcademy } from '../lib/AcademyDataContext';
 // Several keys are shared with Nav.jsx's staff items where the exact same
 // English word is already used by both (e.g. "Certificates", "Messages").
 //
-// "Home" now renders Dashboard V3 (Progress Studio) - the previous
-// dashboard is kept reachable at /dashboard-v1 rather than deleted, and
-// /dashboard-v2 stays too, so both remain available for comparison or
-// rollback during the transition period.
+// "Home" renders Dashboard V3 (Progress Studio), the only student
+// dashboard - V1/V2 are no longer reachable from navigation (files kept
+// temporarily for rollback, see App.jsx's routes).
 const PORTAL_NAV_ITEMS = [
   { to: '/', label: 'home', shortLabel: 'homeShort', Icon: LayoutDashboard, end: true },
-  { to: '/dashboard-v1', label: 'dashboardV1Legacy', shortLabel: 'dashboardV1Short', Icon: Archive },
-  { to: '/dashboard-v2', label: 'dashboardV2Archived', shortLabel: 'dashboardV2Short', Icon: Sparkles },
   { to: '/progress', label: 'myProgress', shortLabel: 'myProgressShort', Icon: TrendingUp },
   { to: '/my-exams', label: 'myExamsFull', shortLabel: 'examsShort', Icon: FileCheck2 },
   { to: '/my-lessons', label: 'myLessonsFull', shortLabel: 'lessonsShort', Icon: Library },
