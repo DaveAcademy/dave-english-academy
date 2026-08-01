@@ -292,6 +292,98 @@ export async function setPaymentStatus(studentId, year, month, paid) {
   return listPayments();
 }
 
+// ---------- Payment ledger (migrations 0054-0060) ----------
+// Reads/writes public.payment_transactions and the derivation functions
+// built on top of it. Payments.jsx now renders this alongside the legacy
+// setPaymentStatus/listPayments section above (stage 1 of the cutover -
+// see that page's comments); Dashboard.jsx/Reports.jsx are untouched.
+
+// Mirrors the check constraints on payment_transactions (migration 0054) -
+// kept here, next to the function that writes them, rather than
+// duplicated in every page that needs the list.
+export const TRANSACTION_TYPES = ['first_partial', 'monthly', 'advance', 'extra'];
+export const PAYMENT_METHODS = ['cash', 'bank_transfer', 'click', 'payme', 'other'];
+
+// Source of truth for a single student's status - never compute this
+// client-side from raw transactions, the derivation (rolling balance,
+// billing-period math) lives entirely in the get_student_payment_status
+// function (migration 0055) so there is exactly one implementation of it.
+export async function getStudentPaymentStatus(studentId) {
+  const { data, error } = await supabase.rpc('get_student_payment_status', { p_student_id: studentId });
+  if (error) throw error;
+  return data[0];
+}
+
+export async function getPaymentTimeline(studentId) {
+  const { data, error } = await supabase
+    .from('payment_transactions')
+    .select('*')
+    .eq('student_id', studentId)
+    .order('paid_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+// createdBy is passed in by the caller (the logged-in admin's profile id
+// from useAuth), same pattern as awardedBy above for point_transactions -
+// not read from a session on this side of the call.
+export async function recordPayment({
+  studentId,
+  amount,
+  transactionType,
+  createdBy,
+  paymentMethod = null,
+  coversPeriodStart = null,
+  coversPeriodEnd = null,
+  paidAt = null,
+  referenceNumber = null,
+  notes = null,
+}) {
+  const { data, error } = await supabase
+    .from('payment_transactions')
+    .insert({
+      student_id: studentId,
+      amount,
+      transaction_type: transactionType,
+      payment_method: paymentMethod,
+      covers_period_start: coversPeriodStart,
+      covers_period_end: coversPeriodEnd,
+      paid_at: paidAt || new Date().toISOString(),
+      reference_number: referenceNumber,
+      notes,
+      created_by: createdBy,
+      source: 'manual',
+    })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+// Live-preview helper for the "calculate first payment automatically"
+// student-creation flow (not wired into StudentForm.jsx yet) - same
+// proration formula the derivation function uses internally, so the
+// preview a admin sees during creation always matches what
+// get_student_payment_status will later compute.
+export async function calculateFirstPayment(joinDate, billingDay, monthlyFee) {
+  const { data, error } = await supabase.rpc('calculate_first_payment', {
+    p_join_date: joinDate,
+    p_billing_day: billingDay,
+    p_monthly_fee: monthlyFee,
+  });
+  if (error) throw error;
+  return data[0];
+}
+
+// Admin-only visibility into the data-quality issues the 0057 backfill
+// surfaced (payments before join_date, zero fees, large advance credit) -
+// see migration 0059's comments. Read-only, changes nothing.
+export async function getPaymentDataAudit() {
+  const { data, error } = await supabase.rpc('payment_data_audit');
+  if (error) throw error;
+  return data;
+}
+
 // ---------- Attendance ----------
 
 export async function listAttendance() {

@@ -1,5 +1,7 @@
 // date.js
 
+import { MONTH_NAMES } from './format';
+
 export function todayISO() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -106,6 +108,21 @@ export function formatMonthDay(date, locale = 'en-US') {
 export function formatFullDateNumeric(date = new Date(), locale = 'en-US') {
   if (locale === 'uz') return `${uzDayMonth(date)} ${date.getFullYear()}`;
   return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+/** "14 October 2026" / "14-oktyabr 2026" - same output shape as
+ * formatFullDateNumeric, but for date-ONLY values (billing/due dates,
+ * "paid until") where the input is a "YYYY-MM-DD" string, not a moment in
+ * time. Built directly from the string's own components - deliberately
+ * never `new Date(iso)` + local getters, which can silently shift a
+ * date-only value by a day depending on the browser's timezone (same
+ * reasoning as addDaysISO/addMonthsISO above). Use this, not
+ * formatFullDateNumeric, for anything payment/billing-date related. */
+export function formatDateOnly(iso, locale = 'en-US') {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-').map(Number);
+  if (locale === 'uz') return `${d}-${UZ_MONTHS[m - 1]} ${y}`;
+  return `${d} ${MONTH_NAMES[m - 1]} ${y}`;
 }
 
 /** Clock time for the dashboard hero card. English: zero-padded 12-hour

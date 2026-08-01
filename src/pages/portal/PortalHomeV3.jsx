@@ -21,9 +21,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { CalendarClock, MessageSquare, Award, Trophy, BookOpen, FileCheck2 } from 'lucide-react';
+import { CalendarClock, MessageSquare, Award, Trophy, BookOpen, FileCheck2, CreditCard } from 'lucide-react';
 import { useAcademy } from '../../lib/AcademyDataContext';
 import { getLeaderboard } from '../../lib/db';
+import { getStudentPaymentStatus } from '../../lib/storageBridge';
 import Panel from '../../components/Panel';
 import StatCard from '../../components/StatCard';
 import StatusPill from '../../components/StatusPill';
@@ -33,7 +34,8 @@ import QuickActions from '../../components/QuickActions';
 import SectionLabel from '../../components/SectionLabel';
 import { computeBadges } from '../../utils/badges';
 import { attendanceRate, filterByYearMonth } from '../../utils/attendance';
-import { currentAndPreviousMonth, trendFrom } from '../../utils/date';
+import { currentAndPreviousMonth, trendFrom, formatDateOnly } from '../../utils/date';
+import { formatUZS } from '../../utils/format';
 
 // Per-metric status thresholds - deliberately different per metric rather
 // than one flat cutoff, because each behaves differently in practice:
@@ -107,10 +109,12 @@ function currentPresentStreak(records) {
 }
 
 export default function PortalHomeV3() {
-  const { t } = useTranslation(['dashboard', 'nav']);
+  const { t, i18n } = useTranslation(['dashboard', 'nav']);
+  const dateLocale = i18n.language === 'uz' ? 'uz' : 'en-US';
   const { students, lessons, attendance, homework, homeworkStatus, examScores, certificates } = useAcademy();
   const me = students[0];
   const [leaderboard, setLeaderboard] = useState(null);
+  const [paymentStatus, setPaymentStatus] = useState(null);
   const { current, previous } = useMemo(() => currentAndPreviousMonth(), []);
 
   useEffect(() => {
@@ -122,6 +126,17 @@ export default function PortalHomeV3() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!me) return;
+    let cancelled = false;
+    getStudentPaymentStatus(me.id)
+      .then((st) => !cancelled && setPaymentStatus(st))
+      .catch(() => !cancelled && setPaymentStatus(null));
+    return () => {
+      cancelled = true;
+    };
+  }, [me]);
 
   const { points, rank } = useMemo(() => {
     if (!me || !leaderboard) return { points: 0, rank: null };
@@ -295,6 +310,68 @@ export default function PortalHomeV3() {
           <p className="text-xs text-ink/60">{t(nextStep.textKey)}</p>
         </div>
       </Link>
+
+      {paymentStatus && (
+        <div className="mb-6">
+          <Panel title={t('v3PaymentTitle')} icon={CreditCard}>
+            {(() => {
+              const date = formatDateOnly(paymentStatus.next_due_date, dateLocale);
+              // Genuinely paid-ahead vs. never-paid-but-nothing-due-yet both
+              // return status='paid' (correct - neither owes anything right
+              // now), but they must not read the same way to a student who
+              // has never made a payment. Found this exact gap verifying
+              // against a real student (paid_to_date 0, status 'paid') before
+              // shipping - see migration 0063.
+              const isFirstPaymentDue = paymentStatus.status === 'paid' && Number(paymentStatus.paid_to_date) === 0 && paymentStatus.next_due_date;
+              const kind = paymentStatus.status === 'overdue' ? 'overdue' : paymentStatus.status === 'due_soon' ? 'dueSoon' : isFirstPaymentDue ? 'firstDue' : 'paid';
+              const headlineKey = {
+                overdue: 'v3PaymentHeadlineOverdue',
+                dueSoon: 'v3PaymentHeadlineDueSoon',
+                firstDue: 'v3PaymentHeadlineFirstDue',
+                paid: 'v3PaymentHeadlinePaid',
+              }[kind];
+              const explanationKey = {
+                overdue: 'v3PaymentExplanationOverdue',
+                dueSoon: 'v3PaymentExplanationDueSoon',
+                firstDue: 'v3PaymentExplanationFirstDue',
+                paid: 'v3PaymentExplanationPaid',
+              }[kind];
+              const headlineColor = { overdue: 'text-inactive', dueSoon: 'text-levelB', firstDue: 'text-levelA', paid: 'text-active' }[kind];
+              // The exact amount of the specific period that's due - not an
+              // approximation from monthly_fee, which would be wrong for a
+              // prorated first payment. outstanding (not next_amount_due) is
+              // used for overdue since it correctly sums every unpaid period,
+              // not just the next one.
+              const amountToPay = paymentStatus.status === 'overdue' ? paymentStatus.outstanding : paymentStatus.next_amount_due;
+              return (
+                <>
+                  <p className={`text-base font-bold ${headlineColor}`}>{t(headlineKey, { date })}</p>
+                  <p className="mt-1 text-sm text-ink/60">{t(explanationKey)}</p>
+
+                  <div className="mt-3 grid grid-cols-2 gap-3 border-t border-ink/[0.06] pt-3 text-sm">
+                    <div>
+                      <p className="text-xs text-ink/50">{t('v3PaymentMonthlyFee')}</p>
+                      <p className="font-semibold text-ink">{formatUZS(paymentStatus.monthly_fee)}</p>
+                    </div>
+                    {paymentStatus.next_due_date && (
+                      <div>
+                        <p className="text-xs text-ink/50">{t('v3PaymentNextDue')}</p>
+                        <p className="font-semibold text-ink">{date}</p>
+                      </div>
+                    )}
+                    {kind !== 'paid' && (
+                      <div>
+                        <p className="text-xs text-ink/50">{t('v3PaymentAmountToPay')}</p>
+                        <p className="font-semibold text-ink">{formatUZS(amountToPay)}</p>
+                      </div>
+                    )}
+                  </div>
+                </>
+              );
+            })()}
+          </Panel>
+        </div>
+      )}
 
       <div className="mb-6">
         <SectionLabel>{t('quickActionsLabel')}</SectionLabel>

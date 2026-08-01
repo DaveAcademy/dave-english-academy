@@ -31,6 +31,7 @@ const Reports = lazy(() => import('./pages/Reports'));
 const Settings = lazy(() => import('./pages/Settings'));
 const Chat = lazy(() => import('./pages/Chat'));
 const FileManager = lazy(() => import('./pages/FileManager'));
+const PaymentEngineTest = lazy(() => import('./pages/PaymentEngineTest'));
 const PortalHomeV3 = lazy(() => import('./pages/portal/PortalHomeV3'));
 const MyProgress = lazy(() => import('./pages/portal/MyProgress'));
 const MyExams = lazy(() => import('./pages/portal/MyExams'));
@@ -127,6 +128,8 @@ function RoutedContent({ isStudent }) {
             <Route path="/chat" element={<Chat />} />
             <Route path="/files" element={<FileManager />} />
             <Route path="/settings" element={<Settings />} />
+            {/* Hidden diagnostic page for the payment ledger redesign - not in Sidebar/BottomNav, direct URL only. */}
+            <Route path="/dev/payment-engine-test" element={<PaymentEngineTest />} />
           </Routes>
         )}
       </Suspense>
