@@ -16,7 +16,7 @@
 // and Administrators never see 'uz' here because syncLanguageForRole (see
 // App.jsx / i18n/index.js) forces i18n.language back to 'en' for any
 // non-student role, so dateLocale resolves to 'en-US' for them regardless.
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
 import {
   Users,
@@ -34,6 +34,7 @@ import {
   ImagePlus,
 } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
+import { getMonthlyPaymentCollection, getStudentPaymentStatus } from '../lib/storageBridge';
 import { useAuth } from '../lib/AuthContext';
 import StatCard from '../components/StatCard';
 import Panel from '../components/Panel';
@@ -65,29 +66,68 @@ function AdminDashboard() {
   const { t, i18n } = useTranslation('dashboard');
   const dateLocale = i18n.language === 'uz' ? 'uz' : 'en-US';
   const { profile } = useAuth();
-  const { students, payments, attendance, exams, examScores, homework, loading } = useAcademy();
+  const { students, attendance, exams, examScores, homework, loading } = useAcademy();
 
   const months = useMemo(() => lastNMonths(6), []);
   const { current, previous } = useMemo(() => currentAndPreviousMonth(), []);
 
-  const stats = useMemo(() => {
-    const active = students.filter((s) => s.status === 'Active');
+  const active = useMemo(() => students.filter((s) => s.status === 'Active'), [students]);
 
-    // ---- Payment collection (this month vs last month) ----
-    const paymentsForMonth = ({ year, month }) => {
-      const paidIds = new Set(payments.filter((p) => p.year === year && p.month === month && p.paid).map((p) => p.student_id));
-      const paid = active.filter((s) => paidIds.has(s.id));
-      const collected = paid.reduce((sum, s) => sum + Number(s.monthly_fee || 0), 0);
-      const expected = active.reduce((sum, s) => sum + Number(s.monthly_fee || 0), 0);
-      return { collected, expected, unpaid: active.filter((s) => !paidIds.has(s.id)) };
+  // Cash-flow collection totals, one RPC call per month shown (6-month
+  // trend + previous, deduped) - financial reporting, see migration 0065.
+  const [collectionByMonth, setCollectionByMonth] = useState({}); // "year-month" -> total_collected
+  useEffect(() => {
+    const keys = [...months, previous];
+    const unique = Array.from(new Map(keys.map((k) => [`${k.year}-${k.month}`, k])).values());
+    let cancelled = false;
+    Promise.all(
+      unique.map((k) =>
+        getMonthlyPaymentCollection(k.year, k.month)
+          .then((row) => [`${k.year}-${k.month}`, Number(row?.total_collected || 0)])
+          .catch(() => [`${k.year}-${k.month}`, 0])
+      )
+    ).then((pairs) => {
+      if (!cancelled) setCollectionByMonth(Object.fromEntries(pairs));
+    });
+    return () => {
+      cancelled = true;
     };
-    const thisMonthPayments = paymentsForMonth(current);
-    const lastMonthPayments = paymentsForMonth(previous);
-    const collectionRate = thisMonthPayments.expected > 0 ? Math.round((thisMonthPayments.collected / thisMonthPayments.expected) * 100) : 0;
-    const lastCollectionRate =
-      lastMonthPayments.expected > 0 ? Math.round((lastMonthPayments.collected / lastMonthPayments.expected) * 100) : null;
-    const outstanding = thisMonthPayments.expected - thisMonthPayments.collected;
-    const unpaidStudents = [...thisMonthPayments.unpaid].sort((a, b) => Number(b.monthly_fee || 0) - Number(a.monthly_fee || 0));
+  }, [months, previous]);
+
+  // Per-student billing status (coverage logic) - who's actually behind,
+  // as opposed to how much cash came in this month. Same one-RPC-per-
+  // student pattern already accepted in Payments.jsx.
+  const [coverageStatuses, setCoverageStatuses] = useState({});
+  useEffect(() => {
+    if (active.length === 0) return;
+    let cancelled = false;
+    Promise.all(
+      active.map((s) =>
+        getStudentPaymentStatus(s.id)
+          .then((st) => [s.id, st])
+          .catch(() => [s.id, null])
+      )
+    ).then((pairs) => {
+      if (!cancelled) setCoverageStatuses(Object.fromEntries(pairs));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [active]);
+
+  const stats = useMemo(() => {
+    // ---- Payment collection (this month vs last month, cash-flow) ----
+    const expected = active.reduce((sum, s) => sum + Number(s.monthly_fee || 0), 0);
+    const collected = collectionByMonth[`${current.year}-${current.month}`] || 0;
+    const lastCollected = collectionByMonth[`${previous.year}-${previous.month}`] || 0;
+    const collectionRate = expected > 0 ? Math.round((collected / expected) * 100) : 0;
+    const lastCollectionRate = expected > 0 ? Math.round((lastCollected / expected) * 100) : null;
+    const outstanding = Math.max(0, expected - collected);
+
+    // ---- Students behind on billing (coverage logic, not cash-flow) ----
+    const unpaidStudents = active
+      .filter((s) => coverageStatuses[s.id]?.status === 'overdue')
+      .sort((a, b) => Number(coverageStatuses[b.id]?.outstanding || 0) - Number(coverageStatuses[a.id]?.outstanding || 0));
 
     // ---- Attendance rate (this month vs last month) ----
     const attendanceThisMonth = filterByYearMonth(attendance, 'date', current.year, current.month);
@@ -135,15 +175,11 @@ function AdminDashboard() {
       }).length,
     }));
 
-    // ---- Income overview (collected per month, last 6 months) ----
-    const income = months.map(({ year, month, label }) => {
-      const paidRecords = payments.filter((p) => p.year === year && p.month === month && p.paid);
-      const total = paidRecords.reduce((sum, p) => {
-        const student = students.find((s) => s.id === p.student_id);
-        return sum + Number(student?.monthly_fee || 0);
-      }, 0);
-      return { label, value: total };
-    });
+    // ---- Income overview (cash-flow collected per month, last 6 months) ----
+    const income = months.map(({ year, month, label }) => ({
+      label,
+      value: collectionByMonth[`${year}-${month}`] || 0,
+    }));
 
     // ---- Attendance trend (rate per month, last 6 months) ----
     const attendanceTrend = months.map(({ year, month, label }) => ({
@@ -192,8 +228,8 @@ function AdminDashboard() {
     return {
       active: active.length,
       total: students.length,
-      collected: thisMonthPayments.collected,
-      expected: thisMonthPayments.expected,
+      collected,
+      expected,
       collectionRate,
       collectionTrend: trendFrom(collectionRate, lastCollectionRate, '%'),
       outstanding,
@@ -211,7 +247,7 @@ function AdminDashboard() {
       monthly,
       topStudents,
     };
-  }, [students, payments, attendance, exams, examScores, homework, months, current, previous]);
+  }, [students, active, collectionByMonth, coverageStatuses, attendance, exams, examScores, homework, months, current, previous]);
 
   const quickActions = [
     { to: '/students', label: t('qaAddStudent'), Icon: Users },

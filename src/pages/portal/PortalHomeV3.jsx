@@ -315,7 +315,7 @@ export default function PortalHomeV3() {
         <div className="mb-6">
           <Panel title={t('v3PaymentTitle')} icon={CreditCard}>
             {(() => {
-              const date = formatDateOnly(paymentStatus.next_due_date, dateLocale);
+              const nextDueText = formatDateOnly(paymentStatus.next_due_date, dateLocale);
               // Genuinely paid-ahead vs. never-paid-but-nothing-due-yet both
               // return status='paid' (correct - neither owes anything right
               // now), but they must not read the same way to a student who
@@ -323,20 +323,33 @@ export default function PortalHomeV3() {
               // against a real student (paid_to_date 0, status 'paid') before
               // shipping - see migration 0063.
               const isFirstPaymentDue = paymentStatus.status === 'paid' && Number(paymentStatus.paid_to_date) === 0 && paymentStatus.next_due_date;
-              const kind = paymentStatus.status === 'overdue' ? 'overdue' : paymentStatus.status === 'due_soon' ? 'dueSoon' : isFirstPaymentDue ? 'firstDue' : 'paid';
+              // paid_through_date (migration 0068) is the end of the last
+              // period actually, fully covered - next_due_date points at the
+              // following (not-yet-due, not-yet-paid) period instead, which
+              // is the right field for "when is my next deadline" but the
+              // wrong one for "paid until": it always lands one period past
+              // what's actually been paid for. A partial payment that
+              // doesn't fully cover even the current period leaves
+              // paid_through_date null despite paid_to_date > 0 - that's the
+              // 'partial' case below, not 'paid'.
+              const isPartial = paymentStatus.status === 'paid' && Number(paymentStatus.paid_to_date) > 0 && !paymentStatus.paid_through_date;
+              const kind = paymentStatus.status === 'overdue' ? 'overdue' : paymentStatus.status === 'due_soon' ? 'dueSoon' : isFirstPaymentDue ? 'firstDue' : isPartial ? 'partial' : 'paid';
+              const date = kind === 'paid' ? formatDateOnly(paymentStatus.paid_through_date, dateLocale) : nextDueText;
               const headlineKey = {
                 overdue: 'v3PaymentHeadlineOverdue',
                 dueSoon: 'v3PaymentHeadlineDueSoon',
                 firstDue: 'v3PaymentHeadlineFirstDue',
+                partial: 'v3PaymentHeadlinePartial',
                 paid: 'v3PaymentHeadlinePaid',
               }[kind];
               const explanationKey = {
                 overdue: 'v3PaymentExplanationOverdue',
                 dueSoon: 'v3PaymentExplanationDueSoon',
                 firstDue: 'v3PaymentExplanationFirstDue',
+                partial: 'v3PaymentExplanationPartial',
                 paid: 'v3PaymentExplanationPaid',
               }[kind];
-              const headlineColor = { overdue: 'text-inactive', dueSoon: 'text-levelB', firstDue: 'text-levelA', paid: 'text-active' }[kind];
+              const headlineColor = { overdue: 'text-inactive', dueSoon: 'text-levelB', firstDue: 'text-levelA', partial: 'text-levelB', paid: 'text-active' }[kind];
               // The exact amount of the specific period that's due - not an
               // approximation from monthly_fee, which would be wrong for a
               // prorated first payment. outstanding (not next_amount_due) is
@@ -345,7 +358,7 @@ export default function PortalHomeV3() {
               const amountToPay = paymentStatus.status === 'overdue' ? paymentStatus.outstanding : paymentStatus.next_amount_due;
               return (
                 <>
-                  <p className={`text-base font-bold ${headlineColor}`}>{t(headlineKey, { date })}</p>
+                  <p className={`text-base font-bold ${headlineColor}`}>{t(headlineKey, { date, amount: formatUZS(paymentStatus.paid_to_date) })}</p>
                   <p className="mt-1 text-sm text-ink/60">{t(explanationKey)}</p>
 
                   <div className="mt-3 grid grid-cols-2 gap-3 border-t border-ink/[0.06] pt-3 text-sm">
@@ -353,10 +366,14 @@ export default function PortalHomeV3() {
                       <p className="text-xs text-ink/50">{t('v3PaymentMonthlyFee')}</p>
                       <p className="font-semibold text-ink">{formatUZS(paymentStatus.monthly_fee)}</p>
                     </div>
-                    {paymentStatus.next_due_date && (
+                    {/* Recurring monthly deadline (current_period_end) - the
+                        calendar period "today" falls inside, unaffected by
+                        when/whether it's been paid. Deliberately not
+                        next_due_date, which is payment-gated. */}
+                    {paymentStatus.current_period_end && (
                       <div>
                         <p className="text-xs text-ink/50">{t('v3PaymentNextDue')}</p>
-                        <p className="font-semibold text-ink">{date}</p>
+                        <p className="font-semibold text-ink">{formatDateOnly(paymentStatus.current_period_end, dateLocale)}</p>
                       </div>
                     )}
                     {kind !== 'paid' && (

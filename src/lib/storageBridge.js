@@ -273,30 +273,22 @@ export async function revokeRecognitionAward(recognitionId, reason) {
 }
 
 // ---------- Payments ----------
+// public.payments is the legacy boolean-per-month table. Its write path
+// (setPaymentStatus) was removed once Payments.jsx's grid moved to the
+// ledger below. Only legitimate remaining consumer is backup export/
+// restore (migration 0066 documents this on the table itself) - do not
+// wire this into any new feature.
 
-export async function listPayments() {
+export async function listLegacyPaymentsForBackup() {
   const { data, error } = await supabase.from('payments').select('*').order('id');
   if (error) throw error;
   return data;
 }
 
-export async function setPaymentStatus(studentId, year, month, paid) {
-  const paid_date = paid ? new Date().toISOString().slice(0, 10) : null;
-  const { error } = await supabase
-    .from('payments')
-    .upsert(
-      { student_id: studentId, year, month, paid, paid_date },
-      { onConflict: 'student_id,year,month' }
-    );
-  if (error) throw error;
-  return listPayments();
-}
-
 // ---------- Payment ledger (migrations 0054-0060) ----------
 // Reads/writes public.payment_transactions and the derivation functions
-// built on top of it. Payments.jsx now renders this alongside the legacy
-// setPaymentStatus/listPayments section above (stage 1 of the cutover -
-// see that page's comments); Dashboard.jsx/Reports.jsx are untouched.
+// built on top of it. This is now the only write path for payments -
+// Payments.jsx records everything through recordPayment() below.
 
 // Mirrors the check constraints on payment_transactions (migration 0054) -
 // kept here, next to the function that writes them, rather than
@@ -375,6 +367,33 @@ export async function calculateFirstPayment(joinDate, billingDay, monthlyFee) {
   return data[0];
 }
 
+// Cash-flow total for one calendar month - Dashboard.jsx's collection-rate
+// KPI and 6-month income trend. See migration 0065 for why this is a
+// separate concept from get_student_payment_status's coverage logic.
+export async function getMonthlyPaymentCollection(year, month) {
+  const { data, error } = await supabase.rpc('get_monthly_payment_collection', { p_year: year, p_month: month });
+  if (error) throw error;
+  return data[0];
+}
+
+// Row-level detail for an admin date range - Reports.jsx's Payment
+// Collection Report.
+export async function getPaymentCollectionSummary(from, to) {
+  const { data, error } = await supabase.rpc('get_payment_collection_summary', { p_from: from, p_to: to });
+  if (error) throw error;
+  return data;
+}
+
+// Reminder-preparation layer (migration 0067) - who would get a payment
+// reminder right now, and what it would say. No messaging attached yet;
+// this exists so wording/timing/exclusions can be checked against real
+// data before anything is wired to actually send.
+export async function getPaymentReminderCandidates() {
+  const { data, error } = await supabase.rpc('get_payment_reminder_candidates');
+  if (error) throw error;
+  return data;
+}
+
 // Admin-only visibility into the data-quality issues the 0057 backfill
 // surfaced (payments before join_date, zero fees, large advance credit) -
 // see migration 0059's comments. Read-only, changes nothing.
@@ -423,7 +442,7 @@ export async function setAttendanceStatus(studentId, date, status) {
 export async function exportAllData() {
   const [students, payments, attendance] = await Promise.all([
     listStudents(),
-    listPayments(),
+    listLegacyPaymentsForBackup(),
     listAttendance(),
   ]);
   return { exported_at: new Date().toISOString(), students, payments, attendance };

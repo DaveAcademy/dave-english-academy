@@ -3,22 +3,25 @@
 // can show academy-wide financial figures (the Payments report), which is
 // exactly why it's not part of the student portal's nav.
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Download, FileBarChart, ShieldAlert } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { useAuth } from '../lib/AuthContext';
 import { formatUZS } from '../utils/format';
 import { downloadReportPdf } from '../utils/pdf';
+import { getPaymentCollectionSummary, getStudentPaymentStatus } from '../lib/storageBridge';
 
 const REPORT_TYPES = [
   { key: 'attendance', label: 'Attendance' },
-  { key: 'payments', label: 'Payments' },
+  { key: 'payments', label: 'Payment Collection' },
   { key: 'exams', label: 'Exams' },
   { key: 'homework', label: 'Homework' },
   { key: 'certificates', label: 'Certificates' },
   { key: 'points', label: 'Points' },
-  { key: 'monthly', label: 'Monthly Performance' },
+  { key: 'monthly', label: 'Student Coverage' },
 ];
+
+const STATUS_LABELS = { paid: 'Paid', due_soon: 'Due soon', overdue: 'Overdue' };
 
 export default function Reports() {
   const { role } = useAuth();
@@ -26,7 +29,6 @@ export default function Reports() {
 
   const {
     students,
-    payments,
     attendance,
     exams,
     examScores,
@@ -42,6 +44,41 @@ export default function Reports() {
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth() + 1);
+
+  // Payment Collection Report: row-level cash-flow detail for an admin date
+  // range (migration 0065) - fetched fresh whenever that report/range is
+  // active. Empty from/to means "no filter", same as every other report
+  // here, so it's widened to an effectively-unbounded range for the RPC.
+  const [paymentRows, setPaymentRows] = useState([]);
+  useEffect(() => {
+    if (reportType !== 'payments') return;
+    let cancelled = false;
+    getPaymentCollectionSummary(fromDate || '2000-01-01', toDate || '2100-01-01')
+      .then((rows) => !cancelled && setPaymentRows(rows))
+      .catch(() => !cancelled && setPaymentRows([]));
+    return () => {
+      cancelled = true;
+    };
+  }, [reportType, fromDate, toDate]);
+
+  // Student Coverage Report: current billing status per student (coverage
+  // logic, get_student_payment_status) - not scoped to the year/month
+  // picker, which only drives the attendance/homework columns here.
+  const [coverageStatuses, setCoverageStatuses] = useState({});
+  useEffect(() => {
+    if (reportType !== 'monthly') return;
+    let cancelled = false;
+    Promise.all(
+      students.map((s) =>
+        getStudentPaymentStatus(s.id)
+          .then((st) => [s.id, st])
+          .catch(() => [s.id, null])
+      )
+    ).then((pairs) => !cancelled && setCoverageStatuses(Object.fromEntries(pairs)));
+    return () => {
+      cancelled = true;
+    };
+  }, [reportType, students]);
 
   const studentsById = useMemo(() => Object.fromEntries(students.map((s) => [s.id, s])), [students]);
   const filteredStudentIds = useMemo(() => {
@@ -65,16 +102,15 @@ export default function Reports() {
         return { columns: cols, rows: data };
       }
       case 'payments': {
-        const cols = ['Student', 'Year', 'Month', 'Fee', 'Paid', 'Paid date'];
-        const data = payments
+        const cols = ['Student', 'Date', 'Amount', 'Type', 'Method'];
+        const data = paymentRows
           .filter((p) => filteredStudentIds.has(p.student_id))
           .map((p) => [
-            studentsById[p.student_id]?.real_name || '—',
-            p.year,
-            p.month,
-            formatUZS(studentsById[p.student_id]?.monthly_fee),
-            p.paid ? 'Yes' : 'No',
-            p.paid_date || '—',
+            p.student_name || studentsById[p.student_id]?.real_name || '—',
+            (p.paid_at || '').slice(0, 10),
+            formatUZS(p.amount),
+            p.transaction_type,
+            p.payment_method || '—',
           ]);
         return { columns: cols, rows: data };
       }
@@ -116,20 +152,20 @@ export default function Reports() {
         return { columns: cols, rows: data };
       }
       case 'monthly': {
-        const cols = ['Student', 'Present', 'Late', 'Absent', 'Paid this month', 'Points'];
+        const cols = ['Student', 'Present', 'Late', 'Absent', 'Payment status', 'Points'];
         const activeFiltered = students.filter((s) => s.status === 'Active' && filteredStudentIds.has(s.id));
         const data = activeFiltered.map((s) => {
           const monthRecords = attendance.filter((a) => {
             const [y, m] = a.date.split('-').map(Number);
             return a.student_id === s.id && y === Number(year) && m === Number(month);
           });
-          const paid = payments.some((p) => p.student_id === s.id && p.year === Number(year) && p.month === Number(month) && p.paid);
+          const status = coverageStatuses[s.id]?.status;
           return [
             s.real_name,
             monthRecords.filter((a) => a.status === 'Present').length,
             monthRecords.filter((a) => a.status === 'Late').length,
             monthRecords.filter((a) => a.status === 'Absent').length,
-            paid ? 'Yes' : 'No',
+            STATUS_LABELS[status] || '—',
             Number(s.points || 0),
           ];
         });
@@ -139,7 +175,7 @@ export default function Reports() {
         return { columns: [], rows: [] };
     }
   }, [
-    reportType, students, payments, attendance, exams, examScores, homework, homeworkStatus,
+    reportType, students, paymentRows, coverageStatuses, attendance, exams, examScores, homework, homeworkStatus,
     certificates, filteredStudentIds, studentsById, fromDate, toDate, year, month,
   ]);
 
@@ -218,7 +254,7 @@ export default function Reports() {
             />
           </>
         ) : (
-          ['attendance', 'exams', 'certificates'].includes(reportType) && (
+          ['attendance', 'exams', 'certificates', 'payments'].includes(reportType) && (
             <>
               <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="input w-auto" />
               <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="input w-auto" />

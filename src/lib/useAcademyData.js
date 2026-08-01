@@ -105,7 +105,7 @@ export function useAcademyData() {
       try {
         const [s, p, a, le, la, ex, es, hw, hs, cert] = await Promise.all([
           db.listStudents(),
-          db.listPayments(),
+          db.listLegacyPaymentsForBackup(),
           db.listAttendance(),
           db.listLessons(),
           db.listLessonAttendance(),
@@ -314,20 +314,6 @@ export function useAcademyData() {
         return result;
       } catch (e) {
         setError('Import failed. Please try again.');
-        throw e;
-      }
-    },
-    [touchBackup]
-  );
-
-  const togglePayment = useCallback(
-    async (studentId, year, month, currentlyPaid) => {
-      try {
-        const updated = await db.setPaymentStatus(studentId, year, month, !currentlyPaid);
-        setPayments(updated);
-        touchBackup();
-      } catch (e) {
-        setError('Could not update payment. Please try again.');
         throw e;
       }
     },
@@ -714,7 +700,7 @@ export function useAcademyData() {
   const reloadAll = useCallback(async () => {
     const [s, p, a, le, la, ex, es, hw, hs, cert] = await Promise.all([
       db.listStudents(),
-      db.listPayments(),
+      db.listLegacyPaymentsForBackup(),
       db.listAttendance(),
       db.listLessons(),
       db.listLessonAttendance(),
@@ -782,7 +768,6 @@ export function useAcademyData() {
     bulkAwardStudentPoints,
     removeStudent,
     importStudents,
-    togglePayment,
     setAttendanceStatus,
     addLesson,
     editLesson,

@@ -2,12 +2,12 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, ChevronLeft, ChevronRight, Check, ShieldAlert, X, History, MessageSquare } from 'lucide-react';
+import { Search, ShieldAlert, X, History, MessageSquare } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { useAuth } from '../lib/AuthContext';
 import { LevelBadge } from '../components/Badge';
-import { formatUZS, MONTH_NAMES } from '../utils/format';
-import { daysUntilDue, formatDateOnly } from '../utils/date';
+import { formatUZS } from '../utils/format';
+import { formatDateOnly } from '../utils/date';
 import {
   getStudentPaymentStatus,
   getPaymentTimeline,
@@ -29,28 +29,50 @@ const TRANSACTION_TYPE_LABELS = {
   extra: 'Extra payment',
 };
 
-// One line, one color, per status - rather than separate status/outstanding/
-// next-due fields a reader has to piece together themselves. monthlyFee is
-// the student's own fee (not something get_student_payment_status returns) -
-// used only as the "due soon" amount, since the upcoming period is the
-// student's normal monthly fee in the overwhelming majority of cases.
+// Three concepts, deliberately kept separate rather than folded into one
+// sentence (business rule, confirmed against real students - see migration
+// 0068's follow-up):
+//   - deadlineLine: the student's recurring monthly deadline. Derived from
+//     current_period_start/current_period_end, which get_student_payment_status
+//     already computes by chaining billing_periods() from join_date - it is
+//     the calendar period "today" falls inside, entirely independent of
+//     whether/when this period's payment was made. Paying early or late
+//     never moves it; only the calendar does, one period at a time.
+//   - statusLine: is the student compliant right now, using status/
+//     outstanding/next_due_date exactly as before - unchanged.
+//   - paid_through_date (coverage) folds into statusLine only for the
+//     'paid' case, where it answers "which period does my payment actually
+//     reach" - it must never stand in for the deadline itself.
 function describeStatus(st, monthlyFee) {
-  if (!st) return { line: 'Loading…', tone: 'neutral' };
+  if (!st) return { deadlineLine: null, statusLine: 'Loading…', tone: 'neutral' };
+  const deadlineLine = st.current_period_end ? `Deadline: ${formatDueDate(st.current_period_end)}` : null;
+
   if (st.status === 'overdue') {
-    return { line: `Overdue since ${formatDueDate(st.next_due_date)} — ${formatUZS(st.outstanding)}`, tone: 'bad' };
+    // next_due_date here is the end of the specific closed, unpaid period -
+    // the missed deadline - which can differ from current_period_end (the
+    // recurring cycle's next occurrence, unaffected by the miss).
+    return { deadlineLine, statusLine: `Overdue since ${formatDueDate(st.next_due_date)} — ${formatUZS(st.outstanding)} unpaid`, tone: 'bad' };
   }
   if (st.status === 'due_soon') {
-    return { line: `Payment due on ${formatDueDate(st.next_due_date)} — ${formatUZS(st.next_amount_due ?? monthlyFee)}`, tone: 'warn' };
+    return { deadlineLine, statusLine: `Due soon — ${formatUZS(st.next_amount_due ?? monthlyFee)}`, tone: 'warn' };
   }
-  // "Paid" covers two different real situations: genuinely paid ahead, and
-  // never paid a thing but nothing's due yet either (a brand-new student).
-  // Same distinction already shipped on the student dashboard card
-  // (migration 0063) - kept in parity here rather than reintroducing the
-  // "Paid until December" style confusion this list already had fixed once.
-  if (Number(st.paid_to_date) === 0 && st.next_due_date) {
-    return { line: `First payment due ${formatDueDate(st.next_due_date)} — ${formatUZS(st.next_amount_due ?? monthlyFee)}`, tone: 'info' };
+  // Genuinely paid-ahead vs. never-paid-but-nothing-due-yet both return
+  // status='paid' (correct - neither owes anything right now), but they
+  // must not read the same way to a student who has never made a payment -
+  // same distinction shipped on the student dashboard card (migration 0063).
+  if (Number(st.paid_to_date) === 0) {
+    return { deadlineLine, statusLine: `No payment recorded yet — ${formatUZS(st.next_amount_due ?? monthlyFee)} due`, tone: 'info' };
   }
-  return { line: st.next_due_date ? `Paid until ${formatDueDate(st.next_due_date)}` : 'Paid', tone: 'good' };
+  // paid_through_date (migration 0068) is the end of the last period
+  // actually, fully covered by payment - distinct from the deadline above.
+  // A partial payment that doesn't fully cover even the current period
+  // leaves this null even though paid_to_date > 0.
+  if (st.paid_through_date) {
+    return { deadlineLine, statusLine: `Paid until ${formatDueDate(st.paid_through_date)}`, tone: 'good' };
+  }
+  const remaining = st.next_amount_due != null ? Math.max(0, Number(st.next_amount_due) - Number(st.paid_to_date)) : null;
+  const remainingText = remaining != null ? ` — ${formatUZS(remaining)} remaining` : '';
+  return { deadlineLine, statusLine: `Partial payment received — ${formatUZS(st.paid_to_date)}${remainingText}`, tone: 'info' };
 }
 
 const STATUS_DOT = { good: 'bg-active', warn: 'bg-amber-500', bad: 'bg-inactive', info: 'bg-levelA', neutral: 'bg-ink/20' };
@@ -104,18 +126,12 @@ function sortByKey(list, statuses, sortKey) {
 }
 
 export default function Payments() {
-  const { students, payments, togglePayment, error } = useAcademy();
+  const { students, error } = useAcademy();
   const { role, session } = useAuth();
   const isAdmin = role === 'administrator';
-  const today = new Date();
-  const curYear = today.getFullYear();
-  const curMonth = today.getMonth() + 1;
 
-  const [viewYear, setViewYear] = useState(curYear);
-  const [viewMonth, setViewMonth] = useState(curMonth);
   const [search, setSearch] = useState('');
   const [level, setLevel] = useState('');
-  const [quickFilter, setQuickFilter] = useState('all'); // all | today | soon | overdue
   const [statusFilter, setStatusFilter] = useState('all'); // STATUS_FILTERS key
   const [sortKey, setSortKey] = useState('name'); // SORT_OPTIONS key
 
@@ -123,9 +139,6 @@ export default function Payments() {
     () => [...students].filter((s) => s.status === 'Active').sort((a, b) => a.real_name.localeCompare(b.real_name)),
     [students]
   );
-
-  // ---------- New ledger-based system (stage 1: alongside the legacy
-  // section below, not replacing it - see that section's own comment) ----------
 
   const [newStatuses, setNewStatuses] = useState({}); // student id -> get_student_payment_status() row
   const [modalStudent, setModalStudent] = useState(null); // the one student whose record-payment/history modal is open
@@ -135,7 +148,6 @@ export default function Payments() {
   const [recordError, setRecordError] = useState('');
   const [recording, setRecording] = useState(false);
   const [recordSuccess, setRecordSuccess] = useState(null); // { nextDueDate } - shown until the modal closes or another save starts
-  const [showLegacy, setShowLegacy] = useState(false);
 
   // One RPC call per active student. Fine at today's roster size; if the
   // academy grows into the hundreds this should become a single batched
@@ -219,72 +231,13 @@ export default function Payments() {
       const [st, tl] = await Promise.all([getStudentPaymentStatus(studentId), getPaymentTimeline(studentId)]);
       setNewStatuses((prev) => ({ ...prev, [studentId]: st }));
       setTimelines((prev) => ({ ...prev, [studentId]: tl }));
-      setRecordSuccess({ nextDueDate: st.next_due_date });
+      setRecordSuccess({ paidThroughDate: st.paid_through_date });
     } catch (e) {
       setRecordError(e.message || String(e));
     } finally {
       setRecording(false);
     }
   }
-
-  // ---------- Legacy monthly boolean system (public.payments) - kept
-  // running as-is below, unmodified, for at least a couple of weeks
-  // alongside the section above while the new system earns trust. Remove
-  // once someone's actually used the new one for real monthly collection. ----------
-
-  const summaryMonth = quickFilter === 'all' ? { year: viewYear, month: viewMonth } : { year: curYear, month: curMonth };
-  const summaryRows = activeStudents.map((s) => {
-    const record = payments.find((p) => p.student_id === s.id && p.year === summaryMonth.year && p.month === summaryMonth.month);
-    return { student: s, paid: Boolean(record?.paid) };
-  });
-  const paidCount = summaryRows.filter((r) => r.paid).length;
-  const collected = summaryRows.filter((r) => r.paid).reduce((sum, r) => sum + Number(r.student.monthly_fee || 0), 0);
-  const expected = summaryRows.reduce((sum, r) => sum + Number(r.student.monthly_fee || 0), 0);
-
-  const rows = useMemo(() => {
-    let list = activeStudents;
-    if (search.trim()) {
-      const q = search.trim().toLowerCase();
-      list = list.filter((s) => s.real_name.toLowerCase().includes(q) || (s.english_name || '').toLowerCase().includes(q));
-    }
-    if (level) list = list.filter((s) => s.level === level);
-
-    const monthCtx = quickFilter === 'all' ? { year: viewYear, month: viewMonth } : { year: curYear, month: curMonth };
-
-    let mapped = list.map((s) => {
-      const record = payments.find((p) => p.student_id === s.id && p.year === monthCtx.year && p.month === monthCtx.month);
-      const paid = Boolean(record?.paid);
-      const due = daysUntilDue(s.payment_deadline);
-      const overdue = !paid && due < 0;
-      return { student: s, paid, due, overdue };
-    });
-
-    if (quickFilter === 'today') mapped = mapped.filter((r) => !r.paid && r.due === 0);
-    if (quickFilter === 'soon') mapped = mapped.filter((r) => !r.paid && r.due > 0 && r.due <= 7);
-    if (quickFilter === 'overdue') mapped = mapped.filter((r) => r.overdue);
-
-    return mapped;
-  }, [activeStudents, payments, search, level, quickFilter, viewYear, viewMonth, curYear, curMonth]);
-
-  const goPrevMonth = () => {
-    if (viewMonth === 1) {
-      setViewYear(viewYear - 1);
-      setViewMonth(12);
-    } else setViewMonth(viewMonth - 1);
-  };
-  const goNextMonth = () => {
-    if (viewMonth === 12) {
-      setViewYear(viewYear + 1);
-      setViewMonth(1);
-    } else setViewMonth(viewMonth + 1);
-  };
-
-  const quickFilters = [
-    { key: 'all', label: 'All' },
-    { key: 'today', label: 'Due today' },
-    { key: 'soon', label: 'Due in 7 days' },
-    { key: 'overdue', label: 'Overdue' },
-  ];
 
   if (!isAdmin) {
     return (
@@ -354,7 +307,7 @@ export default function Payments() {
           <div className="space-y-2">
             {displayStudents.map((s) => {
               const st = newStatuses[s.id];
-              const { line, tone } = describeStatus(st, s.monthly_fee);
+              const { deadlineLine, statusLine, tone } = describeStatus(st, s.monthly_fee);
               return (
                 <div key={s.id} className="flex items-center justify-between gap-3 rounded-xl bg-white p-3 shadow-card">
                   <div className="min-w-0">
@@ -364,8 +317,9 @@ export default function Payments() {
                     </div>
                     <div className="mt-1 flex items-center gap-1.5">
                       <span className={`h-2 w-2 flex-shrink-0 rounded-full ${STATUS_DOT[tone]}`} />
-                      <span className={`text-sm ${STATUS_TEXT[tone]}`}>{line}</span>
+                      <span className={`text-sm ${STATUS_TEXT[tone]}`}>{statusLine}</span>
                     </div>
+                    {deadlineLine && <p className="mt-0.5 text-xs text-ink/40">{deadlineLine}</p>}
                   </div>
                   <div className="flex flex-shrink-0 items-center gap-1">
                     <button
@@ -404,24 +358,28 @@ export default function Payments() {
 
             {(() => {
               const st = newStatuses[modalStudent.id];
-              const { line, tone } = describeStatus(st, modalStudent.monthly_fee);
+              const { statusLine, tone } = describeStatus(st, modalStudent.monthly_fee);
               return (
                 <div className="mb-4 grid grid-cols-2 gap-3 rounded-lg bg-paper p-3 text-sm">
                   <div className="col-span-2">
                     <p className="text-xs text-ink/50">Status</p>
                     <div className="mt-0.5 flex items-center gap-1.5">
                       <span className={`h-2 w-2 flex-shrink-0 rounded-full ${STATUS_DOT[tone]}`} />
-                      <span className={`font-semibold ${STATUS_TEXT[tone]}`}>{line}</span>
+                      <span className={`font-semibold ${STATUS_TEXT[tone]}`}>{statusLine}</span>
                     </div>
                   </div>
                   <div>
                     <p className="text-xs text-ink/50">Monthly fee</p>
                     <p className="font-semibold text-ink">{formatUZS(modalStudent.monthly_fee)}</p>
                   </div>
-                  {st?.next_due_date && (
+                  {/* Recurring monthly deadline - the calendar period "today"
+                      falls inside, unaffected by when/whether it's been paid.
+                      Deliberately not next_due_date, which is payment-gated
+                      and only matches this for an overdue student. */}
+                  {st?.current_period_end && (
                     <div>
-                      <p className="text-xs text-ink/50">{st.status === 'overdue' ? 'Overdue since' : 'Next payment due'}</p>
-                      <p className="font-semibold text-ink">{formatDueDate(st.next_due_date)}</p>
+                      <p className="text-xs text-ink/50">Payment deadline</p>
+                      <p className="font-semibold text-ink">{formatDueDate(st.current_period_end)}</p>
                     </div>
                   )}
                 </div>
@@ -431,8 +389,8 @@ export default function Payments() {
             {recordSuccess && (
               <div className="mb-3 rounded-lg bg-active/10 px-3 py-2 text-sm text-active">
                 <p className="font-semibold">✓ Payment recorded successfully.</p>
-                {recordSuccess.nextDueDate && (
-                  <p className="mt-0.5 text-xs">Next payment due: {formatDueDate(recordSuccess.nextDueDate)}</p>
+                {recordSuccess.paidThroughDate && (
+                  <p className="mt-0.5 text-xs">Covered through: {formatDueDate(recordSuccess.paidThroughDate)}</p>
                 )}
               </div>
             )}
@@ -522,102 +480,6 @@ export default function Payments() {
         </div>
       )}
 
-      <button
-        onClick={() => setShowLegacy((v) => !v)}
-        className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-ink/40 hover:text-ink/70"
-      >
-        <ChevronRight size={14} className={`transition-transform ${showLegacy ? 'rotate-90' : ''}`} />
-        Legacy payment history (old system, kept as a safety net)
-      </button>
-
-      {showLegacy && (
-        <>
-      <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <div className="rounded-xl bg-white p-3 text-center shadow-card">
-          <p className="text-xs text-ink/50">Paid</p>
-          <p className="text-xl font-bold text-active">{paidCount}</p>
-        </div>
-        <div className="rounded-xl bg-white p-3 text-center shadow-card">
-          <p className="text-xs text-ink/50">Unpaid</p>
-          <p className="text-xl font-bold text-inactive">{summaryRows.length - paidCount}</p>
-        </div>
-        <div className="rounded-xl bg-white p-3 text-center shadow-card">
-          <p className="text-xs text-ink/50">Collected</p>
-          <p className="text-sm font-bold text-brand-500 sm:text-base">{formatUZS(collected)}</p>
-        </div>
-        <div className="rounded-xl bg-white p-3 text-center shadow-card">
-          <p className="text-xs text-ink/50">Expected</p>
-          <p className="text-sm font-bold text-ink/70 sm:text-base">{formatUZS(expected)}</p>
-        </div>
-      </div>
-
-      <div className="mb-3 flex gap-1.5 overflow-x-auto">
-        {quickFilters.map((f) => (
-          <button
-            key={f.key}
-            onClick={() => setQuickFilter(f.key)}
-            className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold ${
-              quickFilter === f.key ? 'bg-brand-500 text-white' : 'bg-white text-ink/60 shadow-sm'
-            }`}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
-
-      {quickFilter === 'all' && (
-        <div className="mb-3 flex items-center justify-between rounded-xl bg-white p-2 shadow-card">
-          <button onClick={goPrevMonth} className="rounded-md p-1.5 text-ink/50 hover:bg-ink/5">
-            <ChevronLeft size={18} />
-          </button>
-          <p className="text-sm font-semibold text-ink">
-            {MONTH_NAMES[viewMonth - 1]} {viewYear}
-          </p>
-          <button onClick={goNextMonth} className="rounded-md p-1.5 text-ink/50 hover:bg-ink/5">
-            <ChevronRight size={18} />
-          </button>
-        </div>
-      )}
-
-      {rows.length === 0 ? (
-        <div className="rounded-xl bg-white p-10 text-center shadow-card">
-          <p className="font-display text-lg font-semibold text-ink">Nothing here</p>
-          <p className="mt-1 text-sm text-ink/50">No students match this filter right now.</p>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {rows.map(({ student: s, paid, overdue }) => (
-            <div key={s.id} className="flex items-center justify-between rounded-xl bg-white p-3 shadow-card">
-              <div>
-                <p className="font-semibold text-ink">{s.real_name}</p>
-                <div className="mt-1 flex flex-wrap items-center gap-2">
-                  <LevelBadge level={s.level} />
-                  <span className="text-xs text-ink/50">Due day {s.payment_deadline}</span>
-                  <span className="text-xs font-semibold text-ink/70">{formatUZS(s.monthly_fee)}</span>
-                  {overdue && (
-                    <span className="rounded-full border border-inactive/30 bg-inactive/10 px-1.5 py-0.5 text-[10px] font-bold text-inactive">
-                      OVERDUE
-                    </span>
-                  )}
-                </div>
-              </div>
-              <button
-                onClick={() =>
-                  togglePayment(s.id, quickFilter === 'all' ? viewYear : curYear, quickFilter === 'all' ? viewMonth : curMonth, paid)
-                }
-                className={`flex flex-shrink-0 items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold ${
-                  paid ? 'bg-active text-white' : 'bg-ink/5 text-ink/50'
-                }`}
-              >
-                {paid && <Check size={14} />}
-                {paid ? 'Paid' : 'Unpaid'}
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-        </>
-      )}
     </div>
   );
 }

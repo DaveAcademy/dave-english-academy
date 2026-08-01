@@ -163,6 +163,7 @@
   "v3PaymentHeadlineFirstDue": "📅 First payment due: {{date}}",
   "v3PaymentHeadlineDueSoon": "⚠️ Payment due: {{date}}",
   "v3PaymentHeadlineOverdue": "🔴 Overdue: Payment was due on {{date}}",
+  "v3PaymentHeadlinePartial": "🟡 Partial payment received — {{amount}}",
   "v3PaymentMonthlyFee": "Monthly fee",
   "v3PaymentNextDue": "Next payment date",
   "v3PaymentAmountToPay": "Amount to pay",
@@ -170,6 +171,7 @@
   "v3PaymentExplanationFirstDue": "Welcome! No payment has been recorded yet - here's your first payment date.",
   "v3PaymentExplanationDueSoon": "Your next payment is coming up soon.",
   "v3PaymentExplanationOverdue": "Your payment is overdue - please pay as soon as possible.",
+  "v3PaymentExplanationPartial": "Your payment doesn't fully cover the current period yet.",
 
   "insightTagMomentum": "Momentum",
   "insightTagAttention": "Attention",
