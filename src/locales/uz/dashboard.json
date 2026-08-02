@@ -164,6 +164,7 @@
   "v3PaymentHeadlineDueSoon": "⚠️ To'lov muddati: {{date}}",
   "v3PaymentHeadlineOverdue": "🔴 Muddati o'tgan: to'lov {{date}} da bo'lishi kerak edi",
   "v3PaymentHeadlinePartial": "🟡 Qisman to'lov qabul qilindi — {{amount}}",
+  "v3PaymentHeadlineCurrentUnpaid": "🟡 {{date}} gacha to'langan — joriy davr uchun hali to'lanmagan",
   "v3PaymentMonthlyFee": "Oylik to'lov",
   "v3PaymentNextDue": "Keyingi to'lov sanasi",
   "v3PaymentAmountToPay": "To'lash summasi",
@@ -172,6 +173,7 @@
   "v3PaymentExplanationDueSoon": "Keyingi to'lovingiz yaqinlashmoqda.",
   "v3PaymentExplanationOverdue": "To'lovingiz muddati o'tgan - iltimos, imkon qadar tezroq to'lang.",
   "v3PaymentExplanationPartial": "To'lovingiz hozirgi davrni to'liq qoplamaydi.",
+  "v3PaymentExplanationCurrentUnpaid": "Muddati o'tmagan, lekin joriy davr uchun hali hech narsa to'lanmagan.",
 
   "insightTagMomentum": "Yuksalish",
   "insightTagAttention": "Diqqat",

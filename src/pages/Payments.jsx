@@ -68,7 +68,23 @@ function describeStatus(st, monthlyFee) {
   // A partial payment that doesn't fully cover even the current period
   // leaves this null even though paid_to_date > 0.
   if (st.paid_through_date) {
-    return { deadlineLine, statusLine: `Paid until ${formatDueDate(st.paid_through_date)}`, tone: 'good' };
+    // paid_through_date can be a PAST period's end while status is still
+    // 'paid' (not overdue - the current period hasn't closed yet, so
+    // nothing's owed) - e.g. paid through Aug 1, current period is
+    // Aug1-Sep1, today is Aug 2. Flat green "Paid until Aug 1" reads as
+    // "all good" when really: last payment just ran out, nothing's been
+    // paid toward the period we're actually in. Distinguish that from
+    // genuinely paid ahead (paid_through_date reaches into/past the
+    // current period) rather than folding both into the same green line.
+    const coversCurrentPeriod = !st.current_period_end || st.paid_through_date >= st.current_period_end;
+    if (coversCurrentPeriod) {
+      return { deadlineLine, statusLine: `Paid until ${formatDueDate(st.paid_through_date)}`, tone: 'good' };
+    }
+    return {
+      deadlineLine,
+      statusLine: `Paid until ${formatDueDate(st.paid_through_date)} — current period not yet paid`,
+      tone: 'warn',
+    };
   }
   const remaining = st.next_amount_due != null ? Math.max(0, Number(st.next_amount_due) - Number(st.paid_to_date)) : null;
   const remainingText = remaining != null ? ` — ${formatUZS(remaining)} remaining` : '';
