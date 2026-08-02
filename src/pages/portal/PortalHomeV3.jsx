@@ -333,26 +333,19 @@ export default function PortalHomeV3() {
               // paid_through_date null despite paid_to_date > 0 - that's the
               // 'partial' case below, not 'paid'.
               const isPartial = paymentStatus.status === 'paid' && Number(paymentStatus.paid_to_date) > 0 && !paymentStatus.paid_through_date;
-              // paid_through_date can be a PAST period's end while status is
-              // still 'paid' (current period hasn't closed, nothing owed
-              // yet) - e.g. paid through Aug 1 while today is already
-              // inside the Aug1-Sep1 period. Distinguish "genuinely paid
-              // ahead" (covers into/past the current period) from "last
-              // payment just ran out" rather than showing both as the same
-              // all-clear headline.
-              const isCurrentUnpaid =
-                paymentStatus.status === 'paid' &&
-                paymentStatus.paid_through_date &&
-                paymentStatus.current_period_end &&
-                paymentStatus.paid_through_date < paymentStatus.current_period_end;
-              const kind = paymentStatus.status === 'overdue' ? 'overdue' : paymentStatus.status === 'due_soon' ? 'dueSoon' : isFirstPaymentDue ? 'firstDue' : isPartial ? 'partial' : isCurrentUnpaid ? 'currentUnpaid' : 'paid';
-              const date = kind === 'paid' || kind === 'currentUnpaid' ? formatDateOnly(paymentStatus.paid_through_date, dateLocale) : nextDueText;
+              // A paid_through_date that ends before current_period_end used
+              // to be handled here as a frontend-only "paid but current
+              // period unpaid" case - migration 0071 moved it into the
+              // backend (status='overdue' immediately, no grace until that
+              // period closes), so it's now just the ordinary overdue
+              // branch above like any other overdue student.
+              const kind = paymentStatus.status === 'overdue' ? 'overdue' : paymentStatus.status === 'due_soon' ? 'dueSoon' : isFirstPaymentDue ? 'firstDue' : isPartial ? 'partial' : 'paid';
+              const date = kind === 'paid' ? formatDateOnly(paymentStatus.paid_through_date, dateLocale) : nextDueText;
               const headlineKey = {
                 overdue: 'v3PaymentHeadlineOverdue',
                 dueSoon: 'v3PaymentHeadlineDueSoon',
                 firstDue: 'v3PaymentHeadlineFirstDue',
                 partial: 'v3PaymentHeadlinePartial',
-                currentUnpaid: 'v3PaymentHeadlineCurrentUnpaid',
                 paid: 'v3PaymentHeadlinePaid',
               }[kind];
               const explanationKey = {
@@ -360,10 +353,9 @@ export default function PortalHomeV3() {
                 dueSoon: 'v3PaymentExplanationDueSoon',
                 firstDue: 'v3PaymentExplanationFirstDue',
                 partial: 'v3PaymentExplanationPartial',
-                currentUnpaid: 'v3PaymentExplanationCurrentUnpaid',
                 paid: 'v3PaymentExplanationPaid',
               }[kind];
-              const headlineColor = { overdue: 'text-inactive', dueSoon: 'text-levelB', firstDue: 'text-levelA', partial: 'text-levelB', currentUnpaid: 'text-levelB', paid: 'text-active' }[kind];
+              const headlineColor = { overdue: 'text-inactive', dueSoon: 'text-levelB', firstDue: 'text-levelA', partial: 'text-levelB', paid: 'text-active' }[kind];
               // The exact amount of the specific period that's due - not an
               // approximation from monthly_fee, which would be wrong for a
               // prorated first payment. outstanding (not next_amount_due) is

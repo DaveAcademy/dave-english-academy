@@ -67,15 +67,14 @@ function classifyPayment(st, monthlyFee) {
     const remainingText = remaining != null ? ` — ${formatUZS(remaining)} remaining` : '';
     return { kind: 'partial', deadlineLine, statusLine: `Partial payment received — ${formatUZS(st.paid_to_date)}${remainingText}`, tone: 'info' };
   }
-  // paid_through_date always lands on a period boundary, so relative to
-  // the current period it's either strictly before it (the previous
-  // payment ran out and nothing's been paid toward the period we're
-  // actually in - not overdue yet since that period hasn't closed, but
-  // shouldn't read as a flat "all good" green) or at/after it (covers the
-  // current period, possibly with room to spare).
-  if (st.current_period_end && st.paid_through_date < st.current_period_end) {
-    return { kind: 'due_soon', deadlineLine, statusLine: `Paid until ${formatDueDate(st.paid_through_date)} — current period not yet paid`, tone: 'warn' };
-  }
+  // paid_through_date reaching before the current period's end used to be
+  // handled here as a frontend-only amber case - migration 0071 moved it
+  // into the backend itself (status='overdue' the moment paid_through_date
+  // passes with nothing paid toward the current period, no grace until
+  // that period closes), so it's now caught by the st.status === 'overdue'
+  // branch above like any other overdue student. Nothing left to special-
+  // case here; paid_through_date at this point is guaranteed >= current_period_end.
+  //
   // Backend status='due_soon' (next_due_date within DUE_SOON_DAYS) catches
   // "about to become overdue". This catches the milder but equally
   // actionable twin: coverage itself runs out within DUE_SOON_DAYS, even
