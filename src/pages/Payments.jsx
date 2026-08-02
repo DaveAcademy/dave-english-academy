@@ -29,66 +29,62 @@ const TRANSACTION_TYPE_LABELS = {
   extra: 'Extra payment',
 };
 
-// Three concepts, deliberately kept separate rather than folded into one
-// sentence (business rule, confirmed against real students - see migration
-// 0068's follow-up):
-//   - deadlineLine: the student's recurring monthly deadline. Derived from
-//     current_period_start/current_period_end, which get_student_payment_status
-//     already computes by chaining billing_periods() from join_date - it is
-//     the calendar period "today" falls inside, entirely independent of
-//     whether/when this period's payment was made. Paying early or late
-//     never moves it; only the calendar does, one period at a time.
-//   - statusLine: is the student compliant right now, using status/
-//     outstanding/next_due_date exactly as before - unchanged.
-//   - paid_through_date (coverage) folds into statusLine only for the
-//     'paid' case, where it answers "which period does my payment actually
-//     reach" - it must never stand in for the deadline itself.
-function describeStatus(st, monthlyFee) {
-  if (!st) return { deadlineLine: null, statusLine: 'Loading…', tone: 'neutral' };
+const DUE_SOON_DAYS = 5;
+
+// Whole calendar days from today to an ISO "YYYY-MM-DD" date, via Date.UTC
+// on both sides so it's not sensitive to the browser's local timezone.
+function daysFromToday(iso) {
+  const [y, m, d] = iso.split('-').map(Number);
+  const target = Date.UTC(y, m - 1, d);
+  const now = new Date();
+  const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.round((target - today) / 86400000);
+}
+
+// One classification, used for both the row/modal label AND the status
+// filter buttons - they used to read two different signals (this function
+// vs. matchesStatusFilter checking raw st.status) and could disagree,
+// which is exactly how "Due soon shows nothing" and "paid_through_date in
+// the past still reads green" both slipped through: a student could be in
+// a state neither concept flagged. See migration 0068's follow-up for
+// why paid_through_date/current_period_end/next_due_date are three
+// separate facts to begin with.
+//
+// kind is the bucket (drives both filtering and tone); deadlineLine/
+// statusLine are the two-line display described there.
+function classifyPayment(st, monthlyFee) {
+  if (!st) return { kind: 'loading', deadlineLine: null, statusLine: 'Loading…', tone: 'neutral' };
   const deadlineLine = st.current_period_end ? `Deadline: ${formatDueDate(st.current_period_end)}` : null;
 
   if (st.status === 'overdue') {
-    // next_due_date here is the end of the specific closed, unpaid period -
-    // the missed deadline - which can differ from current_period_end (the
-    // recurring cycle's next occurrence, unaffected by the miss).
-    return { deadlineLine, statusLine: `Overdue since ${formatDueDate(st.next_due_date)} — ${formatUZS(st.outstanding)} unpaid`, tone: 'bad' };
+    return { kind: 'overdue', deadlineLine, statusLine: `Overdue since ${formatDueDate(st.next_due_date)} — ${formatUZS(st.outstanding)} unpaid`, tone: 'bad' };
   }
-  if (st.status === 'due_soon') {
-    return { deadlineLine, statusLine: `Due soon — ${formatUZS(st.next_amount_due ?? monthlyFee)}`, tone: 'warn' };
-  }
-  // Genuinely paid-ahead vs. never-paid-but-nothing-due-yet both return
-  // status='paid' (correct - neither owes anything right now), but they
-  // must not read the same way to a student who has never made a payment -
-  // same distinction shipped on the student dashboard card (migration 0063).
   if (Number(st.paid_to_date) === 0) {
-    return { deadlineLine, statusLine: `No payment recorded yet — ${formatUZS(st.next_amount_due ?? monthlyFee)} due`, tone: 'info' };
+    return { kind: 'no_payment', deadlineLine, statusLine: `No payment recorded yet — ${formatUZS(st.next_amount_due ?? monthlyFee)} due`, tone: 'info' };
   }
-  // paid_through_date (migration 0068) is the end of the last period
-  // actually, fully covered by payment - distinct from the deadline above.
-  // A partial payment that doesn't fully cover even the current period
-  // leaves this null even though paid_to_date > 0.
-  if (st.paid_through_date) {
-    // paid_through_date can be a PAST period's end while status is still
-    // 'paid' (not overdue - the current period hasn't closed yet, so
-    // nothing's owed) - e.g. paid through Aug 1, current period is
-    // Aug1-Sep1, today is Aug 2. Flat green "Paid until Aug 1" reads as
-    // "all good" when really: last payment just ran out, nothing's been
-    // paid toward the period we're actually in. Distinguish that from
-    // genuinely paid ahead (paid_through_date reaches into/past the
-    // current period) rather than folding both into the same green line.
-    const coversCurrentPeriod = !st.current_period_end || st.paid_through_date >= st.current_period_end;
-    if (coversCurrentPeriod) {
-      return { deadlineLine, statusLine: `Paid until ${formatDueDate(st.paid_through_date)}`, tone: 'good' };
-    }
-    return {
-      deadlineLine,
-      statusLine: `Paid until ${formatDueDate(st.paid_through_date)} — current period not yet paid`,
-      tone: 'warn',
-    };
+  if (!st.paid_through_date) {
+    const remaining = st.next_amount_due != null ? Math.max(0, Number(st.next_amount_due) - Number(st.paid_to_date)) : null;
+    const remainingText = remaining != null ? ` — ${formatUZS(remaining)} remaining` : '';
+    return { kind: 'partial', deadlineLine, statusLine: `Partial payment received — ${formatUZS(st.paid_to_date)}${remainingText}`, tone: 'info' };
   }
-  const remaining = st.next_amount_due != null ? Math.max(0, Number(st.next_amount_due) - Number(st.paid_to_date)) : null;
-  const remainingText = remaining != null ? ` — ${formatUZS(remaining)} remaining` : '';
-  return { deadlineLine, statusLine: `Partial payment received — ${formatUZS(st.paid_to_date)}${remainingText}`, tone: 'info' };
+  // paid_through_date always lands on a period boundary, so relative to
+  // the current period it's either strictly before it (the previous
+  // payment ran out and nothing's been paid toward the period we're
+  // actually in - not overdue yet since that period hasn't closed, but
+  // shouldn't read as a flat "all good" green) or at/after it (covers the
+  // current period, possibly with room to spare).
+  if (st.current_period_end && st.paid_through_date < st.current_period_end) {
+    return { kind: 'due_soon', deadlineLine, statusLine: `Paid until ${formatDueDate(st.paid_through_date)} — current period not yet paid`, tone: 'warn' };
+  }
+  // Backend status='due_soon' (next_due_date within DUE_SOON_DAYS) catches
+  // "about to become overdue". This catches the milder but equally
+  // actionable twin: coverage itself runs out within DUE_SOON_DAYS, even
+  // though nothing is technically owed yet - e.g. paid exactly through
+  // the 4th and today is the 2nd. Same bucket, same nudge.
+  if (st.status === 'due_soon' || daysFromToday(st.paid_through_date) <= DUE_SOON_DAYS) {
+    return { kind: 'due_soon', deadlineLine, statusLine: `Paid until ${formatDueDate(st.paid_through_date)} — payment due soon`, tone: 'warn' };
+  }
+  return { kind: 'paid', deadlineLine, statusLine: `Paid until ${formatDueDate(st.paid_through_date)}`, tone: 'good' };
 }
 
 const STATUS_DOT = { good: 'bg-active', warn: 'bg-amber-500', bad: 'bg-inactive', info: 'bg-levelA', neutral: 'bg-ink/20' };
@@ -102,15 +98,13 @@ const STATUS_FILTERS = [
   { key: 'no_payment', label: 'No payment recorded' },
 ];
 
-// Filters against the same status/paid_to_date fields describeStatus
-// already reads - no separate business logic, just a display-side bucket.
-function matchesStatusFilter(st, filterKey) {
+// Filters against classifyPayment's kind - the exact same classification
+// the row/modal render, so a student can never appear in a filter bucket
+// that disagrees with what their own row says.
+function matchesStatusFilter(st, filterKey, monthlyFee) {
   if (filterKey === 'all') return true;
   if (!st) return false;
-  const neverPaid = Number(st.paid_to_date) === 0;
-  if (filterKey === 'no_payment') return neverPaid;
-  if (filterKey === 'paid') return st.status === 'paid' && !neverPaid;
-  return st.status === filterKey;
+  return classifyPayment(st, monthlyFee).kind === filterKey;
 }
 
 const SORT_OPTIONS = [
@@ -198,7 +192,7 @@ export default function Payments() {
   }, [activeStudents, search, level]);
 
   const displayStudents = useMemo(() => {
-    const byStatus = filteredStudents.filter((s) => matchesStatusFilter(newStatuses[s.id], statusFilter));
+    const byStatus = filteredStudents.filter((s) => matchesStatusFilter(newStatuses[s.id], statusFilter, s.monthly_fee));
     return sortByKey(byStatus, newStatuses, sortKey);
   }, [filteredStudents, newStatuses, statusFilter, sortKey]);
 
@@ -323,7 +317,7 @@ export default function Payments() {
           <div className="space-y-2">
             {displayStudents.map((s) => {
               const st = newStatuses[s.id];
-              const { deadlineLine, statusLine, tone } = describeStatus(st, s.monthly_fee);
+              const { deadlineLine, statusLine, tone } = classifyPayment(st, s.monthly_fee);
               return (
                 <div key={s.id} className="flex items-center justify-between gap-3 rounded-xl bg-white p-3 shadow-card">
                   <div className="min-w-0">
@@ -374,7 +368,7 @@ export default function Payments() {
 
             {(() => {
               const st = newStatuses[modalStudent.id];
-              const { statusLine, tone } = describeStatus(st, modalStudent.monthly_fee);
+              const { statusLine, tone } = classifyPayment(st, modalStudent.monthly_fee);
               return (
                 <div className="mb-4 grid grid-cols-2 gap-3 rounded-lg bg-paper p-3 text-sm">
                   <div className="col-span-2">
