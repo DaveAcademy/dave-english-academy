@@ -88,7 +88,7 @@ function classifyPayment(st, monthlyFee) {
 }
 
 const STATUS_DOT = { good: 'bg-active', warn: 'bg-amber-500', bad: 'bg-inactive', info: 'bg-levelA', neutral: 'bg-ink/20' };
-const STATUS_TEXT = { good: 'text-ink/70', warn: 'text-amber-700', bad: 'text-inactive', info: 'text-levelA', neutral: 'text-ink/40' };
+const STATUS_TEXT = { good: 'text-active', warn: 'text-amber-700', bad: 'text-inactive', info: 'text-levelA', neutral: 'text-ink/40' };
 
 const STATUS_FILTERS = [
   { key: 'all', label: 'All students' },
