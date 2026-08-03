@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Pencil, Trash2, MessageSquare, MessageSquareOff, Paperclip, Download, X, BookOpen } from 'lucide-react';
+import { Plus, Pencil, Trash2, MessageSquare, MessageSquareOff, Paperclip, Download, X } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { LevelBadge } from '../components/Badge';
 import { uploadAttachment, getAttachmentUrl } from '../lib/db';
@@ -230,30 +230,20 @@ export default function Lessons() {
           {sortedLessons.map((l) => (
             <div
               key={l.id}
-              onClick={() => setSelectedLessonId(l.id)}
-              className={`flex cursor-pointer items-center justify-between rounded-xl p-3 shadow-card ${
+              className={`flex items-center justify-between rounded-xl p-3 shadow-card ${
                 selectedLesson?.id === l.id ? 'bg-brand-500 text-white' : 'bg-white text-ink'
               }`}
             >
-              <div>
-                <p className="font-semibold">{l.topic}</p>
+              <Link to={`/lessons/${l.id}`} className="min-w-0 flex-1" title="Open Lesson Hub">
+                <p className="font-semibold hover:underline">{l.topic}</p>
                 <div className="mt-1 flex flex-wrap items-center gap-2 text-xs opacity-80">
                   {l.group_name && <span>{l.group_name}</span>}
                   {l.level && <LevelBadge level={l.level} />}
                   {l.discussion_enabled && <span className="rounded-full bg-active/20 px-1.5 py-0.5 text-[10px] font-bold">Discussion on</span>}
                   {l.pdf_path && <span className="rounded-full bg-active/20 px-1.5 py-0.5 text-[10px] font-bold">PDF attached</span>}
                 </div>
-              </div>
+              </Link>
               <div className="flex flex-shrink-0 items-center gap-1">
-                <Link
-                  to={`/lessons/${l.id}`}
-                  onClick={(e) => e.stopPropagation()}
-                  className={`rounded-md p-1.5 ${selectedLesson?.id === l.id ? 'text-white/80 hover:bg-white/10' : 'text-ink/40 hover:bg-ink/5'}`}
-                  aria-label="Open Lesson Hub"
-                  title="Open Lesson Hub"
-                >
-                  <BookOpen size={15} />
-                </Link>
                 {l.pdf_path && (
                   <button
                     onClick={(e) => {

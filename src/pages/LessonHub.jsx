@@ -30,6 +30,25 @@ import { useAcademy } from '../lib/AcademyDataContext';
 import { LevelBadge } from '../components/Badge';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { uploadAttachment, getAttachmentUrl, listLessonVocabulary } from '../lib/db';
+import HomeworkGradingRoster from '../components/HomeworkGradingRoster';
+import ExamGradingRoster from '../components/ExamGradingRoster';
+
+// LessonHub doesn't use i18n elsewhere (see file header - all copy here is
+// plain English), so the grading rosters get the same plain labels inline
+// rather than introducing a translation namespace for two cards.
+const GRADE_LABELS = {
+  needsGrading: 'Needs grading',
+  notSubmitted: 'Not submitted',
+  studentSubmissionDefault: 'Submission',
+  scorePlaceholder: 'Score',
+  feedbackPlaceholder: 'Feedback (optional)',
+  submitted: 'Submitted',
+  graded: 'Graded',
+  notGraded: 'Not graded',
+  studentAnswerDefault: 'Answer',
+};
+const gradeT = (key, opts) => (key === 'imageN' ? `Image ${opts?.n}` : GRADE_LABELS[key] ?? key);
+const HW_STATUS_LABELS = { Assigned: 'Assigned', Submitted: 'Submitted', Graded: 'Graded' };
 
 function HubCard({ icon: Icon, title, action, children }) {
   return (
@@ -55,8 +74,8 @@ export default function LessonHub() {
   const isStudent = role === 'student';
   const {
     lessons, students, editLesson,
-    homework, homeworkStatus, addHomework, editHomework, removeHomework, submitMyHomeworkFiles,
-    exams, examScores, addExam, editExam, removeExam, submitMyExamAnswer,
+    homework, homeworkStatus, homeworkSubmissionFiles, addHomework, editHomework, removeHomework, submitMyHomeworkFiles, setHomeworkStatusForStudent,
+    exams, examScores, addExam, editExam, removeExam, submitMyExamAnswer, setExamScoreForStudent,
   } = useAcademy();
 
   const lesson = lessons.find((l) => l.id === lessonId);
@@ -132,6 +151,8 @@ export default function LessonHub() {
     setDeletingHomework(null);
   };
   const myHwStatus = (homeworkId) => homeworkStatus.find((s) => s.homework_id === homeworkId && s.student_id === me?.id);
+  const myHwFilesCount = (homeworkId) =>
+    homeworkSubmissionFiles.filter((f) => f.homework_id === homeworkId && f.student_id === me?.id).length;
   const handleHwFilePick = async (homeworkId, file) => {
     if (!file || !me) return;
     setHwUploading(homeworkId);
@@ -212,6 +233,47 @@ export default function LessonHub() {
       .finally(() => { if (!cancelled) setVocabLoading(false); });
     return () => { cancelled = true; };
   }, [lessonId]);
+
+  // Roster = active students at the lesson's level, same convention already
+  // used by Attendance.jsx and Exams.jsx's grading roster (level-based, not
+  // group_name - group_name is display-only metadata elsewhere in the app).
+  // Attendance marking itself lives on Attendance.jsx only (single source
+  // of truth) - lessonRoster here is only for the grading rosters below.
+  const lessonRoster = useMemo(
+    () =>
+      [...students]
+        .filter((s) => s.status === 'Active')
+        .filter((s) => !lesson?.level || s.level === lesson.level)
+        .sort((a, b) => a.real_name.localeCompare(b.real_name)),
+    [students, lesson]
+  );
+
+  // --- Grading (teacher-only, inline per lesson item, collapsed by
+  // default - reuses the same roster components/setters as Homework.jsx
+  // and Exams.jsx so grading logic lives in exactly one place). ---
+  const [expandedGrading, setExpandedGrading] = useState({}); // { [`hw-${id}` | `ex-${id}`]: boolean }
+  const toggleGrading = (key) => setExpandedGrading((prev) => ({ ...prev, [key]: !prev[key] }));
+  const handleOpenAnswerFile = async (path) => {
+    const url = await getAttachmentUrl(path);
+    if (url) window.open(url, '_blank', 'noopener');
+  };
+  const hwStatusOf = (homeworkId, studentId) =>
+    homeworkStatus.find((s) => s.homework_id === homeworkId && s.student_id === studentId) || {
+      status: 'Assigned', score: null, feedback: null, answer_file_url: null, answer_file_name: null,
+    };
+  const hwFilesOf = (homeworkId, studentId) =>
+    homeworkSubmissionFiles.filter((f) => f.homework_id === homeworkId && f.student_id === studentId).sort((a, b) => a.position - b.position);
+  const hwGradingStateOf = (homeworkId, studentId) => {
+    const current = hwStatusOf(homeworkId, studentId);
+    if (current.score != null) return 'graded';
+    if (current.answer_file_url || hwFilesOf(homeworkId, studentId).length > 0) return 'needsGrading';
+    return 'notSubmitted';
+  };
+  const hwSubmittedCount = (homeworkId) =>
+    lessonRoster.filter((s) => hwGradingStateOf(homeworkId, s.id) !== 'notSubmitted').length;
+  const examAnswerOf = (examId, studentId) => examScores.find((s) => s.exam_id === examId && s.student_id === studentId) || {};
+  const examSubmittedCount = (examId) =>
+    lessonRoster.filter((s) => !!examAnswerOf(examId, s.id).answer_file_url).length;
 
   // --- Notes ---
   const [notesEditing, setNotesEditing] = useState(false);
@@ -350,7 +412,7 @@ export default function LessonHub() {
                   {isStudent && (
                     <div className="mt-2 flex flex-wrap items-center gap-2">
                       <span className="rounded-full bg-ink/5 px-2 py-0.5 text-[10px] font-bold text-ink/40">
-                        {graded ? 'Graded' : status?.answer_file_url ? 'Awaiting grading' : 'Not submitted'}
+                        {graded ? 'Graded' : myHwFilesCount(h.id) > 0 ? 'Awaiting grading' : 'Not submitted'}
                       </span>
                       {status?.feedback && <span className="text-xs text-ink/60">{status.feedback}</span>}
                       {!graded && (
@@ -373,7 +435,37 @@ export default function LessonHub() {
           </div>
         )}
         {!isStudent && lessonHomework.length > 0 && (
-          <Link to="/homework" className="mt-3 inline-block text-xs font-semibold text-ink/50 hover:underline">Manage grading &rarr;</Link>
+          <div className="mt-3 space-y-2 border-t border-ink/10 pt-3">
+            {lessonHomework.map((h) => {
+              const key = `hw-${h.id}`;
+              const expanded = !!expandedGrading[key];
+              return (
+                <div key={key}>
+                  <button
+                    onClick={() => toggleGrading(key)}
+                    className="flex w-full items-center justify-between rounded-lg px-1 py-1 text-xs font-semibold text-ink/60 hover:text-ink"
+                  >
+                    <span>{h.title} &middot; {hwSubmittedCount(h.id)}/{lessonRoster.length} submissions</span>
+                    <span className="text-brand-500">{expanded ? 'Hide grading ▲' : 'Grade ▼'}</span>
+                  </button>
+                  {expanded && (
+                    <div className="mt-2">
+                      <HomeworkGradingRoster
+                        students={lessonRoster}
+                        statusOf={(studentId) => hwStatusOf(h.id, studentId)}
+                        filesOf={(studentId) => hwFilesOf(h.id, studentId)}
+                        gradingStateOf={(studentId) => hwGradingStateOf(h.id, studentId)}
+                        onOpenFile={handleOpenAnswerFile}
+                        onSetStatus={(studentId, status, score, feedback) => setHomeworkStatusForStudent(h.id, studentId, status, score, feedback)}
+                        statusLabels={HW_STATUS_LABELS}
+                        t={gradeT}
+                      />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         )}
       </HubCard>
 
@@ -486,7 +578,35 @@ export default function LessonHub() {
           </div>
         )}
         {!isStudent && lessonQuizzes.length > 0 && (
-          <Link to="/exams" className="mt-3 inline-block text-xs font-semibold text-ink/50 hover:underline">Manage grading &rarr;</Link>
+          <div className="mt-3 space-y-2 border-t border-ink/10 pt-3">
+            {lessonQuizzes.map((ex) => {
+              const key = `ex-${ex.id}`;
+              const expanded = !!expandedGrading[key];
+              return (
+                <div key={key}>
+                  <button
+                    onClick={() => toggleGrading(key)}
+                    className="flex w-full items-center justify-between rounded-lg px-1 py-1 text-xs font-semibold text-ink/60 hover:text-ink"
+                  >
+                    <span>{ex.title} &middot; {examSubmittedCount(ex.id)}/{lessonRoster.length} submissions</span>
+                    <span className="text-brand-500">{expanded ? 'Hide grading ▲' : 'Grade ▼'}</span>
+                  </button>
+                  {expanded && (
+                    <div className="mt-2">
+                      <ExamGradingRoster
+                        examMaxScore={ex.max_score}
+                        students={lessonRoster}
+                        answerOf={(studentId) => examAnswerOf(ex.id, studentId)}
+                        onOpenFile={handleOpenAnswerFile}
+                        onSetScore={(studentId, score, feedback) => setExamScoreForStudent(ex.id, studentId, score, feedback)}
+                        t={gradeT}
+                      />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         )}
       </HubCard>
 
