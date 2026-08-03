@@ -1,25 +1,60 @@
 // MyProgress.jsx
 
-import { useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CheckCircle2, Clock, XCircle } from 'lucide-react';
+import { CheckCircle2, Clock, XCircle, Star, Trophy, CalendarCheck, FileCheck2, BookOpen } from 'lucide-react';
 import { useAcademy } from '../../lib/AcademyDataContext';
+import { getLeaderboard } from '../../lib/db';
+import { formatWeekdayDate } from '../../utils/date';
+import { attendanceRate } from '../../utils/attendance';
+import { calculateLevel } from '../../utils/level';
+import { computeBadges } from '../../utils/badges';
+import StatCard from '../../components/StatCard';
+import Panel from '../../components/Panel';
+import SectionLabel from '../../components/SectionLabel';
+import StatusPill from '../../components/StatusPill';
+import BadgeShelf from '../../components/BadgeShelf';
 
 const STATUS_ICON = { Present: CheckCircle2, Late: Clock, Absent: XCircle };
 const STATUS_COLOR = { Present: 'text-active', Late: 'text-levelB', Absent: 'text-inactive' };
+const HOMEWORK_TONE = { Assigned: 'watch', Submitted: 'info', Graded: 'good' };
 
 export default function MyProgress() {
-  const { t } = useTranslation(['portal', 'attendance', 'dashboard']);
-  const { students, lessons, lessonAttendance, exams, examScores } = useAcademy();
+  const { t, i18n } = useTranslation(['portal', 'attendance', 'dashboard']);
+  const dateLocale = i18n.language === 'uz' ? 'uz' : 'en-US';
+  const { students, attendance, homework, homeworkStatus, exams, examScores } = useAcademy();
   const me = students[0];
+  const [leaderboard, setLeaderboard] = useState(null);
 
-  const attendanceRows = useMemo(() => {
-    const lessonsById = Object.fromEntries(lessons.map((l) => [l.id, l]));
-    return lessonAttendance
-      .map((a) => ({ ...a, lesson: lessonsById[a.lesson_id] }))
-      .filter((a) => a.lesson)
-      .sort((a, b) => new Date(b.lesson.scheduled_at) - new Date(a.lesson.scheduled_at));
-  }, [lessonAttendance, lessons]);
+  // Same get_leaderboard() call and sort PortalHomeV3's hero card uses, so
+  // the rank/points shown here always agree with the Dashboard - not a
+  // second, differently-scoped ranking (get_group_leaderboard) that could
+  // disagree with what the student already sees there.
+  useEffect(() => {
+    let cancelled = false;
+    getLeaderboard()
+      .then((rows) => !cancelled && setLeaderboard([...(rows || [])].sort((a, b) => b.points - a.points || a.real_name.localeCompare(b.real_name))))
+      .catch(() => !cancelled && setLeaderboard([]));
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const { points, rank } = useMemo(() => {
+    if (!me || !leaderboard) return { points: 0, rank: null };
+    const idx = leaderboard.findIndex((r) => r.student_id === me.id);
+    return { points: leaderboard[idx]?.points ?? 0, rank: idx >= 0 ? idx + 1 : null };
+  }, [leaderboard, me]);
+
+  // Real attendance records (see Attendance.jsx / attendance table) - the
+  // same source PortalHomeV3's attendance stat reads, not the never-written
+  // lesson_attendance table this page used to (mis)read.
+  const attendanceRows = useMemo(() => [...attendance].sort((a, b) => new Date(b.date) - new Date(a.date)), [attendance]);
+  const attendedCount = attendanceRows.filter((a) => a.status !== 'Absent').length;
+  // Present=1/Late=0.5/Absent=0 - the same shared formula the Dashboard and
+  // Attendance pages use (utils/attendance.js), so this percentage always
+  // matches what's shown there rather than a simpler present-count ratio.
+  const attendancePct = attendanceRate(attendanceRows);
 
   const examRows = useMemo(() => {
     const examsById = Object.fromEntries(exams.map((e) => [e.id, e]));
@@ -29,7 +64,54 @@ export default function MyProgress() {
       .sort((a, b) => new Date(b.exam.exam_date) - new Date(a.exam.exam_date));
   }, [examScores, exams]);
 
-  const attendedCount = attendanceRows.filter((a) => a.status !== 'Absent').length;
+  const examAvg = useMemo(() => {
+    const scored = examScores.filter((s) => s.score != null);
+    return scored.length > 0 ? Math.round(scored.reduce((sum, s) => sum + Number(s.score), 0) / scored.length) : null;
+  }, [examScores]);
+
+  // Improvement indicator: latest two exams, normalized to a percent of
+  // each exam's own max_score so exams with different point totals stay
+  // comparable - a real delta, not an invented one.
+  const examTrend = useMemo(() => {
+    if (examRows.length < 2) return null;
+    const pct = (row) => (row.exam.max_score ? (Number(row.score) / row.exam.max_score) * 100 : null);
+    const latest = pct(examRows[0]);
+    const previous = pct(examRows[1]);
+    if (latest == null || previous == null) return null;
+    const delta = Math.round(latest - previous);
+    if (delta === 0) return { direction: 'flat' };
+    return { direction: delta > 0 ? 'up' : 'down', delta: Math.abs(delta) };
+  }, [examRows]);
+
+  // Same scoping rule as PortalHomeV3/Homework.jsx: homework assigned to
+  // the student's level (or to everyone, when level is unset).
+  const homeworkRows = useMemo(() => {
+    const myHomework = me ? homework.filter((h) => !h.level || h.level === me.level) : [];
+    const statusById = Object.fromEntries(homeworkStatus.map((h) => [h.homework_id, h]));
+    return myHomework
+      .map((h) => ({ ...h, statusRow: statusById[h.id] }))
+      .sort((a, b) => new Date(b.due_date) - new Date(a.due_date));
+  }, [homework, homeworkStatus, me]);
+
+  const homeworkStats = useMemo(() => {
+    const total = homeworkRows.length;
+    const completed = homeworkRows.filter((h) => h.statusRow?.status === 'Submitted' || h.statusRow?.status === 'Graded').length;
+    return { total, completed, rate: total > 0 ? Math.round((completed / total) * 100) : null };
+  }, [homeworkRows]);
+
+  const badges = useMemo(
+    () =>
+      computeBadges({
+        attendanceRate: attendancePct,
+        attendanceStreak: 0,
+        homeworkTotal: homeworkStats.total,
+        homeworkDoneRate: homeworkStats.rate,
+        examAvg,
+        lessonsCompleted: 0,
+        rank,
+      }),
+    [attendancePct, homeworkStats, examAvg, rank]
+  );
 
   if (!me) {
     return (
@@ -44,23 +126,35 @@ export default function MyProgress() {
       <header className="mb-6">
         <h1 className="font-display text-2xl font-bold text-ink">{t('portal:myProgressTitle')}</h1>
         <p className="mt-1 text-sm text-ink/50">
-          {t('portal:attendedOfLessons', { count: attendedCount, total: attendanceRows.length })}
+          {t('portal:attendedOfDays', { count: attendedCount, total: attendanceRows.length })}
         </p>
       </header>
 
-      <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-ink/50">{t('portal:lessonAttendance')}</h2>
+      <SectionLabel>{t('portal:progressSummaryTitle')}</SectionLabel>
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
+        <StatCard label={t('portal:progressLevelLabel')} value={`LV${calculateLevel(points)}`} tone="brand" icon={Star} />
+        <StatCard label={t('nav:attendance')} value={attendancePct == null ? '—' : `${attendancePct}%`} tone="success" icon={CalendarCheck} />
+        <StatCard label={t('dashboard:examAverage')} value={examAvg == null ? '—' : `${examAvg}%`} tone="info" icon={FileCheck2} />
+        <StatCard label={t('dashboard:homework')} value={homeworkStats.rate == null ? '—' : `${homeworkStats.rate}%`} tone="warning" icon={BookOpen} />
+        <StatCard label={t('dashboard:myPoints')} value={points} tone="brand" icon={Star} />
+        <StatCard label={t('dashboard:myRank')} value={rank ? `#${rank}` : '—'} tone="success" icon={Trophy} />
+      </div>
+
+      <SectionLabel>{t('dashboard:achievementsTitle')}</SectionLabel>
+      <div className="mb-6">
+        <BadgeShelf badges={badges} />
+      </div>
+
+      <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-ink/50">{t('portal:attendanceHistory')}</h2>
       {attendanceRows.length === 0 ? (
-        <div className="mb-6 rounded-xl bg-white p-6 text-center text-sm text-ink/50 shadow-card">{t('portal:noLessonsRecorded')}</div>
+        <div className="mb-6 rounded-xl bg-white p-6 text-center text-sm text-ink/50 shadow-card">{t('portal:noAttendanceRecorded')}</div>
       ) : (
         <div className="mb-6 space-y-2">
           {attendanceRows.map((a) => {
             const Icon = STATUS_ICON[a.status];
             return (
               <div key={a.id} className="flex items-center justify-between rounded-xl bg-white p-3 shadow-card">
-                <div>
-                  <p className="font-semibold text-ink">{a.lesson.topic}</p>
-                  <p className="text-xs text-ink/50">{new Date(a.lesson.scheduled_at).toLocaleDateString()}</p>
-                </div>
+                <p className="font-semibold text-ink">{formatWeekdayDate(new Date(a.date), dateLocale)}</p>
                 <span className={`flex items-center gap-1 text-sm font-semibold ${STATUS_COLOR[a.status]}`}>
                   <Icon size={16} /> {t(`attendance:${a.status.toLowerCase()}`)}
                 </span>
@@ -70,20 +164,56 @@ export default function MyProgress() {
         </div>
       )}
 
-      <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-ink/50">{t('portal:examScores')}</h2>
+      <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-ink/50">{t('portal:homeworkProgressTitle')}</h2>
+      <Panel title={t('portal:recentHomeworkTitle')} action={<span className="text-xs font-semibold text-ink/50">{t('portal:homeworkCompletedOfTotal', { completed: homeworkStats.completed, total: homeworkStats.total })}</span>}>
+        {homeworkRows.length === 0 ? (
+          <p className="text-sm text-ink/50">{t('dashboard:noHomeworkAssignedYet')}</p>
+        ) : (
+          <div className="space-y-2">
+            {homeworkRows.slice(0, 5).map((h) => {
+              const status = h.statusRow?.status || 'Assigned';
+              return (
+                <div key={h.id} className="rounded-lg border border-ink/[0.06] p-2.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-semibold text-ink">{h.title}</p>
+                    <StatusPill tone={HOMEWORK_TONE[status]}>{t(`dashboard:${status === 'Assigned' ? 'assigned' : status === 'Submitted' ? 'awaitingSubmission' : 'graded'}`)}</StatusPill>
+                  </div>
+                  {h.statusRow?.feedback && (
+                    <p className="mt-1 text-xs text-ink/50">{t('portal:teacherFeedbackLabel')}: {h.statusRow.feedback}</p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </Panel>
+
+      <h2 className="mb-3 mt-6 text-sm font-bold uppercase tracking-wide text-ink/50">{t('portal:examScores')}</h2>
+      {examTrend && (
+        <p className="mb-3 text-sm text-ink/60">
+          {examTrend.direction === 'flat'
+            ? t('portal:examTrendSame')
+            : examTrend.direction === 'up'
+              ? t('portal:examTrendUp', { delta: examTrend.delta })
+              : t('portal:examTrendDown', { delta: examTrend.delta })}
+        </p>
+      )}
       {examRows.length === 0 ? (
         <div className="rounded-xl bg-white p-6 text-center text-sm text-ink/50 shadow-card">{t('portal:noExamScoresYet')}</div>
       ) : (
         <div className="space-y-2">
           {examRows.map((s) => (
-            <div key={s.id} className="flex items-center justify-between rounded-xl bg-white p-3 shadow-card">
-              <div>
-                <p className="font-semibold text-ink">{s.exam.title}</p>
-                <p className="text-xs text-ink/50">{s.exam.exam_date}</p>
+            <div key={s.id} className="rounded-xl bg-white p-3 shadow-card">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-semibold text-ink">{s.exam.title}</p>
+                  <p className="text-xs text-ink/50">{s.exam.exam_date}</p>
+                </div>
+                <p className="text-sm font-bold text-brand-500">
+                  {s.score} / {s.exam.max_score}
+                </p>
               </div>
-              <p className="text-sm font-bold text-brand-500">
-                {s.score} / {s.exam.max_score}
-              </p>
+              {s.feedback && <p className="mt-1 text-xs text-ink/50">{t('portal:teacherFeedbackLabel')}: {s.feedback}</p>}
             </div>
           ))}
         </div>
