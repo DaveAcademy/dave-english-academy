@@ -48,3 +48,16 @@ export async function isSetupComplete() {
   if (error) throw error;
   return data === true;
 }
+
+// Re-verifies the current password (defends against an unattended/shared
+// session), then updates it. Signs out afterward so the new password must
+// be used on the next login.
+export async function changePassword({ email, currentPassword, newPassword }) {
+  const { error: reauthError } = await supabase.auth.signInWithPassword({ email, password: currentPassword });
+  if (reauthError) throw Object.assign(new Error('Current password is incorrect.'), { code: 'wrong_current_password' });
+
+  const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+  if (updateError) throw Object.assign(new Error('Could not update password.'), { code: 'update_failed' });
+
+  await signOut();
+}

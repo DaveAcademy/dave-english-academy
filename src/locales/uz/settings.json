@@ -24,5 +24,15 @@
   "enableNotifications": "Xabar bildirishnomalarini yoqish",
   "notificationsUnsupported": "Brauzeringiz bildirishnomalarni qo'llab-quvvatlamaydi.",
   "notificationsBlocked": "Bildirishnomalar brauzer sozlamalarida bloklangan. Buni yoqish uchun ushbu sayt uchun ruxsat bering.",
-  "notificationsEnabled": "Bildirishnomalar yoqildi."
+  "notificationsEnabled": "Bildirishnomalar yoqildi.",
+  "changePassword": "Parolni o'zgartirish",
+  "changePasswordDesc": "Parolingizni o'zgartirgandan so'ng tizimdan chiqasiz, shuning uchun yangi parol bilan qayta kiring.",
+  "currentPassword": "Joriy parol",
+  "newPassword": "Yangi parol",
+  "confirmNewPassword": "Yangi parolni tasdiqlang",
+  "changingPassword": "O'zgartirilmoqda...",
+  "passwordTooShort": "Yangi parol kamida {{count}} belgidan iborat bo'lishi kerak.",
+  "passwordsDontMatch": "Yangi parollar mos kelmadi.",
+  "passwordChangeFailed": "Parolni o'zgartirib bo'lmadi. Joriy parolingizni tekshirib, qayta urinib ko'ring.",
+  "wrongCurrentPassword": "Joriy parol noto'g'ri."
 }

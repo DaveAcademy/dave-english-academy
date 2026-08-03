@@ -24,5 +24,15 @@
   "enableNotifications": "Enable message notifications",
   "notificationsUnsupported": "Your browser doesn't support notifications.",
   "notificationsBlocked": "Notifications are blocked in your browser settings. Allow them for this site to turn this on.",
-  "notificationsEnabled": "Notifications enabled."
+  "notificationsEnabled": "Notifications enabled.",
+  "changePassword": "Change password",
+  "changePasswordDesc": "You'll be signed out after changing your password, so sign back in with the new one.",
+  "currentPassword": "Current password",
+  "newPassword": "New password",
+  "confirmNewPassword": "Confirm new password",
+  "changingPassword": "Changing...",
+  "passwordTooShort": "New password must be at least {{count}} characters.",
+  "passwordsDontMatch": "New passwords don't match.",
+  "passwordChangeFailed": "Could not change your password. Check your current password and try again.",
+  "wrongCurrentPassword": "Current password is incorrect."
 }

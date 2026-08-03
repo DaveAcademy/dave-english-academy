@@ -9,6 +9,7 @@ import { useAuth } from '../lib/AuthContext';
 import { signOut } from '../lib/auth';
 import { setLanguage } from '../i18n';
 import { isChatNotificationsEnabled, setChatNotificationsEnabled } from '../lib/notificationPrefs';
+import ChangePasswordForm from '../components/settings/ChangePasswordForm';
 import CreateUserForm from '../components/admin/CreateUserForm';
 import BulkCreateStudentAccounts from '../components/admin/BulkCreateStudentAccounts';
 import TeacherGroupAssignments from '../components/admin/TeacherGroupAssignments';
@@ -108,6 +109,10 @@ export default function Settings() {
           <LogOut size={16} /> {t('signOut')}
         </button>
       </section>
+
+      <div className="mb-4">
+        <ChangePasswordForm />
+      </div>
 
       <section className="mb-4 rounded-xl bg-white p-5 shadow-card">
         <div className="mb-1 flex items-center gap-2">
