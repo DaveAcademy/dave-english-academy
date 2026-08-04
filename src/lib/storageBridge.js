@@ -394,6 +394,51 @@ export async function getPaymentReminderCandidates() {
   return data;
 }
 
+// Test mode only - always routes to the admin's own Telegram
+// (TELEGRAM_TEST_CHAT_ID on the edge function), never the student, and
+// never writes a payment_reminders row.
+export async function sendTestReminder(studentId) {
+  const { data, error } = await supabase.functions.invoke('send-payment-reminder', {
+    body: { student_id: studentId, test: true },
+  });
+  if (error) throw error;
+  return data;
+}
+
+// Real send - one Telegram message per student id, delivered to that
+// student's own telegram_chat_id. Only call this after the admin has
+// explicitly confirmed the recipient list (see Reminders.jsx's
+// confirmation modal) - there is no further confirmation step past this
+// call. Returns { success, results: [{ student_id, status, ... }] }.
+export async function sendPaymentReminders(studentIds) {
+  const { data, error } = await supabase.functions.invoke('send-payment-reminder', {
+    body: { student_ids: studentIds },
+  });
+  if (error) throw error;
+  return data;
+}
+
+// Full attempt log (migration 0086) - sent AND failed rows, independent
+// of a student's current candidate status. Filtered client-side in
+// Reminders.jsx (same pattern as Reports.jsx) since the table is small.
+export async function getPaymentReminderHistory() {
+  const { data, error } = await supabase
+    .from('payment_reminders')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+// Resolves payment_reminders.sent_by (a profile id) to a display name -
+// profiles_select_admin_all (migration 0003) already lets an admin read
+// every profile, so this is a plain select, no new RPC/policy needed.
+export async function getAdminProfiles() {
+  const { data, error } = await supabase.from('profiles').select('id, full_name').eq('role', 'administrator');
+  if (error) throw error;
+  return data;
+}
+
 // Admin-only visibility into the data-quality issues the 0057 backfill
 // surfaced (payments before join_date, zero fees, large advance credit) -
 // see migration 0059's comments. Read-only, changes nothing.
@@ -618,26 +663,6 @@ export async function setHomeworkStatus(homeworkId, studentId, status, score = n
       { homework_id: homeworkId, student_id: studentId, status, score, feedback },
       { onConflict: 'homework_id,student_id' }
     );
-  if (error) throw error;
-  return listHomeworkStatus();
-}
-
-// Student self-submission (see migration 0009) - same protection as
-// submitExamAnswer: blocked by RLS the moment status is 'Graded'. Legacy
-// single-file path - kept working, but the student UI now submits via
-// submitHomeworkFiles/addHomeworkSubmissionFile below instead.
-export async function submitHomeworkAnswer(homeworkId, studentId, { fileUrl, fileName }) {
-  const { error } = await supabase.from('homework_status').upsert(
-    {
-      homework_id: homeworkId,
-      student_id: studentId,
-      status: 'Submitted',
-      answer_file_url: fileUrl,
-      answer_file_name: fileName,
-      submitted_at: new Date().toISOString(),
-    },
-    { onConflict: 'homework_id,student_id' }
-  );
   if (error) throw error;
   return listHomeworkStatus();
 }

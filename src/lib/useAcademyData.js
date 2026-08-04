@@ -473,16 +473,6 @@ export function useAcademyData() {
     }
   }, []);
 
-  const submitMyHomeworkAnswer = useCallback(async (homeworkId, studentId, file) => {
-    try {
-      const updated = await db.submitHomeworkAnswer(homeworkId, studentId, file);
-      setHomeworkStatusState(updated);
-    } catch (e) {
-      setError('Could not submit your homework. Please try again.');
-      throw e;
-    }
-  }, []);
-
   // files: array of {fileUrl, fileName, fileType} already uploaded to
   // storage by the caller. Inserted one at a time (see
   // addHomeworkSubmissionFile's comment for why) so a failure partway
@@ -782,7 +772,6 @@ export function useAcademyData() {
     editHomework,
     removeHomework,
     setHomeworkStatusForStudent,
-    submitMyHomeworkAnswer,
     submitMyHomeworkFiles,
     removeMyHomeworkSubmissionFile,
     addCertificate,
