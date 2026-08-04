@@ -7,7 +7,7 @@ import { useAcademy } from '../lib/AcademyDataContext';
 import { useAuth } from '../lib/AuthContext';
 import { LevelBadge } from '../components/Badge';
 import { formatUZS } from '../utils/format';
-import { formatDateOnly } from '../utils/date';
+import { formatDateOnly, todayISO } from '../utils/date';
 import {
   getStudentPaymentStatus,
   getPaymentTimeline,
@@ -153,7 +153,7 @@ export default function Payments() {
   const [modalStudent, setModalStudent] = useState(null); // the one student whose record-payment/history modal is open
   const [modalMode, setModalMode] = useState('record'); // 'record' shows the form by default; 'view' (opened via the Timeline quick action) starts collapsed to just the summary + timeline
   const [timelines, setTimelines] = useState({}); // student id -> payment_transactions rows
-  const [recordForm, setRecordForm] = useState({ amount: '', transactionType: 'monthly', paymentMethod: '' });
+  const [recordForm, setRecordForm] = useState({ amount: '', transactionType: 'monthly', paymentMethod: '', paidAt: todayISO() });
   const [recordError, setRecordError] = useState('');
   const [recording, setRecording] = useState(false);
   const [recordSuccess, setRecordSuccess] = useState(null); // { nextDueDate } - shown until the modal closes or another save starts
@@ -204,7 +204,7 @@ export default function Payments() {
     const prefill = st && Number(st.outstanding) > 0 ? st.outstanding : s.monthly_fee || '';
     setModalStudent(s);
     setModalMode(mode);
-    setRecordForm({ amount: prefill ? String(prefill) : '', transactionType: 'monthly', paymentMethod: '' });
+    setRecordForm({ amount: prefill ? String(prefill) : '', transactionType: 'monthly', paymentMethod: '', paidAt: todayISO() });
     setRecordError('');
     setRecordSuccess(null);
     if (!timelines[s.id]) {
@@ -225,6 +225,13 @@ export default function Payments() {
   async function handleRecordPayment(e, studentId) {
     e.preventDefault();
     if (!recordForm.amount) return;
+    // Belt-and-suspenders alongside the date input's max attribute - a
+    // future-dated payment would misrepresent when money was actually
+    // received, exactly the class of bug this field exists to prevent.
+    if (recordForm.paidAt && recordForm.paidAt > todayISO()) {
+      setRecordError('Payment date cannot be in the future.');
+      return;
+    }
     setRecording(true);
     setRecordError('');
     setRecordSuccess(null);
@@ -234,9 +241,10 @@ export default function Payments() {
         amount: Number(recordForm.amount),
         transactionType: recordForm.transactionType,
         paymentMethod: recordForm.paymentMethod || null,
+        paidAt: recordForm.paidAt || undefined,
         createdBy: session.user.id,
       });
-      setRecordForm({ amount: '', transactionType: 'monthly', paymentMethod: '' });
+      setRecordForm({ amount: '', transactionType: 'monthly', paymentMethod: '', paidAt: todayISO() });
       const [st, tl] = await Promise.all([getStudentPaymentStatus(studentId), getPaymentTimeline(studentId)]);
       setNewStatuses((prev) => ({ ...prev, [studentId]: st }));
       setTimelines((prev) => ({ ...prev, [studentId]: tl }));
@@ -415,6 +423,16 @@ export default function Payments() {
                       className="input w-full"
                       value={recordForm.amount}
                       onChange={(e) => setRecordForm({ ...recordForm, amount: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-ink/50">Payment date</label>
+                    <input
+                      type="date"
+                      className="input w-full"
+                      value={recordForm.paidAt}
+                      max={todayISO()}
+                      onChange={(e) => setRecordForm({ ...recordForm, paidAt: e.target.value })}
                     />
                   </div>
                   <div className="flex gap-2">
