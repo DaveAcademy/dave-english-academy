@@ -352,21 +352,6 @@ export async function recordPayment({
   return data;
 }
 
-// Live-preview helper for the "calculate first payment automatically"
-// student-creation flow (not wired into StudentForm.jsx yet) - same
-// proration formula the derivation function uses internally, so the
-// preview a admin sees during creation always matches what
-// get_student_payment_status will later compute.
-export async function calculateFirstPayment(joinDate, billingDay, monthlyFee) {
-  const { data, error } = await supabase.rpc('calculate_first_payment', {
-    p_join_date: joinDate,
-    p_billing_day: billingDay,
-    p_monthly_fee: monthlyFee,
-  });
-  if (error) throw error;
-  return data[0];
-}
-
 // Cash-flow total for one calendar month - Dashboard.jsx's collection-rate
 // KPI and 6-month income trend. See migration 0065 for why this is a
 // separate concept from get_student_payment_status's coverage logic.

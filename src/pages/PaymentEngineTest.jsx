@@ -17,7 +17,6 @@ import {
   getPaymentTimeline,
   recordPayment,
   getPaymentDataAudit,
-  calculateFirstPayment,
   TRANSACTION_TYPES,
   PAYMENT_METHODS,
 } from '../lib/storageBridge';
@@ -34,16 +33,6 @@ export default function PaymentEngineTest() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState({ amount: '', transactionType: 'monthly', paymentMethod: '' });
-
-  // Scenario 6: brand-new student, prorated first payment. Standalone -
-  // doesn't need an existing student record, since this is exactly the
-  // moment (creating a student) where none exists yet. Same
-  // calculate_first_payment() the future StudentForm.jsx "calculate first
-  // payment automatically" preview will call, so proving it here is
-  // proving that preview too.
-  const [prorationForm, setProrationForm] = useState({ joinDate: '', billingDay: '', monthlyFee: '' });
-  const [prorationResult, setProrationResult] = useState(null);
-  const [prorationError, setProrationError] = useState('');
 
   const activeStudents = [...students].sort((a, b) => a.real_name.localeCompare(b.real_name));
   const selected = activeStudents.find((s) => String(s.id) === String(studentId));
@@ -86,20 +75,6 @@ export default function PaymentEngineTest() {
     );
   }
 
-  async function handleCalculateProration(e) {
-    e.preventDefault();
-    const { joinDate, billingDay, monthlyFee } = prorationForm;
-    if (!joinDate || !billingDay || !monthlyFee) return;
-    setProrationError('');
-    setProrationResult(null);
-    try {
-      const result = await calculateFirstPayment(joinDate, Number(billingDay), Number(monthlyFee));
-      setProrationResult(result);
-    } catch (e) {
-      setProrationError(e.message || String(e));
-    }
-  }
-
   async function handleRecord(e) {
     e.preventDefault();
     if (!studentId || !form.amount) return;
@@ -133,57 +108,6 @@ export default function PaymentEngineTest() {
       </header>
 
       {error && <div className="mb-4 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{error}</div>}
-
-      <div className="mb-6 rounded-xl bg-white p-4 shadow-card">
-        <p className="mb-1 text-sm font-semibold text-ink">Scenario 6 — brand-new student, prorated first payment</p>
-        <p className="mb-3 text-xs text-ink/50">
-          No student record needed - this is the calculation StudentForm.jsx will preview live once "calculate first
-          payment automatically" is wired up.
-        </p>
-        <form onSubmit={handleCalculateProration} className="flex flex-wrap items-end gap-2">
-          <div>
-            <label className="block text-xs text-ink/50">Join date</label>
-            <input
-              type="date"
-              className="input"
-              value={prorationForm.joinDate}
-              onChange={(e) => setProrationForm({ ...prorationForm, joinDate: e.target.value })}
-            />
-          </div>
-          <div>
-            <label className="block text-xs text-ink/50">Payment day</label>
-            <input
-              type="number"
-              min="1"
-              max="31"
-              className="input w-20"
-              value={prorationForm.billingDay}
-              onChange={(e) => setProrationForm({ ...prorationForm, billingDay: e.target.value })}
-            />
-          </div>
-          <div>
-            <label className="block text-xs text-ink/50">Monthly fee</label>
-            <input
-              type="number"
-              className="input w-32"
-              value={prorationForm.monthlyFee}
-              onChange={(e) => setProrationForm({ ...prorationForm, monthlyFee: e.target.value })}
-            />
-          </div>
-          <button type="submit" className="rounded-lg bg-brand-500 px-3 py-2 text-xs font-semibold text-white">
-            Calculate
-          </button>
-        </form>
-        {prorationError && <p className="mt-2 text-xs text-inactive">{prorationError}</p>}
-        {prorationResult && (
-          <p className="mt-3 text-sm text-ink">
-            First period <span className="font-semibold">{prorationResult.period_start}</span> →{' '}
-            <span className="font-semibold">{prorationResult.period_end}</span>, prorated amount{' '}
-            <span className="font-semibold text-brand-700">{formatUZS(prorationResult.amount)}</span>. Then a normal
-            monthly cycle continues from {prorationResult.period_end}.
-          </p>
-        )}
-      </div>
 
       <select value={studentId} onChange={(e) => setStudentId(e.target.value)} className="input mb-4 w-full sm:w-80">
         <option value="">Select a student…</option>
