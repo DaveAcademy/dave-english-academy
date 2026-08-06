@@ -512,7 +512,12 @@ export const STORAGE_KEYS = { students: 'students', payments: 'payments', attend
 // ---------- Lessons ----------
 
 export async function listLessons() {
-  const { data, error } = await supabase.from('lessons').select('*').order('scheduled_at');
+  // curriculum_lessons(lesson_number) join lets list views order lessons by
+  // permanent curriculum position instead of scheduled_at/created_at.
+  const { data, error } = await supabase
+    .from('lessons')
+    .select('*, curriculum_lessons(lesson_number)')
+    .order('scheduled_at');
   if (error) throw error;
   return data;
 }

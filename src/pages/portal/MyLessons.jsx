@@ -21,9 +21,20 @@ export default function MyLessons() {
 
   const myLessons = useMemo(() => {
     if (!me) return [];
+    // Order follows the permanent curriculum sequence (lesson_number), never
+    // creation/upload date, so it always reads Lesson 1, 2, 3... regardless
+    // of the order PDFs were attached in. Legacy lessons with no curriculum
+    // link have no fixed position, so they sort after the curriculum ones.
     return [...lessons]
       .filter((l) => (!l.group_name && !l.level) || l.group_name === me.group_name || l.level === me.level)
-      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      .sort((a, b) => {
+        const an = a.curriculum_lessons?.lesson_number;
+        const bn = b.curriculum_lessons?.lesson_number;
+        if (an != null && bn != null) return an - bn;
+        if (an != null) return -1;
+        if (bn != null) return 1;
+        return new Date(b.created_at) - new Date(a.created_at);
+      });
   }, [lessons, me]);
 
   const handleViewPdf = async (path) => {

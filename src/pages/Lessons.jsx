@@ -21,7 +21,21 @@ export default function Lessons() {
   const [uploadError, setUploadError] = useState(null);
   const [selectedLessonId, setSelectedLessonId] = useState(null);
 
-  const sortedLessons = useMemo(() => [...lessons].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)), [lessons]);
+  // Order follows the permanent curriculum sequence (lesson_number), never
+  // creation/upload date. Legacy lessons with no curriculum link have no
+  // fixed position, so they sort after the curriculum ones.
+  const sortedLessons = useMemo(
+    () =>
+      [...lessons].sort((a, b) => {
+        const an = a.curriculum_lessons?.lesson_number;
+        const bn = b.curriculum_lessons?.lesson_number;
+        if (an != null && bn != null) return an - bn;
+        if (an != null) return -1;
+        if (bn != null) return 1;
+        return new Date(b.created_at) - new Date(a.created_at);
+      }),
+    [lessons]
+  );
   const selectedLesson = sortedLessons.find((l) => l.id === selectedLessonId) || sortedLessons[0] || null;
   const editingLesson = editingId ? lessons.find((l) => l.id === editingId) : null;
 
