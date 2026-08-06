@@ -83,7 +83,15 @@ export default function Homework() {
   };
 
   const sortedLessons = useMemo(
-    () => [...lessons].sort((a, b) => new Date(b.scheduled_at) - new Date(a.scheduled_at)),
+    () =>
+      [...lessons].sort((a, b) => {
+        const an = a.curriculum_lessons?.lesson_number;
+        const bn = b.curriculum_lessons?.lesson_number;
+        if (an != null && bn != null) return an - bn;
+        if (an != null) return -1;
+        if (bn != null) return 1;
+        return new Date(b.created_at) - new Date(a.created_at);
+      }),
     [lessons]
   );
   const lessonOf = (lessonId) => (lessonId ? lessons.find((l) => l.id === lessonId) : null);
