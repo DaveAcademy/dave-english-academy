@@ -1,7 +1,7 @@
 // lessonLogic.js
 // Shared, pure helpers for Lesson Hub V2's progress model. Kept in one place
 // so MyLessons.jsx, LessonHub.jsx and the portal home all derive the same
-// unlock/status from the same rules - see migration 0093 for the SQL side.
+// unlock/status from the same rules - see migrations 0093/0094 for the SQL side.
 //
 // Unlock rule (mirrors can_read_lesson_pdf):
 //   * legacy lessons (no curriculum link) are always unlocked (level check

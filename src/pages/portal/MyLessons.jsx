@@ -11,7 +11,7 @@
 // the same answers from the same rules.
 //
 // PDF access is enforced server-side by can_read_lesson_pdf (migration
-// 0093) - this page's lock badges are a convenience, not the boundary.
+// 0094) - this page's lock badges are a convenience, not the boundary.
 
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';

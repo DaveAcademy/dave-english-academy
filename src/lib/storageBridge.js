@@ -577,7 +577,7 @@ export async function advanceCurriculumProgress(level, currentLessonNumber) {
 // ---------- Student lesson progress (Lesson Hub V2) ----------
 
 // Per-student completion + PDF page tracking, one row per (student, lesson)
-// - see migration 0093. RLS scopes every row to its owner, so passing the
+// - see migration 0094. RLS scopes every row to its owner, so passing the
 // caller's own student id is both a convenience and the security boundary.
 export async function listStudentLessonProgress(studentId) {
   const { data, error } = await supabase

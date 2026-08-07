@@ -1,3 +1,8 @@
+-- NOTE (2026-08-07): renumbered 0093 -> 0094 so the new curriculum_progress
+-- migration (0093) runs first. can_read_lesson_pdf() below is LANGUAGE sql,
+-- which validates its relations at creation time and needs the
+-- curriculum_progress table to already exist. See 0093_curriculum_progress.sql.
+--
 -- Lesson Hub V2: per-student lesson completion + PDF progress.
 --
 -- The academy's lessons are shared teaching instances (a `lessons` row per
