@@ -352,6 +352,30 @@ export async function recordPayment({
   return data;
 }
 
+// Reversal row for a mistaken payment - never edits/deletes the original,
+// same append-only pattern as every correction done manually via migration
+// (0064, 0070, 0073-0075/0079). amount must be negative; the DB check
+// constraint (0064) enforces this independent of client-side validation.
+export async function createCorrection({ studentId, amount, originalTransactionId, reason, createdBy }) {
+  if (amount >= 0) throw new Error('Correction amount must be negative.');
+  const { data, error } = await supabase
+    .from('payment_transactions')
+    .insert({
+      student_id: studentId,
+      amount,
+      transaction_type: 'correction',
+      paid_at: new Date().toISOString(),
+      reference_number: originalTransactionId ? String(originalTransactionId) : null,
+      notes: reason,
+      created_by: createdBy,
+      source: 'manual',
+    })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
 // Cash-flow total for one calendar month - Dashboard.jsx's collection-rate
 // KPI and 6-month income trend. See migration 0065 for why this is a
 // separate concept from get_student_payment_status's coverage logic.
@@ -512,7 +536,40 @@ export const STORAGE_KEYS = { students: 'students', payments: 'payments', attend
 // ---------- Lessons ----------
 
 export async function listLessons() {
-  const { data, error } = await supabase.from('lessons').select('*').order('scheduled_at');
+  const { data, error } = await supabase
+    .from('lessons')
+    .select('*, curriculum_lessons(lesson_number, title, month, lesson_type, description), lesson_vocabulary(count)')
+    .order('scheduled_at');
+  if (error) throw error;
+  return data.map((l) => ({ ...l, vocabulary_count: l.lesson_vocabulary?.[0]?.count ?? 0 }));
+}
+
+// Full curriculum, independent of whether a teaching instance (lessons row)
+// exists yet - lets the UI show "coming soon" slots for lesson numbers that
+// haven't been taught, in permanent curriculum order.
+export async function listCurriculumLessons() {
+  const { data, error } = await supabase.from('curriculum_lessons').select('*').order('lesson_number');
+  if (error) throw error;
+  return data;
+}
+
+// Per-level teaching progress (Level A/B/C, always exactly 3 rows). This is
+// UI-only state for showing lock badges/messages - the real access control
+// is the storage RLS policy on lesson-pdfs (can_read_lesson_pdf), which reads
+// this same table server-side.
+export async function listCurriculumProgress() {
+  const { data, error } = await supabase.from('curriculum_progress').select('*').order('level');
+  if (error) throw error;
+  return data;
+}
+
+export async function advanceCurriculumProgress(level, currentLessonNumber) {
+  const { data, error } = await supabase
+    .from('curriculum_progress')
+    .update({ current_lesson_number: currentLessonNumber, updated_at: new Date().toISOString() })
+    .eq('level', level)
+    .select()
+    .single();
   if (error) throw error;
   return data;
 }
@@ -923,6 +980,18 @@ export async function getAttachmentUrl(path) {
   const { data, error } = await supabase.storage.from(ATTACHMENTS_BUCKET).createSignedUrl(path, 3600);
   if (error) throw error;
   return data.signedUrl;
+}
+
+// Same storage path as getAttachmentUrl() above, but returns the file bytes as
+// a Blob instead of a shareable signed URL - for in-app viewing (PdfViewer)
+// where we must not hand out a copyable/bookmarkable link. RLS gates the
+// download exactly as it gates the signed-URL fetch (attachments_read /
+// can_read_lesson_pdf), so the security boundary is unchanged.
+export async function getAttachmentBlob(path) {
+  if (!path) return null;
+  const { data, error } = await supabase.storage.from(ATTACHMENTS_BUCKET).download(path);
+  if (error) throw error;
+  return data;
 }
 
 // Chat-only: same upload as uploadAttachment() above, but via a raw XHR

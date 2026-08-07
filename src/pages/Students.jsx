@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search, Plus, Upload, Pencil, Trash2, ChevronUp, ChevronDown, ArrowUpDown } from 'lucide-react';
+import { Search, Plus, Upload, Pencil, Trash2, ChevronUp, ChevronDown, ArrowUpDown, MessageCircle, MessageCircleOff } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { useAuth } from '../lib/AuthContext';
 import { LevelBadge, StatusBadge } from '../components/Badge';
@@ -85,6 +85,7 @@ export default function Students() {
     { key: 'payment_deadline', label: t('colPaymentDay') },
     { key: 'monthly_fee', label: t('colFee') },
     { key: 'status', label: t('colStatus') },
+    { key: 'telegram_chat_id', label: t('colTelegram') },
   ];
 
   return (
@@ -195,6 +196,17 @@ export default function Students() {
                       <td className="px-4 py-3 text-ink/70">{t('dayNumber', { day: s.payment_deadline })}</td>
                       <td className="px-4 py-3 text-ink/70">{formatUZS(s.monthly_fee)}</td>
                       <td className="px-4 py-3"><StatusBadge status={s.status} /></td>
+                      <td className="px-4 py-3">
+                        {s.telegram_chat_id ? (
+                          <span className="inline-flex items-center gap-1 text-xs font-semibold text-active">
+                            <MessageCircle size={14} /> {t('telegramConnected')}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-xs font-semibold text-ink/40">
+                            <MessageCircleOff size={14} /> {t('telegramMissing')}
+                          </span>
+                        )}
+                      </td>
                       {isAdmin && (
                         <td className="px-4 py-3">
                           <div className="flex justify-end gap-2">
@@ -251,6 +263,15 @@ export default function Students() {
                   <StatusBadge status={s.status} />
                   {s.group_name && <span className="text-xs text-ink/40">{s.group_name}</span>}
                   <span className="text-xs text-ink/40">{t('paysDay', { day: s.payment_deadline })}</span>
+                  {s.telegram_chat_id ? (
+                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-active">
+                      <MessageCircle size={12} /> {t('telegramConnected')}
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-ink/40">
+                      <MessageCircleOff size={12} /> {t('telegramMissing')}
+                    </span>
+                  )}
                 </div>
                 <div className="mt-1.5 flex items-center justify-between">
                   {s.phone && <p className="text-xs text-ink/50">{s.phone}</p>}

@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Pencil, Trash2, MessageSquare, MessageSquareOff, Paperclip, Download, X } from 'lucide-react';
+import { Plus, Pencil, Trash2, MessageSquare, MessageSquareOff, Paperclip, Download, X, Clock } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { LevelBadge } from '../components/Badge';
 import { uploadAttachment, getAttachmentUrl } from '../lib/db';
@@ -10,7 +10,9 @@ import { uploadAttachment, getAttachmentUrl } from '../lib/db';
 const EMPTY_FORM = { topic: '', group_name: '', level: 'A', discussion_enabled: false };
 
 export default function Lessons() {
-  const { lessons, addLesson, editLesson, removeLesson, error } = useAcademy();
+  const { lessons, curriculumLessons, curriculumProgress, addLesson, editLesson, removeLesson, advanceCurriculumProgress, error } = useAcademy();
+  const [progressDrafts, setProgressDrafts] = useState({});
+  const [progressSaving, setProgressSaving] = useState(null);
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [editingId, setEditingId] = useState(null);
@@ -20,8 +22,60 @@ export default function Lessons() {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState(null);
   const [selectedLessonId, setSelectedLessonId] = useState(null);
+  const [search, setSearch] = useState('');
+  const [scopeFilter, setScopeFilter] = useState('all'); // all | curriculum | legacy
 
-  const sortedLessons = useMemo(() => [...lessons].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)), [lessons]);
+  // Permanent curriculum order: every curriculum_lessons row (ascending by
+  // lesson_number) becomes one row here - either the real lesson attached to
+  // it, or a "coming soon" placeholder if no lessons row exists yet for it.
+  // Review/test/activity/final_exam curriculum entries are teacher-triggered
+  // events, not planned teaching slots, so they never render as placeholders
+  // (matches the "reviews/exams are not curriculum lessons" rule). Legacy
+  // lessons (no curriculum_lesson_id) have no fixed position, so they're
+  // appended after the curriculum, newest first - this ordering must never
+  // depend on lessons.id/created_at/upload date for the curriculum rows
+  // themselves.
+  const orderedRows = useMemo(() => {
+    const byCurriculumId = new Map();
+    const legacy = [];
+    for (const l of lessons) {
+      if (l.curriculum_lesson_id != null) byCurriculumId.set(l.curriculum_lesson_id, l);
+      else legacy.push(l);
+    }
+    const curriculumRows = curriculumLessons
+      .filter((cl) => byCurriculumId.has(cl.id) || cl.lesson_type === 'normal')
+      .map((cl) => {
+        const lesson = byCurriculumId.get(cl.id);
+        return lesson
+          ? { kind: 'lesson', key: `lesson-${lesson.id}`, lesson, curriculum: cl }
+          : { kind: 'placeholder', key: `placeholder-${cl.id}`, curriculum: cl };
+      });
+    const legacyRows = [...legacy]
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+      .map((l) => ({ kind: 'lesson', key: `lesson-${l.id}`, lesson: l, curriculum: null }));
+    return [...curriculumRows, ...legacyRows];
+  }, [lessons, curriculumLessons]);
+
+  const filteredRows = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return orderedRows.filter((row) => {
+      const isCurriculum = !!row.curriculum;
+      if (scopeFilter === 'curriculum' && !isCurriculum) return false;
+      if (scopeFilter === 'legacy' && isCurriculum) return false;
+      if (!q) return true;
+      const lessonNumber = row.curriculum?.lesson_number;
+      const title = row.kind === 'placeholder' ? row.curriculum.title : row.lesson.topic;
+      return (
+        title?.toLowerCase().includes(q) ||
+        row.curriculum?.title?.toLowerCase().includes(q) ||
+        (lessonNumber != null && String(lessonNumber) === q)
+      );
+    });
+  }, [orderedRows, search, scopeFilter]);
+
+  // Preserves whatever order filteredRows already has (curriculum order) -
+  // does not re-sort by id/created_at.
+  const sortedLessons = useMemo(() => filteredRows.filter((row) => row.kind === 'lesson').map((row) => row.lesson), [filteredRows]);
   const selectedLesson = sortedLessons.find((l) => l.id === selectedLessonId) || sortedLessons[0] || null;
   const editingLesson = editingId ? lessons.find((l) => l.id === editingId) : null;
 
@@ -120,6 +174,22 @@ export default function Lessons() {
     if (url) window.open(url, '_blank', 'noopener');
   };
 
+  const progressDraftFor = (level) => {
+    const current = curriculumProgress.find((p) => p.level === level)?.current_lesson_number ?? 0;
+    return progressDrafts[level] ?? String(current);
+  };
+  const handleProgressSave = async (level) => {
+    const n = Number(progressDraftFor(level));
+    if (!Number.isInteger(n) || n < 0) return;
+    setProgressSaving(level);
+    try {
+      await advanceCurriculumProgress(level, n);
+      setProgressDrafts((prev) => ({ ...prev, [level]: undefined }));
+    } finally {
+      setProgressSaving(null);
+    }
+  };
+
   return (
     <div>
       <header className="mb-4 flex flex-wrap items-center justify-between gap-2">
@@ -134,6 +204,53 @@ export default function Lessons() {
           <Plus size={16} /> Add lesson
         </button>
       </header>
+
+      <div className="mb-4 grid gap-2 rounded-xl bg-white p-4 shadow-card sm:grid-cols-3">
+        {['A', 'B', 'C'].map((level) => (
+          <div key={level} className="flex items-center gap-2">
+            <LevelBadge level={level} />
+            <span className="text-xs text-ink/50">is on lesson</span>
+            <input
+              type="number"
+              min="0"
+              value={progressDraftFor(level)}
+              onChange={(e) => setProgressDrafts((prev) => ({ ...prev, [level]: e.target.value }))}
+              className="input w-16 px-2 py-1 text-sm"
+            />
+            <button
+              onClick={() => handleProgressSave(level)}
+              disabled={progressSaving === level}
+              className="rounded-lg bg-brand-500 px-2 py-1 text-xs font-semibold text-white hover:bg-brand-600 disabled:opacity-60"
+            >
+              {progressSaving === level ? 'Saving...' : 'Update'}
+            </button>
+          </div>
+        ))}
+      </div>
+
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by lesson number or title..."
+          className="input max-w-xs"
+        />
+        <div className="flex overflow-hidden rounded-lg border border-ink/15 text-xs font-semibold">
+          {[
+            ['all', 'All'],
+            ['curriculum', 'Shared Curriculum'],
+            ['legacy', 'Legacy'],
+          ].map(([value, label]) => (
+            <button
+              key={value}
+              onClick={() => setScopeFilter(value)}
+              className={`px-3 py-2 ${scopeFilter === value ? 'bg-brand-500 text-white' : 'bg-white text-ink/60 hover:bg-ink/5'}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {error && <div className="mb-4 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{error}</div>}
       {uploadError && <div className="mb-4 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{uploadError}</div>}
@@ -221,26 +338,70 @@ export default function Lessons() {
         </form>
       )}
 
-      {sortedLessons.length === 0 ? (
+      {filteredRows.length === 0 ? (
         <div className="rounded-xl bg-white p-10 text-center shadow-card">
           <p className="font-display text-lg font-semibold text-ink">No lessons yet</p>
         </div>
       ) : (
         <div className="mb-4 space-y-2">
-          {sortedLessons.map((l) => (
+          {filteredRows.map((row) => {
+            if (row.kind === 'placeholder') {
+              const cl = row.curriculum;
+              return (
+                <div key={row.key} className="flex items-center justify-between rounded-xl border-2 border-dashed border-ink/10 bg-white/60 p-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-ink/50">
+                      <span className="opacity-70">#{cl.lesson_number} · </span>
+                      {cl.title}
+                    </p>
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-xs opacity-80">
+                      <span className="flex items-center gap-1 rounded-full bg-ink/10 px-1.5 py-0.5 text-[10px] font-bold text-ink/50">
+                        <Clock size={10} /> Coming Soon
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setForm({ ...EMPTY_FORM, topic: cl.title });
+                      setFormOpen(true);
+                    }}
+                    className="flex-shrink-0 rounded-md p-1.5 text-ink/40 hover:bg-ink/5"
+                    aria-label="Create this lesson"
+                    title="Create this lesson"
+                  >
+                    <Plus size={15} />
+                  </button>
+                </div>
+              );
+            }
+            const l = row.lesson;
+            return (
             <div
-              key={l.id}
+              key={row.key}
               className={`flex items-center justify-between rounded-xl p-3 shadow-card ${
                 selectedLesson?.id === l.id ? 'bg-brand-500 text-white' : 'bg-white text-ink'
               }`}
             >
               <Link to={`/lessons/${l.id}`} className="min-w-0 flex-1" title="Open Lesson Hub">
-                <p className="font-semibold hover:underline">{l.topic}</p>
+                <p className="font-semibold hover:underline">
+                  {l.curriculum_lessons && <span className="opacity-70">#{l.curriculum_lessons.lesson_number} · </span>}
+                  {l.topic}
+                </p>
                 <div className="mt-1 flex flex-wrap items-center gap-2 text-xs opacity-80">
+                  {l.curriculum_lessons ? (
+                    <span className="rounded-full bg-brand-500/20 px-1.5 py-0.5 text-[10px] font-bold">Shared Curriculum</span>
+                  ) : (
+                    <span className="rounded-full bg-ink/10 px-1.5 py-0.5 text-[10px] font-bold">Legacy</span>
+                  )}
                   {l.group_name && <span>{l.group_name}</span>}
                   {l.level && <LevelBadge level={l.level} />}
                   {l.discussion_enabled && <span className="rounded-full bg-active/20 px-1.5 py-0.5 text-[10px] font-bold">Discussion on</span>}
-                  {l.pdf_path && <span className="rounded-full bg-active/20 px-1.5 py-0.5 text-[10px] font-bold">PDF attached</span>}
+                  {l.pdf_path ? (
+                    <span className="rounded-full bg-active/20 px-1.5 py-0.5 text-[10px] font-bold">📄 PDF attached</span>
+                  ) : (
+                    <span className="rounded-full bg-inactive/20 px-1.5 py-0.5 text-[10px] font-bold">⚠️ No PDF</span>
+                  )}
+                  <span className="rounded-full bg-ink/10 px-1.5 py-0.5 text-[10px] font-bold">📚 {l.vocabulary_count} words</span>
                 </div>
               </Link>
               <div className="flex flex-shrink-0 items-center gap-1">
@@ -298,7 +459,8 @@ export default function Lessons() {
                 </button>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

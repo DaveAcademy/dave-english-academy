@@ -11,6 +11,7 @@ const EMPTY_FORM = {
   group_name: '',
   phone: '',
   parent_phone: '',
+  telegram_chat_id: '',
   join_date: new Date().toISOString().slice(0, 10),
   payment_deadline: 1,
   monthly_fee: '',
@@ -35,6 +36,7 @@ export default function StudentForm({ student, onClose, onSave }) {
             group_name: student.group_name || '',
             phone: student.phone || '',
             parent_phone: student.parent_phone || '',
+            telegram_chat_id: student.telegram_chat_id || '',
             join_date: student.join_date || EMPTY_FORM.join_date,
             payment_deadline: student.payment_deadline || 1,
             monthly_fee: student.monthly_fee ?? '',
@@ -61,7 +63,7 @@ export default function StudentForm({ student, onClose, onSave }) {
     setError('');
     setSaving(true);
     try {
-      await onSave({ ...form, payment_deadline: deadline, monthly_fee: fee });
+      await onSave({ ...form, payment_deadline: deadline, monthly_fee: fee, telegram_chat_id: form.telegram_chat_id.trim() || null });
     } catch (err) {
       setError(err.message || t('genericError'));
     } finally {
@@ -122,6 +124,15 @@ export default function StudentForm({ student, onClose, onSave }) {
 
               <Field label={t('parentPhoneLabel')}>
                 <input type="tel" value={form.parent_phone} onChange={(e) => update({ parent_phone: e.target.value })} className="input" placeholder="+998 90 123 45 67" />
+              </Field>
+
+              <Field label={t('telegramChatIdLabel')} span={2}>
+                <input
+                  value={form.telegram_chat_id}
+                  onChange={(e) => update({ telegram_chat_id: e.target.value })}
+                  className="input"
+                  placeholder={t('telegramChatIdPlaceholder')}
+                />
               </Field>
 
               <Field label={t('joinDateLabel')} required>

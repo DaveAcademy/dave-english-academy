@@ -29,6 +29,7 @@ import { useAuth } from '../lib/AuthContext';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { LevelBadge } from '../components/Badge';
 import ConfirmDialog from '../components/ConfirmDialog';
+import PdfViewer from '../components/PdfViewer';
 import { uploadAttachment, getAttachmentUrl, listLessonVocabulary } from '../lib/db';
 import HomeworkGradingRoster from '../components/HomeworkGradingRoster';
 import ExamGradingRoster from '../components/ExamGradingRoster';
@@ -73,7 +74,7 @@ export default function LessonHub() {
   const { role } = useAuth();
   const isStudent = role === 'student';
   const {
-    lessons, students, editLesson,
+    lessons, students, editLesson, curriculumProgress,
     homework, homeworkStatus, homeworkSubmissionFiles, addHomework, editHomework, removeHomework, submitMyHomeworkFiles, setHomeworkStatusForStudent,
     exams, examScores, addExam, editExam, removeExam, submitMyExamAnswer, setExamScoreForStudent,
   } = useAcademy();
@@ -82,15 +83,21 @@ export default function LessonHub() {
   const me = students[0];
   const backHref = isStudent ? '/my-lessons' : '/lessons';
 
+  // Real access control is the storage RLS policy on lesson-pdfs
+  // (can_read_lesson_pdf reads curriculum_progress server-side); this is
+  // just so a student who navigates straight to a locked lesson's URL sees
+  // an explanatory message instead of a silently-failing PDF fetch.
+  const myProgress = curriculumProgress.find((p) => p.level === me?.level)?.current_lesson_number ?? 0;
+  const lessonNumber = lesson?.curriculum_lessons?.lesson_number;
+  const isLockedForMe = isStudent && lessonNumber != null && lessonNumber > myProgress;
+
   // --- PDF ---
   const [pdfFile, setPdfFile] = useState(null);
   const [pdfUploading, setPdfUploading] = useState(false);
   const [pdfError, setPdfError] = useState(null);
+  const [viewPdf, setViewPdf] = useState(null);
 
-  const handleOpenPdf = async () => {
-    const url = await getAttachmentUrl(lesson.pdf_path);
-    if (url) window.open(url, '_blank', 'noopener');
-  };
+  const handleOpenPdf = () => setViewPdf(lesson);
 
   const handlePdfPick = async (file) => {
     if (!file) return;
@@ -298,6 +305,18 @@ export default function LessonHub() {
       <div className="rounded-xl bg-white p-10 text-center shadow-card">
         <p className="font-display text-lg font-semibold text-ink">Lesson not found.</p>
         <Link to={backHref} className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-brand-500 hover:underline">
+          <ArrowLeft size={14} /> Back to lessons
+        </Link>
+      </div>
+    );
+  }
+
+  if (isLockedForMe) {
+    return (
+      <div className="rounded-xl bg-white p-10 text-center shadow-card">
+        <p className="font-display text-lg font-semibold text-ink">🔒 This lesson is locked.</p>
+        <p className="mt-1 text-sm text-ink/50">This lesson will become available when your teacher reaches it.</p>
+        <Link to={backHref} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-brand-500 hover:underline">
           <ArrowLeft size={14} /> Back to lessons
         </Link>
       </div>
@@ -662,6 +681,9 @@ export default function LessonHub() {
           onConfirm={handleQuizDelete}
           onCancel={() => setDeletingQuiz(null)}
         />
+      )}
+      {viewPdf && (
+        <PdfViewer path={viewPdf.pdf_path} fileName={viewPdf.pdf_name} onClose={() => setViewPdf(null)} />
       )}
     </div>
   );

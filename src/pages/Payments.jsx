@@ -12,9 +12,13 @@ import {
   getStudentPaymentStatus,
   getPaymentTimeline,
   recordPayment,
+  createCorrection,
+  getAdminProfiles,
   TRANSACTION_TYPES,
   PAYMENT_METHODS,
 } from '../lib/storageBridge';
+
+const CORRECTION_REASONS = ['Duplicate payment', 'Wrong amount entered', 'Wrong student', 'Other'];
 
 // "14 October 2026", not "2026-10-14" - see utils/date.js's formatDateOnly
 // for why this goes through the ISO string's own components rather than
@@ -27,6 +31,7 @@ const TRANSACTION_TYPE_LABELS = {
   monthly: 'Monthly payment',
   advance: 'Advance payment',
   extra: 'Extra payment',
+  correction: 'Correction',
 };
 
 const DUE_SOON_DAYS = 5;
@@ -157,6 +162,76 @@ export default function Payments() {
   const [recordError, setRecordError] = useState('');
   const [recording, setRecording] = useState(false);
   const [recordSuccess, setRecordSuccess] = useState(null); // { nextDueDate } - shown until the modal closes or another save starts
+  const [adminNames, setAdminNames] = useState({}); // profile id -> full_name, for "Admin who created it"
+  const [correctionTx, setCorrectionTx] = useState(null); // the transaction being corrected, or null when the correction modal is closed
+  const [correctionAmount, setCorrectionAmount] = useState('');
+  const [correctionReason, setCorrectionReason] = useState(CORRECTION_REASONS[0]);
+  const [correctionNotes, setCorrectionNotes] = useState('');
+  const [correctionConfirming, setCorrectionConfirming] = useState(false);
+  const [correctionError, setCorrectionError] = useState('');
+  const [correctionSaving, setCorrectionSaving] = useState(false);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    getAdminProfiles()
+      .then((rows) => setAdminNames(Object.fromEntries(rows.map((r) => [r.id, r.full_name]))))
+      .catch(() => {});
+  }, [isAdmin]);
+
+  function openCorrection(tx) {
+    setCorrectionTx(tx);
+    setCorrectionAmount(String(-Math.abs(tx.amount)));
+    setCorrectionReason(CORRECTION_REASONS[0]);
+    setCorrectionNotes('');
+    setCorrectionConfirming(false);
+    setCorrectionError('');
+  }
+
+  function closeCorrection() {
+    setCorrectionTx(null);
+  }
+
+  async function submitCorrection() {
+    const amount = Number(correctionAmount);
+    if (!amount || amount >= 0) {
+      setCorrectionError('Correction amount must be negative.');
+      return;
+    }
+    if (Math.abs(amount) > correctionTx.amount && !correctionConfirming) {
+      setCorrectionError('Correction is larger than the original payment. Click "Create Correction" again to confirm.');
+      setCorrectionConfirming(true);
+      return;
+    }
+    if (!correctionReason) {
+      setCorrectionError('Reason is required.');
+      return;
+    }
+    const reasonText = correctionReason === 'Other' ? correctionNotes.trim() : [correctionReason, correctionNotes.trim()].filter(Boolean).join(': ');
+    if (!reasonText) {
+      setCorrectionError('Notes are required.');
+      return;
+    }
+    setCorrectionSaving(true);
+    setCorrectionError('');
+    try {
+      const studentId = modalStudent.id;
+      await createCorrection({
+        studentId,
+        amount,
+        originalTransactionId: correctionTx.id,
+        reason: reasonText,
+        createdBy: session.user.id,
+      });
+      const [st, tl] = await Promise.all([getStudentPaymentStatus(studentId), getPaymentTimeline(studentId)]);
+      setNewStatuses((prev) => ({ ...prev, [studentId]: st }));
+      setTimelines((prev) => ({ ...prev, [studentId]: tl }));
+      setCorrectionTx(null);
+    } catch (e) {
+      setCorrectionError(e.message || String(e));
+    } finally {
+      setCorrectionSaving(false);
+    }
+  }
 
   // One RPC call per active student. Fine at today's roster size; if the
   // academy grows into the hundreds this should become a single batched
@@ -488,21 +563,107 @@ export default function Payments() {
             <div className="mt-5 border-t border-ink/5 pt-4">
               <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink/40">Payment Timeline</p>
               <div className="max-h-56 space-y-2 overflow-y-auto">
-                {(timelines[modalStudent.id] || []).map((tx) => (
-                  <div key={tx.id} className="rounded-lg border border-ink/5 p-2">
-                    <p className="text-xs font-semibold text-ink">{formatDueDate(tx.paid_at?.slice(0, 10))}</p>
-                    <p className="mt-0.5 text-xs text-ink/70">
-                      {TRANSACTION_TYPE_LABELS[tx.transaction_type] || tx.transaction_type} · {formatUZS(tx.amount)}
-                      {tx.payment_method ? ` · ${tx.payment_method}` : ''}
-                    </p>
-                    <p className="mt-0.5 text-[11px] text-ink/40">
-                      {tx.source === 'migration' ? 'Imported from previous system' : 'Recorded manually'}
-                    </p>
-                  </div>
-                ))}
+                {(timelines[modalStudent.id] || []).map((tx) => {
+                  const isCorrection = tx.transaction_type === 'correction';
+                  return (
+                    <div
+                      key={tx.id}
+                      className={`rounded-lg border p-2 ${isCorrection ? 'border-inactive/30 bg-inactive/5' : 'border-ink/5'}`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-xs font-semibold text-ink">{formatDueDate(tx.paid_at?.slice(0, 10))}</p>
+                        {!isCorrection && (
+                          <button
+                            onClick={() => openCorrection(tx)}
+                            className="text-[11px] font-semibold text-brand-700 hover:underline"
+                          >
+                            Create Correction
+                          </button>
+                        )}
+                      </div>
+                      <p className={`mt-0.5 text-xs font-semibold ${isCorrection ? 'text-inactive' : 'text-ink/70'}`}>
+                        {tx.amount > 0 ? '+' : ''}
+                        {formatUZS(tx.amount)} {TRANSACTION_TYPE_LABELS[tx.transaction_type] || (isCorrection ? 'Correction' : tx.transaction_type)}
+                        {tx.payment_method ? ` · ${tx.payment_method}` : ''}
+                      </p>
+                      {isCorrection && tx.notes && <p className="mt-0.5 text-[11px] text-ink/60">Reason: {tx.notes}</p>}
+                      <p className="mt-0.5 text-[11px] text-ink/40">
+                        Created {formatDueDate(tx.created_at?.slice(0, 10))}
+                        {tx.created_by ? ` · ${adminNames[tx.created_by] || 'Admin'}` : tx.source === 'migration' ? ' · Imported from previous system' : ''}
+                      </p>
+                    </div>
+                  );
+                })}
                 {timelines[modalStudent.id]?.length === 0 && <p className="text-xs text-ink/40">No payments recorded yet.</p>}
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {correctionTx && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={closeCorrection}>
+          <div className="w-full max-w-sm rounded-xl bg-white p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-3 flex items-center justify-between">
+              <p className="font-display text-base font-semibold text-ink">Create Correction</p>
+              <button onClick={closeCorrection}>
+                <X size={18} className="text-ink/40" />
+              </button>
+            </div>
+
+            <div className="mb-3 rounded-lg bg-cloud/60 p-3 text-xs text-ink/70">
+              <p className="font-semibold text-ink">Correction for:</p>
+              <p>{modalStudent?.real_name}</p>
+              <p>Payment: {formatUZS(correctionTx.amount)}</p>
+              <p>Date: {formatDueDate(correctionTx.paid_at?.slice(0, 10))}</p>
+              <p>Transaction ID: {correctionTx.id}</p>
+            </div>
+
+            <label className="block text-xs text-ink/50">Correction amount</label>
+            <input
+              type="number"
+              className="input mb-3 w-full"
+              value={correctionAmount}
+              onChange={(e) => {
+                setCorrectionAmount(e.target.value);
+                setCorrectionConfirming(false);
+              }}
+            />
+
+            <label className="block text-xs text-ink/50">Reason</label>
+            <select
+              className="input mb-3 w-full"
+              value={correctionReason}
+              onChange={(e) => setCorrectionReason(e.target.value)}
+            >
+              {CORRECTION_REASONS.map((r) => (
+                <option key={r} value={r}>
+                  {r}
+                </option>
+              ))}
+            </select>
+
+            <label className="block text-xs text-ink/50">Notes {correctionReason === 'Other' ? '(required)' : ''}</label>
+            <textarea
+              className="input mb-3 w-full"
+              rows={2}
+              value={correctionNotes}
+              onChange={(e) => setCorrectionNotes(e.target.value)}
+            />
+
+            <p className="mb-3 text-xs text-ink/50">
+              You are creating a correction transaction. The original payment will remain unchanged.
+            </p>
+
+            {correctionError && <p className="mb-2 text-xs text-inactive">{correctionError}</p>}
+
+            <button
+              onClick={submitCorrection}
+              disabled={correctionSaving}
+              className="w-full rounded-lg bg-inactive py-2 text-sm font-semibold text-white disabled:opacity-50"
+            >
+              {correctionSaving ? 'Saving…' : correctionConfirming ? 'Confirm larger correction' : 'Create Correction'}
+            </button>
           </div>
         </div>
       )}

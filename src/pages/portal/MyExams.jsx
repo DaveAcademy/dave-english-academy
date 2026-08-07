@@ -36,7 +36,24 @@ export default function MyExams() {
     return 'notSubmitted';
   };
 
-  const isOverdue = (exam) => !!exam.deadline && new Date(exam.deadline) < new Date();
+  // exam.deadline is a timestamptz column, but it's always written from a
+  // plain <input type="date"> (see Exams.jsx), so in practice it represents
+  // a calendar day, not an instant. Comparing `new Date(deadline) < new
+  // Date()` parses the date as UTC midnight and marks it overdue hours
+  // before the due day even ends for anyone east of UTC (e.g. Tashkent,
+  // UTC+5, sees it flip to overdue at 5am local on the due date itself) -
+  // same bug class already fixed for homework in MyHomework.jsx. Compare
+  // local calendar days directly instead: overdue only once "today" (in the
+  // viewer's own local time) is strictly after the deadline's calendar day.
+  const isOverdue = (exam) => {
+    if (!exam.deadline) return false;
+    const [y, m, d] = exam.deadline.slice(0, 10).split('-').map(Number);
+    if (!y || !m || !d) return false;
+    const due = new Date(y, m - 1, d);
+    const today = new Date();
+    const todayLocal = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    return todayLocal > due;
+  };
 
   const handleOpenFile = async (path) => {
     setActionError(null);
@@ -150,7 +167,7 @@ export default function MyExams() {
                       <Download size={13} /> {e.file_name || t('examFileDefault')}
                     </button>
                   )}
-                  {!graded && (
+                  {e.exam_type !== 'Oral' && !graded && (
                     <label className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-semibold text-ink/60 hover:bg-ink/5">
                       <Upload size={13} />
                       {submittingId === e.id ? t('uploading') : result?.answer_file_name ? t('replaceMyAnswer') : t('uploadMyAnswer')}
@@ -163,7 +180,7 @@ export default function MyExams() {
                       />
                     </label>
                   )}
-                  {result?.answer_file_url && (
+                  {e.exam_type !== 'Oral' && result?.answer_file_url && (
                     <button
                       onClick={() => handleOpenFile(result.answer_file_url)}
                       className="text-xs text-ink/50 hover:underline"

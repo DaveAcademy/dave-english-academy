@@ -85,6 +85,8 @@ export function useAcademyData() {
   // without re-fetching from Supabase on every single mutation.
   const stateRef = useRef({ students: [], payments: [], attendance: [] });
   const [lessons, setLessons] = useState([]);
+  const [curriculumLessons, setCurriculumLessons] = useState([]);
+  const [curriculumProgress, setCurriculumProgress] = useState([]);
   const [lessonAttendance, setLessonAttendanceState] = useState([]);
   const [exams, setExams] = useState([]);
   const [examScores, setExamScoresState] = useState([]);
@@ -141,13 +143,15 @@ export function useAcademyData() {
   useEffect(() => {
     (async () => {
       try {
-        const [tmpl, msg, reads, atts, fls, hsf] = await Promise.all([
+        const [tmpl, msg, reads, atts, fls, hsf, cl, cp] = await Promise.all([
           db.listCertificateTemplates(),
           db.listMessages(),
           db.listMessageReads(),
           db.listMessageAttachments(),
           db.listFiles(),
           db.listHomeworkSubmissionFiles(),
+          db.listCurriculumLessons(),
+          db.listCurriculumProgress(),
         ]);
         setCertificateTemplates(tmpl);
         setMessages(msg);
@@ -155,6 +159,8 @@ export function useAcademyData() {
         setMessageAttachments(atts);
         setFiles(fls);
         setHomeworkSubmissionFilesState(hsf);
+        setCurriculumLessons(cl);
+        setCurriculumProgress(cp);
       } catch (e) {
         // Messaging/certificate-template/file-library are additive
         // features - leave them at their empty defaults rather than
@@ -348,10 +354,21 @@ export function useAcademyData() {
   const editLesson = useCallback(async (id, data) => {
     try {
       const record = await db.updateLesson(id, data);
-      setLessons((prev) => prev.map((l) => (l.id === id ? record : l)));
+      setLessons((prev) => prev.map((l) => (l.id === id ? { ...l, ...record } : l)));
       return record;
     } catch (e) {
       setError('Could not save lesson changes. Please try again.');
+      throw e;
+    }
+  }, []);
+
+  const advanceCurriculumProgress = useCallback(async (level, currentLessonNumber) => {
+    try {
+      const record = await db.advanceCurriculumProgress(level, currentLessonNumber);
+      setCurriculumProgress((prev) => prev.map((p) => (p.level === level ? record : p)));
+      return record;
+    } catch (e) {
+      setError('Could not update curriculum progress. Please try again.');
       throw e;
     }
   }, []);
@@ -713,13 +730,15 @@ export function useAcademyData() {
     // Same isolation as the initial load - a restore's core data reload
     // must not be held hostage by the messaging tables.
     try {
-      const [tmpl, msg, reads, atts, fls, hsf] = await Promise.all([
+      const [tmpl, msg, reads, atts, fls, hsf, cl, cp] = await Promise.all([
         db.listCertificateTemplates(),
         db.listMessages(),
         db.listMessageReads(),
         db.listMessageAttachments(),
         db.listFiles(),
         db.listHomeworkSubmissionFiles(),
+        db.listCurriculumLessons(),
+        db.listCurriculumProgress(),
       ]);
       setCertificateTemplates(tmpl);
       setMessages(msg);
@@ -727,6 +746,8 @@ export function useAcademyData() {
       setMessageAttachments(atts);
       setFiles(fls);
       setHomeworkSubmissionFilesState(hsf);
+      setCurriculumLessons(cl);
+      setCurriculumProgress(cp);
     } catch (e) {
       // best-effort, see the initial-load effect above for why
     }
@@ -737,6 +758,8 @@ export function useAcademyData() {
     payments,
     attendance,
     lessons,
+    curriculumLessons,
+    curriculumProgress,
     lessonAttendance,
     exams,
     examScores,
@@ -762,6 +785,7 @@ export function useAcademyData() {
     addLesson,
     editLesson,
     removeLesson,
+    advanceCurriculumProgress,
     markLessonAttendance,
     addExam,
     editExam,

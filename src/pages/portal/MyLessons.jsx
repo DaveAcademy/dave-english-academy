@@ -8,28 +8,46 @@
 // lesson-pdfs branch (can_read_lesson_pdf, see migration 0032/0033) -
 // this page's filtering is a convenience, not the real security boundary.
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAcademy } from '../../lib/AcademyDataContext';
-import { getAttachmentUrl } from '../../lib/db';
 import { LevelBadge } from '../../components/Badge';
-import { BookOpen, Download, MessageSquare, Languages } from 'lucide-react';
+import PdfViewer from '../../components/PdfViewer';
+import { BookOpen, Eye, MessageSquare, Languages, Lock } from 'lucide-react';
 
 export default function MyLessons() {
-  const { students, lessons } = useAcademy();
+  const { students, lessons, curriculumProgress } = useAcademy();
   const me = students[0];
+  // The teacher's per-level progress gate. Storage RLS (can_read_lesson_pdf)
+  // is the real enforcement point - this is only for the lock badge/message,
+  // so a locked lesson doesn't quietly 403 when the student tries the PDF.
+  const myProgress = curriculumProgress.find((p) => p.level === me?.level)?.current_lesson_number ?? 0;
+  const isLocked = (l) => {
+    const n = l.curriculum_lessons?.lesson_number;
+    return n != null && n > myProgress;
+  };
 
   const myLessons = useMemo(() => {
     if (!me) return [];
+    // Only real, taught lessons ever appear here - no "coming soon"
+    // placeholders for students (that's an admin-only view on Lessons.jsx).
+    // Order follows the permanent curriculum sequence (lesson_number), never
+    // creation/upload date, so it always reads Lesson 1, 2, 3... regardless
+    // of the order PDFs were attached in. Legacy lessons with no curriculum
+    // link have no fixed position, so they sort after the curriculum ones.
     return [...lessons]
       .filter((l) => (!l.group_name && !l.level) || l.group_name === me.group_name || l.level === me.level)
-      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      .sort((a, b) => {
+        const an = a.curriculum_lessons?.lesson_number;
+        const bn = b.curriculum_lessons?.lesson_number;
+        if (an != null && bn != null) return an - bn;
+        if (an != null) return -1;
+        if (bn != null) return 1;
+        return new Date(b.created_at) - new Date(a.created_at);
+      });
   }, [lessons, me]);
 
-  const handleViewPdf = async (path) => {
-    const url = await getAttachmentUrl(path);
-    if (url) window.open(url, '_blank', 'noopener');
-  };
+  const [viewPdf, setViewPdf] = useState(null);
 
   if (!me) {
     return (
@@ -52,50 +70,75 @@ export default function MyLessons() {
         </div>
       ) : (
         <div className="space-y-2">
-          {myLessons.map((l) => (
-            <div key={l.id} className="flex items-center gap-3 rounded-xl bg-white p-3 shadow-card">
-              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-500">
-                <BookOpen size={18} />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="font-semibold text-ink">{l.topic}</p>
-                <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-ink/50">
-                  {l.group_name && <span>{l.group_name}</span>}
-                  {l.level && <LevelBadge level={l.level} />}
+          {myLessons.map((l) => {
+            const locked = isLocked(l);
+            return (
+              <div key={l.id} className={`flex items-center gap-3 rounded-xl p-3 shadow-card ${locked ? 'bg-ink/5' : 'bg-white'}`}>
+                <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full ${locked ? 'bg-ink/10 text-ink/40' : 'bg-brand-50 text-brand-500'}`}>
+                  {locked ? <Lock size={16} /> : <BookOpen size={18} />}
                 </div>
+                <div className="min-w-0 flex-1">
+                  <p className={`font-semibold ${locked ? 'text-ink/50' : 'text-ink'}`}>
+                    {l.curriculum_lessons && <span className="text-ink/40">#{l.curriculum_lessons.lesson_number} · </span>}
+                    {l.topic}
+                  </p>
+                  {l.curriculum_lessons?.description && (
+                    <p className="mt-0.5 text-xs text-ink/50">{l.curriculum_lessons.description}</p>
+                  )}
+                  {locked ? (
+                    <p className="mt-1 text-xs text-ink/40">This lesson will become available when your teacher reaches it.</p>
+                  ) : (
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-ink/50">
+                      {l.group_name && <span>{l.group_name}</span>}
+                      {l.level && <LevelBadge level={l.level} />}
+                    </div>
+                  )}
+                </div>
+                {locked ? (
+                  <span className="flex flex-shrink-0 items-center gap-1 rounded-full bg-ink/10 px-3 py-1.5 text-xs font-semibold text-ink/40">
+                    <Lock size={13} /> Locked
+                  </span>
+                ) : (
+                  <>
+                    <Link
+                      to={`/my-lessons/${l.id}`}
+                      className="flex flex-shrink-0 items-center gap-1.5 rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-600"
+                    >
+                      <BookOpen size={13} /> Open Lesson
+                    </Link>
+                    {l.pdf_path && (
+                      <button
+                        type="button"
+                        onClick={() => setViewPdf(l)}
+                        className="flex flex-shrink-0 items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-xs font-semibold text-brand-500 hover:bg-brand-50"
+                      >
+                        <Eye size={13} /> View PDF
+                      </button>
+                    )}
+                    <Link
+                      to={`/my-vocabulary?lesson=${l.id}`}
+                      className="flex flex-shrink-0 items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-semibold text-ink/60 hover:bg-ink/5"
+                    >
+                      <Languages size={13} /> Vocabulary
+                    </Link>
+                    {l.discussion_enabled && (
+                      <Link
+                        to={`/chat?type=lesson&id=${l.id}`}
+                        className="flex flex-shrink-0 items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-semibold text-ink/60 hover:bg-ink/5"
+                      >
+                        <MessageSquare size={13} /> Discuss
+                      </Link>
+                    )}
+                  </>
+                )}
               </div>
-              <Link
-                to={`/my-lessons/${l.id}`}
-                className="flex flex-shrink-0 items-center gap-1.5 rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-600"
-              >
-                <BookOpen size={13} /> Open Lesson
-              </Link>
-              {l.pdf_path && (
-                <button
-                  type="button"
-                  onClick={() => handleViewPdf(l.pdf_path)}
-                  className="flex flex-shrink-0 items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-xs font-semibold text-brand-500 hover:bg-brand-50"
-                >
-                  <Download size={13} /> View PDF
-                </button>
-              )}
-              <Link
-                to={`/my-vocabulary?lesson=${l.id}`}
-                className="flex flex-shrink-0 items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-semibold text-ink/60 hover:bg-ink/5"
-              >
-                <Languages size={13} /> Vocabulary
-              </Link>
-              {l.discussion_enabled && (
-                <Link
-                  to={`/chat?type=lesson&id=${l.id}`}
-                  className="flex flex-shrink-0 items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-semibold text-ink/60 hover:bg-ink/5"
-                >
-                  <MessageSquare size={13} /> Discuss
-                </Link>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
+      )}
+
+      {viewPdf && (
+        <PdfViewer path={viewPdf.pdf_path} fileName={viewPdf.pdf_name} onClose={() => setViewPdf(null)} />
       )}
     </div>
   );
