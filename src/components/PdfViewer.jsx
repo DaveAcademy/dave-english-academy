@@ -15,7 +15,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   AlertTriangle, ChevronLeft, ChevronRight, FileText, Loader2,
-  ZoomIn, ZoomOut, X, RotateCw,
+  ZoomIn, ZoomOut, X,
 } from 'lucide-react';
 import { getAttachmentBlob } from '../lib/db';
 
