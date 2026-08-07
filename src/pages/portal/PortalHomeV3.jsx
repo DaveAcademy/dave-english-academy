@@ -21,7 +21,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { CalendarClock, MessageSquare, Award, Trophy, BookOpen, FileCheck2, CreditCard } from 'lucide-react';
+import { ArrowRight, CalendarClock, MessageSquare, Award, Trophy, BookOpen, FileCheck2, CreditCard } from 'lucide-react';
+import {
+  LESSON_STATUS, teacherPaceFor, progressByLessonNumber, lessonStatusFor, nextUnfinishedLesson,
+} from '../../lib/lessonLogic';
 import { useAcademy } from '../../lib/AcademyDataContext';
 import { getLeaderboard } from '../../lib/db';
 import { getStudentPaymentStatus } from '../../lib/storageBridge';
@@ -111,8 +114,7 @@ function currentPresentStreak(records) {
 export default function PortalHomeV3() {
   const { t, i18n } = useTranslation(['dashboard', 'nav']);
   const dateLocale = i18n.language === 'uz' ? 'uz' : 'en-US';
-  const { students, lessons, attendance, homework, homeworkStatus, examScores, certificates } = useAcademy();
-  const me = students[0];
+  const { lessons, attendance, homework, homeworkStatus, examScores, certificates, curriculumProgress, lessonProgress, me } = useAcademy();
   const [leaderboard, setLeaderboard] = useState(null);
   const [paymentStatus, setPaymentStatus] = useState(null);
   const { current, previous } = useMemo(() => currentAndPreviousMonth(), []);
@@ -148,15 +150,17 @@ export default function PortalHomeV3() {
 
   // Lessons no longer carry a meaningful scheduled_at (it's set to
   // creation time and never edited - see Lessons.jsx and PortalHome.jsx's
-  // own note on this), so "upcoming" shows the next lessons in curriculum
-  // order for the student's level/group. Order follows the permanent
-  // curriculum sequence (curriculum_lessons.lesson_number), never
-  // creation/upload date - matches MyLessons.jsx. Legacy lessons with no
-  // curriculum link have no fixed position, so they sort after the
-  // curriculum ones.
-  const upcoming = useMemo(() => {
-    return lessons
-      .filter((l) => !me || (!l.group_name && !l.level) || l.group_name === me.group_name || l.level === me.level)
+  // own note on this), so ordering follows the permanent curriculum
+  // sequence (curriculum_lessons.lesson_number), never creation/upload
+  // date - matches MyLessons.jsx. Legacy lessons with no curriculum link
+  // have no fixed position, so they sort after the curriculum ones.
+  //
+  // The full visible set in curriculum order backs the Continue Learning
+  // CTA, the real completion count, and the upcoming widget below.
+  const myLessons = useMemo(() => {
+    if (!me) return [];
+    return [...lessons]
+      .filter((l) => (!l.group_name && !l.level) || l.group_name === me.group_name || l.level === me.level)
       .sort((a, b) => {
         const an = a.curriculum_lessons?.lesson_number;
         const bn = b.curriculum_lessons?.lesson_number;
@@ -164,9 +168,30 @@ export default function PortalHomeV3() {
         if (an != null) return -1;
         if (bn != null) return 1;
         return new Date(b.created_at) - new Date(a.created_at);
-      })
-      .slice(0, 4);
+      });
   }, [lessons, me]);
+  const upcoming = useMemo(() => myLessons.slice(0, 4), [myLessons]);
+
+  // Same unlock/status rules as MyLessons (lessonLogic.js) - the Continue
+  // Learning button always points at the first unlocked, unfinished lesson.
+  const pace = teacherPaceFor(curriculumProgress, me?.level);
+  const progressByNum = useMemo(() => progressByLessonNumber(lessonProgress, myLessons), [lessonProgress, myLessons]);
+  const nextLesson = useMemo(
+    () => nextUnfinishedLesson(myLessons, pace, progressByNum),
+    [myLessons, pace, progressByNum]
+  );
+  const lessonStats = useMemo(() => {
+    let completed = 0;
+    for (const l of myLessons) {
+      if (lessonStatusFor(l, pace, progressByNum) === LESSON_STATUS.COMPLETED) completed += 1;
+    }
+    return {
+      total: myLessons.length,
+      completed,
+      remaining: myLessons.length - completed,
+      percent: myLessons.length > 0 ? Math.round((completed / myLessons.length) * 100) : 0,
+    };
+  }, [myLessons, pace, progressByNum]);
 
   const stats = useMemo(() => {
     const monthRecords = filterByYearMonth(attendance, 'date', current.year, current.month);
@@ -185,12 +210,9 @@ export default function PortalHomeV3() {
     const pending = myHomework.length - submitted - graded;
     const homeworkDoneRate = myHomework.length > 0 ? Math.round(((submitted + graded) / myHomework.length) * 100) : null;
 
-    // "Completed" no longer has a real date signal to key off (see the
-    // upcoming-lessons note above), so this counts all lessons visible to
-    // the student's level/group rather than a date-filtered subset.
-    const lessonsCompleted = lessons.filter(
-      (l) => !me || (!l.group_name && !l.level) || l.group_name === me.group_name || l.level === me.level
-    ).length;
+    // Real completion count from student_lesson_progress (via lessonStats),
+    // not a "how many lessons are visible" estimate.
+    const lessonsCompleted = lessonStats.completed;
 
     return {
       attendanceRate: rate,
@@ -203,7 +225,7 @@ export default function PortalHomeV3() {
       homeworkPending: pending,
       lessonsCompleted,
     };
-  }, [attendance, examScores, homework, homeworkStatus, lessons, me, current, previous]);
+  }, [attendance, examScores, homework, homeworkStatus, lessonStats, me, current, previous]);
 
   const badges = useMemo(
     () =>
@@ -281,6 +303,36 @@ export default function PortalHomeV3() {
           streak={stats.attendanceStreak}
         />
       </div>
+
+      {/* Continue Learning - always points at the first unlocked, unfinished
+          lesson (same lessonLogic rules as MyLessons). */}
+      {nextLesson ? (
+        <Link
+          to={`/my-lessons/${nextLesson.id}`}
+          className="group mb-6 flex items-center gap-4 rounded-2xl bg-gradient-to-r from-brand-600 to-brand-500 p-4 shadow-card transition-transform hover:scale-[1.01] sm:p-5"
+        >
+          <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-white/15 text-2xl" aria-hidden="true">🚀</span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-xs font-bold uppercase tracking-wide text-white/70">{t('v3ContinueLearning')}</span>
+            <span className="mt-0.5 block truncate font-display text-lg font-bold text-white">
+              {t('v3ContinueWithLesson', { topic: nextLesson.topic || nextLesson.curriculum_lessons?.title })}
+            </span>
+            <span className="mt-0.5 block text-xs text-white/70">
+              {t('v3LessonsProgress', { completed: lessonStats.completed, total: lessonStats.total })}
+              {lessonStats.remaining > 0 && <> · {t('v3LessonsRemaining', { remaining: lessonStats.remaining })}</>}
+            </span>
+          </span>
+          <ArrowRight size={22} className="flex-shrink-0 text-white/80 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+        </Link>
+      ) : myLessons.length > 0 ? (
+        <div className="mb-6 flex items-center gap-3 rounded-2xl border border-active/20 bg-active/5 p-4 shadow-card sm:p-5">
+          <span className="text-2xl" aria-hidden="true">🎉</span>
+          <div>
+            <p className="font-display text-base font-bold text-ink">{t('v3AllCaughtUp')}</p>
+            <p className="text-xs text-ink/60">{t('v3AllCaughtUpHint')}</p>
+          </div>
+        </div>
+      ) : null}
 
       <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <div>

@@ -202,6 +202,12 @@
   "v3LessonsCompletedLabel": "Tugatilgan darslar",
   "v3NoAssignmentsYet": "Hali topshiriqlar yo'q",
   "v3WaitingForHomework": "Uy vazifasi kutilmoqda",
+  "v3ContinueLearning": "O'qishni davom ettirish",
+  "v3ContinueWithLesson": "\"{{topic}}\" bilan davom eting",
+  "v3LessonsProgress": "{{total}} ta darsdan {{completed}} tasi tugatildi",
+  "v3LessonsRemaining": "{{remaining}} ta qoldi",
+  "v3AllCaughtUp": "Hammasi bajarildi!",
+  "v3AllCaughtUpHint": "Barcha mavjud darslarni tugatdingiz.",
   "statusOnTrack": "Barqaror",
   "statusWatch": "Kuzatuvda",
 

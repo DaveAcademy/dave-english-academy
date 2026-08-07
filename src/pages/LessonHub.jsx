@@ -19,12 +19,16 @@
 // - Quiz uses the exams table + its lesson_id column (migration 0051)
 //   instead of a separate quiz table - no new schema beyond that link.
 
-import { useState, useEffect, useMemo } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft, FileText, Download, Upload, BookOpen, Languages, FileCheck2,
-  StickyNote, Pencil, Trash2, X, Plus,
+  ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight, Download, FileCheck2,
+  FileText, Languages, List, BookOpen, Pencil, PlayCircle, Plus, RotateCcw,
+  StickyNote, Trash2, Upload, X,
 } from 'lucide-react';
+import {
+  LESSON_STATUS, teacherPaceFor, progressByLessonNumber, lessonStatusFor,
+} from '../lib/lessonLogic';
 import { useAuth } from '../lib/AuthContext';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { LevelBadge } from '../components/Badge';
@@ -73,23 +77,52 @@ export default function LessonHub() {
   const lessonId = Number(id);
   const { role } = useAuth();
   const isStudent = role === 'student';
+  const navigate = useNavigate();
   const {
-    lessons, students, editLesson, curriculumProgress,
+    lessons, students, me, editLesson, curriculumProgress, lessonProgress, setLessonProgress,
     homework, homeworkStatus, homeworkSubmissionFiles, addHomework, editHomework, removeHomework, submitMyHomeworkFiles, setHomeworkStatusForStudent,
     exams, examScores, addExam, editExam, removeExam, submitMyExamAnswer, setExamScoreForStudent,
   } = useAcademy();
 
   const lesson = lessons.find((l) => l.id === lessonId);
-  const me = students[0];
   const backHref = isStudent ? '/my-lessons' : '/lessons';
 
-  // Real access control is the storage RLS policy on lesson-pdfs
-  // (can_read_lesson_pdf reads curriculum_progress server-side); this is
-  // just so a student who navigates straight to a locked lesson's URL sees
-  // an explanatory message instead of a silently-failing PDF fetch.
-  const myProgress = curriculumProgress.find((p) => p.level === me?.level)?.current_lesson_number ?? 0;
+  // Unlock/status shared with MyLessons (lessonLogic.js) - mirrors
+  // can_read_lesson_pdf server-side: teacher pace floor, lesson 1 always
+  // open, and a completed previous lesson unlocks the next. The storage
+  // RLS policy is the real boundary; this just explains a locked lesson
+  // instead of a silently-failing PDF fetch.
+  const pace = teacherPaceFor(curriculumProgress, me?.level);
+  const progressByNum = useMemo(() => progressByLessonNumber(lessonProgress, lessons), [lessonProgress, lessons]);
+  const lessonStatus = isStudent && me && lesson ? lessonStatusFor(lesson, pace, progressByNum) : null;
+  const isLockedForMe = lessonStatus === 'locked';
   const lessonNumber = lesson?.curriculum_lessons?.lesson_number;
-  const isLockedForMe = isStudent && lessonNumber != null && lessonNumber > myProgress;
+
+  // --- In-lesson navigation (prev / next / jump) ------------------------
+  // Same curriculum ordering the list page uses; students navigate within
+  // their visible scope (shared + own level/group lessons).
+  const orderedLessons = useMemo(
+    () =>
+      [...lessons].sort((a, b) => {
+        const an = a.curriculum_lessons?.lesson_number;
+        const bn = b.curriculum_lessons?.lesson_number;
+        if (an != null && bn != null) return an - bn;
+        if (an != null) return -1;
+        if (bn != null) return 1;
+        return new Date(b.created_at) - new Date(a.created_at);
+      }),
+    [lessons]
+  );
+  const navLessons = useMemo(() => {
+    if (!isStudent || !me) return orderedLessons;
+    return orderedLessons.filter(
+      (l) => (!l.group_name && !l.level) || l.group_name === me.group_name || l.level === me.level
+    );
+  }, [orderedLessons, isStudent, me]);
+  const navIndex = lesson ? navLessons.findIndex((l) => l.id === lesson.id) : -1;
+  const prevLesson = navIndex > 0 ? navLessons[navIndex - 1] : null;
+  const nextLesson = navIndex >= 0 && navIndex < navLessons.length - 1 ? navLessons[navIndex + 1] : null;
+  const goToLesson = (l) => navigate(isStudent ? `/my-lessons/${l.id}` : `/lessons/${l.id}`);
 
   // --- PDF ---
   const [pdfFile, setPdfFile] = useState(null);
@@ -300,6 +333,46 @@ export default function LessonHub() {
     }
   };
 
+  // --- Completion + last-page remembering (student only) ----------------
+  const [justCompleted, setJustCompleted] = useState(false);
+  const lastPageSentRef = useRef(null);
+  const persistPage = useCallback(
+    (pageNum) => {
+      if (!isStudent || !me || !lesson || !pageNum) return;
+      if (lastPageSentRef.current === pageNum) return;
+      lastPageSentRef.current = pageNum;
+      setLessonProgress(me.id, lesson.id, { last_page: pageNum });
+    },
+    [isStudent, me, lesson, setLessonProgress]
+  );
+
+  const handleMarkCompleted = () => {
+    if (!isStudent || !me || !lesson) return;
+    setLessonProgress(me.id, lesson.id, {
+      status: 'completed',
+      completed_at: new Date().toISOString(),
+    });
+    setJustCompleted(true);
+    window.setTimeout(() => setJustCompleted(false), 4000);
+  };
+
+  const handleMarkInProgress = () => {
+    if (!isStudent || !me || !lesson) return;
+    setLessonProgress(me.id, lesson.id, { status: 'in_progress', completed_at: null });
+  };
+
+  // Opening a lesson for the first time marks it in progress, so the list
+  // reflects what the student actually touched (never fires twice).
+  const autoStartRef = useRef(false);
+  useEffect(() => {
+    if (!isStudent || !me || !lesson || isLockedForMe) return;
+    if (autoStartRef.current) return;
+    autoStartRef.current = true;
+    if (lessonStatus === LESSON_STATUS.NOT_STARTED) {
+      setLessonProgress(me.id, lesson.id, { status: 'in_progress' });
+    }
+  }, [isStudent, me, lesson, isLockedForMe, lessonStatus, setLessonProgress]);
+
   if (!lesson) {
     return (
       <div className="rounded-xl bg-white p-10 text-center shadow-card">
@@ -315,7 +388,7 @@ export default function LessonHub() {
     return (
       <div className="rounded-xl bg-white p-10 text-center shadow-card">
         <p className="font-display text-lg font-semibold text-ink">🔒 This lesson is locked.</p>
-        <p className="mt-1 text-sm text-ink/50">This lesson will become available when your teacher reaches it.</p>
+        <p className="mt-1 text-sm text-ink/50">Complete the previous lesson to unlock this one.</p>
         <Link to={backHref} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-brand-500 hover:underline">
           <ArrowLeft size={14} /> Back to lessons
         </Link>
@@ -325,15 +398,104 @@ export default function LessonHub() {
 
   return (
     <div className="space-y-4">
+      {justCompleted && (
+        <div className="flex items-center gap-3 rounded-xl border border-active/20 bg-active/5 p-4 shadow-card">
+          <span className="text-2xl" aria-hidden="true">🎉</span>
+          <div>
+            <p className="font-display text-base font-bold text-ink">Lesson completed!</p>
+            <p className="text-xs text-ink/60">The next lesson is now unlocked for you.</p>
+          </div>
+        </div>
+      )}
+
       <header>
-        <Link to={backHref} className="mb-2 flex items-center gap-1 text-xs font-semibold text-brand-500 hover:underline">
-          <ArrowLeft size={13} /> Back to lessons
-        </Link>
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+          <Link to={backHref} className="flex items-center gap-1 text-xs font-semibold text-brand-500 hover:underline">
+            <ArrowLeft size={13} /> Back to lessons
+          </Link>
+          {navLessons.length > 1 && (
+            <label className="flex items-center gap-1.5 text-xs font-semibold text-ink/60">
+              <List size={13} className="text-brand-500" aria-hidden="true" />
+              <select
+                value={lesson.id}
+                onChange={(e) => {
+                  const target = navLessons.find((l) => l.id === Number(e.target.value));
+                  if (target) goToLesson(target);
+                }}
+                className="input max-w-[220px] w-auto py-1 text-xs"
+                aria-label="Jump to lesson"
+              >
+                {navLessons.map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.curriculum_lessons?.lesson_number != null ? `#${l.curriculum_lessons.lesson_number} · ` : ''}{l.topic}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+        </div>
+
         <div className="flex flex-wrap items-center gap-2">
-          <h1 className="font-display text-2xl font-bold text-ink">{lesson.topic}</h1>
+          <h1 className="font-display text-2xl font-bold text-ink">
+            {lessonNumber != null && <span className="text-ink/40">#{lessonNumber} · </span>}
+            {lesson.topic}
+          </h1>
           {lesson.level && <LevelBadge level={lesson.level} />}
+          {isStudent && lessonStatus && lessonStatus !== 'locked' && (
+            <span
+              className={`flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                lessonStatus === 'completed' ? 'bg-active/10 text-active' : lessonStatus === 'in_progress' ? 'bg-brand-50 text-brand-600' : 'bg-ink/5 text-ink/60'
+              }`}
+            >
+              {lessonStatus === 'completed' ? <CheckCircle2 size={13} /> : lessonStatus === 'in_progress' ? <PlayCircle size={13} /> : null}
+              {lessonStatus === 'completed' ? 'Completed' : lessonStatus === 'in_progress' ? 'In progress' : 'Not started'}
+            </span>
+          )}
         </div>
         {lesson.group_name && <p className="mt-1 text-sm text-ink/50">{lesson.group_name}</p>}
+
+        {isStudent && me && !isLockedForMe && (
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            {lessonStatus === 'completed' ? (
+              <>
+                <span className="flex items-center gap-1.5 rounded-lg bg-active/10 px-3 py-1.5 text-sm font-semibold text-active">
+                  <CheckCircle2 size={15} /> Completed
+                </span>
+                <button
+                  onClick={handleMarkInProgress}
+                  className="flex items-center gap-1 rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-semibold text-ink/60 hover:bg-ink/5"
+                >
+                  <RotateCcw size={13} /> Mark as in progress
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={handleMarkCompleted}
+                className="flex items-center gap-1.5 rounded-lg bg-brand-500 px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-600"
+              >
+                <CheckCircle2 size={15} /> Mark as completed
+              </button>
+            )}
+          </div>
+        )}
+
+        {navLessons.length > 1 && (
+          <div className="mt-4 flex items-center justify-between gap-2 rounded-xl bg-white p-2 shadow-card">
+            {prevLesson ? (
+              <button onClick={() => goToLesson(prevLesson)} className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-semibold text-ink/70 hover:bg-ink/5">
+                <ChevronLeft size={15} /> Previous
+              </button>
+            ) : <span className="px-2" />}
+            <span className="text-xs font-semibold text-ink/40">
+              {navIndex + 1} / {navLessons.length}
+            </span>
+            {nextLesson ? (
+              <button onClick={() => goToLesson(nextLesson)} className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-semibold text-brand-500 hover:bg-brand-50">
+                Next <ChevronRight size={15} />
+              </button>
+            ) : <span className="px-2" />}
+          </div>
+        )}
       </header>
 
       {/* PDF */}
@@ -683,7 +845,13 @@ export default function LessonHub() {
         />
       )}
       {viewPdf && (
-        <PdfViewer path={viewPdf.pdf_path} fileName={viewPdf.pdf_name} onClose={() => setViewPdf(null)} />
+        <PdfViewer
+          path={viewPdf.pdf_path}
+          fileName={viewPdf.pdf_name}
+          initialPage={isStudent && me ? progressByNum[lessonNumber]?.last_page || 1 : 1}
+          onPageChange={persistPage}
+          onClose={() => setViewPdf(null)}
+        />
       )}
     </div>
   );

@@ -3,7 +3,7 @@
 // mutation here (rather than scattered across pages) is what makes the
 // eventual Supabase swap mechanical: only db.js and this hook change.
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import * as db from '../lib/db';
 import { supabase } from '../lib/supabaseClient';
 import { writeAutoBackup } from '../lib/backup';
@@ -101,6 +101,27 @@ export function useAcademyData() {
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [lessonProgress, setLessonProgressState] = useState([]);
+
+  // The portal's "me": the student row whose profile_id matches the
+  // signed-in user, falling back to the first roster student (the
+  // long-standing convention) when no profile link exists yet. Portal pages
+  // should read this instead of hand-rolling students[0].
+  const me = useMemo(
+    () => students.find((s) => s.profile_id && profile?.id && s.profile_id === profile.id) ?? students[0] ?? null,
+    [students, profile]
+  );
+
+  // Per-student lesson completion + PDF page tracking (Lesson Hub V2) -
+  // loaded for the current student only; RLS scopes rows to their owner.
+  useEffect(() => {
+    if (!me) return;
+    let cancelled = false;
+    db.listStudentLessonProgress(me.id)
+      .then((rows) => { if (!cancelled) setLessonProgressState(rows); })
+      .catch(() => { if (!cancelled) setLessonProgressState([]); });
+    return () => { cancelled = true; };
+  }, [me]);
 
   useEffect(() => {
     (async () => {
@@ -369,6 +390,27 @@ export function useAcademyData() {
       return record;
     } catch (e) {
       setError('Could not update curriculum progress. Please try again.');
+      throw e;
+    }
+  }, []);
+
+  // Per-student lesson completion (Lesson Hub V2) - upserts one
+  // (student, lesson) progress row and merges the returned row into state.
+  const setLessonProgress = useCallback(async (studentId, lessonId, patch) => {
+    try {
+      const record = await db.setStudentLessonProgress(studentId, lessonId, patch);
+      setLessonProgressState((prev) => {
+        const idx = prev.findIndex((r) => r.student_id === studentId && r.lesson_id === lessonId);
+        if (idx >= 0) {
+          const next = [...prev];
+          next[idx] = { ...next[idx], ...record };
+          return next;
+        }
+        return [...prev, record];
+      });
+      return record;
+    } catch (e) {
+      setError('Could not save your lesson progress. Please try again.');
       throw e;
     }
   }, []);
@@ -751,15 +793,24 @@ export function useAcademyData() {
     } catch (e) {
       // best-effort, see the initial-load effect above for why
     }
-  }, []);
+    if (me) {
+      try {
+        setLessonProgressState(await db.listStudentLessonProgress(me.id));
+      } catch (e) {
+        // best-effort - progress is additive, not worth the shared error banner
+      }
+    }
+  }, [me]);
 
   return {
     students,
+    me,
     payments,
     attendance,
     lessons,
     curriculumLessons,
     curriculumProgress,
+    lessonProgress,
     lessonAttendance,
     exams,
     examScores,
@@ -786,6 +837,7 @@ export function useAcademyData() {
     editLesson,
     removeLesson,
     advanceCurriculumProgress,
+    setLessonProgress,
     markLessonAttendance,
     addExam,
     editExam,

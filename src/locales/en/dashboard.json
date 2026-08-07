@@ -202,6 +202,12 @@
   "v3LessonsCompletedLabel": "Lessons completed",
   "v3NoAssignmentsYet": "No assignments yet",
   "v3WaitingForHomework": "Waiting for homework",
+  "v3ContinueLearning": "Continue Learning",
+  "v3ContinueWithLesson": "Continue with \"{{topic}}\"",
+  "v3LessonsProgress": "{{completed}} of {{total}} lessons complete",
+  "v3LessonsRemaining": "{{remaining}} left",
+  "v3AllCaughtUp": "All caught up!",
+  "v3AllCaughtUpHint": "You've completed every available lesson.",
   "statusOnTrack": "On track",
   "statusWatch": "Watch",
 

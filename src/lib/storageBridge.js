@@ -574,6 +574,35 @@ export async function advanceCurriculumProgress(level, currentLessonNumber) {
   return data;
 }
 
+// ---------- Student lesson progress (Lesson Hub V2) ----------
+
+// Per-student completion + PDF page tracking, one row per (student, lesson)
+// - see migration 0093. RLS scopes every row to its owner, so passing the
+// caller's own student id is both a convenience and the security boundary.
+export async function listStudentLessonProgress(studentId) {
+  const { data, error } = await supabase
+    .from('student_lesson_progress')
+    .select('*')
+    .eq('student_id', studentId);
+  if (error) throw error;
+  return data;
+}
+
+// Upsert on (student_id, lesson_id). patch is a partial row - e.g.
+// { status: 'completed', completed_at: ... } or { last_page: 7 } - missing
+// columns keep their defaults/existing values. Returns the merged row.
+export async function setStudentLessonProgress(studentId, lessonId, patch) {
+  const { data, error } = await supabase
+    .from('student_lesson_progress')
+    .upsert({ student_id: studentId, lesson_id: lessonId, ...patch, updated_at: new Date().toISOString() }, {
+      onConflict: 'student_id,lesson_id',
+    })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
 export async function createLesson(data) {
   const { data: record, error } = await supabase.from('lessons').insert(data).select().single();
   if (error) throw error;
