@@ -11,8 +11,11 @@
 -- (curriculum_progress.current_lesson_number + max_available_lesson, see 0093
 -- and 0095). The lesson unlock rule (lessonLogic.js lessonCapFor, mirrored by
 -- can_read_lesson_pdf) then applies to A1 automatically - no code change:
---   A  -> 1-20     A1 -> 1-30     B -> 1-40     C -> 1-50
--- A1's class coverage starts at 30 so lessons 21-30 are immediately open.
+--   A  -> 1-20     A1 -> 1-10     B -> 1-40     C -> 1-50
+-- A1 is a brand-new group (started 2026-08-08); its class coverage opens at
+-- 10 so lessons 1-10 are open and the cap grows as the group advances.
+-- (Corrected 2026-08-08: the applied migration had set 30 for a group still
+-- only on Lesson 1; live DB and this seed now agree on 10.)
 
 do $$
 declare
@@ -35,5 +38,5 @@ begin
 end $$;
 
 insert into public.curriculum_progress (level, current_lesson_number, max_available_lesson, updated_at)
-values ('A1', 30, 30, now())
+values ('A1', 10, 10, now())
 on conflict (level) do nothing;
