@@ -98,12 +98,34 @@ export default function Rankings() {
   const [awardPending, setAwardPending] = useState(false);
   const [awardMessage, setAwardMessage] = useState('');
 
+  // Idempotency guard for award submissions. The ledger is insert-only (see
+  // migration 0019), so there is nothing server-side preventing an identical
+  // award batch from being written twice; every aggregation then sums both
+  // rows and a level's "Today's Points" can show 2x. We saw this happen for
+  // real: "Bulk class points via Rankings" submitted twice ~40 s apart on
+  // 2026-08-08 created two identical rows per Level-B student. The screen
+  // clears the values after a successful submit, so a repeat with the same
+  // values means the teacher re-typed or the first attempt "failed" on the
+  // client while actually reaching the DB (timeout/retry). Guard: remember
+  // the exact signature of the batch just submitted (whether it reported
+  // success or a client-side error) and reject an identical resubmit within
+  // a short window, so a retry can never double-write the same row.
+  const [lastAwardSignature, setLastAwardSignature] = useState(null);
+  const [lastBulkSignature, setLastBulkSignature] = useState(null);
+  const DUP_WINDOW_MS = 2 * 60 * 1000;
+
   const submitAward = async (e) => {
     e.preventDefault();
     const student = students.find((s) => String(s.id) === String(awardStudentId));
     const points = Number(awardPointsValue);
     if (!student || !Number.isFinite(points) || points === 0 || !canAwardLevel(student.level)) return;
     const categoryKey = points > 0 ? 'bonus' : 'penalty';
+    const sig = `${student.id}|${categoryKey}|${points}|${awardReason.trim() || ''}`;
+    if (lastAwardSignature?.sig === sig && Date.now() - lastAwardSignature.at < DUP_WINDOW_MS) {
+      setAwardMessage('That exact award was just submitted. Check the leaderboard before resubmitting.');
+      return;
+    }
+    setLastAwardSignature({ sig, at: Date.now() });
     setAwardPending(true);
     setAwardMessage('');
     try {
@@ -180,6 +202,19 @@ export default function Rankings() {
       .map((s) => ({ student: s, points: Number(bulkValues[s.id]) }))
       .filter((r) => Number.isFinite(r.points) && r.points !== 0);
     if (entries.length === 0) return;
+    // Same non-idempotency guard as submitAward, but for the whole batch:
+    // signature = sorted student:points of every non-zero row, so an exact
+    // repeat submission (double-click, or client-error retry) is rejected
+    // instead of writing the same rows a second time.
+    const batchKey = entries
+      .map(({ student, points }) => `${student.id}:${points}`)
+      .sort()
+      .join('|');
+    if (lastBulkSignature?.sig === batchKey && Date.now() - lastBulkSignature.at < DUP_WINDOW_MS) {
+      setBulkMessage('That exact batch was just submitted. Check the leaderboard before resubmitting.');
+      return;
+    }
+    setLastBulkSignature({ sig: batchKey, at: Date.now() });
     setBulkPending(true);
     setBulkMessage('');
     try {
