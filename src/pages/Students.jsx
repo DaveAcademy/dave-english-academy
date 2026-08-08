@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Search, Plus, Upload, Pencil, Trash2, ChevronUp, ChevronDown, ArrowUpDown, MessageCircle, MessageCircleOff } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { useAuth } from '../lib/AuthContext';
+import { LEVELS } from '../lib/levels';
 import { LevelBadge, StatusBadge } from '../components/Badge';
 import StudentForm from '../components/StudentForm';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -130,9 +131,9 @@ export default function Students() {
         </div>
         <select value={filters.level} onChange={(e) => setFilters({ ...filters, level: e.target.value })} className="input sm:w-40">
           <option value="">{t('common:allLevels')}</option>
-          <option value="A">{t('common:levelA')}</option>
-          <option value="B">{t('common:levelB')}</option>
-          <option value="C">{t('common:levelC')}</option>
+          {LEVELS.map((lvl) => (
+            <option key={lvl} value={lvl}>{t(`common:level${lvl}`)}</option>
+          ))}
         </select>
         <select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })} className="input sm:w-40">
           <option value="">{t('common:allStatuses')}</option>

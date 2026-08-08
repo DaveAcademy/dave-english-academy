@@ -272,9 +272,9 @@ export default function Lessons() {
             className="input"
           />
           <select value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value })} className="input">
-            <option value="A">Level A</option>
-            <option value="B">Level B</option>
-            <option value="C">Level C</option>
+            {LEVELS.map((lvl) => (
+              <option key={lvl} value={lvl}>Level {lvl}</option>
+            ))}
           </select>
           <label className="flex items-center gap-2 text-sm text-ink/70 sm:col-span-2">
             <input

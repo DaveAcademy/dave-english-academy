@@ -13,6 +13,7 @@ import { useAcademy } from '../lib/AcademyDataContext';
 import { LevelBadge } from '../components/Badge';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { uploadAttachment, getAttachmentUrl } from '../lib/db';
+import { LEVELS } from '../lib/levels';
 import ExamGradingRoster from '../components/ExamGradingRoster';
 
 const EXAM_TYPES = ['Written', 'Oral'];
@@ -215,9 +216,9 @@ export default function Exams() {
             className="input sm:col-span-2"
           />
           <select value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value })} className="input">
-            <option value="A">{t('common:levelA')}</option>
-            <option value="B">{t('common:levelB')}</option>
-            <option value="C">{t('common:levelC')}</option>
+            {LEVELS.map((lvl) => (
+              <option key={lvl} value={lvl}>{t(`common:level${lvl}`)}</option>
+            ))}
           </select>
           <select value={form.exam_type} onChange={(e) => setForm({ ...form, exam_type: e.target.value })} className="input">
             {EXAM_TYPES.map((type) => (

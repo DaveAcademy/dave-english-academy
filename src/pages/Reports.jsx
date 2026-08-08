@@ -7,6 +7,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { Download, FileBarChart, ShieldAlert } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { useAuth } from '../lib/AuthContext';
+import { LEVELS } from '../lib/levels';
 import { formatUZS } from '../utils/format';
 import { downloadReportPdf } from '../utils/pdf';
 import { getPaymentCollectionSummary, getStudentPaymentStatus } from '../lib/storageBridge';
@@ -233,9 +234,9 @@ export default function Reports() {
       <div className="mb-4 flex flex-wrap gap-2 rounded-xl bg-white p-3 shadow-card">
         <select value={level} onChange={(e) => setLevel(e.target.value)} className="input w-auto">
           <option value="">All levels</option>
-          <option value="A">Level A</option>
-          <option value="B">Level B</option>
-          <option value="C">Level C</option>
+          {LEVELS.map((lvl) => (
+            <option key={lvl} value={lvl}>Level {lvl}</option>
+          ))}
         </select>
         {reportType === 'monthly' ? (
           <>

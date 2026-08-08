@@ -6,6 +6,7 @@ import { Search, ShieldAlert, X, History, MessageSquare } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { useAuth } from '../lib/AuthContext';
 import { LevelBadge } from '../components/Badge';
+import { LEVELS } from '../lib/levels';
 import { formatUZS } from '../utils/format';
 import { formatDateOnly, todayISO } from '../utils/date';
 import {
@@ -365,9 +366,9 @@ export default function Payments() {
         </div>
         <select value={level} onChange={(e) => setLevel(e.target.value)} className="input sm:w-32">
           <option value="">All levels</option>
-          <option value="A">Level A</option>
-          <option value="B">Level B</option>
-          <option value="C">Level C</option>
+          {LEVELS.map((lvl) => (
+            <option key={lvl} value={lvl}>Level {lvl}</option>
+          ))}
         </select>
         <select value={sortKey} onChange={(e) => setSortKey(e.target.value)} className="input sm:w-48">
           {SORT_OPTIONS.map((o) => (

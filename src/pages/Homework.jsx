@@ -12,6 +12,7 @@ import { useAcademy } from '../lib/AcademyDataContext';
 import { LevelBadge } from '../components/Badge';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { uploadAttachment, getAttachmentUrl } from '../lib/db';
+import { LEVELS } from '../lib/levels';
 import HomeworkGradingRoster from '../components/HomeworkGradingRoster';
 
 const EMPTY_FORM = { title: '', level: 'A', description: '', due_date: new Date().toISOString().slice(0, 10), lesson_id: '' };
@@ -223,9 +224,9 @@ export default function Homework() {
             className="input sm:col-span-2"
           />
           <select value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value })} className="input">
-            <option value="A">{t('common:levelA')}</option>
-            <option value="B">{t('common:levelB')}</option>
-            <option value="C">{t('common:levelC')}</option>
+            {LEVELS.map((lvl) => (
+              <option key={lvl} value={lvl}>{t(`common:level${lvl}`)}</option>
+            ))}
           </select>
           <select
             value={form.lesson_id}
