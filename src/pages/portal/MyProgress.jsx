@@ -1,10 +1,15 @@
 // MyProgress.jsx
 
 import { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { CheckCircle2, Clock, XCircle, Star, Trophy, CalendarCheck, FileCheck2, BookOpen } from 'lucide-react';
 import { useAcademy } from '../../lib/AcademyDataContext';
 import { getLeaderboard } from '../../lib/db';
+import {
+  LESSON_STATUS, teacherPaceFor, lessonCapFor, progressByLessonNumber, lessonStatusFor,
+  nextUnfinishedLesson, completionStreak,
+} from '../../lib/lessonLogic';
 import { formatWeekdayDate } from '../../utils/date';
 import { attendanceRate } from '../../utils/attendance';
 import { calculateLevel } from '../../utils/level';
@@ -14,6 +19,7 @@ import Panel from '../../components/Panel';
 import SectionLabel from '../../components/SectionLabel';
 import StatusPill from '../../components/StatusPill';
 import BadgeShelf from '../../components/BadgeShelf';
+import LessonStatsBar from '../../components/lesson/LessonStatsBar';
 
 const STATUS_ICON = { Present: CheckCircle2, Late: Clock, Absent: XCircle };
 const STATUS_COLOR = { Present: 'text-active', Late: 'text-levelB', Absent: 'text-inactive' };
@@ -22,7 +28,7 @@ const HOMEWORK_TONE = { Assigned: 'watch', Submitted: 'info', Graded: 'good' };
 export default function MyProgress() {
   const { t, i18n } = useTranslation(['portal', 'attendance', 'dashboard']);
   const dateLocale = i18n.language === 'uz' ? 'uz' : 'en-US';
-  const { students, attendance, homework, homeworkStatus, exams, examScores } = useAcademy();
+  const { students, attendance, homework, homeworkStatus, exams, examScores, lessons, curriculumProgress, lessonProgress } = useAcademy();
   const me = students[0];
   const [leaderboard, setLeaderboard] = useState(null);
 
@@ -65,9 +71,11 @@ export default function MyProgress() {
   }, [examScores, exams]);
 
   const examAvg = useMemo(() => {
-    const scored = examScores.filter((s) => s.score != null);
-    return scored.length > 0 ? Math.round(scored.reduce((sum, s) => sum + Number(s.score), 0) / scored.length) : null;
-  }, [examScores]);
+    const scored = examRows.filter((s) => s.score != null);
+    return scored.length > 0
+      ? Math.round((scored.reduce((sum, s) => sum + Number(s.score) / (s.exam.max_score || 100), 0) / scored.length) * 100)
+      : null;
+  }, [examRows]);
 
   // Improvement indicator: latest two exams, normalized to a percent of
   // each exam's own max_score so exams with different point totals stay
@@ -82,6 +90,41 @@ export default function MyProgress() {
     if (delta === 0) return { direction: 'flat' };
     return { direction: delta > 0 ? 'up' : 'down', delta: Math.abs(delta) };
   }, [examRows]);
+
+  // Curriculum progress - the same lessonLogic + student_lesson_progress
+  // model the portal home and MyLessons use, so the numbers here always
+  // agree with what the student already sees there (status/cap/unlock).
+  const lessonBlock = useMemo(() => {
+    if (!me) return null;
+    const visible = lessons.filter((l) => (!l.group_name && !l.level) || l.group_name === me.group_name || l.level === me.level);
+    const pace = teacherPaceFor(curriculumProgress, me.level);
+    const cap = lessonCapFor(curriculumProgress, me.level);
+    const progressByNum = progressByLessonNumber(lessonProgress, visible);
+    let completed = 0;
+    let inProgress = 0;
+    let vocabCount = 0;
+    for (const l of visible) {
+      const s = lessonStatusFor(l, pace, progressByNum, cap);
+      if (s === LESSON_STATUS.COMPLETED) {
+        completed += 1;
+        vocabCount += l.lesson_vocabulary?.[0]?.count ?? 0;
+      } else if (s === LESSON_STATUS.IN_PROGRESS) {
+        inProgress += 1;
+      }
+    }
+    const total = visible.length;
+    return {
+      total,
+      completed,
+      inProgress,
+      remaining: total - completed,
+      vocabCount,
+      percent: total > 0 ? Math.round((completed / total) * 100) : 0,
+      streak: completionStreak(lessonProgress),
+      cap,
+      next: nextUnfinishedLesson(visible, pace, progressByNum, undefined, cap),
+    };
+  }, [me, lessons, curriculumProgress, lessonProgress]);
 
   // Same scoping rule as PortalHomeV3/Homework.jsx: homework assigned to
   // the student's level (or to everyone, when level is unset).
@@ -107,10 +150,10 @@ export default function MyProgress() {
         homeworkTotal: homeworkStats.total,
         homeworkDoneRate: homeworkStats.rate,
         examAvg,
-        lessonsCompleted: 0,
+        lessonsCompleted: lessonBlock?.completed ?? 0,
         rank,
       }),
-    [attendancePct, homeworkStats, examAvg, rank]
+    [attendancePct, homeworkStats, examAvg, rank, lessonBlock]
   );
 
   if (!me) {
@@ -139,6 +182,35 @@ export default function MyProgress() {
         <StatCard label={t('dashboard:myPoints')} value={points} tone="brand" icon={Star} />
         <StatCard label={t('dashboard:myRank')} value={rank ? `#${rank}` : '—'} tone="success" icon={Trophy} />
       </div>
+
+      {lessonBlock && (
+        <>
+          <SectionLabel>{t('portal:lessonProgressTitle')}</SectionLabel>
+          <div className="mb-6 space-y-3">
+            <LessonStatsBar
+              total={lessonBlock.total}
+              completed={lessonBlock.completed}
+              inProgress={lessonBlock.inProgress}
+              remaining={lessonBlock.remaining}
+              streak={lessonBlock.streak}
+              vocabCount={lessonBlock.vocabCount}
+            />
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-1 rounded-xl bg-white px-4 py-3 text-sm text-ink/70 shadow-card">
+              <span>
+                <strong className="font-semibold text-ink">{t('portal:lessonCapLabel')}</strong>: {lessonBlock.cap}
+              </span>
+              <span className="text-ink/30">·</span>
+              {lessonBlock.next ? (
+                <Link to={`/my-lessons/${lessonBlock.next.id}`} className="font-semibold text-brand-500 hover:underline">
+                  {t('portal:nextLessonLabel')}: {lessonBlock.next.topic || lessonBlock.next.curriculum_lessons?.title || ''} (#{lessonBlock.next.curriculum_lessons?.lesson_number})
+                </Link>
+              ) : (
+                <span>{t('portal:nextLessonLabel')}: —</span>
+              )}
+            </div>
+          </div>
+        </>
+      )}
 
       <SectionLabel>{t('dashboard:achievementsTitle')}</SectionLabel>
       <div className="mb-6">

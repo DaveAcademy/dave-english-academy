@@ -588,7 +588,16 @@ export async function listStudentLessonProgress(studentId) {
   return data;
 }
 
-// Upsert on (student_id, lesson_id). patch is a partial row - e.g.
+// All lesson-progress rows across every student (Lesson Progress report) -
+// only reachable by admins/teachers, whose RLS policies on
+// student_lesson_progress grant full select (migration 0094).
+export async function listAllStudentLessonProgress() {
+  const { data, error } = await supabase.from('student_lesson_progress').select('*');
+  if (error) throw error;
+  return data;
+}
+
+// Upsert on (student_id, lesson_id). data is a partial upsert - e.g.
 // { status: 'completed', completed_at: ... } or { last_page: 7 } - missing
 // columns keep their defaults/existing values. Returns the merged row.
 export async function setStudentLessonProgress(studentId, lessonId, patch) {

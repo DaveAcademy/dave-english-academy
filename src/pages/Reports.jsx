@@ -10,13 +10,17 @@ import { useAuth } from '../lib/AuthContext';
 import { LEVELS } from '../lib/levels';
 import { formatUZS } from '../utils/format';
 import { downloadReportPdf } from '../utils/pdf';
-import { getPaymentCollectionSummary, getStudentPaymentStatus } from '../lib/storageBridge';
+import { getPaymentCollectionSummary, getStudentPaymentStatus, listAllStudentLessonProgress } from '../lib/storageBridge';
+import {
+  LESSON_STATUS, teacherPaceFor, lessonCapFor, progressByLessonNumber, lessonStatusFor, nextUnfinishedLesson,
+} from '../lib/lessonLogic';
 
 const REPORT_TYPES = [
   { key: 'attendance', label: 'Attendance' },
   { key: 'payments', label: 'Payment Collection' },
   { key: 'exams', label: 'Exams' },
   { key: 'homework', label: 'Homework' },
+  { key: 'lessonProgress', label: 'Lesson Progress' },
   { key: 'certificates', label: 'Certificates' },
   { key: 'points', label: 'Points' },
   { key: 'monthly', label: 'Student Coverage' },
@@ -36,6 +40,9 @@ export default function Reports() {
     homework,
     homeworkStatus,
     certificates,
+    lessons,
+    curriculumProgress,
+    lessonProgress,
   } = useAcademy();
 
   const [reportType, setReportType] = useState('attendance');
@@ -80,6 +87,23 @@ export default function Reports() {
       cancelled = true;
     };
   }, [reportType, students]);
+
+  // Lesson Progress Report: academy-wide student_lesson_progress rows
+  // (migration 0094) - only reachable by admins/teachers, whose RLS grant
+  // full select on that table. Per-student rows are derived with the same
+  // lessonLogic status/cap/next rules as MyProgress and the Lesson Hub, so
+  // this report always agrees with what the portal shows each student.
+  const [allLessonProgress, setAllLessonProgress] = useState([]);
+  useEffect(() => {
+    if (reportType !== 'lessonProgress') return;
+    let cancelled = false;
+    listAllStudentLessonProgress()
+      .then((rows) => !cancelled && setAllLessonProgress(rows || []))
+      .catch(() => !cancelled && setAllLessonProgress([]));
+    return () => {
+      cancelled = true;
+    };
+  }, [reportType]);
 
   const studentsById = useMemo(() => Object.fromEntries(students.map((s) => [s.id, s])), [students]);
   const filteredStudentIds = useMemo(() => {
@@ -138,6 +162,31 @@ export default function Reports() {
           });
         return { columns: cols, rows: data };
       }
+      case 'lessonProgress': {
+        const cols = ['Student', 'Level', 'Completed', 'In progress', 'Next lesson', 'Cap', 'Progress %'];
+        const activeFiltered = students.filter((s) => s.status === 'Active' && filteredStudentIds.has(s.id));
+        const data = activeFiltered.map((s) => {
+          const visible = lessons.filter((l) => (!l.group_name && !l.level) || l.group_name === s.group_name || l.level === s.level);
+          const pace = teacherPaceFor(curriculumProgress, s.level);
+          const cap = lessonCapFor(curriculumProgress, s.level);
+          const progressByNum = progressByLessonNumber(allLessonProgress, visible);
+          let completed = 0;
+          let inProgress = 0;
+          for (const l of visible) {
+            const st = lessonStatusFor(l, pace, progressByNum, cap);
+            if (st === LESSON_STATUS.COMPLETED) completed += 1;
+            else if (st === LESSON_STATUS.IN_PROGRESS) inProgress += 1;
+          }
+          const total = visible.length;
+          const next = nextUnfinishedLesson(visible, pace, progressByNum, undefined, cap);
+          const nextLabel = next
+            ? `${next.topic || next.curriculum_lessons?.title || 'Untitled'} (#${next.curriculum_lessons?.lesson_number})`
+            : '—';
+          const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+          return [s.real_name, s.level, completed, inProgress, nextLabel, cap, `${pct}%`];
+        });
+        return { columns: cols, rows: data };
+      }
       case 'certificates': {
         const cols = ['Student', 'Certificate', 'Issued date'];
         const data = certificates
@@ -177,7 +226,8 @@ export default function Reports() {
     }
   }, [
     reportType, students, paymentRows, coverageStatuses, attendance, exams, examScores, homework, homeworkStatus,
-    certificates, filteredStudentIds, studentsById, fromDate, toDate, year, month,
+    certificates, lessons, curriculumProgress, lessonProgress, allLessonProgress, filteredStudentIds, studentsById,
+    fromDate, toDate, year, month,
   ]);
 
   const reportLabel = REPORT_TYPES.find((r) => r.key === reportType)?.label || 'Report';

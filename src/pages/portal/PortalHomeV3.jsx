@@ -114,7 +114,7 @@ function currentPresentStreak(records) {
 export default function PortalHomeV3() {
   const { t, i18n } = useTranslation(['dashboard', 'nav']);
   const dateLocale = i18n.language === 'uz' ? 'uz' : 'en-US';
-  const { lessons, attendance, homework, homeworkStatus, examScores, certificates, curriculumProgress, lessonProgress, me } = useAcademy();
+  const { lessons, attendance, homework, homeworkStatus, exams, examScores, certificates, curriculumProgress, lessonProgress, me } = useAcademy();
   const [leaderboard, setLeaderboard] = useState(null);
   const [paymentStatus, setPaymentStatus] = useState(null);
   const { current, previous } = useMemo(() => currentAndPreviousMonth(), []);
@@ -201,8 +201,14 @@ export default function PortalHomeV3() {
     const lastRate = attendanceRate(lastMonthRecords);
     const streak = currentPresentStreak(attendance);
 
+    // Normalized against each exam's own max_score (average of score/max → %)
+    // - the same formula the Dashboard and MyProgress use, so the number shown
+    // here always agrees with theirs, even when exams have different totals.
+    const examsById = Object.fromEntries(exams.map((e) => [e.id, e]));
     const scored = examScores.filter((s) => s.score != null);
-    const examAvg = scored.length > 0 ? Math.round(scored.reduce((sum, s) => sum + Number(s.score), 0) / scored.length) : null;
+    const examAvg = scored.length > 0
+      ? Math.round((scored.reduce((sum, s) => sum + Number(s.score) / (examsById[s.exam_id]?.max_score || 100), 0) / scored.length) * 100)
+      : null;
 
     const myHomework = me ? homework.filter((h) => !h.level || h.level === me.level) : [];
     const statusOf = (id) => homeworkStatus.find((h) => h.homework_id === id)?.status || 'Assigned';
@@ -226,7 +232,7 @@ export default function PortalHomeV3() {
       homeworkPending: pending,
       lessonsCompleted,
     };
-  }, [attendance, examScores, homework, homeworkStatus, lessonStats, me, current, previous]);
+  }, [attendance, exams, examScores, homework, homeworkStatus, lessonStats, me, current, previous]);
 
   const badges = useMemo(
     () =>
