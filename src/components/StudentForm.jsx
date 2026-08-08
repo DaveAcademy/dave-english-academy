@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
+import { LEVELS } from '../lib/levels';
 
 const EMPTY_FORM = {
   real_name: '',
@@ -96,9 +97,9 @@ export default function StudentForm({ student, onClose, onSave }) {
 
               <Field label={t('levelLabel')} required>
                 <select value={form.level} onChange={(e) => update({ level: e.target.value })} className="input">
-                  <option value="A">A</option>
-                  <option value="B">B</option>
-                  <option value="C">C</option>
+                  {LEVELS.map((lv) => (
+                    <option key={lv} value={lv}>{lv}</option>
+                  ))}
                 </select>
               </Field>
 

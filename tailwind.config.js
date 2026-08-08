@@ -17,6 +17,7 @@ export default {
         active: '#1F9D7C',
         inactive: '#E1584B',
         levelA: '#3E7CB1',
+        levelA1: '#2C9E8F',
         levelB: '#F2A93B',
         levelC: '#7856A6',
       },

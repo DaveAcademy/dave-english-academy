@@ -10,7 +10,10 @@
 //   * a lesson is unlocked once the teacher's per-level pace has reached
 //     it (current_lesson_number), or
 //   * the student has completed the immediately previous lesson.
-// Locked is a UI state only - the storage RLS policy is the real boundary.
+// A per-level hard ceiling (max_available_lesson, migration 0095) overrides
+// all of the above - a student can never open lessons past their level's cap
+// (A: 20, B: 40, C: 50). Locked is a UI state only - the storage RLS policy
+// is the real boundary.
 
 export const LESSON_STATUS = {
   NOT_STARTED: 'not_started',
@@ -21,6 +24,15 @@ export const LESSON_STATUS = {
 // Teacher's whole-class coverage for a level (0 when no row exists yet).
 export function teacherPaceFor(curriculumProgress, level) {
   return curriculumProgress.find((p) => p.level === level)?.current_lesson_number ?? 0;
+}
+
+// Hard per-level ceiling: a student can never open lessons past this number,
+// regardless of teacher pace or their own completion. Mirrors the
+// curriculum_progress.max_available_lesson column, which can_read_lesson_pdf
+// (migration 0095) enforces server-side. 100000 = effectively no cap, so a
+// missing row or column keeps today's behaviour.
+export function lessonCapFor(curriculumProgress, level) {
+  return curriculumProgress?.find((p) => p.level === level)?.max_available_lesson ?? 100000;
 }
 
 // Map lesson_number -> progress row for the curriculum lessons the student
@@ -37,9 +49,10 @@ export function progressByLessonNumber(lessonProgress, lessons) {
   return map;
 }
 
-export function isLessonUnlocked(lesson, pace, progressByNum) {
+export function isLessonUnlocked(lesson, pace, progressByNum, cap = 100000) {
   const n = lesson?.curriculum_lessons?.lesson_number;
   if (n == null) return true; // legacy
+  if (n > cap) return false; // per-level ceiling
   if (n <= 1) return true; // lesson 1 always unlocked
   if (n <= pace) return true; // teacher's class coverage
   return progressByNum[n - 1]?.status === LESSON_STATUS.COMPLETED; // completed prev unlocks next
@@ -47,8 +60,8 @@ export function isLessonUnlocked(lesson, pace, progressByNum) {
 
 // UI status for a lesson: 'locked' overrides everything, otherwise it's the
 // student's stored status (not_started / in_progress / completed).
-export function lessonStatusFor(lesson, pace, progressByNum) {
-  const unlocked = isLessonUnlocked(lesson, pace, progressByNum);
+export function lessonStatusFor(lesson, pace, progressByNum, cap = 100000) {
+  const unlocked = isLessonUnlocked(lesson, pace, progressByNum, cap);
   if (!unlocked) return 'locked';
   const n = lesson?.curriculum_lessons?.lesson_number;
   return progressByNum[n]?.status ?? LESSON_STATUS.NOT_STARTED;
@@ -57,7 +70,7 @@ export function lessonStatusFor(lesson, pace, progressByNum) {
 // The next lesson the student should open: the first curriculum-ordered
 // lesson that is unlocked and not completed. Returns the lesson row or null
 // when everything is done.
-export function nextUnfinishedLesson(lessons, pace, progressByNum, filter) {
+export function nextUnfinishedLesson(lessons, pace, progressByNum, filter, cap = 100000) {
   const ordered = [...lessons]
     .filter(filter || (() => true))
     .sort((a, b) => {
@@ -68,7 +81,7 @@ export function nextUnfinishedLesson(lessons, pace, progressByNum, filter) {
       if (bn != null) return 1;
       return new Date(b.created_at) - new Date(a.created_at);
     });
-  return ordered.find((l) => isLessonUnlocked(l, pace, progressByNum) && progressByNum[l.curriculum_lessons?.lesson_number]?.status !== LESSON_STATUS.COMPLETED) || null;
+  return ordered.find((l) => isLessonUnlocked(l, pace, progressByNum, cap) && progressByNum[l.curriculum_lessons?.lesson_number]?.status !== LESSON_STATUS.COMPLETED) || null;
 }
 
 // Lesson streak from completion timestamps: consecutive calendar days with

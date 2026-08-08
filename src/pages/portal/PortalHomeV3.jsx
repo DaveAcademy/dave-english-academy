@@ -23,7 +23,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowRight, CalendarClock, MessageSquare, Award, Trophy, BookOpen, FileCheck2, CreditCard } from 'lucide-react';
 import {
-  LESSON_STATUS, teacherPaceFor, progressByLessonNumber, lessonStatusFor, nextUnfinishedLesson,
+  LESSON_STATUS, teacherPaceFor, lessonCapFor, progressByLessonNumber, lessonStatusFor, nextUnfinishedLesson,
 } from '../../lib/lessonLogic';
 import { useAcademy } from '../../lib/AcademyDataContext';
 import { getLeaderboard } from '../../lib/db';
@@ -175,15 +175,16 @@ export default function PortalHomeV3() {
   // Same unlock/status rules as MyLessons (lessonLogic.js) - the Continue
   // Learning button always points at the first unlocked, unfinished lesson.
   const pace = teacherPaceFor(curriculumProgress, me?.level);
+  const cap = lessonCapFor(curriculumProgress, me?.level);
   const progressByNum = useMemo(() => progressByLessonNumber(lessonProgress, myLessons), [lessonProgress, myLessons]);
   const nextLesson = useMemo(
-    () => nextUnfinishedLesson(myLessons, pace, progressByNum),
-    [myLessons, pace, progressByNum]
+    () => nextUnfinishedLesson(myLessons, pace, progressByNum, undefined, cap),
+    [myLessons, pace, progressByNum, cap]
   );
   const lessonStats = useMemo(() => {
     let completed = 0;
     for (const l of myLessons) {
-      if (lessonStatusFor(l, pace, progressByNum) === LESSON_STATUS.COMPLETED) completed += 1;
+      if (lessonStatusFor(l, pace, progressByNum, cap) === LESSON_STATUS.COMPLETED) completed += 1;
     }
     return {
       total: myLessons.length,
@@ -191,7 +192,7 @@ export default function PortalHomeV3() {
       remaining: myLessons.length - completed,
       percent: myLessons.length > 0 ? Math.round((completed / myLessons.length) * 100) : 0,
     };
-  }, [myLessons, pace, progressByNum]);
+  }, [myLessons, pace, progressByNum, cap]);
 
   const stats = useMemo(() => {
     const monthRecords = filterByYearMonth(attendance, 'date', current.year, current.month);

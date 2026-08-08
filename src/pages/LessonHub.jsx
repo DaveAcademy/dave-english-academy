@@ -27,7 +27,7 @@ import {
   StickyNote, Trash2, Upload, X,
 } from 'lucide-react';
 import {
-  LESSON_STATUS, teacherPaceFor, progressByLessonNumber, lessonStatusFor,
+  LESSON_STATUS, teacherPaceFor, lessonCapFor, progressByLessonNumber, lessonStatusFor,
 } from '../lib/lessonLogic';
 import { useAuth } from '../lib/AuthContext';
 import { useAcademy } from '../lib/AcademyDataContext';
@@ -93,8 +93,9 @@ export default function LessonHub() {
   // RLS policy is the real boundary; this just explains a locked lesson
   // instead of a silently-failing PDF fetch.
   const pace = teacherPaceFor(curriculumProgress, me?.level);
+  const cap = lessonCapFor(curriculumProgress, me?.level);
   const progressByNum = useMemo(() => progressByLessonNumber(lessonProgress, lessons), [lessonProgress, lessons]);
-  const lessonStatus = isStudent && me && lesson ? lessonStatusFor(lesson, pace, progressByNum) : null;
+  const lessonStatus = isStudent && me && lesson ? lessonStatusFor(lesson, pace, progressByNum, cap) : null;
   const isLockedForMe = lessonStatus === 'locked';
   const lessonNumber = lesson?.curriculum_lessons?.lesson_number;
 

@@ -23,11 +23,12 @@ import LessonStatsBar from '../../components/lesson/LessonStatsBar';
 import MonthGroup from '../../components/lesson/MonthGroup';
 import PdfViewer from '../../components/PdfViewer';
 import {
-  LESSON_STATUS, teacherPaceFor, progressByLessonNumber,
+  LESSON_STATUS, teacherPaceFor, lessonCapFor, progressByLessonNumber,
   lessonStatusFor, nextUnfinishedLesson, completionStreak,
 } from '../../lib/lessonLogic';
+import { LEVELS } from '../../lib/levels';
 
-const LEVEL_OPTIONS = ['A', 'B', 'C'];
+const LEVEL_OPTIONS = LEVELS;
 const STATUS_OPTIONS = [
   { value: LESSON_STATUS.COMPLETED, key: 'filterCompleted' },
   { value: LESSON_STATUS.IN_PROGRESS, key: 'filterInProgress' },
@@ -77,13 +78,14 @@ export default function MyLessons() {
   }, [lessons, me, scopeFilter]);
 
   const pace = teacherPaceFor(curriculumProgress, me?.level);
+  const cap = lessonCapFor(curriculumProgress, me?.level);
   const progressByNum = useMemo(() => progressByLessonNumber(lessonProgress, myLessons), [lessonProgress, myLessons]);
 
   const statusByLesson = useMemo(() => {
     const map = new Map();
-    for (const l of myLessons) map.set(l.id, lessonStatusFor(l, pace, progressByNum));
+    for (const l of myLessons) map.set(l.id, lessonStatusFor(l, pace, progressByNum, cap));
     return map;
-  }, [myLessons, pace, progressByNum]);
+  }, [myLessons, pace, progressByNum, cap]);
 
   const stats = useMemo(() => {
     let completed = 0;
@@ -111,8 +113,8 @@ export default function MyLessons() {
   }, [myLessons, statusByLesson, lessonProgress]);
 
   const next = useMemo(
-    () => nextUnfinishedLesson(myLessons, pace, progressByNum),
-    [myLessons, pace, progressByNum]
+    () => nextUnfinishedLesson(myLessons, pace, progressByNum, undefined, cap),
+    [myLessons, pace, progressByNum, cap]
   );
 
   const monthOptions = useMemo(() => {

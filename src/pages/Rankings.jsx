@@ -33,8 +33,8 @@ import { Tag, Users, ChevronDown, ChevronUp, ArrowUp, ArrowDown } from 'lucide-r
 import { useAcademy } from '../lib/AcademyDataContext';
 import { useAuth } from '../lib/AuthContext';
 import { listPointCategories, listMyTeacherLevels, getGroupLeaderboard, getPeriodBounds, listClassPointTransactions } from '../lib/db';
+import { LEVELS } from '../lib/levels';
 
-const LEVELS = ['A', 'B', 'C'];
 const PERIODS = ['week', 'month', 'all_time'];
 const PERIOD_LABEL = { week: 'This Week', month: 'This Month', all_time: 'All Time' };
 

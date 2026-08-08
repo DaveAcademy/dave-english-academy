@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 
 const LEVEL_STYLES = {
   A: 'bg-levelA/10 text-levelA border-levelA/30',
+  A1: 'bg-levelA1/10 text-levelA1 border-levelA1/30',
   B: 'bg-levelB/10 text-levelB border-levelB/30',
   C: 'bg-levelC/10 text-levelC border-levelC/30',
 };

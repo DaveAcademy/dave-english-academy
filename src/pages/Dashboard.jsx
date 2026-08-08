@@ -59,6 +59,7 @@ import { TONE } from '../utils/tone';
 import { formatUZS } from '../utils/format';
 import { attendanceRate, filterByYearMonth } from '../utils/attendance';
 import { currentAndPreviousMonth, trendFrom } from '../utils/date';
+import { LEVELS } from '../lib/levels';
 
 function lastNMonths(n) {
   const months = [];
@@ -275,7 +276,7 @@ function AdminDashboard() {
       if (level) acc[level] = (acc[level] || 0) + Number(tx.amount || 0);
       return acc;
     }, {});
-    const financeByGroup = ['A', 'B', 'C'].map((level) => {
+    const financeByGroup = LEVELS.map((level) => {
       const group = active.filter((s) => s.level === level);
       const groupExpected = group.reduce((sum, s) => sum + Number(s.monthly_fee || 0), 0);
       const groupCollected = Math.max(0, collectedByLevel[level] || 0);
@@ -337,7 +338,7 @@ function AdminDashboard() {
     // ---- Class health by level: composite of this month's attendance,
     // homework completion, and exam average - same three metrics already
     // computed academy-wide, just scoped per level ----
-    const classHealth = ['A', 'B', 'C'].map((level) => {
+    const classHealth = LEVELS.map((level) => {
       const group = active.filter((s) => s.level === level);
       const groupIds = new Set(group.map((s) => s.id));
       const groupAttendance = attendanceThisMonth.filter((a) => groupIds.has(a.student_id));

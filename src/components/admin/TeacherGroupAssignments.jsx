@@ -11,8 +11,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Users2 } from 'lucide-react';
 import { listTeachers, listTeacherGroupAssignments, addTeacherGroupAssignment, removeTeacherGroupAssignment } from '../../lib/db';
+import { LEVELS } from '../../lib/levels';
 
-const LEVELS = ['A', 'B', 'C'];
 
 export default function TeacherGroupAssignments() {
   const [teachers, setTeachers] = useState(null);

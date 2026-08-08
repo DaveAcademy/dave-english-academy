@@ -36,9 +36,9 @@ import { useAcademy } from '../lib/AcademyDataContext';
 import { useAuth } from '../lib/AuthContext';
 import { LevelBadge } from '../components/Badge';
 import { getGroupLeaderboard, getPeriodBounds, listRecognitionAwards } from '../lib/db';
+import { LEVELS } from '../lib/levels';
 import { addDaysISO, addMonthsISO } from '../utils/date';
 
-const LEVELS = ['A', 'B', 'C'];
 const AWARD_TYPES = [
   { key: 'student_of_week', periodType: 'week', title: 'Student of the Week' },
   { key: 'student_of_month', periodType: 'month', title: 'Student of the Month' },

@@ -19,6 +19,7 @@ import { useAcademy } from '../lib/AcademyDataContext';
 import { useAuth } from '../lib/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { uploadAttachmentWithProgress, getAttachmentUrl, listTeacherGroupAssignments } from '../lib/db';
+import { LEVELS } from '../lib/levels';
 
 // Attachments are normalized to { url, name, type } whether they come
 // from the legacy single-attachment columns on messages (0009) or from
@@ -27,7 +28,6 @@ const isImageAttachment = (a) => (a.type || '').startsWith('image/');
 const isPdfAttachment = (a) => a.type === 'application/pdf' || (a.name || '').toLowerCase().endsWith('.pdf');
 
 const MAX_ATTACHMENTS = 5;
-const LEVELS = ['A', 'B', 'C'];
 const DISCUSSION_KEY = { lesson: 'discussionLesson', homework: 'discussionHomework', exam: 'discussionExam', certificate: 'discussionCertificate' };
 
 function initials(label) {

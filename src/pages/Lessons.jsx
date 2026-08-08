@@ -6,6 +6,7 @@ import { Plus, Pencil, Trash2, MessageSquare, MessageSquareOff, Paperclip, Downl
 import { useAcademy } from '../lib/AcademyDataContext';
 import { LevelBadge } from '../components/Badge';
 import { uploadAttachment, getAttachmentUrl } from '../lib/db';
+import { LEVELS } from '../lib/levels';
 
 const EMPTY_FORM = { topic: '', group_name: '', level: 'A', discussion_enabled: false };
 
@@ -206,7 +207,7 @@ export default function Lessons() {
       </header>
 
       <div className="mb-4 grid gap-2 rounded-xl bg-white p-4 shadow-card sm:grid-cols-3">
-        {['A', 'B', 'C'].map((level) => (
+        {LEVELS.map((level) => (
           <div key={level} className="flex items-center gap-2">
             <LevelBadge level={level} />
             <span className="text-xs text-ink/50">is on lesson</span>
