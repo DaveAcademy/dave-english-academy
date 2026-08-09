@@ -34,8 +34,9 @@ import {
   ImagePlus,
   ListChecks,
   Bell,
-  UserCheck,
-  Percent,
+  LogIn,
+  Globe,
+  AlertTriangle,
 } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
 import {
@@ -45,6 +46,8 @@ import {
   getLeaderboard,
   listRecognitionAwards,
   listCertificates,
+  listAllStudentLessonProgress,
+  listStudentLoginInfo,
 } from '../lib/storageBridge';
 import { useAuth } from '../lib/AuthContext';
 import StatCard from '../components/StatCard';
@@ -57,11 +60,15 @@ import SectionLabel from '../components/SectionLabel';
 import DashboardErrorBoundary from '../components/DashboardErrorBoundary';
 import ActivityFeed from '../components/ActivityFeed';
 import ProgressAnalytics from '../components/ProgressAnalytics';
+import WebsiteEngagementSummary from '../components/WebsiteEngagementSummary';
+import AcademicProgressSummary from '../components/AcademicProgressSummary';
 import { TONE } from '../utils/tone';
 import { formatUZS } from '../utils/format';
 import { attendanceRate, filterByYearMonth } from '../utils/attendance';
 import { currentAndPreviousMonth, trendFrom } from '../utils/date';
 import { LEVELS } from '../lib/levels';
+import { buildStudentProgressRows, summarizeProgress } from '../lib/progressAnalytics';
+import { buildWebsiteEngagementRows, summarizeWebsiteEngagement } from '../lib/websiteEngagement';
 
 function lastNMonths(n) {
   const months = [];
@@ -82,7 +89,7 @@ function AdminDashboard() {
   const { t, i18n } = useTranslation('dashboard');
   const dateLocale = i18n.language === 'uz' ? 'uz' : 'en-US';
   const { profile } = useAuth();
-  const { students, attendance, exams, examScores, lessons, homeworkStatus, loading } = useAcademy();
+  const { students, attendance, exams, examScores, lessons, homeworkStatus, curriculumProgress, loading } = useAcademy();
 
   const months = useMemo(() => lastNMonths(6), []);
   const { current, previous } = useMemo(() => currentAndPreviousMonth(), []);
@@ -152,6 +159,75 @@ function AdminDashboard() {
       cancelled = true;
     };
   }, []);
+
+  // Lifted from ProgressAnalytics.jsx (IA refactor) so the Academic
+  // Progress summary, the Website Engagement summary, and the detailed
+  // Progress Analytics table all read one shared row set instead of each
+  // fetching/computing it themselves - same two admin-only queries as
+  // before (all-student lesson progress; get_student_login_info,
+  // migration 0102), just fetched once at the Dashboard level.
+  const [allLessonProgress, setAllLessonProgress] = useState([]);
+  const [progressLoading, setProgressLoading] = useState(true);
+  useEffect(() => {
+    let cancelled = false;
+    listAllStudentLessonProgress()
+      .then((rows) => {
+        if (!cancelled) setAllLessonProgress(rows || []);
+      })
+      .catch(() => {
+        if (!cancelled) setAllLessonProgress([]);
+      })
+      .finally(() => {
+        if (!cancelled) setProgressLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const [loginInfo, setLoginInfo] = useState([]);
+  const [loginInfoLoading, setLoginInfoLoading] = useState(true);
+  useEffect(() => {
+    let cancelled = false;
+    listStudentLoginInfo()
+      .then((rows) => {
+        if (!cancelled) setLoginInfo(rows || []);
+      })
+      .catch(() => {
+        if (!cancelled) setLoginInfo([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoginInfoLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // buildStudentProgressRows/buildWebsiteEngagementRows are pure - not
+  // active/level-filtered here, since Academic Progress, Website
+  // Engagement, and the detailed table each apply the current levelFilter
+  // themselves (buildStudentProgressRows already scopes to active
+  // students internally).
+  const progressRows = useMemo(
+    () => buildStudentProgressRows({ students, attendance, exams, examScores, homeworkStatus, lessons, curriculumProgress, lessonProgress: allLessonProgress }),
+    [students, attendance, exams, examScores, homeworkStatus, lessons, curriculumProgress, allLessonProgress]
+  );
+  const progressDataLoading = loading || progressLoading;
+  const engagementRows = useMemo(() => buildWebsiteEngagementRows(progressRows, loginInfo), [progressRows, loginInfo]);
+  const engagementDataLoading = progressDataLoading || loginInfoLoading;
+
+  // Level-scoped summaries reused by the compact Overview cards and the
+  // Needs Attention rows below, so neither duplicates buildWebsiteEngagementRows'
+  // per-student pass just to get two counts.
+  const engagementSummary = useMemo(() => {
+    const scoped = levelFilter ? engagementRows.filter((r) => r.level === levelFilter) : engagementRows;
+    return summarizeWebsiteEngagement(scoped);
+  }, [engagementRows, levelFilter]);
+  const progressSummary = useMemo(() => {
+    const scoped = levelFilter ? progressRows.filter((r) => r.level === levelFilter) : progressRows;
+    return summarizeProgress(scoped);
+  }, [progressRows, levelFilter]);
 
   // Cash-flow collection totals, one RPC call per month shown (6-month
   // trend + previous, deduped) - financial reporting, see migration 0065.
@@ -541,7 +617,9 @@ function AdminDashboard() {
         }
       />
 
-      {/* Section 1 - Overview: the instant-read KPI strip. */}
+      {/* LEVEL 1 - Overview: one compact headline per domain ("what is
+          happening"), not a re-listing of every card that used to live
+          here. Each dedicated section below expands its own domain. */}
       <DashboardErrorBoundary>
         <div className="mt-6">
           <SectionLabel>{t('overviewLabel')}</SectionLabel>
@@ -555,36 +633,29 @@ function AdminDashboard() {
               loading={loading}
             />
             <StatCard
-              label={t('studentsPaid')}
-              value={`${stats.paymentStatusCounts.paid} / ${stats.active}`}
-              tone="success"
-              icon={UserCheck}
-              loading={loading}
+              label={t('neverLoggedInLabel')}
+              value={engagementSummary.neverLoggedIn}
+              hint={t('websiteOverviewHint', { noLessons: engagementSummary.loggedInNoLessons, learning: engagementSummary.learning, upToDate: engagementSummary.upToDate })}
+              tone="danger"
+              icon={LogIn}
+              loading={engagementDataLoading}
             />
-            <StatCard label={t('moneyCollected')} value={formatUZS(stats.collected)} tone="brand" icon={Wallet} loading={loading} />
-            <StatCard label={t('expectedRevenue')} value={formatUZS(stats.expected)} tone="info" icon={Wallet} loading={loading} />
             <StatCard
               label={t('outstandingRevenue')}
               value={formatUZS(stats.outstanding)}
-              hint={t('unpaidHint', { count: stats.unpaidStudents.length })}
+              hint={t('paymentsOverviewHint', { paid: stats.paymentStatusCounts.paid, active: stats.active, rate: stats.collectionRate })}
               tone="danger"
               icon={AlertCircle}
               loading={loading}
             />
-            <div className="group relative overflow-hidden rounded-xl border border-ink/[0.06] bg-white p-4 shadow-card sm:p-5">
-              <div className="flex items-start justify-between gap-2">
-                <p className="text-xs font-medium text-ink/60 sm:text-sm">{t('collectionRateLabel')}</p>
-                <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-500">
-                  <Percent size={16} aria-hidden="true" />
-                </span>
-              </div>
-              <p className="mt-1 font-display text-2xl font-bold text-ink sm:mt-2 sm:text-3xl">{loading ? '—' : `${stats.collectionRate}%`}</p>
-              <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-brand-50">
-                <div className="h-full rounded-full bg-gradient-to-r from-brand-500 to-levelB" style={{ width: `${Math.min(100, stats.collectionRate || 0)}%` }} />
-              </div>
-            </div>
-            <StatCard label={t('classesToday')} value={stats.classesToday} tone="info" icon={CalendarClock} loading={loading} />
-            <StatCard label={t('homeworkWaitingReview')} value={stats.homeworkSubmitted} tone="warning" icon={BookOpen} loading={loading} />
+            <StatCard
+              label={t('atRiskLabel')}
+              value={progressSummary.atRisk}
+              hint={t('academicOverviewHint', { onTrack: progressSummary.onTrack, behind: progressSummary.behind })}
+              tone="danger"
+              icon={AlertTriangle}
+              loading={progressDataLoading}
+            />
           </div>
 
           {stats.todaysLessons.length > 0 && (
@@ -610,11 +681,11 @@ function AdminDashboard() {
         </div>
       </DashboardErrorBoundary>
 
-      {/* Section 2 - Needs Attention: what the owner should act on today. */}
+      {/* LEVEL 2 - Needs Attention: "what do I need to do". */}
       <DashboardErrorBoundary>
         <div className="mt-6">
           <SectionLabel>{t('needsAttentionLabel')}</SectionLabel>
-          <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <Panel title={t('paymentAlertsTitle')} icon={Wallet}>
               <div className="space-y-2">
                 <Link to="/payments" className="flex items-center justify-between text-sm hover:text-brand-600">
@@ -669,6 +740,34 @@ function AdminDashboard() {
               </div>
             </Panel>
 
+            <Panel title={t('academicAlertsTitle')} icon={AlertTriangle}>
+              <div className="space-y-2">
+                <Link to="/students" className="flex items-center justify-between text-sm hover:text-brand-600">
+                  <span className="text-ink/60">{t('atRiskLabel')}</span>
+                  <span className="font-semibold text-inactive">{progressSummary.atRisk}</span>
+                </Link>
+                <Link to="/students" className="flex items-center justify-between text-sm hover:text-brand-600">
+                  <span className="text-ink/60">{t('behindLabel')}</span>
+                  <span className="font-semibold text-levelB">{progressSummary.behind}</span>
+                </Link>
+              </div>
+            </Panel>
+
+            <Panel title={t('websiteAlertsTitle')} icon={Globe}>
+              <div className="space-y-2">
+                <Link to="/students" className="flex items-center justify-between text-sm hover:text-brand-600">
+                  <span className="text-ink/60">{t('neverLoggedInLabel')}</span>
+                  <span className="font-semibold text-inactive">{engagementSummary.neverLoggedIn}</span>
+                </Link>
+                <Link to="/students" className="flex items-center justify-between text-sm hover:text-brand-600">
+                  <span className="text-ink/60">{t('loggedInNoLessonsLabel')}</span>
+                  <span className="font-semibold text-levelB">{engagementSummary.loggedInNoLessons}</span>
+                </Link>
+              </div>
+            </Panel>
+          </div>
+
+          <div className="mt-4">
             <AttentionCard
               title={t('upcomingExamsTitle')}
               icon={FileCheck2}
@@ -686,80 +785,32 @@ function AdminDashboard() {
         </div>
       </DashboardErrorBoundary>
 
-      {/* Section 3 - Academy Performance: how the academy is doing, by group. */}
+      {/* Academic Progress - promoted from ProgressAnalytics (IA refactor).
+          Same traffic-light colors as Website Engagement below, different
+          meaning: this is academic standing (lesson pace + homework +
+          attendance), not site usage. */}
       <DashboardErrorBoundary>
         <div className="mt-6">
-          <SectionLabel>{t('academyPerformanceLabel')}</SectionLabel>
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-            <StatCard
-              label={t('averageAttendanceLabel')}
-              value={stats.attendanceRateNow == null ? t('noData') : `${stats.attendanceRateNow}%`}
-              trend={stats.attendanceTrendBadge}
-              tone="info"
-              icon={CalendarCheck}
-              loading={loading}
-            />
-            <StatCard
-              label={t('homeworkCompletionRateLabel')}
-              value={stats.homeworkCompletionRate == null ? t('noData') : `${stats.homeworkCompletionRate}%`}
-              tone="warning"
-              icon={BookOpen}
-              loading={loading}
-            />
-            <StatCard
-              label={t('averageTestScoreLabel')}
-              value={stats.examAvg == null ? t('noData') : `${stats.examAvg}%`}
-              tone="brand"
-              icon={FileCheck2}
-              loading={loading}
-            />
-            <StatCard label={t('certificatesIssuedLabel')} value={stats.certificatesThisMonth} tone="success" icon={Award} loading={loading} />
-          </div>
-
-          <div className="mt-4 overflow-x-auto rounded-xl border border-ink/[0.06] bg-white p-4 shadow-card sm:p-5">
-            <h2 className="mb-3 flex items-center gap-1.5 text-sm font-bold uppercase tracking-wide text-ink/50">
-              <ClipboardList size={14} className="text-ink/40" aria-hidden="true" />
-              {t('classHealthTitle')}
-            </h2>
-            <table className="w-full min-w-[520px] text-left text-sm">
-              <thead>
-                <tr className="text-xs uppercase tracking-wide text-ink/40">
-                  <th className="py-2 font-semibold">{t('group')}</th>
-                  <th className="py-2 font-semibold">{t('studentsCol')}</th>
-                  <th className="py-2 font-semibold">{t('attendanceCol')}</th>
-                  <th className="py-2 font-semibold">{t('homeworkCol')}</th>
-                  <th className="py-2 font-semibold">{t('testAvgCol')}</th>
-                  <th className="py-2 font-semibold">{t('healthCol')}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-ink/[0.06]">
-                {loading ? (
-                  <tr>
-                    <td colSpan={6} className="py-3 text-ink/40">
-                      —
-                    </td>
-                  </tr>
-                ) : (
-                  stats.classHealth.map((g) => (
-                    <tr key={g.level}>
-                      <td className="py-2 font-medium text-ink">{t('levelLabel', { level: g.level })}</td>
-                      <td className="py-2 text-ink/70">{g.students}</td>
-                      <td className="py-2 text-ink/70">{g.attendanceRate == null ? '—' : `${g.attendanceRate}%`}</td>
-                      <td className="py-2 text-ink/70">{g.homeworkRate == null ? '—' : `${g.homeworkRate}%`}</td>
-                      <td className="py-2 text-ink/70">{g.testAvg == null ? '—' : `${g.testAvg}%`}</td>
-                      <td className="py-2">
-                        <span className={`inline-flex h-2.5 w-2.5 rounded-full ${TONE[g.health].dot}`} aria-hidden="true" />
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+          <SectionLabel>{t('academicProgressLabel')}</SectionLabel>
+          <AcademicProgressSummary rows={progressRows} levelFilter={levelFilter} loading={progressDataLoading} />
         </div>
       </DashboardErrorBoundary>
 
-      {/* Section 4 - Financial Overview: revenue by group and over time. */}
+      {/* Website Engagement - a separate domain from Academic Progress
+          above. Never labeled "Behind"/"On Track" here; those belong to
+          the academic-status system only (see lib/websiteEngagement.js).
+          Distinct card treatment (dashed brand-tinted border/background)
+          so it can never be skimmed as the same metric family as Academic
+          Progress above it. */}
+      <DashboardErrorBoundary>
+        <div className="mt-6 rounded-2xl border-2 border-dashed border-brand-200 bg-brand-50/40 p-4 sm:p-5">
+          <SectionLabel>{t('websiteEngagementLabel')}</SectionLabel>
+          <WebsiteEngagementSummary rows={engagementRows} levelFilter={levelFilter} loading={engagementDataLoading} />
+        </div>
+      </DashboardErrorBoundary>
+
+      {/* Payments - group breakdown and trend detail (headline numbers
+          already shown in Overview above). */}
       <DashboardErrorBoundary>
         <div className="mt-6">
           <SectionLabel>{t('financeOverviewLabel')}</SectionLabel>
@@ -824,11 +875,97 @@ function AdminDashboard() {
         </div>
       </DashboardErrorBoundary>
 
-      {/* Section 5 - Student Highlights: who's excelling, recognized this month. */}
+      {/* Attendance / Exams - compact section, moved out of Academy
+          Performance (reuses the exact same stats.* fields, no new
+          calculation). Class Health's per-level table is detailed enough
+          to belong in Detailed Analytics below instead of here. */}
       <DashboardErrorBoundary>
         <div className="mt-6">
-          <SectionLabel>{t('studentHighlightsLabel')}</SectionLabel>
-          <div className="grid gap-4 lg:grid-cols-3">
+          <SectionLabel>{t('attendanceExamsLabel')}</SectionLabel>
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+            <StatCard
+              label={t('averageAttendanceLabel')}
+              value={stats.attendanceRateNow == null ? t('noData') : `${stats.attendanceRateNow}%`}
+              trend={stats.attendanceTrendBadge}
+              tone="info"
+              icon={CalendarCheck}
+              loading={loading}
+            />
+            <StatCard
+              label={t('homeworkCompletionRateLabel')}
+              value={stats.homeworkCompletionRate == null ? t('noData') : `${stats.homeworkCompletionRate}%`}
+              tone="warning"
+              icon={BookOpen}
+              loading={loading}
+            />
+            <StatCard
+              label={t('averageTestScoreLabel')}
+              value={stats.examAvg == null ? t('noData') : `${stats.examAvg}%`}
+              tone="brand"
+              icon={FileCheck2}
+              loading={loading}
+            />
+            <StatCard label={t('certificatesIssuedLabel')} value={stats.certificatesThisMonth} tone="success" icon={Award} loading={loading} />
+          </div>
+        </div>
+      </DashboardErrorBoundary>
+
+      {/* LEVEL 3 - Detailed Analytics: deeper-dive material that shouldn't
+          compete with the operational sections above. Class Health Score
+          (deliberately renamed and kept apart from the Academic Progress
+          on_track/behind/at_risk cards above - same traffic-light colors, a
+          different level-averaged formula), Student Highlights, the full
+          Progress Analytics roster/export, and the Activity Feed all live
+          here. */}
+      <div className="mt-8">
+        <SectionLabel>{t('detailedAnalyticsLabel')}</SectionLabel>
+
+        <DashboardErrorBoundary>
+          <div className="mt-3 overflow-x-auto rounded-xl border border-ink/[0.06] bg-white p-4 shadow-card sm:p-5">
+            <h2 className="mb-3 flex items-center gap-1.5 text-sm font-bold uppercase tracking-wide text-ink/50">
+              <ClipboardList size={14} className="text-ink/40" aria-hidden="true" />
+              {t('classHealthTitle')}
+            </h2>
+            <p className="mb-3 text-xs text-ink/40">{t('classHealthDisclaimer')}</p>
+            <table className="w-full min-w-[520px] text-left text-sm">
+              <thead>
+                <tr className="text-xs uppercase tracking-wide text-ink/40">
+                  <th className="py-2 font-semibold">{t('group')}</th>
+                  <th className="py-2 font-semibold">{t('studentsCol')}</th>
+                  <th className="py-2 font-semibold">{t('attendanceCol')}</th>
+                  <th className="py-2 font-semibold">{t('homeworkCol')}</th>
+                  <th className="py-2 font-semibold">{t('testAvgCol')}</th>
+                  <th className="py-2 font-semibold">{t('healthCol')}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-ink/[0.06]">
+                {loading ? (
+                  <tr>
+                    <td colSpan={6} className="py-3 text-ink/40">
+                      —
+                    </td>
+                  </tr>
+                ) : (
+                  stats.classHealth.map((g) => (
+                    <tr key={g.level}>
+                      <td className="py-2 font-medium text-ink">{t('levelLabel', { level: g.level })}</td>
+                      <td className="py-2 text-ink/70">{g.students}</td>
+                      <td className="py-2 text-ink/70">{g.attendanceRate == null ? '—' : `${g.attendanceRate}%`}</td>
+                      <td className="py-2 text-ink/70">{g.homeworkRate == null ? '—' : `${g.homeworkRate}%`}</td>
+                      <td className="py-2 text-ink/70">{g.testAvg == null ? '—' : `${g.testAvg}%`}</td>
+                      <td className="py-2">
+                        <span className={`inline-flex h-2.5 w-2.5 rounded-full ${TONE[g.health].dot}`} aria-hidden="true" />
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </DashboardErrorBoundary>
+
+        <DashboardErrorBoundary>
+          <div className="mt-4 grid gap-4 lg:grid-cols-3">
             <Panel title={t('top3StudentsTitle')} icon={Trophy}>
               {stats.topStudents.length === 0 ? (
                 <p className="text-sm text-ink/50">{t('noActiveStudents')}</p>
@@ -889,32 +1026,24 @@ function AdminDashboard() {
               )}
             </Panel>
           </div>
-        </div>
-      </DashboardErrorBoundary>
+        </DashboardErrorBoundary>
 
-      {/* Section 5.5 - Progress Analytics: sortable per-student roster with
-          lesson/homework/attendance/exam metrics, level breakdown, lesson
-          distribution, and an at-risk list. Own component (ProgressAnalytics.jsx)
-          - fetches nothing itself, reuses the same useAcademy() data already
-          loaded above and lessonLogic.js's cap/pace rules (see
-          lib/progressAnalytics.js), so it never disagrees with the portal
-          or Reports.jsx's Lesson Progress report. */}
-      <DashboardErrorBoundary>
-        <div className="mt-6">
-          <SectionLabel>Progress Analytics</SectionLabel>
-          <ProgressAnalytics />
-        </div>
-      </DashboardErrorBoundary>
+        <DashboardErrorBoundary>
+          <div className="mt-4">
+            <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-ink/40">{t('progressAnalyticsLabel')}</h2>
+            <ProgressAnalytics rows={progressRows} levelFilter={levelFilter} loading={progressDataLoading} />
+          </div>
+        </DashboardErrorBoundary>
 
-      {/* Section 6 - Activity Feed: most recent academy events, newest first. */}
-      <DashboardErrorBoundary>
-        <div className="mt-6">
-          <SectionLabel>{t('activityFeedLabel')}</SectionLabel>
-          <ActivityFeed />
-        </div>
-      </DashboardErrorBoundary>
+        <DashboardErrorBoundary>
+          <div className="mt-4">
+            <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-ink/40">{t('activityFeedLabel')}</h2>
+            <ActivityFeed />
+          </div>
+        </DashboardErrorBoundary>
+      </div>
 
-      {/* Section 7 - Quick Actions. */}
+      {/* Quick Actions. */}
       <DashboardErrorBoundary>
         <div className="mt-6">
           <SectionLabel>{t('quickActionsLabel')}</SectionLabel>

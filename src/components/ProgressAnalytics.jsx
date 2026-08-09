@@ -1,26 +1,25 @@
 // ProgressAnalytics.jsx
-// Admin Dashboard "Progress Analytics" section (Phase 1). Fetches nothing
-// itself - every input comes from useAcademy(), which the Dashboard page
-// already loads once (students, attendance, exams, examScores,
-// homeworkStatus, lessons, curriculumProgress, lessonProgress). All
-// per-student math lives in lib/progressAnalytics.js, reusing lessonLogic.js
-// (same cap/pace/status rules as the student portal and Reports.jsx's
-// "Lesson Progress" report) so this never disagrees with either.
+// Admin Dashboard "Detailed Analytics" per-student academic table. Rows are
+// now a prop (`rows`, `loading`) computed once by Dashboard.jsx via
+// buildStudentProgressRows - this component no longer fetches or builds
+// them itself, so the Academic Progress summary cards, the Website
+// Engagement cards, and this table all read the exact same computed row
+// set (no drift, no duplicate queries). All per-student math still lives
+// in lib/progressAnalytics.js, reusing lessonLogic.js (same cap/pace/status
+// rules as the student portal and Reports.jsx's "Lesson Progress" report).
 //
-// Filters (level/status/search) are applied client-side over the single
-// computed row set - no refetch on filter change, see the useMemo below.
+// Level comes from Dashboard's single global filter (`levelFilter` prop) -
+// this component no longer has its own level dropdown. Status/search
+// filters remain local, applied client-side over `rows`.
 
-import { useEffect, useMemo, useState } from 'react';
-import { Search, Download, FileDown, TrendingUp, AlertTriangle, ListChecks } from 'lucide-react';
-import { useAcademy } from '../lib/AcademyDataContext';
+import { useMemo, useState } from 'react';
+import { Search, Download, FileDown, AlertTriangle } from 'lucide-react';
 import { LEVELS } from '../lib/levels';
 import { TONE } from '../utils/tone';
 import Panel from './Panel';
-import StatCard from './StatCard';
-import { buildStudentProgressRows, summarizeProgress, levelBreakdown, lessonDistribution } from '../lib/progressAnalytics';
+import { summarizeProgress, levelBreakdown, lessonDistribution } from '../lib/progressAnalytics';
 import { downloadReportPdf } from '../utils/pdf';
 import { downloadCsv } from '../utils/csv';
-import { listAllStudentLessonProgress } from '../lib/storageBridge';
 
 const STATUS_META = {
   on_track: { label: 'On Track', tone: 'success', emoji: '🟢' },
@@ -32,49 +31,21 @@ function pct(v) {
   return v == null ? '—' : `${v}%`;
 }
 
-export default function ProgressAnalytics() {
-  const { students, attendance, exams, examScores, homeworkStatus, lessons, curriculumProgress, loading } = useAcademy();
-
-  // IMPORTANT: useAcademy()'s own `lessonProgress` is scoped to just the
-  // signed-in user's student row ("me" - see useAcademyData.js, loaded via
-  // db.listStudentLessonProgress(me.id) for the portal's Lesson Hub), NOT
-  // every student. This section needs every active student's lesson
-  // progress, so it fetches listAllStudentLessonProgress() itself - the
-  // same single admin-wide query (student_lesson_progress select *)
-  // Reports.jsx's "Lesson Progress" report already uses. One query, not
-  // one per student.
-  const [allLessonProgress, setAllLessonProgress] = useState([]);
-  const [progressLoading, setProgressLoading] = useState(true);
-  useEffect(() => {
-    let cancelled = false;
-    listAllStudentLessonProgress()
-      .then((rows) => { if (!cancelled) setAllLessonProgress(rows || []); })
-      .catch(() => { if (!cancelled) setAllLessonProgress([]); })
-      .finally(() => { if (!cancelled) setProgressLoading(false); });
-    return () => { cancelled = true; };
-  }, []);
-
-  const allRows = useMemo(
-    () => buildStudentProgressRows({ students, attendance, exams, examScores, homeworkStatus, lessons, curriculumProgress, lessonProgress: allLessonProgress }),
-    [students, attendance, exams, examScores, homeworkStatus, lessons, curriculumProgress, allLessonProgress]
-  );
-  const dataLoading = loading || progressLoading;
-
-  const [level, setLevel] = useState('');
+export default function ProgressAnalytics({ rows: allRows, levelFilter, loading: dataLoading }) {
   const [status, setStatus] = useState('');
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState('name');
   const [sortDir, setSortDir] = useState('asc');
 
-  // Client-side filter only - allRows is computed once above regardless of
-  // filter state, so changing level/status/search never touches useAcademy
-  // or re-runs buildStudentProgressRows over anything but its own memo deps.
+  // Client-side filter only - allRows is a stable prop, so changing
+  // status/search never touches useAcademy or re-runs
+  // buildStudentProgressRows over anything.
   const filteredRows = useMemo(() => {
     const q = search.trim().toLowerCase();
     return allRows.filter(
-      (r) => (!level || r.level === level) && (!status || r.status === status) && (!q || r.name.toLowerCase().includes(q))
+      (r) => (!levelFilter || r.level === levelFilter) && (!status || r.status === status) && (!q || r.name.toLowerCase().includes(q))
     );
-  }, [allRows, level, status, search]);
+  }, [allRows, levelFilter, status, search]);
 
   const sortedRows = useMemo(() => {
     const dir = sortDir === 'asc' ? 1 : -1;
@@ -144,25 +115,19 @@ export default function ProgressAnalytics() {
 
   return (
     <div>
-      {/* Summary cards */}
+      {/* Detail-level averages (On Track/Behind/At Risk headline numbers
+          now live in the Academic Progress section above; this row is the
+          per-student-average detail that belongs with the roster). */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <StatCard label="Avg Lesson Completion" value={pct(summary.avgProgress)} tone="brand" icon={TrendingUp} loading={dataLoading} />
-        <StatCard label="Avg Homework" value={pct(summary.avgHomework)} tone="warning" icon={ListChecks} loading={dataLoading} />
-        <StatCard label="Avg Attendance" value={pct(summary.avgAttendance)} tone="info" icon={TrendingUp} loading={dataLoading} />
-        <StatCard label="Avg Exam Score" value={pct(summary.avgExam)} tone="brand" icon={TrendingUp} loading={dataLoading} />
-        <StatCard label="On Track" value={summary.onTrack} tone="success" icon={TrendingUp} loading={dataLoading} />
-        <StatCard label="Behind" value={summary.behind} tone="warning" icon={AlertTriangle} loading={dataLoading} />
-        <StatCard label="At Risk" value={summary.atRisk} tone="danger" icon={AlertTriangle} loading={dataLoading} />
+        <Panel title="Avg Lesson Completion"><p className="font-display text-2xl font-bold text-ink">{dataLoading ? '—' : pct(summary.avgProgress)}</p></Panel>
+        <Panel title="Avg Homework"><p className="font-display text-2xl font-bold text-ink">{dataLoading ? '—' : pct(summary.avgHomework)}</p></Panel>
+        <Panel title="Avg Attendance"><p className="font-display text-2xl font-bold text-ink">{dataLoading ? '—' : pct(summary.avgAttendance)}</p></Panel>
+        <Panel title="Avg Exam Score"><p className="font-display text-2xl font-bold text-ink">{dataLoading ? '—' : pct(summary.avgExam)}</p></Panel>
       </div>
 
-      {/* Filters + export */}
+      {/* Filters (level filter removed - Dashboard's single global level
+          filter drives `levelFilter` prop instead) + export */}
       <div className="mt-4 flex flex-wrap items-center gap-2 rounded-xl bg-white p-3 shadow-card">
-        <select value={level} onChange={(e) => setLevel(e.target.value)} className="input w-auto">
-          <option value="">All levels</option>
-          {LEVELS.map((lvl) => (
-            <option key={lvl} value={lvl}>Level {lvl}</option>
-          ))}
-        </select>
         <select value={status} onChange={(e) => setStatus(e.target.value)} className="input w-auto">
           <option value="">All statuses</option>
           {Object.entries(STATUS_META).map(([key, meta]) => (
