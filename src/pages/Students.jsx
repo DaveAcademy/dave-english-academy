@@ -1,26 +1,53 @@
 // Students.jsx
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search, Plus, Upload, Pencil, Trash2, ChevronUp, ChevronDown, ArrowUpDown, MessageCircle, MessageCircleOff } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { useAuth } from '../lib/AuthContext';
 import { LEVELS } from '../lib/levels';
-import { LevelBadge, StatusBadge } from '../components/Badge';
+import { LevelBadge, StatusBadge, WebsiteStatusBadge } from '../components/Badge';
 import StudentForm from '../components/StudentForm';
 import ConfirmDialog from '../components/ConfirmDialog';
 import ImportModal from '../components/ImportModal';
 import { formatUZS } from '../utils/format';
+import { listAllStudentLessonProgress, listStudentLoginInfo } from '../lib/storageBridge';
+import { buildStudentProgressRows } from '../lib/progressAnalytics';
+import { buildWebsiteEngagementRows, WEBSITE_STATUS_META } from '../lib/websiteEngagement';
+
+function formatDateTime(iso) {
+  if (!iso) return null;
+  return new Date(iso).toLocaleDateString();
+}
 
 export default function Students() {
   const { t } = useTranslation(['students', 'common']);
-  const { students, loading, error, addStudent, editStudent, removeStudent, importStudents } = useAcademy();
+  const { students, attendance, exams, examScores, homeworkStatus, lessons, curriculumProgress, loading, error, addStudent, editStudent, removeStudent, importStudents } = useAcademy();
   const { role } = useAuth();
   const isAdmin = role === 'administrator';
 
-  const [filters, setFilters] = useState({ search: '', level: '', status: '', group: '' });
+  const [filters, setFilters] = useState({ search: '', level: '', status: '', group: '', websiteStatus: '' });
   const [sortKey, setSortKey] = useState('real_name');
   const [sortDir, setSortDir] = useState('asc');
+
+  // Website Engagement data - same admin-only sources ProgressAnalytics.jsx
+  // uses (all-student lesson progress + get_student_login_info RPC,
+  // migration 0102). Fetched once here since the Students page has its own
+  // useAcademy() scope, not shared with the Dashboard's ProgressAnalytics.
+  const [allLessonProgress, setAllLessonProgress] = useState([]);
+  const [loginInfo, setLoginInfo] = useState([]);
+  useEffect(() => {
+    let cancelled = false;
+    listAllStudentLessonProgress().then((rows) => { if (!cancelled) setAllLessonProgress(rows || []); }).catch(() => { if (!cancelled) setAllLessonProgress([]); });
+    listStudentLoginInfo().then((rows) => { if (!cancelled) setLoginInfo(rows || []); }).catch(() => { if (!cancelled) setLoginInfo([]); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const engagementById = useMemo(() => {
+    const progressRows = buildStudentProgressRows({ students, attendance, exams, examScores, homeworkStatus, lessons, curriculumProgress, lessonProgress: allLessonProgress });
+    const rows = buildWebsiteEngagementRows(progressRows, loginInfo);
+    return Object.fromEntries(rows.map((r) => [r.id, r]));
+  }, [students, attendance, exams, examScores, homeworkStatus, lessons, curriculumProgress, allLessonProgress, loginInfo]);
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
@@ -47,15 +74,18 @@ export default function Students() {
     if (filters.level) list = list.filter((s) => s.level === filters.level);
     if (filters.status) list = list.filter((s) => s.status === filters.status);
     if (filters.group) list = list.filter((s) => (s.group_name || '') === filters.group);
+    if (filters.websiteStatus) list = list.filter((s) => engagementById[s.id]?.websiteStatus === filters.websiteStatus);
 
+    const ENGAGEMENT_KEYS = { websiteStatus: 'websiteStatus', lastLogin: 'lastSignInAt', lastWebsiteActivity: 'lastWebsiteActivity', lessonsCompleted: 'lessonsCompleted', lessonsAvailable: 'lessonsAvailable', currentLesson: 'currentLessonNumber' };
     list.sort((a, b) => {
-      const av = a[sortKey] ?? '';
-      const bv = b[sortKey] ?? '';
+      const engagementKey = ENGAGEMENT_KEYS[sortKey];
+      const av = engagementKey ? (engagementById[a.id]?.[engagementKey] ?? '') : (a[sortKey] ?? '');
+      const bv = engagementKey ? (engagementById[b.id]?.[engagementKey] ?? '') : (b[sortKey] ?? '');
       const cmp = typeof av === 'number' ? av - bv : String(av).localeCompare(String(bv));
       return sortDir === 'asc' ? cmp : -cmp;
     });
     return list;
-  }, [students, filters, sortKey, sortDir]);
+  }, [students, filters, sortKey, sortDir, engagementById]);
 
   const handleHeaderSort = (key) => {
     if (sortKey === key) setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
@@ -87,6 +117,12 @@ export default function Students() {
     { key: 'monthly_fee', label: t('colFee') },
     { key: 'status', label: t('colStatus') },
     { key: 'telegram_chat_id', label: t('colTelegram') },
+    { key: 'websiteStatus', label: t('colWebsiteStatus', { defaultValue: 'Website Status' }) },
+    { key: 'lastLogin', label: t('colLastLogin', { defaultValue: 'Last Login' }) },
+    { key: 'lastWebsiteActivity', label: t('colLastWebsiteActivity', { defaultValue: 'Last Website Activity' }) },
+    { key: 'lessonsCompleted', label: t('colLessonsCompleted', { defaultValue: 'Lessons Completed' }) },
+    { key: 'lessonsAvailable', label: t('colLessonsAvailable', { defaultValue: 'Lessons Available' }) },
+    { key: 'currentLesson', label: t('colCurrentLesson', { defaultValue: 'Current Lesson' }) },
   ];
 
   return (
@@ -150,6 +186,12 @@ export default function Students() {
             ))}
           </select>
         )}
+        <select value={filters.websiteStatus} onChange={(e) => setFilters({ ...filters, websiteStatus: e.target.value })} className="input sm:w-48">
+          <option value="">{t('allWebsiteStatuses', { defaultValue: 'All website statuses' })}</option>
+          {Object.entries(WEBSITE_STATUS_META).map(([key, meta]) => (
+            <option key={key} value={key}>{meta.emoji} {meta.label}</option>
+          ))}
+        </select>
       </div>
 
       {loading ? (
@@ -187,7 +229,9 @@ export default function Students() {
                   </tr>
                 </thead>
                 <tbody>
-                  {visible.map((s) => (
+                  {visible.map((s) => {
+                    const eng = engagementById[s.id];
+                    return (
                     <tr key={s.id} className="border-b border-ink/5 last:border-0 hover:bg-ink/[0.015]">
                       <td className="px-4 py-3 font-medium text-ink">{s.real_name}</td>
                       <td className="px-4 py-3 text-ink/70">{s.english_name || '—'}</td>
@@ -208,6 +252,12 @@ export default function Students() {
                           </span>
                         )}
                       </td>
+                      <td className="px-4 py-3"><WebsiteStatusBadge status={eng?.websiteStatus} /></td>
+                      <td className="px-4 py-3 text-ink/70">{formatDateTime(eng?.lastSignInAt) || t('common:never', { defaultValue: 'Never' })}</td>
+                      <td className="px-4 py-3 text-ink/70">{formatDateTime(eng?.lastWebsiteActivity) || '—'}</td>
+                      <td className="px-4 py-3 text-ink/70">{eng ? `${eng.lessonsCompleted}` : '—'}</td>
+                      <td className="px-4 py-3 text-ink/70">{eng ? `${eng.lessonsAvailable}` : '—'}</td>
+                      <td className="px-4 py-3 text-ink/70">{eng?.currentLessonLabel || '—'}</td>
                       {isAdmin && (
                         <td className="px-4 py-3">
                           <div className="flex justify-end gap-2">
@@ -227,7 +277,8 @@ export default function Students() {
                         </td>
                       )}
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -235,7 +286,9 @@ export default function Students() {
 
           {/* Mobile cards */}
           <div className="space-y-2 md:hidden">
-            {visible.map((s) => (
+            {visible.map((s) => {
+              const eng = engagementById[s.id];
+              return (
               <div key={s.id} className="rounded-xl bg-white p-3 shadow-card">
                 <div className="flex items-start justify-between">
                   <div>
@@ -273,13 +326,20 @@ export default function Students() {
                       <MessageCircleOff size={12} /> {t('telegramMissing')}
                     </span>
                   )}
+                  <WebsiteStatusBadge status={eng?.websiteStatus} />
                 </div>
+                {eng && (
+                  <div className="mt-1.5 text-xs text-ink/50">
+                    {t('colLessonsCompleted', { defaultValue: 'Lessons Completed' })}: {eng.lessonsCompleted}/{eng.lessonsAvailable} · {t('colCurrentLesson', { defaultValue: 'Current Lesson' })}: {eng.currentLessonLabel || '—'}
+                  </div>
+                )}
                 <div className="mt-1.5 flex items-center justify-between">
                   {s.phone && <p className="text-xs text-ink/50">{s.phone}</p>}
                   <p className="text-xs font-semibold text-brand-500">{formatUZS(s.monthly_fee)}{t('perMonth')}</p>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </>
       )}

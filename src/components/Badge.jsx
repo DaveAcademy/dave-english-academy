@@ -4,6 +4,8 @@
 // on-screen text goes through t().
 
 import { useTranslation } from 'react-i18next';
+import { TONE } from '../utils/tone';
+import { WEBSITE_STATUS_META } from '../lib/websiteEngagement';
 
 const LEVEL_STYLES = {
   A: 'bg-levelA/10 text-levelA border-levelA/30',
@@ -32,6 +34,19 @@ export function StatusBadge({ status }) {
     >
       <span className={`h-1.5 w-1.5 rounded-full ${isActive ? 'bg-active' : 'bg-inactive'}`} />
       {t(isActive ? 'active' : 'inactive')}
+    </span>
+  );
+}
+
+// Website Engagement status - a separate dimension from account status
+// above, see lib/websiteEngagement.js.
+export function WebsiteStatusBadge({ status }) {
+  const meta = WEBSITE_STATUS_META[status];
+  if (!meta) return <span className="text-xs text-ink/40">—</span>;
+  const tone = TONE[meta.tone];
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${tone.soft} ${tone.text}`}>
+      {meta.emoji} {meta.label}
     </span>
   );
 }

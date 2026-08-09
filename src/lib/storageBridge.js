@@ -607,6 +607,14 @@ export async function listAllStudentLessonProgress() {
   return data;
 }
 
+// Admin-only login timestamps per active student (migration 0102) - the
+// frontend never queries auth.users directly.
+export async function listStudentLoginInfo() {
+  const { data, error } = await supabase.rpc('get_student_login_info');
+  if (error) throw error;
+  return data;
+}
+
 // Upsert on (student_id, lesson_id). data is a partial upsert - e.g.
 // { status: 'completed', completed_at: ... } or { last_page: 7 } - missing
 // columns keep their defaults/existing values. Returns the merged row.
