@@ -56,6 +56,7 @@ import MiniBarChart from '../components/MiniBarChart';
 import SectionLabel from '../components/SectionLabel';
 import DashboardErrorBoundary from '../components/DashboardErrorBoundary';
 import ActivityFeed from '../components/ActivityFeed';
+import ProgressAnalytics from '../components/ProgressAnalytics';
 import { TONE } from '../utils/tone';
 import { formatUZS } from '../utils/format';
 import { attendanceRate, filterByYearMonth } from '../utils/attendance';
@@ -866,6 +867,20 @@ function AdminDashboard() {
               )}
             </Panel>
           </div>
+        </div>
+      </DashboardErrorBoundary>
+
+      {/* Section 5.5 - Progress Analytics: sortable per-student roster with
+          lesson/homework/attendance/exam metrics, level breakdown, lesson
+          distribution, and an at-risk list. Own component (ProgressAnalytics.jsx)
+          - fetches nothing itself, reuses the same useAcademy() data already
+          loaded above and lessonLogic.js's cap/pace rules (see
+          lib/progressAnalytics.js), so it never disagrees with the portal
+          or Reports.jsx's Lesson Progress report. */}
+      <DashboardErrorBoundary>
+        <div className="mt-6">
+          <SectionLabel>Progress Analytics</SectionLabel>
+          <ProgressAnalytics />
         </div>
       </DashboardErrorBoundary>
 
