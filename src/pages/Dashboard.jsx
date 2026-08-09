@@ -87,7 +87,14 @@ function AdminDashboard() {
   const months = useMemo(() => lastNMonths(6), []);
   const { current, previous } = useMemo(() => currentAndPreviousMonth(), []);
 
-  const active = useMemo(() => students.filter((s) => s.status === 'Active'), [students]);
+  // Scopes every stat/list below to one class when set, so the admin can
+  // check "how is Level B doing today" without visiting each page.
+  const [levelFilter, setLevelFilter] = useState('');
+  const active = useMemo(
+    () => students.filter((s) => s.status === 'Active' && (!levelFilter || s.level === levelFilter)),
+    [students, levelFilter],
+  );
+  const groupLevels = levelFilter ? [levelFilter] : LEVELS;
 
   // Real points ranking (migration 0006/0007) - not the raw students.points
   // field, which can drift from the canonical attendance+exam+homework
@@ -218,7 +225,13 @@ function AdminDashboard() {
 
     // ---- Payment collection (this month vs last month, cash-flow) ----
     const expected = active.reduce((sum, s) => sum + Number(s.monthly_fee || 0), 0);
-    const collected = collectionByMonth[`${current.year}-${current.month}`] || 0;
+    const levelById = Object.fromEntries(students.map((s) => [s.id, s.level]));
+    // When scoped to one level, "collected" must match "expected" (both
+    // level-scoped) or the collection rate is nonsense - sum this month's
+    // transactions for that level instead of the academy-wide total.
+    const collected = levelFilter
+      ? monthTransactions.reduce((sum, tx) => (levelById[tx.student_id] === levelFilter ? sum + Number(tx.amount || 0) : sum), 0)
+      : collectionByMonth[`${current.year}-${current.month}`] || 0;
     const lastCollected = collectionByMonth[`${previous.year}-${previous.month}`] || 0;
     const collectionRate = expected > 0 ? Math.round((collected / expected) * 100) : 0;
     const lastCollectionRate = expected > 0 ? Math.round((lastCollected / expected) * 100) : null;
@@ -272,13 +285,12 @@ function AdminDashboard() {
     // above: any payment received this month counts, even if that student
     // has since gone inactive - same cash-accounting convention, just
     // split by level instead of summed academy-wide ----
-    const levelById = Object.fromEntries(students.map((s) => [s.id, s.level]));
     const collectedByLevel = monthTransactions.reduce((acc, tx) => {
       const level = levelById[tx.student_id];
       if (level) acc[level] = (acc[level] || 0) + Number(tx.amount || 0);
       return acc;
     }, {});
-    const financeByGroup = LEVELS.map((level) => {
+    const financeByGroup = groupLevels.map((level) => {
       const group = active.filter((s) => s.level === level);
       const groupExpected = group.reduce((sum, s) => sum + Number(s.monthly_fee || 0), 0);
       const groupCollected = Math.max(0, collectedByLevel[level] || 0);
@@ -340,7 +352,7 @@ function AdminDashboard() {
     // ---- Class health by level: composite of this month's attendance,
     // homework completion, and exam average - same three metrics already
     // computed academy-wide, just scoped per level ----
-    const classHealth = LEVELS.map((level) => {
+    const classHealth = groupLevels.map((level) => {
       const group = active.filter((s) => s.level === level);
       const groupIds = new Set(group.map((s) => s.id));
       const groupAttendance = attendanceThisMonth.filter((a) => groupIds.has(a.student_id));
@@ -475,6 +487,8 @@ function AdminDashboard() {
   }, [
     students,
     active,
+    groupLevels,
+    levelFilter,
     collectionByMonth,
     monthTransactions,
     coverageStatuses,
@@ -517,6 +531,14 @@ function AdminDashboard() {
                     : t('adminHeroAttendancePercent', { rate: stats.attendanceRateNow }),
               })
         }
+        right={
+          <select value={levelFilter} onChange={(e) => setLevelFilter(e.target.value)} className="input sm:w-40" aria-label={t('common:allLevels')}>
+            <option value="">{t('common:allLevels')}</option>
+            {LEVELS.map((lvl) => (
+              <option key={lvl} value={lvl}>{t(`common:level${lvl}`)}</option>
+            ))}
+          </select>
+        }
       />
 
       {/* Section 1 - Overview: the instant-read KPI strip. */}
@@ -527,7 +549,7 @@ function AdminDashboard() {
             <StatCard
               label={t('activeStudents')}
               value={stats.active}
-              hint={t('levelBreakdownHint', { a: stats.levelCounts.A, b: stats.levelCounts.B, c: stats.levelCounts.C })}
+              hint={levelFilter ? undefined : t('levelBreakdownHint', { a: stats.levelCounts.A, b: stats.levelCounts.B, c: stats.levelCounts.C })}
               tone="success"
               icon={Users}
               loading={loading}
