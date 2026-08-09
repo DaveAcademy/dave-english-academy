@@ -293,10 +293,8 @@
   "activityFeedEmpty": "No recent activity yet.",
   "activityStudentAdded": "New student",
   "activityPaymentRecorded": "Payment recorded",
-  "activityAttendanceSubmitted": "Attendance marked",
   "activityHomeworkSubmitted": "Homework submitted",
   "activityExamCompleted": "Exam completed",
-  "activityCertificateAwarded": "Certificate awarded",
   "activityLessonCompleted": "Lesson completed",
   "activityLessonUnlocked": "Lesson unlocked",
   "activityRecognitionAwarded": "Recognition awarded"

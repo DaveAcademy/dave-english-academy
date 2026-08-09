@@ -7,17 +7,15 @@
 
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { UserPlus, Wallet, CalendarCheck, BookOpen, FileCheck2, Award, GraduationCap, Trophy, Activity } from 'lucide-react';
+import { UserPlus, Wallet, BookOpen, FileCheck2, GraduationCap, Trophy, Activity } from 'lucide-react';
 import { getActivityFeed } from '../lib/storageBridge';
 import Panel from './Panel';
 
 const EVENT_META = {
   student_added: { icon: UserPlus, tone: 'text-brand-600 bg-brand-50', labelKey: 'activityStudentAdded' },
   payment_recorded: { icon: Wallet, tone: 'text-success bg-success/10', labelKey: 'activityPaymentRecorded' },
-  attendance_submitted: { icon: CalendarCheck, tone: 'text-info bg-info/10', labelKey: 'activityAttendanceSubmitted' },
   homework_submitted: { icon: BookOpen, tone: 'text-warning bg-warning/10', labelKey: 'activityHomeworkSubmitted' },
   exam_completed: { icon: FileCheck2, tone: 'text-levelB bg-levelB/10', labelKey: 'activityExamCompleted' },
-  certificate_awarded: { icon: Award, tone: 'text-success bg-success/10', labelKey: 'activityCertificateAwarded' },
   lesson_completed: { icon: GraduationCap, tone: 'text-brand-600 bg-brand-50', labelKey: 'activityLessonCompleted' },
   lesson_unlocked: { icon: GraduationCap, tone: 'text-info bg-info/10', labelKey: 'activityLessonUnlocked' },
   recognition_awarded: { icon: Trophy, tone: 'text-levelB bg-levelB/10', labelKey: 'activityRecognitionAwarded' },

@@ -293,10 +293,8 @@
   "activityFeedEmpty": "Hozircha faoliyat yo'q.",
   "activityStudentAdded": "Yangi o'quvchi",
   "activityPaymentRecorded": "To'lov qayd etildi",
-  "activityAttendanceSubmitted": "Davomat belgilandi",
   "activityHomeworkSubmitted": "Uy vazifasi topshirildi",
   "activityExamCompleted": "Imtihon topshirildi",
-  "activityCertificateAwarded": "Sertifikat berildi",
   "activityLessonCompleted": "Dars tugallandi",
   "activityLessonUnlocked": "Dars ochildi",
   "activityRecognitionAwarded": "Mukofot berildi"
