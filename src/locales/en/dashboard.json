@@ -286,5 +286,18 @@
   "recentRecognitionBestAttendance": "Best Attendance",
   "recentRecognitionBestHomework": "Best Homework",
   "recentRecognitionBestBehavior": "Best Behavior",
-  "recentRecognitionOther": "Recognition Award"
+  "recentRecognitionOther": "Recognition Award",
+
+  "activityFeedLabel": "Activity Feed",
+  "activityFeedTitle": "Recent activity",
+  "activityFeedEmpty": "No recent activity yet.",
+  "activityStudentAdded": "New student",
+  "activityPaymentRecorded": "Payment recorded",
+  "activityAttendanceSubmitted": "Attendance marked",
+  "activityHomeworkSubmitted": "Homework submitted",
+  "activityExamCompleted": "Exam completed",
+  "activityCertificateAwarded": "Certificate awarded",
+  "activityLessonCompleted": "Lesson completed",
+  "activityLessonUnlocked": "Lesson unlocked",
+  "activityRecognitionAwarded": "Recognition awarded"
 }

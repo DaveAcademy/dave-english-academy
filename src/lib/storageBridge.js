@@ -393,6 +393,16 @@ export async function getPaymentCollectionSummary(from, to) {
   return data;
 }
 
+// Activity Feed (migration 0099) - single RPC that UNIONs the recent
+// events already sitting in existing tables (students/payments/attendance/
+// homework/exams/certificates/lesson progress/recognition), newest first.
+// Admin Dashboard's only query for this feature - no per-event-type calls.
+export async function getActivityFeed(limit = 30) {
+  const { data, error } = await supabase.rpc('get_activity_feed', { p_limit: limit });
+  if (error) throw error;
+  return data;
+}
+
 // Reminder-preparation layer (migration 0067) - who would get a payment
 // reminder right now, and what it would say. No messaging attached yet;
 // this exists so wording/timing/exclusions can be checked against real

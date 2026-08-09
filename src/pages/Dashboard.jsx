@@ -55,6 +55,7 @@ import AttentionCard from '../components/AttentionCard';
 import MiniBarChart from '../components/MiniBarChart';
 import SectionLabel from '../components/SectionLabel';
 import DashboardErrorBoundary from '../components/DashboardErrorBoundary';
+import ActivityFeed from '../components/ActivityFeed';
 import { TONE } from '../utils/tone';
 import { formatUZS } from '../utils/format';
 import { attendanceRate, filterByYearMonth } from '../utils/attendance';
@@ -868,7 +869,15 @@ function AdminDashboard() {
         </div>
       </DashboardErrorBoundary>
 
-      {/* Section 7 - Quick Actions (Section 6, Activity Feed, deferred). */}
+      {/* Section 6 - Activity Feed: most recent academy events, newest first. */}
+      <DashboardErrorBoundary>
+        <div className="mt-6">
+          <SectionLabel>{t('activityFeedLabel')}</SectionLabel>
+          <ActivityFeed />
+        </div>
+      </DashboardErrorBoundary>
+
+      {/* Section 7 - Quick Actions. */}
       <DashboardErrorBoundary>
         <div className="mt-6">
           <SectionLabel>{t('quickActionsLabel')}</SectionLabel>
