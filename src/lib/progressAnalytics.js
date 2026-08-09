@@ -35,7 +35,11 @@ import { attendanceRate } from '../utils/attendance';
 //     - attendance < POOR_ATTENDANCE_MAX
 //     - homework   < POOR_HOMEWORK_MAX
 //     - lesson progress < LOW_PROGRESS_MAX
-//     - no recorded activity in >= STALE_ACTIVITY_DAYS days (or never active)
+//     - no recorded activity in >= STALE_ACTIVITY_DAYS days (or never active
+//       and enrolled at least NEW_STUDENT_GRACE_DAYS days ago - a student
+//       who joined yesterday and hasn't started yet hasn't "fallen behind",
+//       they just haven't started; a never-active student is only stale once
+//       they've had a fair chance to become active)
 //   Any single one of these alone (e.g. one mildly-low metric) is NOT enough
 //   to flag At Risk - the spec explicitly calls for a combination, not one
 //   mild factor. Two or more together is the bar.
@@ -45,6 +49,7 @@ export const POOR_ATTENDANCE_MAX = 60;
 export const POOR_HOMEWORK_MAX = 60;
 export const LOW_PROGRESS_MAX = 30;
 export const STALE_ACTIVITY_DAYS = 14;
+export const NEW_STUDENT_GRACE_DAYS = 7;
 export const AT_RISK_FLAG_THRESHOLD = 2;
 
 function daysSince(iso) {
@@ -131,6 +136,7 @@ export function buildStudentProgressRows({ students, attendance, exams, examScor
     const candidates = [lastAttendanceDate, lastLessonTouch].filter(Boolean);
     const lastActivity = candidates.length > 0 ? candidates.reduce((a, b) => (new Date(a) > new Date(b) ? a : b)) : null;
     const lastActivityDays = daysSince(lastActivity);
+    const enrolledDays = daysSince(s.created_at);
 
     // ---- Status ----
     const metrics = [progressPct, homeworkPct, attendancePct].filter((v) => v != null);
@@ -139,7 +145,12 @@ export function buildStudentProgressRows({ students, attendance, exams, examScor
     const flagAttendance = attendancePct != null && attendancePct < POOR_ATTENDANCE_MAX;
     const flagHomework = homeworkPct != null && homeworkPct < POOR_HOMEWORK_MAX;
     const flagProgress = progressPct != null && progressPct < LOW_PROGRESS_MAX;
-    const flagStale = lastActivityDays == null || lastActivityDays >= STALE_ACTIVITY_DAYS;
+    // Never-active students are only "stale" once they've had a fair chance
+    // to become active (NEW_STUDENT_GRACE_DAYS) - otherwise every brand-new
+    // student would flag stale on day one. Students with SOME activity keep
+    // the plain STALE_ACTIVITY_DAYS rule regardless of enrollment date.
+    const flagStale =
+      lastActivityDays == null ? enrolledDays == null || enrolledDays >= NEW_STUDENT_GRACE_DAYS : lastActivityDays >= STALE_ACTIVITY_DAYS;
     const flagCount = [flagAttendance, flagHomework, flagProgress, flagStale].filter(Boolean).length;
 
     const isAtRisk = flagCount >= AT_RISK_FLAG_THRESHOLD;
