@@ -23,7 +23,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight, Download, FileCheck2,
-  FileText, Languages, List, BookOpen, Pencil, PlayCircle, Plus, RotateCcw,
+  FileText, Languages, List, BookOpen, Image as ImageIcon, Pencil, PlayCircle, Plus, RotateCcw,
   StickyNote, Trash2, Upload, X,
 } from 'lucide-react';
 import {
@@ -34,9 +34,16 @@ import { useAcademy } from '../lib/AcademyDataContext';
 import { LevelBadge } from '../components/Badge';
 import ConfirmDialog from '../components/ConfirmDialog';
 import PdfViewer from '../components/PdfViewer';
-import { uploadAttachment, getAttachmentUrl, listLessonVocabulary } from '../lib/db';
+import {
+  uploadAttachment, getAttachmentUrl, listLessonVocabulary,
+  getMyLessonWorkSubmission, createLessonWorkSubmission, listLessonWorkSubmissionFiles,
+  addLessonWorkSubmissionFile, deleteLessonWorkSubmissionFile,
+  listLessonWorkSubmissionsForLesson, listLessonWorkSubmissionFilesForSubmissions,
+  markLessonWorkReviewed, awardLessonWorkPoints, listPointCategories,
+} from '../lib/db';
 import HomeworkGradingRoster from '../components/HomeworkGradingRoster';
 import ExamGradingRoster from '../components/ExamGradingRoster';
+import LessonWorkReviewRoster from '../components/LessonWorkReviewRoster';
 
 // LessonHub doesn't use i18n elsewhere (see file header - all copy here is
 // plain English), so the grading rosters get the same plain labels inline
@@ -75,7 +82,7 @@ const EMPTY_QUIZ_FORM = { title: '', description: '', exam_date: new Date().toIS
 export default function LessonHub() {
   const { id } = useParams();
   const lessonId = Number(id);
-  const { role } = useAuth();
+  const { role, session } = useAuth();
   const isStudent = role === 'student';
   const navigate = useNavigate();
   const {
@@ -362,6 +369,182 @@ export default function LessonHub() {
     setLessonProgress(me.id, lesson.id, { status: 'in_progress', completed_at: null });
   };
 
+  // --- Lesson work submission (Phase 1 foundation) -----------------------
+  // Deliberately independent of lesson progress above: uploading/submitting
+  // work never calls setLessonProgress, and Mark completed/in progress
+  // never touch this state. See migration 0103 / storageBridge.js.
+  const MAX_WORK_IMAGES = 5;
+  const [workSubmission, setWorkSubmission] = useState(null);
+  const [workFiles, setWorkFiles] = useState([]);
+  const [workLoading, setWorkLoading] = useState(false);
+  const [workPending, setWorkPending] = useState([]); // { file, previewUrl }[]
+  const [workUploading, setWorkUploading] = useState(false);
+  const [workError, setWorkError] = useState(null);
+  const workPendingRef = useRef(workPending);
+  workPendingRef.current = workPending;
+
+  useEffect(() => () => workPendingRef.current.forEach((i) => URL.revokeObjectURL(i.previewUrl)), []);
+
+  useEffect(() => {
+    if (!isStudent || !me || !lesson) return;
+    let cancelled = false;
+    setWorkLoading(true);
+    (async () => {
+      try {
+        const submission = await getMyLessonWorkSubmission(me.id, lesson.id);
+        if (cancelled) return;
+        setWorkSubmission(submission);
+        if (submission) {
+          const files = await listLessonWorkSubmissionFiles(submission.id);
+          if (!cancelled) setWorkFiles(files);
+        } else {
+          setWorkFiles([]);
+        }
+      } catch {
+        if (!cancelled) setWorkError('Could not load your submission.');
+      } finally {
+        if (!cancelled) setWorkLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isStudent, me, lesson]);
+
+  const handlePickWorkFiles = (fileList) => {
+    const picked = Array.from(fileList || []).filter((f) => f.type.startsWith('image/'));
+    if (picked.length === 0) return;
+    const already = workFiles.length + workPending.length;
+    const room = Math.max(0, MAX_WORK_IMAGES - already);
+    const accepted = picked.slice(0, room);
+    if (accepted.length < picked.length) setWorkError(`You can upload up to ${MAX_WORK_IMAGES} images.`);
+    else setWorkError(null);
+    setWorkPending((prev) => [...prev, ...accepted.map((file) => ({ file, previewUrl: URL.createObjectURL(file) }))]);
+  };
+
+  const handleRemoveWorkPending = (index) => {
+    setWorkPending((prev) => {
+      const removed = prev[index];
+      if (removed) URL.revokeObjectURL(removed.previewUrl);
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
+  const handleRemoveWorkFile = async (id) => {
+    setWorkError(null);
+    try {
+      await deleteLessonWorkSubmissionFile(id);
+      setWorkFiles((prev) => prev.filter((f) => f.id !== id));
+    } catch {
+      setWorkError('Could not remove that image.');
+    }
+  };
+
+  const handleSubmitWork = async () => {
+    if (!isStudent || !me || !lesson || workPending.length === 0) return;
+    setWorkUploading(true);
+    setWorkError(null);
+    try {
+      let submission = workSubmission;
+      if (!submission) {
+        submission = await createLessonWorkSubmission(me.id, lesson.id);
+        setWorkSubmission(submission);
+      }
+      const uploaded = [];
+      let position = workFiles.length;
+      for (const item of workPending) {
+        const result = await uploadAttachment(item.file, `lesson-work/${me.id}`);
+        const row = await addLessonWorkSubmissionFile(submission.id, me.id, {
+          fileUrl: result.path,
+          fileName: result.name,
+          position: position++,
+        });
+        uploaded.push(row);
+      }
+      workPending.forEach((i) => URL.revokeObjectURL(i.previewUrl));
+      setWorkPending([]);
+      setWorkFiles((prev) => [...prev, ...uploaded]);
+    } catch {
+      setWorkError('Could not submit your work. Please try again.');
+    } finally {
+      setWorkUploading(false);
+    }
+  };
+
+  // --- Lesson work review (teacher-only, Phase 2) -------------------------
+  // Independent data load from the student panel above - lesson_work_
+  // submissions/files aren't in AcademyDataContext's in-memory arrays, so
+  // this page fetches them itself, same as the student's own submission
+  // fetch does. Points always go through awardLessonWorkPoints()
+  // (storageBridge.js), which is the only writer of point_transactions
+  // here - same ledger, same awardPoints() call every other points flow in
+  // this app uses (see Rankings.jsx).
+  const [workSubmissions, setWorkSubmissions] = useState([]);
+  const [workSubmissionFiles, setWorkSubmissionFiles] = useState([]);
+  const [pointCategories, setPointCategories] = useState([]);
+  const [workReviewExpanded, setWorkReviewExpanded] = useState(false);
+  const [reviewMessage, setReviewMessage] = useState('');
+
+  const reloadLessonWork = useCallback(async () => {
+    if (isStudent || !lesson) return;
+    const submissions = await listLessonWorkSubmissionsForLesson(lesson.id);
+    setWorkSubmissions(submissions || []);
+    const files = await listLessonWorkSubmissionFilesForSubmissions((submissions || []).map((s) => s.id));
+    setWorkSubmissionFiles(files || []);
+  }, [isStudent, lesson]);
+
+  useEffect(() => {
+    reloadLessonWork();
+  }, [reloadLessonWork]);
+
+  useEffect(() => {
+    if (isStudent) return;
+    listPointCategories()
+      .then((rows) => setPointCategories(rows || []))
+      .catch(() => setPointCategories([]));
+  }, [isStudent]);
+
+  // 'other' rather than 'homework': lesson practice is deliberately not
+  // part of the Homework domain (see 0103's header), so its point history
+  // entries shouldn't display under that category either.
+  const lessonWorkCategory = useMemo(
+    () => pointCategories.find((c) => c.key === 'other') || null,
+    [pointCategories]
+  );
+
+  const workSubmissionOf = (studentId) => workSubmissions.find((s) => s.student_id === studentId) || null;
+  const workFilesOf = (submissionId) => workSubmissionFiles.filter((f) => f.submission_id === submissionId);
+
+  const handleMarkLessonWorkReviewed = async (submission, feedback) => {
+    setReviewMessage('');
+    try {
+      await markLessonWorkReviewed(submission.id, { reviewedBy: session?.user?.id, feedback });
+      await reloadLessonWork();
+    } catch {
+      setReviewMessage('Could not update review status. Please try again.');
+    }
+  };
+
+  const handleAwardLessonWorkPoints = async (submission, student, points) => {
+    setReviewMessage('');
+    try {
+      await awardLessonWorkPoints({
+        submissionId: submission.id,
+        studentId: student.id,
+        level: student.level,
+        points,
+        reason: `Lesson practice - ${lesson?.topic || `Lesson ${lessonNumber ?? lesson.id}`}`,
+        awardedBy: session?.user?.id,
+        categoryId: lessonWorkCategory?.id ?? null,
+        categoryKey: 'other',
+      });
+      await reloadLessonWork();
+      setReviewMessage(`Awarded +${points} to ${student.real_name}.`);
+    } catch {
+      setReviewMessage('Could not award points. Please try again.');
+    }
+  };
+
   // Opening a lesson for the first time marks it in progress, so the list
   // reflects what the student actually touched (never fires twice).
   const autoStartRef = useRef(false);
@@ -535,6 +718,143 @@ export default function LessonHub() {
           )}
         </div>
       </HubCard>
+
+      {/* Practice / Submit Your Work (Phase 1 foundation) */}
+      {isStudent && me && (
+        <HubCard icon={ImageIcon} title="Practice / Submit Your Work">
+          {workError && <p className="mb-2 text-xs font-semibold text-inactive">{workError}</p>}
+          {workLoading ? (
+            <p className="text-sm text-ink/40">Loading...</p>
+          ) : (
+            <>
+              <p className="mb-2 flex flex-wrap items-center gap-2 text-xs font-semibold text-ink/60">
+                <span>
+                  Status:{' '}
+                  {workSubmission?.status === 'reviewed'
+                    ? 'Reviewed'
+                    : workSubmission
+                    ? 'Submitted'
+                    : 'Not submitted'}
+                </span>
+                {workSubmission?.points_awarded != null && (
+                  <span className="rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-bold text-brand-600">
+                    +{workSubmission.points_awarded} points
+                  </span>
+                )}
+              </p>
+              {workSubmission?.feedback && (
+                <p className="mb-2 text-xs text-ink/50">Feedback: {workSubmission.feedback}</p>
+              )}
+
+              {workFiles.length > 0 && (
+                <div className="mb-3 flex flex-wrap gap-2">
+                  {workFiles.map((f) => (
+                    <div key={f.id} className="group relative h-20 w-20 overflow-hidden rounded-lg border border-ink/10 bg-ink/5">
+                      <button
+                        onClick={async () => {
+                          const url = await getAttachmentUrl(f.file_url);
+                          if (url) window.open(url, '_blank', 'noopener');
+                        }}
+                        className="flex h-full w-full items-center justify-center"
+                        aria-label={f.file_name || 'View image'}
+                      >
+                        <ImageIcon size={20} className="text-ink/40" />
+                      </button>
+                      {workSubmission?.status !== 'reviewed' && (
+                        <button
+                          onClick={() => handleRemoveWorkFile(f.id)}
+                          className="absolute right-0.5 top-0.5 rounded bg-white/90 p-0.5 text-inactive opacity-0 group-hover:opacity-100"
+                          aria-label="Remove image"
+                        >
+                          <X size={12} />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {workPending.length > 0 && (
+                <div className="mb-3 flex flex-wrap gap-2">
+                  {workPending.map((item, i) => (
+                    <div key={item.previewUrl} className="group relative h-20 w-20 overflow-hidden rounded-lg border border-ink/10">
+                      <img src={item.previewUrl} alt="" className="h-full w-full object-cover" />
+                      <button
+                        onClick={() => handleRemoveWorkPending(i)}
+                        className="absolute right-0.5 top-0.5 rounded bg-white/90 p-0.5 text-inactive opacity-0 group-hover:opacity-100"
+                        aria-label="Remove selected image"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {workSubmission?.status !== 'reviewed' && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <label className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-semibold text-ink/60 hover:bg-ink/5">
+                    <Upload size={13} /> Select images
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      disabled={workFiles.length + workPending.length >= MAX_WORK_IMAGES}
+                      onChange={(e) => {
+                        handlePickWorkFiles(e.target.files);
+                        e.target.value = '';
+                      }}
+                    />
+                  </label>
+                  {workPending.length > 0 && (
+                    <button
+                      onClick={handleSubmitWork}
+                      disabled={workUploading}
+                      className="flex items-center gap-1.5 rounded-lg bg-brand-500 px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-60"
+                    >
+                      {workUploading ? 'Submitting...' : 'Submit'}
+                    </button>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+        </HubCard>
+      )}
+
+      {/* Lesson Practice review (teacher/admin, Phase 2) */}
+      {!isStudent && (
+        <HubCard
+          icon={ImageIcon}
+          title={`Lesson Practice${workSubmissions.length > 0 ? ` · ${workSubmissions.length}/${lessonRoster.length} submissions` : ''}`}
+          action={
+            <button
+              onClick={() => setWorkReviewExpanded((v) => !v)}
+              className="text-xs font-semibold text-brand-500 hover:underline"
+            >
+              {workReviewExpanded ? 'Hide' : 'Review'}
+            </button>
+          }
+        >
+          {reviewMessage && <p className="mb-2 text-xs font-semibold text-ink/60">{reviewMessage}</p>}
+          {workReviewExpanded ? (
+            <LessonWorkReviewRoster
+              students={lessonRoster}
+              submissionOf={workSubmissionOf}
+              filesOf={workFilesOf}
+              onOpenFile={handleOpenAnswerFile}
+              onMarkReviewed={handleMarkLessonWorkReviewed}
+              onAwardPoints={handleAwardLessonWorkPoints}
+              defaultPoints={lessonWorkCategory?.default_points ?? 5}
+            />
+          ) : (
+            <p className="text-sm text-ink/40">
+              {workSubmissions.length === 0 ? 'No submissions yet.' : 'Click Review to see student photos and award points.'}
+            </p>
+          )}
+        </HubCard>
+      )}
 
       {/* Homework */}
       <HubCard

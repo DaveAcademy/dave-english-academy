@@ -1014,6 +1014,163 @@ export async function removeVocabularyFavorite(studentId, vocabularyId) {
   if (error) throw error;
 }
 
+// ---------- Lesson work submissions (Phase 1 foundation) ----------
+// Separate from the Homework domain above - keyed directly to lessons.id,
+// not a homework assignment. See migration 0103. Student-facing only in
+// this phase: no review/points/feedback API yet.
+
+export async function listMyLessonWorkSubmissions(studentId) {
+  const { data, error } = await supabase
+    .from('lesson_work_submissions')
+    .select('*')
+    .eq('student_id', studentId);
+  if (error) throw error;
+  return data;
+}
+
+// Single-lesson lookup for LessonHub.jsx - avoids pulling every submission
+// across every lesson into that page just to find the one row it needs.
+export async function getMyLessonWorkSubmission(studentId, lessonId) {
+  const { data, error } = await supabase
+    .from('lesson_work_submissions')
+    .select('*')
+    .eq('student_id', studentId)
+    .eq('lesson_id', lessonId)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+export async function createLessonWorkSubmission(studentId, lessonId) {
+  const { data, error } = await supabase
+    .from('lesson_work_submissions')
+    .insert({ student_id: studentId, lesson_id: lessonId })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function listLessonWorkSubmissionFiles(submissionId) {
+  const { data, error } = await supabase
+    .from('lesson_work_submission_files')
+    .select('*')
+    .eq('submission_id', submissionId)
+    .order('position', { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+// Inserted one row at a time by the caller, same reasoning as
+// addHomeworkSubmissionFile: the 5-file cap is enforced by RLS via a
+// COUNT subquery that only sees rows already committed at the start of
+// each statement, so sequential single-row inserts are required for the
+// cap to be race-safe.
+export async function addLessonWorkSubmissionFile(submissionId, studentId, { fileUrl, fileName, position }) {
+  const { data, error } = await supabase
+    .from('lesson_work_submission_files')
+    .insert({ submission_id: submissionId, student_id: studentId, file_url: fileUrl, file_name: fileName, position })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteLessonWorkSubmissionFile(id) {
+  const { data, error } = await supabase.from('lesson_work_submission_files').delete().eq('id', id).select();
+  if (error) throw error;
+  assertRows(data, 'remove this file');
+  return true;
+}
+
+// ---------- Lesson work submissions - teacher review (Phase 2) ----------
+// See migration 0104 for the added columns. Points are never written
+// directly here - awardLessonWorkPoints() below is the only writer of
+// points_awarded/points_transaction_id, and it always goes through the
+// existing awardPoints() ledger call (point_transactions), same as every
+// other points flow in this app.
+
+// Every submission for one lesson (teacher_all RLS gives full access) -
+// the caller combines this with its already-loaded lesson roster to show
+// who has/hasn't submitted, same shape as the homework grading roster.
+export async function listLessonWorkSubmissionsForLesson(lessonId) {
+  const { data, error } = await supabase
+    .from('lesson_work_submissions')
+    .select('*')
+    .eq('lesson_id', lessonId);
+  if (error) throw error;
+  return data;
+}
+
+// Files for a batch of submissions in one request - the caller passes
+// every submission id from listLessonWorkSubmissionsForLesson.
+export async function listLessonWorkSubmissionFilesForSubmissions(submissionIds) {
+  if (!submissionIds || submissionIds.length === 0) return [];
+  const { data, error } = await supabase
+    .from('lesson_work_submission_files')
+    .select('*')
+    .in('submission_id', submissionIds)
+    .order('position', { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+// Marks a submission reviewed with feedback only, no points this time
+// (e.g. work needs another attempt, or the teacher just wants to leave a
+// note). Does not touch points_awarded/points_transaction_id, so points
+// can still be awarded afterwards via awardLessonWorkPoints() below.
+export async function markLessonWorkReviewed(submissionId, { reviewedBy, feedback = null }) {
+  const { data, error } = await supabase
+    .from('lesson_work_submissions')
+    .update({ status: 'reviewed', reviewed_at: new Date().toISOString(), reviewed_by: reviewedBy, feedback })
+    .eq('id', submissionId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+// Awards points for a lesson work submission through the existing
+// point_transactions ledger (calls awardPoints() below, the same function
+// every other points flow in this app uses). Duplicate-award-safe: the
+// first step is a guarded UPDATE ... WHERE points_awarded IS NULL, which
+// Postgres serializes against concurrent requests on the same row, so only
+// one concurrent call can ever "claim" a submission before the ledger
+// insert happens. If the ledger insert then fails, the claim is rolled
+// back so the submission isn't left falsely "awarded".
+export async function awardLessonWorkPoints({
+  submissionId, studentId, level, points, reason, awardedBy, categoryId, categoryKey, feedback = null,
+}) {
+  const { data: claimed, error: claimError } = await supabase
+    .from('lesson_work_submissions')
+    .update({ points_awarded: points })
+    .eq('id', submissionId)
+    .is('points_awarded', null)
+    .select()
+    .maybeSingle();
+  if (claimError) throw claimError;
+  if (!claimed) throw new Error('Points were already awarded for this submission.');
+
+  try {
+    const transactionId = await awardPoints({ studentId, level, categoryId, categoryKey, points, reason, awardedBy });
+    const { error: finalizeError } = await supabase
+      .from('lesson_work_submissions')
+      .update({
+        status: 'reviewed',
+        reviewed_at: new Date().toISOString(),
+        reviewed_by: awardedBy,
+        feedback,
+        points_transaction_id: transactionId,
+      })
+      .eq('id', submissionId);
+    if (finalizeError) throw finalizeError;
+    return transactionId;
+  } catch (err) {
+    await supabase.from('lesson_work_submissions').update({ points_awarded: null }).eq('id', submissionId);
+    throw err;
+  }
+}
+
 // ---------- File uploads ----------
 // One shared private bucket for every attachment (chat, exam/homework
 // files and answers, the certificate template) - see migration 0009. The
