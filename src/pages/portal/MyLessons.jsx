@@ -21,6 +21,7 @@ import { useAcademy } from '../../lib/AcademyDataContext';
 import LessonCard from '../../components/lesson/LessonCard';
 import LessonStatsBar from '../../components/lesson/LessonStatsBar';
 import MonthGroup from '../../components/lesson/MonthGroup';
+import LessonSectionTabs from '../../components/lesson/LessonSectionTabs';
 import PdfViewer from '../../components/PdfViewer';
 import {
   LESSON_STATUS, teacherPaceFor, lessonCapFor, progressByLessonNumber,
@@ -167,7 +168,7 @@ export default function MyLessons() {
   if (!me) {
     return (
       <div className="rounded-xl bg-white p-10 text-center shadow-card">
-        <p className="font-display text-lg font-semibold text-ink">Your account isn't linked to a student record yet.</p>
+        <p className="font-display text-lg font-semibold text-ink">{t('noStudentRecord')}</p>
       </div>
     );
   }
@@ -178,6 +179,8 @@ export default function MyLessons() {
         <h1 className="font-display text-2xl font-bold text-ink">{t('title')}</h1>
         <p className="mt-1 text-sm text-ink/50">{t('subtitle')}</p>
       </header>
+
+      <LessonSectionTabs />
 
       {/* Continue Learning banner */}
       {next ? (

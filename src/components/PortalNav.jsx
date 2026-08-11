@@ -18,14 +18,19 @@ import { useAcademy } from '../lib/AcademyDataContext';
 // "Home" renders Dashboard V3 (Progress Studio), the only student
 // dashboard - V1/V2 are no longer reachable from navigation (files kept
 // temporarily for rollback, see App.jsx's routes).
+// The lessonsGroup flag marks the Lessons/Homework/Exams block as one
+// section (see PortalSidebar's "Lessons" header above it) - students land
+// on lesson content, homework, and exams from a single grouped area
+// instead of three scattered top-level items. Bottom nav can't nest, so it
+// just keeps these three adjacent instead.
 const PORTAL_NAV_ITEMS = [
   { to: '/', label: 'home', shortLabel: 'homeShort', Icon: LayoutDashboard, end: true },
   { to: '/progress', label: 'myProgress', shortLabel: 'myProgressShort', Icon: TrendingUp },
-  { to: '/my-exams', label: 'myExamsFull', shortLabel: 'examsShort', Icon: FileCheck2 },
-  { to: '/my-lessons', label: 'myLessonsFull', shortLabel: 'lessonsShort', Icon: Library },
+  { to: '/my-lessons', label: 'myLessonsFull', shortLabel: 'lessonsShort', Icon: Library, lessonsGroup: true },
+  { to: '/my-homework', label: 'myHomeworkFull', shortLabel: 'homeworkShort', Icon: BookOpen, lessonsGroup: true },
+  { to: '/my-exams', label: 'myExamsFull', shortLabel: 'examsShort', Icon: FileCheck2, lessonsGroup: true },
   { to: '/dictionary', label: 'dictionary', shortLabel: 'dictionaryShort', Icon: Languages },
   { to: '/games', label: 'gameCenterFull', shortLabel: 'gameCenterShort', Icon: Gamepad2 },
-  { to: '/my-homework', label: 'myHomeworkFull', shortLabel: 'homeworkShort', Icon: BookOpen },
   { to: '/my-certificates', label: 'certificates', shortLabel: 'certificatesShort', Icon: Award },
   { to: '/my-ranking', label: 'ranking', shortLabel: 'rankingsShort', Icon: Trophy },
   { to: '/chat', label: 'messages', shortLabel: 'messagesShort', Icon: MessageSquare },
@@ -71,21 +76,27 @@ export function PortalSidebar() {
       </div>
 
       <nav className="flex-1 space-y-1 px-3">
-        {PORTAL_NAV_ITEMS.map(({ to, label, Icon, end }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={end}
-            className={({ isActive }) =>
-              `flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                isActive ? 'bg-white text-brand-700' : 'text-white/80 hover:bg-white/10 hover:text-white'
-              }`
-            }
-          >
-            <Icon className="h-4 w-4 flex-shrink-0" />
-            {t(label)}
-            {to === '/chat' && <UnreadBadge count={unread} />}
-          </NavLink>
+        {PORTAL_NAV_ITEMS.map(({ to, label, Icon, end, lessonsGroup }, i) => (
+          <div key={to}>
+            {lessonsGroup && !PORTAL_NAV_ITEMS[i - 1]?.lessonsGroup && (
+              <p className="mb-1 mt-3 px-3 text-[11px] font-bold uppercase tracking-wide text-white/40 first:mt-0">
+                {t('lessons')}
+              </p>
+            )}
+            <NavLink
+              to={to}
+              end={end}
+              className={({ isActive }) =>
+                `flex w-full items-center gap-3 rounded-lg py-2.5 text-sm font-medium transition-colors ${
+                  lessonsGroup ? 'pl-6 pr-3' : 'px-3'
+                } ${isActive ? 'bg-white text-brand-700' : 'text-white/80 hover:bg-white/10 hover:text-white'}`
+              }
+            >
+              <Icon className="h-4 w-4 flex-shrink-0" />
+              {t(label)}
+              {to === '/chat' && <UnreadBadge count={unread} />}
+            </NavLink>
+          </div>
         ))}
       </nav>
 

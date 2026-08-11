@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import { FileCheck2, Download, Upload, MessageSquare } from 'lucide-react';
 import { useAcademy } from '../../lib/AcademyDataContext';
 import { uploadAttachment, getAttachmentUrl } from '../../lib/db';
+import LessonSectionTabs from '../../components/lesson/LessonSectionTabs';
 
 export default function MyExams() {
   const { t } = useTranslation(['exams', 'common']);
@@ -101,6 +102,8 @@ export default function MyExams() {
         <h1 className="font-display text-2xl font-bold text-ink">{t('myTitle')}</h1>
         <p className="mt-1 text-sm text-ink/50">{t('mySubtitle')}</p>
       </header>
+
+      <LessonSectionTabs />
 
       {actionError && <div className="mb-4 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{actionError}</div>}
 
