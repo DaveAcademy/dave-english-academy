@@ -1014,6 +1014,63 @@ export async function removeVocabularyFavorite(studentId, vocabularyId) {
   if (error) throw error;
 }
 
+// ---------- Game Center (Game & Practice System) ----------
+// See migrations 0111/0112. Every game shares the same contract: a
+// get*Round() call returns only what's needed to render the round (word
+// ids + curriculum-scoped content, already readable by the student via
+// listAllVocabulary/RLS - see 0112's header comment for why that's not a
+// new exposure), and submitGameRound() sends back the student's answers
+// for the server to grade against the authoritative vocabulary. Game
+// score lives in game_sessions, entirely separate from academy ranking
+// points (point_transactions/students.points) - the only path from a
+// game round to points is an achievement bonus, awarded by the existing
+// evaluate_achievements() engine, not by this code. Adding a new game on
+// the frontend means one new get*Round() wrapper here plus a
+// submitGameRound(gameType, answers) call - not a new submit function.
+
+export async function getWordScrambleRound() {
+  const { data, error } = await supabase.rpc('get_word_scramble_round');
+  if (error) throw error;
+  return data;
+}
+
+export async function getVocabularyQuizRound() {
+  const { data, error } = await supabase.rpc('get_vocabulary_quiz_round');
+  if (error) throw error;
+  return data;
+}
+
+export async function getWordMatchRound() {
+  const { data, error } = await supabase.rpc('get_word_match_round');
+  if (error) throw error;
+  return data;
+}
+
+export async function getSpeedChallengeRound() {
+  const { data, error } = await supabase.rpc('get_speed_challenge_round');
+  if (error) throw error;
+  return data;
+}
+
+export async function submitGameRound(gameType, answers) {
+  const { data, error } = await supabase.rpc('submit_game_round', { p_game_type: gameType, p_answers: answers });
+  if (error) throw error;
+  return data;
+}
+
+// A student's own recent rounds for a game (best score / history) -
+// game_sessions RLS already scopes this to is_own_student, no RPC needed.
+export async function listMyGameSessions(studentId, gameType) {
+  const { data, error } = await supabase
+    .from('game_sessions')
+    .select('*')
+    .eq('student_id', studentId)
+    .eq('game_type', gameType)
+    .order('played_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
 // ---------- Lesson work submissions (Phase 1 foundation) ----------
 // Separate from the Homework domain above - keyed directly to lessons.id,
 // not a homework assignment. See migration 0103. Student-facing only in

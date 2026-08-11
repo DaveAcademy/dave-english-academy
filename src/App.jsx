@@ -41,6 +41,11 @@ const MyLessons = lazy(() => import('./pages/portal/MyLessons'));
 const MyVocabulary = lazy(() => import('./pages/portal/MyVocabulary'));
 const MyCertificates = lazy(() => import('./pages/portal/MyCertificates'));
 const MyRanking = lazy(() => import('./pages/portal/MyRanking'));
+const WordScramble = lazy(() => import('./pages/portal/WordScramble'));
+const VocabularyQuiz = lazy(() => import('./pages/portal/VocabularyQuiz'));
+const WordMatch = lazy(() => import('./pages/portal/WordMatch'));
+const SpeedChallenge = lazy(() => import('./pages/portal/SpeedChallenge'));
+const GameCenter = lazy(() => import('./pages/portal/GameCenter'));
 
 export default function App() {
   return (
@@ -106,6 +111,11 @@ function RoutedContent({ isStudent }) {
             <Route path="/my-lessons" element={<MyLessons />} />
             <Route path="/my-lessons/:id" element={<LessonHub />} />
             <Route path="/my-vocabulary" element={<MyVocabulary />} />
+            <Route path="/games" element={<GameCenter />} />
+            <Route path="/word-scramble" element={<WordScramble />} />
+            <Route path="/vocabulary-quiz" element={<VocabularyQuiz />} />
+            <Route path="/word-match" element={<WordMatch />} />
+            <Route path="/speed-challenge" element={<SpeedChallenge />} />
             <Route path="/my-certificates" element={<MyCertificates />} />
             <Route path="/my-ranking" element={<MyRanking />} />
             <Route path="/chat" element={<Chat />} />
