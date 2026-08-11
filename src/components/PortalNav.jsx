@@ -23,7 +23,7 @@ const PORTAL_NAV_ITEMS = [
   { to: '/progress', label: 'myProgress', shortLabel: 'myProgressShort', Icon: TrendingUp },
   { to: '/my-exams', label: 'myExamsFull', shortLabel: 'examsShort', Icon: FileCheck2 },
   { to: '/my-lessons', label: 'myLessonsFull', shortLabel: 'lessonsShort', Icon: Library },
-  { to: '/my-vocabulary', label: 'myVocabularyFull', shortLabel: 'vocabularyShort', Icon: Languages },
+  { to: '/dictionary', label: 'dictionary', shortLabel: 'dictionaryShort', Icon: Languages },
   { to: '/games', label: 'gameCenterFull', shortLabel: 'gameCenterShort', Icon: Gamepad2 },
   { to: '/my-homework', label: 'myHomeworkFull', shortLabel: 'homeworkShort', Icon: BookOpen },
   { to: '/my-certificates', label: 'certificates', shortLabel: 'certificatesShort', Icon: Award },

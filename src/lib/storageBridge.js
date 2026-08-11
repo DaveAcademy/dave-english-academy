@@ -1027,6 +1027,22 @@ export async function reorderLessonVocabulary(lessonId, orderedIds) {
   return listLessonVocabulary(lessonId);
 }
 
+// ---------- General Dictionary (independent of lessons/level/curriculum -
+// see migration 0116). Read-only for students; RLS is the only gate,
+// nothing here checks role client-side.
+
+export async function searchDictionary(query) {
+  const q = `%${query.trim()}%`;
+  const { data, error } = await supabase
+    .from('dictionary_entries')
+    .select('*')
+    .or(`english.ilike.${q},uzbek.ilike.${q}`)
+    .order('english')
+    .limit(30);
+  if (error) throw error;
+  return data;
+}
+
 export async function listMyVocabularyFavorites(studentId) {
   const { data, error } = await supabase.from('student_vocabulary_favorites').select('*').eq('student_id', studentId);
   if (error) throw error;

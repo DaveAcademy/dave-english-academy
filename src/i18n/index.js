@@ -33,6 +33,8 @@ import enLessons from '../locales/en/lessons.json';
 import uzLessons from '../locales/uz/lessons.json';
 import enGame from '../locales/en/game.json';
 import uzGame from '../locales/uz/game.json';
+import enDictionary from '../locales/en/dictionary.json';
+import uzDictionary from '../locales/uz/dictionary.json';
 
 const LANGUAGE_KEY = 'dave-academy-language';
 const storedLanguage = localStorage.getItem(LANGUAGE_KEY);
@@ -64,6 +66,7 @@ i18n.use(initReactI18next).init({
       chat: enChat,
       lessons: enLessons,
       game: enGame,
+      dictionary: enDictionary,
     },
     uz: {
       common: uzCommon,
@@ -79,6 +82,7 @@ i18n.use(initReactI18next).init({
       chat: uzChat,
       lessons: uzLessons,
       game: uzGame,
+      dictionary: uzDictionary,
     },
   },
   lng: storedLanguage || 'en',

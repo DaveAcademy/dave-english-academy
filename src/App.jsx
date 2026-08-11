@@ -39,6 +39,7 @@ const MyExams = lazy(() => import('./pages/portal/MyExams'));
 const MyHomework = lazy(() => import('./pages/portal/MyHomework'));
 const MyLessons = lazy(() => import('./pages/portal/MyLessons'));
 const MyVocabulary = lazy(() => import('./pages/portal/MyVocabulary'));
+const Dictionary = lazy(() => import('./pages/portal/Dictionary'));
 const MyCertificates = lazy(() => import('./pages/portal/MyCertificates'));
 const MyRanking = lazy(() => import('./pages/portal/MyRanking'));
 const WordScramble = lazy(() => import('./pages/portal/WordScramble'));
@@ -111,6 +112,7 @@ function RoutedContent({ isStudent }) {
             <Route path="/my-lessons" element={<MyLessons />} />
             <Route path="/my-lessons/:id" element={<LessonHub />} />
             <Route path="/my-vocabulary" element={<MyVocabulary />} />
+            <Route path="/dictionary" element={<Dictionary />} />
             <Route path="/games" element={<GameCenter />} />
             <Route path="/word-scramble" element={<WordScramble />} />
             <Route path="/vocabulary-quiz" element={<VocabularyQuiz />} />
