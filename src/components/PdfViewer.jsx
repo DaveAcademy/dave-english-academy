@@ -13,6 +13,7 @@
 // pdf.js is imported lazily (dynamic import) so the ~1MB library only loads
 // the first time a PDF is actually opened, keeping the main bundle lean.
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   AlertTriangle, ChevronLeft, ChevronRight, FileText, Loader2,
   ZoomIn, ZoomOut, X,
@@ -35,6 +36,7 @@ function getPdfjs() {
 }
 
 export default function PdfViewer({ path, fileName, initialPage = 1, onPageChange, onClose }) {
+  const { t } = useTranslation('lessons');
   const [doc, setDoc] = useState(null);
   const [pageNum, setPageNum] = useState(1);
   const [numPages, setNumPages] = useState(0);
@@ -69,7 +71,7 @@ export default function PdfViewer({ path, fileName, initialPage = 1, onPageChang
         const start = Math.min(Math.max(1, Number(initialPage) || 1), loaded.numPages);
         setPageNum(start);
       } catch {
-        if (!cancelled) setLoadError('Could not load this PDF. It may be missing or you may not have access to it yet.');
+        if (!cancelled) setLoadError(t('pdfLoadError'));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -133,14 +135,14 @@ export default function PdfViewer({ path, fileName, initialPage = 1, onPageChang
         <header className="flex flex-wrap items-center justify-between gap-2 border-b border-ink/10 px-3 py-2 sm:px-4">
           <span className="flex min-w-0 items-center gap-2 text-sm font-semibold text-ink">
             <FileText size={16} className="flex-shrink-0 text-brand-500" />
-            <span className="truncate">{fileName || 'PDF'}</span>
+            <span className="truncate">{fileName || t('hubPdfTitle')}</span>
           </span>
 
           <div className="flex items-center gap-1">
             {doc && (
               <>
                 <button type="button" onClick={() => goTo(pageNum - 1)} disabled={pageNum <= 1}
-                  className="flex items-center gap-0.5 rounded-lg px-2 py-1 text-xs font-semibold text-ink/60 hover:bg-ink/5 disabled:opacity-40" aria-label="Previous page">
+                  className="flex items-center gap-0.5 rounded-lg px-2 py-1 text-xs font-semibold text-ink/60 hover:bg-ink/5 disabled:opacity-40" aria-label={t('pdfPreviousPage')}>
                   <ChevronLeft size={15} />
                 </button>
                 <span className="flex items-center gap-1 text-xs font-medium text-ink/60">
@@ -151,28 +153,28 @@ export default function PdfViewer({ path, fileName, initialPage = 1, onPageChang
                     value={pageNum}
                     onChange={(e) => goTo(Number(e.target.value))}
                     className="w-12 rounded border border-ink/15 px-1 py-0.5 text-center text-xs font-semibold text-ink"
-                    aria-label="Page number"
+                    aria-label={t('pdfPageNumber')}
                   />
                   <span>/ {doc.numPages}</span>
                 </span>
                 <button type="button" onClick={() => goTo(pageNum + 1)} disabled={pageNum >= doc.numPages}
-                  className="flex items-center gap-0.5 rounded-lg px-2 py-1 text-xs font-semibold text-ink/60 hover:bg-ink/5 disabled:opacity-40" aria-label="Next page">
+                  className="flex items-center gap-0.5 rounded-lg px-2 py-1 text-xs font-semibold text-ink/60 hover:bg-ink/5 disabled:opacity-40" aria-label={t('pdfNextPage')}>
                   <ChevronRight size={15} />
                 </button>
                 <span className="mx-1 h-5 w-px bg-ink/10" />
                 <button type="button" onClick={() => setScale((s) => Math.max(0.5, +(s - 0.25).toFixed(2)))}
-                  className="rounded-lg p-1.5 text-ink/60 hover:bg-ink/5" aria-label="Zoom out">
+                  className="rounded-lg p-1.5 text-ink/60 hover:bg-ink/5" aria-label={t('pdfZoomOut')}>
                   <ZoomOut size={15} />
                 </button>
                 <span className="w-10 text-center text-xs font-semibold text-ink/60">{Math.round(scale * 100)}%</span>
                 <button type="button" onClick={() => setScale((s) => Math.min(4, +(s + 0.25).toFixed(2)))}
-                  className="rounded-lg p-1.5 text-ink/60 hover:bg-ink/5" aria-label="Zoom in">
+                  className="rounded-lg p-1.5 text-ink/60 hover:bg-ink/5" aria-label={t('pdfZoomIn')}>
                   <ZoomIn size={15} />
                 </button>
               </>
             )}
             <button type="button" onClick={close}
-              className="ml-1 flex-shrink-0 rounded-lg p-1.5 text-ink/60 hover:bg-ink/5 hover:text-ink" aria-label="Close PDF">
+              className="ml-1 flex-shrink-0 rounded-lg p-1.5 text-ink/60 hover:bg-ink/5 hover:text-ink" aria-label={t('pdfClose')}>
               <X size={18} />
             </button>
           </div>
@@ -197,7 +199,7 @@ export default function PdfViewer({ path, fileName, initialPage = 1, onPageChang
           ) : !doc ? (
             <div className="flex h-full flex-col items-center justify-center gap-3 text-sm text-ink/50">
               <Loader2 size={28} className="animate-spin text-brand-500" />
-              <span>Loading PDF…</span>
+              <span>{t('pdfLoading')}</span>
             </div>
           ) : (
             <div className="flex min-h-full min-w-fit items-start justify-center p-2 sm:p-4">

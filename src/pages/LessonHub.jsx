@@ -21,6 +21,7 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight, Download, FileCheck2,
   FileText, Languages, List, BookOpen, Image as ImageIcon, Pencil, PlayCircle, Plus, RotateCcw,
@@ -44,6 +45,7 @@ import {
 import HomeworkGradingRoster from '../components/HomeworkGradingRoster';
 import ExamGradingRoster from '../components/ExamGradingRoster';
 import LessonWorkReviewRoster from '../components/LessonWorkReviewRoster';
+import { translatedLessonTitle } from '../lib/lessonLogic';
 
 // LessonHub doesn't use i18n elsewhere (see file header - all copy here is
 // plain English), so the grading rosters get the same plain labels inline
@@ -80,6 +82,7 @@ const EMPTY_HOMEWORK_FORM = { title: '', description: '', due_date: new Date().t
 const EMPTY_QUIZ_FORM = { title: '', description: '', exam_date: new Date().toISOString().slice(0, 10), max_score: 100 };
 
 export default function LessonHub() {
+  const { t } = useTranslation('lessons');
   const { id } = useParams();
   const lessonId = Number(id);
   const { role, session } = useAuth();
@@ -560,9 +563,9 @@ export default function LessonHub() {
   if (!lesson) {
     return (
       <div className="rounded-xl bg-white p-10 text-center shadow-card">
-        <p className="font-display text-lg font-semibold text-ink">Lesson not found.</p>
+        <p className="font-display text-lg font-semibold text-ink">{t('hubNotFound')}</p>
         <Link to={backHref} className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-brand-500 hover:underline">
-          <ArrowLeft size={14} /> Back to lessons
+          <ArrowLeft size={14} /> {t('hubBackToLessons')}
         </Link>
       </div>
     );
@@ -571,10 +574,10 @@ export default function LessonHub() {
   if (isLockedForMe) {
     return (
       <div className="rounded-xl bg-white p-10 text-center shadow-card">
-        <p className="font-display text-lg font-semibold text-ink">🔒 This lesson is locked.</p>
-        <p className="mt-1 text-sm text-ink/50">Complete the previous lesson to unlock this one.</p>
+        <p className="font-display text-lg font-semibold text-ink">🔒 {t('hubLockedTitle')}</p>
+        <p className="mt-1 text-sm text-ink/50">{t('hubLockedSub')}</p>
         <Link to={backHref} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-brand-500 hover:underline">
-          <ArrowLeft size={14} /> Back to lessons
+          <ArrowLeft size={14} /> {t('hubBackToLessons')}
         </Link>
       </div>
     );
@@ -586,8 +589,8 @@ export default function LessonHub() {
         <div className="flex items-center gap-3 rounded-xl border border-active/20 bg-active/5 p-4 shadow-card">
           <span className="text-2xl" aria-hidden="true">🎉</span>
           <div>
-            <p className="font-display text-base font-bold text-ink">Lesson completed!</p>
-            <p className="text-xs text-ink/60">The next lesson is now unlocked for you.</p>
+            <p className="font-display text-base font-bold text-ink">{t('hubJustCompletedTitle')}</p>
+            <p className="text-xs text-ink/60">{t('hubJustCompletedSub')}</p>
           </div>
         </div>
       )}
@@ -595,7 +598,7 @@ export default function LessonHub() {
       <header>
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
           <Link to={backHref} className="flex items-center gap-1 text-xs font-semibold text-brand-500 hover:underline">
-            <ArrowLeft size={13} /> Back to lessons
+            <ArrowLeft size={13} /> {t('hubBackToLessons')}
           </Link>
           {navLessons.length > 1 && (
             <label className="flex items-center gap-1.5 text-xs font-semibold text-ink/60">
@@ -607,11 +610,11 @@ export default function LessonHub() {
                   if (target) goToLesson(target);
                 }}
                 className="input max-w-[220px] w-auto py-1 text-xs"
-                aria-label="Jump to lesson"
+                aria-label={t('hubJumpToLesson')}
               >
                 {navLessons.map((l) => (
                   <option key={l.id} value={l.id}>
-                    {l.curriculum_lessons?.lesson_number != null ? `#${l.curriculum_lessons.lesson_number} · ` : ''}{l.topic}
+                    {l.curriculum_lessons?.lesson_number != null ? `#${l.curriculum_lessons.lesson_number} · ` : ''}{translatedLessonTitle(t, l.curriculum_lessons?.lesson_number, l.topic)}
                   </option>
                 ))}
               </select>
@@ -622,7 +625,7 @@ export default function LessonHub() {
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="font-display text-2xl font-bold text-ink">
             {lessonNumber != null && <span className="text-ink/40">#{lessonNumber} · </span>}
-            {lesson.topic}
+            {translatedLessonTitle(t, lessonNumber, lesson.topic)}
           </h1>
           {lesson.level && <LevelBadge level={lesson.level} />}
           {isStudent && lessonStatus && lessonStatus !== 'locked' && (
@@ -632,7 +635,7 @@ export default function LessonHub() {
               }`}
             >
               {lessonStatus === 'completed' ? <CheckCircle2 size={13} /> : lessonStatus === 'in_progress' ? <PlayCircle size={13} /> : null}
-              {lessonStatus === 'completed' ? 'Completed' : lessonStatus === 'in_progress' ? 'In progress' : 'Not started'}
+              {lessonStatus === 'completed' ? t('statusCompleted') : lessonStatus === 'in_progress' ? t('statusInProgress') : t('statusNotStarted')}
             </span>
           )}
         </div>
@@ -643,13 +646,13 @@ export default function LessonHub() {
             {lessonStatus === 'completed' ? (
               <>
                 <span className="flex items-center gap-1.5 rounded-lg bg-active/10 px-3 py-1.5 text-sm font-semibold text-active">
-                  <CheckCircle2 size={15} /> Completed
+                  <CheckCircle2 size={15} /> {t('statusCompleted')}
                 </span>
                 <button
                   onClick={handleMarkInProgress}
                   className="flex items-center gap-1 rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-semibold text-ink/60 hover:bg-ink/5"
                 >
-                  <RotateCcw size={13} /> Mark as in progress
+                  <RotateCcw size={13} /> {t('hubMarkInProgress')}
                 </button>
               </>
             ) : (
@@ -657,7 +660,7 @@ export default function LessonHub() {
                 onClick={handleMarkCompleted}
                 className="flex items-center gap-1.5 rounded-lg bg-brand-500 px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-600"
               >
-                <CheckCircle2 size={15} /> Mark as completed
+                <CheckCircle2 size={15} /> {t('hubMarkCompleted')}
               </button>
             )}
           </div>
@@ -667,7 +670,7 @@ export default function LessonHub() {
           <div className="mt-4 flex items-center justify-between gap-2 rounded-xl bg-white p-2 shadow-card">
             {prevLesson ? (
               <button onClick={() => goToLesson(prevLesson)} className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-semibold text-ink/70 hover:bg-ink/5">
-                <ChevronLeft size={15} /> Previous
+                <ChevronLeft size={15} /> {t('hubPrevious')}
               </button>
             ) : <span className="px-2" />}
             <span className="text-xs font-semibold text-ink/40">
@@ -675,7 +678,7 @@ export default function LessonHub() {
             </span>
             {nextLesson ? (
               <button onClick={() => goToLesson(nextLesson)} className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-semibold text-brand-500 hover:bg-brand-50">
-                Next <ChevronRight size={15} />
+                {t('hubNext')} <ChevronRight size={15} />
               </button>
             ) : <span className="px-2" />}
           </div>
@@ -683,7 +686,7 @@ export default function LessonHub() {
       </header>
 
       {/* PDF */}
-      <HubCard icon={FileText} title="PDF">
+      <HubCard icon={FileText} title={t('hubPdfTitle')}>
         {pdfError && <p className="mb-2 text-xs font-semibold text-inactive">{pdfError}</p>}
         <div className="flex flex-wrap items-center gap-2">
           {lesson.pdf_path ? (
@@ -691,10 +694,10 @@ export default function LessonHub() {
               onClick={handleOpenPdf}
               className="flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-sm font-semibold text-brand-500 hover:bg-brand-50"
             >
-              <Download size={14} /> {lesson.pdf_name || 'Open PDF'}
+              <Download size={14} /> {lesson.pdf_name || t('hubOpenPdf')}
             </button>
           ) : (
-            <p className="text-sm text-ink/40">No PDF uploaded yet.</p>
+            <p className="text-sm text-ink/40">{t('hubNoPdf')}</p>
           )}
           {!isStudent && (
             <>
@@ -721,29 +724,29 @@ export default function LessonHub() {
 
       {/* Practice / Submit Your Work (Phase 1 foundation) */}
       {isStudent && me && (
-        <HubCard icon={ImageIcon} title="Practice / Submit Your Work">
+        <HubCard icon={ImageIcon} title={t('hubPracticeTitle')}>
           {workError && <p className="mb-2 text-xs font-semibold text-inactive">{workError}</p>}
           {workLoading ? (
-            <p className="text-sm text-ink/40">Loading...</p>
+            <p className="text-sm text-ink/40">{t('hubLoading')}</p>
           ) : (
             <>
               <p className="mb-2 flex flex-wrap items-center gap-2 text-xs font-semibold text-ink/60">
                 <span>
-                  Status:{' '}
+                  {t('hubStatusLabel')}{' '}
                   {workSubmission?.status === 'reviewed'
-                    ? 'Reviewed'
+                    ? t('hubStatusReviewed')
                     : workSubmission
-                    ? 'Submitted'
-                    : 'Not submitted'}
+                    ? t('hubStatusSubmitted')
+                    : t('hubStatusNotSubmitted')}
                 </span>
                 {workSubmission?.points_awarded != null && (
                   <span className="rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-bold text-brand-600">
-                    +{workSubmission.points_awarded} points
+                    {t('hubPointsAwarded', { points: workSubmission.points_awarded })}
                   </span>
                 )}
               </p>
               {workSubmission?.feedback && (
-                <p className="mb-2 text-xs text-ink/50">Feedback: {workSubmission.feedback}</p>
+                <p className="mb-2 text-xs text-ink/50">{t('hubFeedback', { feedback: workSubmission.feedback })}</p>
               )}
 
               {workFiles.length > 0 && (
@@ -756,7 +759,7 @@ export default function LessonHub() {
                           if (url) window.open(url, '_blank', 'noopener');
                         }}
                         className="flex h-full w-full items-center justify-center"
-                        aria-label={f.file_name || 'View image'}
+                        aria-label={f.file_name || t('hubViewImage')}
                       >
                         <ImageIcon size={20} className="text-ink/40" />
                       </button>
@@ -764,7 +767,7 @@ export default function LessonHub() {
                         <button
                           onClick={() => handleRemoveWorkFile(f.id)}
                           className="absolute right-0.5 top-0.5 rounded bg-white/90 p-0.5 text-inactive opacity-0 group-hover:opacity-100"
-                          aria-label="Remove image"
+                          aria-label={t('hubRemoveImage')}
                         >
                           <X size={12} />
                         </button>
@@ -782,7 +785,7 @@ export default function LessonHub() {
                       <button
                         onClick={() => handleRemoveWorkPending(i)}
                         className="absolute right-0.5 top-0.5 rounded bg-white/90 p-0.5 text-inactive opacity-0 group-hover:opacity-100"
-                        aria-label="Remove selected image"
+                        aria-label={t('hubRemoveSelectedImage')}
                       >
                         <X size={12} />
                       </button>
@@ -794,7 +797,7 @@ export default function LessonHub() {
               {workSubmission?.status !== 'reviewed' && (
                 <div className="flex flex-wrap items-center gap-2">
                   <label className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-semibold text-ink/60 hover:bg-ink/5">
-                    <Upload size={13} /> Select images
+                    <Upload size={13} /> {t('hubSelectImages')}
                     <input
                       type="file"
                       accept="image/*"
@@ -813,7 +816,7 @@ export default function LessonHub() {
                       disabled={workUploading}
                       className="flex items-center gap-1.5 rounded-lg bg-brand-500 px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-60"
                     >
-                      {workUploading ? 'Submitting...' : 'Submit'}
+                      {workUploading ? t('hubSubmitting') : t('hubSubmit')}
                     </button>
                   )}
                 </div>
@@ -859,7 +862,7 @@ export default function LessonHub() {
       {/* Homework */}
       <HubCard
         icon={BookOpen}
-        title="Homework"
+        title={t('hubHomeworkTitle')}
         action={
           !isStudent && (
             <button
@@ -888,7 +891,7 @@ export default function LessonHub() {
         )}
 
         {lessonHomework.length === 0 ? (
-          <p className="text-sm text-ink/40">No homework assigned for this lesson yet.</p>
+          <p className="text-sm text-ink/40">{t('hubNoHomework')}</p>
         ) : (
           <div className="space-y-2">
             {lessonHomework.map((h) => {
@@ -899,7 +902,7 @@ export default function LessonHub() {
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div className="min-w-0">
                       <p className="font-semibold text-ink">{h.title}</p>
-                      <p className="text-xs text-ink/50">Due {h.due_date}</p>
+                      <p className="text-xs text-ink/50">{t('hubDue', { date: h.due_date })}</p>
                       {h.description && <p className="mt-1 whitespace-pre-wrap text-sm text-ink/70">{h.description}</p>}
                     </div>
                     {!isStudent ? (
@@ -914,12 +917,12 @@ export default function LessonHub() {
                   {isStudent && (
                     <div className="mt-2 flex flex-wrap items-center gap-2">
                       <span className="rounded-full bg-ink/5 px-2 py-0.5 text-[10px] font-bold text-ink/40">
-                        {graded ? 'Graded' : myHwFilesCount(h.id) > 0 ? 'Awaiting grading' : 'Not submitted'}
+                        {graded ? t('hubHwGraded') : myHwFilesCount(h.id) > 0 ? t('hubHwAwaitingGrading') : t('hubHwNotSubmitted')}
                       </span>
                       {status?.feedback && <span className="text-xs text-ink/60">{status.feedback}</span>}
                       {!graded && (
                         <label className="flex cursor-pointer items-center gap-1 text-xs font-semibold text-brand-500 hover:underline">
-                          <Upload size={12} /> {hwUploading === h.id ? 'Uploading...' : 'Submit'}
+                          <Upload size={12} /> {hwUploading === h.id ? t('hubUploading') : t('hubSubmit')}
                           <input
                             type="file"
                             accept="image/*"
@@ -974,20 +977,20 @@ export default function LessonHub() {
       {/* Vocabulary */}
       <HubCard
         icon={Languages}
-        title={`Vocabulary${vocabWords.length ? ` (${vocabWords.length})` : ''}`}
+        title={vocabWords.length ? t('hubVocabularyTitleCount', { count: vocabWords.length }) : t('hubVocabularyTitle')}
         action={
           <Link
             to={isStudent ? `/my-vocabulary?lesson=${lessonId}` : '/vocabulary'}
             className="flex items-center gap-1 rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-semibold text-ink/60 hover:bg-ink/5"
           >
-            {isStudent ? 'Study Vocabulary' : 'Manage Vocabulary'}
+            {isStudent ? t('hubStudyVocabulary') : t('hubManageVocabulary')}
           </Link>
         }
       >
         {vocabLoading ? (
-          <p className="text-sm text-ink/40">Loading...</p>
+          <p className="text-sm text-ink/40">{t('hubLoading')}</p>
         ) : vocabWords.length === 0 ? (
-          <p className="text-sm text-ink/40">No vocabulary added for this lesson yet.</p>
+          <p className="text-sm text-ink/40">{t('hubNoVocabulary')}</p>
         ) : (
           <ul className="grid gap-1 sm:grid-cols-2">
             {vocabWords.slice(0, 6).map((w) => (
@@ -1002,7 +1005,7 @@ export default function LessonHub() {
       {/* Quiz */}
       <HubCard
         icon={FileCheck2}
-        title="Quiz"
+        title={t('hubQuizTitle')}
         action={
           !isStudent && (
             <button
@@ -1032,7 +1035,7 @@ export default function LessonHub() {
         )}
 
         {lessonQuizzes.length === 0 ? (
-          <p className="text-sm text-ink/40">No quiz for this lesson yet.</p>
+          <p className="text-sm text-ink/40">{t('hubNoQuiz')}</p>
         ) : (
           <div className="space-y-2">
             {lessonQuizzes.map((ex) => {
@@ -1043,7 +1046,7 @@ export default function LessonHub() {
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div className="min-w-0">
                       <p className="font-semibold text-ink">{ex.title}</p>
-                      <p className="text-xs text-ink/50">{ex.exam_date} · out of {ex.max_score}</p>
+                      <p className="text-xs text-ink/50">{t('hubQuizMeta', { date: ex.exam_date, max: ex.max_score })}</p>
                       {ex.description && <p className="mt-1 whitespace-pre-wrap text-sm text-ink/70">{ex.description}</p>}
                     </div>
                     {!isStudent ? (
@@ -1058,12 +1061,12 @@ export default function LessonHub() {
                   {isStudent && (
                     <div className="mt-2 flex flex-wrap items-center gap-2">
                       <span className="rounded-full bg-ink/5 px-2 py-0.5 text-[10px] font-bold text-ink/40">
-                        {graded ? 'Completed' : result?.answer_file_url ? 'Awaiting grading' : 'Available'}
+                        {graded ? t('hubQuizCompleted') : result?.answer_file_url ? t('hubQuizAwaitingGrading') : t('hubQuizAvailable')}
                       </span>
                       {result?.feedback && <span className="text-xs text-ink/60">{result.feedback}</span>}
                       {!graded && (
                         <label className="flex cursor-pointer items-center gap-1 text-xs font-semibold text-brand-500 hover:underline">
-                          <Upload size={12} /> {quizUploading === ex.id ? 'Uploading...' : 'Start Quiz'}
+                          <Upload size={12} /> {quizUploading === ex.id ? t('hubUploading') : t('hubStartQuiz')}
                           <input
                             type="file"
                             className="hidden"
@@ -1115,7 +1118,7 @@ export default function LessonHub() {
       {/* Notes */}
       <HubCard
         icon={StickyNote}
-        title="Notes"
+        title={t('hubNotesTitle')}
         action={
           !isStudent && !notesEditing && (
             <button onClick={startNotesEdit} className="flex items-center gap-1 rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-semibold text-ink/60 hover:bg-ink/5">
@@ -1143,7 +1146,7 @@ export default function LessonHub() {
         ) : lesson.notes ? (
           <p className="whitespace-pre-wrap text-sm text-ink/70">{lesson.notes}</p>
         ) : (
-          <p className="text-sm text-ink/40">No notes for this lesson yet.</p>
+          <p className="text-sm text-ink/40">{t('hubNoNotes')}</p>
         )}
       </HubCard>
 
