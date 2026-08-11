@@ -9,8 +9,14 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowUp, ArrowDown } from 'lucide-react';
 import { useAcademy } from '../../lib/AcademyDataContext';
-import { getGroupLeaderboard, getRecognitionAwards, getStudentRankingSummary } from '../../lib/db';
+import { getGroupLeaderboard, getRecognitionAwards, getStudentRankingSummary, listAchievementDefinitions, getStudentAchievements } from '../../lib/db';
 import { formatMonthDay } from '../../utils/date';
+
+const RARITY_STYLE = {
+  common: 'bg-ink/10 text-ink/60',
+  rare: 'bg-brand-500/10 text-brand-500',
+  epic: 'bg-levelB/20 text-levelB',
+};
 
 const PERIODS = ['week', 'month', 'all_time'];
 
@@ -32,6 +38,8 @@ export default function MyRanking() {
   const [leaderboard, setLeaderboard] = useState(null);
   const [awards, setAwards] = useState(null);
   const [summary, setSummary] = useState(null);
+  const [achievementDefs, setAchievementDefs] = useState(null);
+  const [earnedAchievements, setEarnedAchievements] = useState(null);
 
   // This Week / This Month / Total Points, all three at once - the same
   // week_bounds()/month_bounds()-summed ledger figures as the leaderboard
@@ -89,6 +97,42 @@ export default function MyRanking() {
     };
   }, [me]);
 
+  // Achievements: catalog + this student's earned rows, fetched
+  // independently (like awards/leaderboard above) so one failing request
+  // doesn't block the others.
+  useEffect(() => {
+    let cancelled = false;
+    listAchievementDefinitions()
+      .then((rows) => {
+        if (!cancelled) setAchievementDefs(rows || []);
+      })
+      .catch(() => {
+        if (!cancelled) setAchievementDefs([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!me?.id) return undefined;
+    let cancelled = false;
+    setEarnedAchievements(null);
+    getStudentAchievements(me.id)
+      .then((rows) => {
+        if (!cancelled) setEarnedAchievements(rows || []);
+      })
+      .catch(() => {
+        if (!cancelled) setEarnedAchievements([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [me?.id]);
+
+  const earnedKeys = new Set((earnedAchievements || []).map((a) => a.achievement?.key));
+  const lockedAchievements = (achievementDefs || []).filter((d) => !earnedKeys.has(d.key));
+
   const medal = (i) => (i === 0 ? 'bg-levelB' : i === 1 ? 'bg-ink/20' : i === 2 ? 'bg-levelA' : 'bg-ink/5');
   const medalText = (i) => (i <= 2 ? 'text-white' : 'text-ink/50');
 
@@ -144,6 +188,52 @@ export default function MyRanking() {
                 </div>
               );
             })}
+          </div>
+        )}
+      </section>
+
+      <section className="mb-6">
+        <h2 className="mb-2 font-display text-base font-bold text-ink">{t('portal:achievementsTitle')}</h2>
+        {earnedAchievements === null || achievementDefs === null ? (
+          <div className="rounded-xl bg-white p-6 text-center text-sm text-ink/50 shadow-card">{t('common:loading')}</div>
+        ) : earnedAchievements.length === 0 && lockedAchievements.length === 0 ? (
+          <div className="rounded-xl bg-white p-6 text-center shadow-card">
+            <p className="text-sm text-ink/50">{t('portal:achievementsEmpty')}</p>
+          </div>
+        ) : (
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {earnedAchievements.map((a) => (
+              <div key={a.achievement?.key} className="flex items-start gap-3 rounded-xl bg-white p-3 shadow-card">
+                <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-brand-500/10 text-lg">
+                  {a.achievement?.icon || '🏆'}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <p className="truncate font-semibold text-ink">{a.achievement?.name}</p>
+                    {a.achievement?.rarity && (
+                      <span className={`flex-shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase ${RARITY_STYLE[a.achievement.rarity] || RARITY_STYLE.common}`}>
+                        {a.achievement.rarity}
+                      </span>
+                    )}
+                  </div>
+                  {a.achievement?.description && <p className="text-xs text-ink/50">{a.achievement.description}</p>}
+                  <p className="mt-1 text-xs text-ink/40">
+                    {formatMonthDay(new Date(a.earned_at), dateLocale)}
+                    {a.bonus_transaction?.points > 0 && ` · +${a.bonus_transaction.points} ${t('portal:points')}`}
+                  </p>
+                </div>
+              </div>
+            ))}
+            {lockedAchievements.map((d) => (
+              <div key={d.key} className="flex items-start gap-3 rounded-xl bg-ink/[0.02] p-3 opacity-60 shadow-card">
+                <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-ink/5 text-lg grayscale">{d.icon || '🔒'}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-semibold text-ink/70">{d.name}</p>
+                  {d.description && <p className="text-xs text-ink/40">{d.description}</p>}
+                  <p className="mt-1 text-xs font-semibold uppercase text-ink/30">{t('portal:achievementLocked')}</p>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </section>

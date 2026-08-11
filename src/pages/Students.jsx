@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search, Plus, Upload, Pencil, Trash2, ChevronUp, ChevronDown, ArrowUpDown, MessageCircle, MessageCircleOff } from 'lucide-react';
+import { Search, Plus, Upload, Pencil, Trash2, ChevronUp, ChevronDown, ArrowUpDown, MessageCircle, MessageCircleOff, Trophy } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { useAuth } from '../lib/AuthContext';
 import { LEVELS } from '../lib/levels';
@@ -10,6 +10,7 @@ import { LevelBadge, StatusBadge, WebsiteStatusBadge } from '../components/Badge
 import StudentForm from '../components/StudentForm';
 import ConfirmDialog from '../components/ConfirmDialog';
 import ImportModal from '../components/ImportModal';
+import StudentAchievementsModal from '../components/StudentAchievementsModal';
 import { formatUZS } from '../utils/format';
 import { listAllStudentLessonProgress, listStudentLoginInfo } from '../lib/storageBridge';
 import { buildStudentProgressRows } from '../lib/progressAnalytics';
@@ -52,6 +53,7 @@ export default function Students() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
   const [deletingStudent, setDeletingStudent] = useState(null);
+  const [achievementsStudent, setAchievementsStudent] = useState(null);
   const [importOpen, setImportOpen] = useState(false);
 
   const groups = useMemo(() => {
@@ -262,6 +264,13 @@ export default function Students() {
                         <td className="px-4 py-3">
                           <div className="flex justify-end gap-2">
                             <button
+                              onClick={() => setAchievementsStudent(s)}
+                              title={t('viewAchievements', { defaultValue: 'View achievements' })}
+                              className="rounded-md px-2 py-1 text-xs font-semibold text-ink/50 hover:bg-ink/5"
+                            >
+                              <Trophy size={14} />
+                            </button>
+                            <button
                               onClick={() => {
                                 setEditingStudent(s);
                                 setFormOpen(true);
@@ -297,6 +306,9 @@ export default function Students() {
                   </div>
                   {isAdmin && (
                     <div className="flex gap-1">
+                      <button onClick={() => setAchievementsStudent(s)} className="rounded-md p-1.5 text-ink/50 active:bg-ink/5">
+                        <Trophy size={15} />
+                      </button>
                       <button
                         onClick={() => {
                           setEditingStudent(s);
@@ -363,6 +375,10 @@ export default function Students() {
           onConfirm={handleDelete}
           onCancel={() => setDeletingStudent(null)}
         />
+      )}
+
+      {achievementsStudent && (
+        <StudentAchievementsModal student={achievementsStudent} onClose={() => setAchievementsStudent(null)} />
       )}
 
       {importOpen && <ImportModal onClose={() => setImportOpen(false)} onImport={importStudents} />}

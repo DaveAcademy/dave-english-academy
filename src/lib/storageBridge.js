@@ -208,6 +208,41 @@ export async function getRecognitionAwards(studentId) {
   return data;
 }
 
+// ---------- Achievements ----------
+// Read-only: achievements are awarded exclusively by the production
+// evaluate_achievements() DB function (migrations 0105-0110), triggered
+// off student_lesson_progress/lesson_work_submissions/attendance. Nothing
+// here writes to achievement_definitions or student_achievements - the
+// existing RLS (achievement_definitions_read_active, student_achievements
+// _self_select/_teacher_select/_admin_all) is what actually enforces who
+// can see what, same as getRecognitionAwards() above.
+
+// All active achievement definitions - the full catalog, used to compute
+// which ones a student hasn't earned yet (locked list) alongside earned().
+export async function listAchievementDefinitions() {
+  const { data, error } = await supabase
+    .from('achievement_definitions')
+    .select('id, key, name, description, icon, category, rarity, bonus_points, sort_order')
+    .eq('active', true)
+    .order('sort_order');
+  if (error) throw error;
+  return data;
+}
+
+// One student's earned achievements, newest first. Works for the
+// student's own id (self_select) or, for a teacher/admin, any student in
+// their scope (teacher_select/admin_all) - same call either way, RLS
+// decides what rows come back.
+export async function getStudentAchievements(studentId) {
+  const { data, error } = await supabase
+    .from('student_achievements')
+    .select('earned_at, bonus_transaction:point_transaction_id(points), achievement:achievement_id(key, name, description, icon, category, rarity, bonus_points)')
+    .eq('student_id', studentId)
+    .order('earned_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
 // ---------- Recognition (admin Student of the Week/Month workflow) ----------
 // See migration 0025. week_bounds()/month_bounds() (0023) stay the single
 // source of truth for what a "week"/"month" is - the client never computes
