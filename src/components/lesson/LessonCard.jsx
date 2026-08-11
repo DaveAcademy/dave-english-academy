@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { BookOpen, Check, ChevronRight, FileText, Languages, Lock, MessageSquare, Play, Circle } from 'lucide-react';
 import { LevelBadge } from '../Badge';
+import { translatedLessonTitle } from '../../lib/lessonLogic';
 
 const STATUS_STYLES = {
   completed: 'bg-active/10 text-active',
@@ -46,8 +47,9 @@ export default function LessonCard({ lesson, status, openHref, onViewPdf, vocabH
   const month = lesson.curriculum_lessons?.month;
   const lessonType = lesson.curriculum_lessons?.lesson_type;
   const vocabCount = lesson.lesson_vocabulary?.[0]?.count;
-  const title = lesson.topic || lesson.curriculum_lessons?.title;
-  const typeKey = { normal: 'typeNormal', review: 'typeReview', test: 'typeTest' }[lessonType];
+  const rawTitle = lesson.topic || lesson.curriculum_lessons?.title;
+  const title = translatedLessonTitle(t, number, rawTitle);
+  const typeKey = { normal: 'typeNormal', review: 'typeReview', test: 'typeTest', activity: 'typeActivity', final_exam: 'typeFinalExam' }[lessonType];
 
   return (
     <div className={`flex items-stretch overflow-hidden rounded-xl border bg-white shadow-card transition-shadow hover:shadow-md ${locked ? 'border-ink/5 opacity-80' : 'border-ink/5'}`}>

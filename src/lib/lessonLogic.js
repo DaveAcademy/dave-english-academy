@@ -21,6 +21,19 @@ export const LESSON_STATUS = {
   COMPLETED: 'completed',
 };
 
+// Curriculum lesson titles are free-text English content (e.g. "My
+// Family"), not a fixed UI vocabulary, so they can't live as a normal
+// locale string per key. Instead the 'lessons' namespace carries an
+// optional lessonTitles.<lesson_number> override per language - only
+// Uzbek defines any (English UI shows the raw curriculum_lessons.title
+// as-is, so it never needs an override). Lessons without a translated
+// title (not yet seeded, or missing an entry) fall back to the same raw
+// English title every language already showed before this existed.
+export function translatedLessonTitle(t, lessonNumber, rawTitle) {
+  if (lessonNumber == null || !rawTitle) return rawTitle;
+  return t(`lessonTitles.${lessonNumber}`, { ns: 'lessons', defaultValue: rawTitle });
+}
+
 // Teacher's whole-class coverage for a level (0 when no row exists yet).
 export function teacherPaceFor(curriculumProgress, level) {
   return curriculumProgress.find((p) => p.level === level)?.current_lesson_number ?? 0;

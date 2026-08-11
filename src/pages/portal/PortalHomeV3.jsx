@@ -23,7 +23,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowRight, CalendarClock, MessageSquare, Award, Trophy, BookOpen, FileCheck2, CreditCard } from 'lucide-react';
 import {
-  LESSON_STATUS, teacherPaceFor, lessonCapFor, progressByLessonNumber, lessonStatusFor, nextUnfinishedLesson,
+  LESSON_STATUS, teacherPaceFor, lessonCapFor, progressByLessonNumber, lessonStatusFor, nextUnfinishedLesson, translatedLessonTitle,
 } from '../../lib/lessonLogic';
 import { useAcademy } from '../../lib/AcademyDataContext';
 import { getLeaderboard } from '../../lib/db';
@@ -322,7 +322,7 @@ export default function PortalHomeV3() {
           <span className="min-w-0 flex-1">
             <span className="block text-xs font-bold uppercase tracking-wide text-white/70">{t('v3ContinueLearning')}</span>
             <span className="mt-0.5 block truncate font-display text-lg font-bold text-white">
-              {t('v3ContinueWithLesson', { topic: nextLesson.topic || nextLesson.curriculum_lessons?.title })}
+              {t('v3ContinueWithLesson', { topic: translatedLessonTitle(t, nextLesson.curriculum_lessons?.lesson_number, nextLesson.topic || nextLesson.curriculum_lessons?.title) })}
             </span>
             <span className="mt-0.5 block text-xs text-white/70">
               {t('v3LessonsProgress', { completed: lessonStats.completed, total: lessonStats.total })}

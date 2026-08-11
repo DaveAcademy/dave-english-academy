@@ -21,6 +21,8 @@
   "typeNormal": "Lesson",
   "typeReview": "Review",
   "typeTest": "Test",
+  "typeActivity": "Activity",
+  "typeFinalExam": "Final Exam",
   "continueLearning": "Continue Learning",
   "continueWithLesson": "Continue with \"{{topic}}\"",
   "continueNextStep": "You're {{percent}}% through. Next up: Lesson {{number}}.",

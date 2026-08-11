@@ -24,7 +24,7 @@ import MonthGroup from '../../components/lesson/MonthGroup';
 import PdfViewer from '../../components/PdfViewer';
 import {
   LESSON_STATUS, teacherPaceFor, lessonCapFor, progressByLessonNumber,
-  lessonStatusFor, nextUnfinishedLesson, completionStreak,
+  lessonStatusFor, nextUnfinishedLesson, completionStreak, translatedLessonTitle,
 } from '../../lib/lessonLogic';
 import { LEVELS } from '../../lib/levels';
 
@@ -191,7 +191,7 @@ export default function MyLessons() {
           <span className="min-w-0 flex-1">
             <span className="block text-xs font-bold uppercase tracking-wide text-white/70">{t('continueLearning')}</span>
             <span className="mt-0.5 block truncate font-display text-lg font-bold text-white">
-              {t('continueWithLesson', { topic: next.topic || next.curriculum_lessons?.title })}
+              {t('continueWithLesson', { topic: translatedLessonTitle(t, next.curriculum_lessons?.lesson_number, next.topic || next.curriculum_lessons?.title) })}
             </span>
             {next.curriculum_lessons?.lesson_number != null && (
               <span className="mt-0.5 block text-xs text-white/70">
