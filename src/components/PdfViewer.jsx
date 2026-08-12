@@ -50,6 +50,16 @@ export default function PdfViewer({ path, fileName, initialPage = 1, onPageChang
   // --- Load the document once, resume at initialPage ---------------------
   useEffect(() => {
     let cancelled = false;
+    // pdf.js requires an explicit destroy() to free a document's worker and
+    // internal caches - letting the JS wrapper get garbage-collected does
+    // NOT terminate the worker thread. The parent unmounts PdfViewer
+    // entirely on close ({viewPdf && <PdfViewer .../>}), so without this
+    // every close+reopen leaked another worker: the first open worked fine,
+    // the second (now competing with the still-alive first worker for
+    // memory) could fail outright on a constrained device. Tracked in a
+    // local var (not the `doc` state) so cleanup can destroy it even if the
+    // component unmounts while getDocument() is still in flight.
+    let loadedDoc = null;
     (async () => {
       try {
         setLoading(true);
@@ -58,7 +68,11 @@ export default function PdfViewer({ path, fileName, initialPage = 1, onPageChang
         const blob = await getAttachmentBlob(path);
         const buffer = await blob.arrayBuffer();
         const loaded = await pdfjs.getDocument({ data: buffer }).promise;
-        if (cancelled) return;
+        if (cancelled) {
+          loaded.destroy();
+          return;
+        }
+        loadedDoc = loaded;
         setDoc(loaded);
         setNumPages(loaded.numPages);
 
@@ -82,7 +96,10 @@ export default function PdfViewer({ path, fileName, initialPage = 1, onPageChang
         if (!cancelled) setLoading(false);
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      if (loadedDoc) loadedDoc.destroy();
+    };
   }, [path]); // initialPage is only read at open time, not a dependency
 
   // --- Render the current page ------------------------------------------
