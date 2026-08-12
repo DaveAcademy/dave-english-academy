@@ -28,7 +28,6 @@ import {
   BarChart3,
   Award,
   FileCheck2,
-  Trophy,
   BookOpen,
   ClipboardList,
   ImagePlus,
@@ -43,7 +42,6 @@ import {
   getMonthlyPaymentCollection,
   getPaymentCollectionSummary,
   getStudentPaymentStatus,
-  getLeaderboard,
   listRecognitionAwards,
   listCertificates,
   listAllStudentLessonProgress,
@@ -102,24 +100,6 @@ function AdminDashboard() {
     [students, levelFilter],
   );
   const groupLevels = levelFilter ? [levelFilter] : LEVELS;
-
-  // Real points ranking (migration 0006/0007) - not the raw students.points
-  // field, which can drift from the canonical attendance+exam+homework
-  // points formula the leaderboard actually uses.
-  const [leaderboard, setLeaderboard] = useState([]);
-  useEffect(() => {
-    let cancelled = false;
-    getLeaderboard()
-      .then((rows) => {
-        if (!cancelled) setLeaderboard(rows || []);
-      })
-      .catch(() => {
-        if (!cancelled) setLeaderboard([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   // Recent recognition (migration 0022) - reuses the same
   // listRecognitionAwards() query the admin Recognition.jsx page already
@@ -500,13 +480,6 @@ function AdminDashboard() {
       value: collectionByMonth[`${year}-${month}`] || 0,
     }));
 
-    // ---- Top students - real leaderboard (migration 0006/0007), not the
-    // raw students.points field, which can drift from the canonical
-    // attendance+exam+homework points formula the leaderboard uses ----
-    const topStudents = [...leaderboard]
-      .sort((a, b) => b.points - a.points || a.real_name.localeCompare(b.real_name))
-      .slice(0, 5);
-
     const studentsById = Object.fromEntries(students.map((s) => [s.id, s]));
 
     // ---- Most improved - most recent manually-assigned 'most_improved'
@@ -555,7 +528,6 @@ function AdminDashboard() {
       upcomingExams,
       examAvg,
       income,
-      topStudents,
       mostImprovedAward,
       certificatesThisMonth,
       recentCertificates,
@@ -573,7 +545,6 @@ function AdminDashboard() {
     examScores,
     lessons,
     homeworkStatus,
-    leaderboard,
     recentAwards,
     certificates,
     months,
@@ -965,31 +936,7 @@ function AdminDashboard() {
         </DashboardErrorBoundary>
 
         <DashboardErrorBoundary>
-          <div className="mt-4 grid gap-4 lg:grid-cols-3">
-            <Panel title={t('top3StudentsTitle')} icon={Trophy}>
-              {stats.topStudents.length === 0 ? (
-                <p className="text-sm text-ink/50">{t('noActiveStudents')}</p>
-              ) : (
-                <div className="space-y-2">
-                  {stats.topStudents.slice(0, 3).map((s, i) => (
-                    <div key={s.student_id} className="flex items-center gap-3">
-                      <span
-                        className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                          i === 0 ? 'bg-levelB text-white' : i === 1 ? 'bg-ink/20' : 'bg-levelA text-white'
-                        }`}
-                      >
-                        {i + 1}
-                      </span>
-                      <span className="flex-1 truncate text-sm font-medium text-ink">{s.real_name}</span>
-                      <span className="text-sm font-bold text-brand-500">
-                        {s.points} {t('points')}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Panel>
-
+          <div className="mt-4 grid gap-4 lg:grid-cols-2">
             <Panel title={t('mostImprovedTitle')} icon={Award}>
               {stats.mostImprovedAward == null ? (
                 <p className="text-sm text-ink/50">{t('mostImprovedEmpty')}</p>
