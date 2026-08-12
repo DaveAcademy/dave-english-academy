@@ -62,6 +62,7 @@
   "uploadMyAnswer": "Javobimni yuklash",
   "viewMySubmittedAnswer": "Yuborilgan javobimni ko'rish",
   "awaitingGrading": "Topshirildi, baholanishi kutilmoqda",
+  "expired": "Muddati o'tgan",
   "dueDateOverdue": "{{date}} dan beri muddati o'tgan",
   "deadlinePassedWarning": "Bu imtihonning muddati o'tgan. Baribir topshirishingiz mumkin, lekin avval o'qituvchingiz bilan gaplashing.",
   "openFileFailed": "Faylni ochib bo'lmadi. Qaytadan urinib ko'ring.",

@@ -62,6 +62,7 @@
   "uploadMyAnswer": "Upload my answer",
   "viewMySubmittedAnswer": "View my submitted answer",
   "awaitingGrading": "Submitted, awaiting grading",
+  "expired": "Expired",
   "dueDateOverdue": "Overdue since {{date}}",
   "deadlinePassedWarning": "The deadline for this exam has passed. You can still submit, but check with your teacher first.",
   "openFileFailed": "Could not open this file. Please try again.",
