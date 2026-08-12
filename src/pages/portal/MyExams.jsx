@@ -30,15 +30,32 @@ export default function MyExams() {
 
   const scoreFor = (examId) => examScores.find((s) => s.exam_id === examId && s.student_id === me?.id);
 
-  // graded / awaitingGrading / expired / notSubmitted - purely derived from
-  // existing score/answer_file_url columns plus the deadline, no new field.
-  // Priority matters: a graded or submitted exam must never read as expired
-  // just because its deadline has since passed, so overdue is checked last.
-  const statusOf = (result, overdue) => {
+  // graded / awaitingGrading / expired / notSubmitted / upcoming - purely
+  // derived from existing score/answer_file_url columns plus the exam_date
+  // and deadline, no new schema field. Priority matters: a graded or
+  // submitted exam must never read as expired or upcoming just because its
+  // date has since passed or was scheduled ahead, so those checks come
+  // first; "upcoming" only applies once nothing has been graded or
+  // submitted yet.
+  const statusOf = (result, overdue, upcoming) => {
     if (result?.score != null) return 'graded';
     if (result?.answer_file_url) return 'awaitingGrading';
+    if (upcoming) return 'upcoming';
     if (overdue) return 'expired';
     return 'notSubmitted';
+  };
+
+  // exam_date is a plain `date` column (no time-of-day), always compared as
+  // a local calendar day - same reasoning as isOverdue below. An exam is
+  // "upcoming" only while its exam_date is strictly after today.
+  const isUpcoming = (exam) => {
+    if (!exam.exam_date) return false;
+    const [y, m, d] = exam.exam_date.slice(0, 10).split('-').map(Number);
+    if (!y || !m || !d) return false;
+    const examDay = new Date(y, m - 1, d);
+    const today = new Date();
+    const todayLocal = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    return examDay > todayLocal;
   };
 
   // exam.deadline is a timestamptz column, but it's always written from a
@@ -121,7 +138,8 @@ export default function MyExams() {
             const result = scoreFor(e.id);
             const graded = result?.score != null;
             const overdue = isOverdue(e);
-            const status = statusOf(result, overdue);
+            const upcoming = isUpcoming(e);
+            const status = statusOf(result, overdue, upcoming);
             const expired = status === 'expired';
             return (
               <div key={e.id} className="rounded-xl bg-white p-3 shadow-card">
@@ -143,9 +161,11 @@ export default function MyExams() {
                             ? 'bg-brand-50 text-brand-600'
                             : status === 'awaitingGrading'
                               ? 'bg-active/10 text-active'
-                              : status === 'expired'
-                                ? 'bg-inactive/10 text-inactive'
-                                : 'bg-ink/5 text-ink/40'
+                              : status === 'upcoming'
+                                ? 'bg-brand-100 text-brand-700'
+                                : status === 'expired'
+                                  ? 'bg-inactive/10 text-inactive'
+                                  : 'bg-ink/5 text-ink/40'
                         }`}
                       >
                         {t(status)}
@@ -160,6 +180,11 @@ export default function MyExams() {
                           ` · ${t('dueDate', { date: e.deadline.slice(0, 10) })}`
                         ))}
                     </p>
+                    {upcoming && (
+                      <p className="mt-1 text-sm text-brand-700">
+                        {t('upcomingExamDate', { date: e.exam_date })} · {t('upcomingPrepareMessage')}
+                      </p>
+                    )}
                     {e.description && <p className="mt-1 whitespace-pre-wrap text-sm text-ink/70">{e.description}</p>}
                   </div>
                   {graded && <p className="flex-shrink-0 text-sm font-bold text-brand-500">{t('scoreOutOfMax', { score: result.score, max: e.max_score })}</p>}
