@@ -30,11 +30,14 @@ export default function MyExams() {
 
   const scoreFor = (examId) => examScores.find((s) => s.exam_id === examId && s.student_id === me?.id);
 
-  // graded / awaitingGrading / notSubmitted - purely derived from existing
-  // score/answer_file_url columns, no new field.
-  const statusOf = (result) => {
+  // graded / awaitingGrading / expired / notSubmitted - purely derived from
+  // existing score/answer_file_url columns plus the deadline, no new field.
+  // Priority matters: a graded or submitted exam must never read as expired
+  // just because its deadline has since passed, so overdue is checked last.
+  const statusOf = (result, overdue) => {
     if (result?.score != null) return 'graded';
     if (result?.answer_file_url) return 'awaitingGrading';
+    if (overdue) return 'expired';
     return 'notSubmitted';
   };
 
@@ -117,8 +120,9 @@ export default function MyExams() {
           {myExams.map((e) => {
             const result = scoreFor(e.id);
             const graded = result?.score != null;
-            const status = statusOf(result);
             const overdue = isOverdue(e);
+            const status = statusOf(result, overdue);
+            const expired = status === 'expired';
             return (
               <div key={e.id} className="rounded-xl bg-white p-3 shadow-card">
                 <div className="flex items-start gap-3">
@@ -139,7 +143,9 @@ export default function MyExams() {
                             ? 'bg-brand-50 text-brand-600'
                             : status === 'awaitingGrading'
                               ? 'bg-active/10 text-active'
-                              : 'bg-ink/5 text-ink/40'
+                              : status === 'expired'
+                                ? 'bg-inactive/10 text-inactive'
+                                : 'bg-ink/5 text-ink/40'
                         }`}
                       >
                         {t(status)}
@@ -148,7 +154,7 @@ export default function MyExams() {
                     <p className="text-xs text-ink/50">
                       {e.exam_date} · {t('outOfScore', { max: e.max_score })}
                       {e.deadline &&
-                        (overdue ? (
+                        (expired ? (
                           <span className="font-semibold text-inactive"> · {t('dueDateOverdue', { date: e.deadline.slice(0, 10) })}</span>
                         ) : (
                           ` · ${t('dueDate', { date: e.deadline.slice(0, 10) })}`
@@ -163,7 +169,7 @@ export default function MyExams() {
                   <p className="mt-2 rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-700">{result.feedback}</p>
                 )}
 
-                {overdue && !graded && (
+                {expired && (
                   <p className="mt-2 text-xs font-semibold text-inactive">{t('deadlinePassedWarning')}</p>
                 )}
 
