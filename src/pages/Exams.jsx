@@ -8,13 +8,14 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Plus, FileCheck2, Pencil, Trash2, Paperclip, MessageSquare, Download, X } from 'lucide-react';
+import { Plus, FileCheck2, Pencil, Trash2, Paperclip, MessageSquare, Download, X, CheckCircle2 } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { LevelBadge } from '../components/Badge';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { uploadAttachment, getAttachmentUrl } from '../lib/db';
 import { LEVELS } from '../lib/levels';
 import ExamGradingRoster from '../components/ExamGradingRoster';
+import ExamResultsView from '../components/ExamResultsView';
 
 const EXAM_TYPES = ['Written', 'Oral'];
 
@@ -43,10 +44,25 @@ export default function Exams() {
   const [editingId, setEditingId] = useState(null);
   const [deletingExam, setDeletingExam] = useState(null);
   const [statusFilter, setStatusFilter] = useState('all');
+  const [editingGrades, setEditingGrades] = useState(false);
 
   const sortedExams = useMemo(() => [...exams].sort((a, b) => new Date(b.exam_date) - new Date(a.exam_date)), [exams]);
   const selectedExam = sortedExams.find((e) => e.id === selectedExamId) || sortedExams[0] || null;
   const editingExam = editingId ? exams.find((e) => e.id === editingId) : null;
+
+  // An exam is Completed/Closed once every currently-active, eligible
+  // student has a score - not a stored status field, purely derived from
+  // exam_scores so no schema/migration is needed. A level with zero active
+  // students never counts as "closed" (vacuously-true would mark it closed
+  // the instant it's created).
+  const isExamClosed = (exam) => {
+    const eligible = students.filter((s) => s.status === 'Active' && (!exam.level || s.level === exam.level));
+    if (eligible.length === 0) return false;
+    return eligible.every((s) => examScores.some((sc) => sc.exam_id === exam.id && sc.student_id === s.id && sc.score != null));
+  };
+  const activeExams = useMemo(() => sortedExams.filter((e) => !isExamClosed(e)), [sortedExams, students, examScores]);
+  const closedExams = useMemo(() => sortedExams.filter((e) => isExamClosed(e)), [sortedExams, students, examScores]);
+  const selectedExamClosed = selectedExam ? isExamClosed(selectedExam) : false;
 
   const sortedLessons = useMemo(
     () =>
@@ -72,6 +88,14 @@ export default function Exams() {
   );
 
   const answerOf = (studentId) => examScores.find((s) => s.exam_id === selectedExam?.id && s.student_id === studentId) || {};
+
+  // Selecting a different exam always starts back on the read-only results
+  // view for a closed exam - "Edit grades" is a per-visit explicit choice,
+  // not a state that should carry over from whichever exam was open before.
+  const selectExam = (id) => {
+    setSelectedExamId(id);
+    setEditingGrades(false);
+  };
 
   const filteredStudents = useMemo(
     () =>
@@ -179,6 +203,84 @@ export default function Exams() {
   const handleOpenFile = async (path) => {
     const url = await getAttachmentUrl(path);
     if (url) window.open(url, '_blank', 'noopener');
+  };
+
+  // Same row markup for both sections - only the exam list and whether the
+  // "Completed" pill shows differ, so upcoming/active exams don't gain any
+  // visual weight they didn't have before this change.
+  const renderExamsTable = (list, heading, closedSection = false) => {
+    if (list.length === 0) return null;
+    return (
+      <div className="mb-4">
+        <h2 className="mb-2 text-sm font-bold uppercase tracking-wide text-ink/50">{heading}</h2>
+        <div className="overflow-x-auto rounded-xl bg-white shadow-card">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="border-b border-ink/10 text-xs font-semibold uppercase tracking-wide text-ink/40">
+                <th className="px-3 py-2">{t('colTitle')}</th>
+                <th className="px-3 py-2">{t('colType')}</th>
+                <th className="px-3 py-2">{t('colLesson')}</th>
+                <th className="px-3 py-2">{t('colDate')}</th>
+                <th className="px-3 py-2">{t('colStudentCount')}</th>
+                <th className="px-3 py-2" />
+              </tr>
+            </thead>
+            <tbody>
+              {list.map((e) => (
+                <tr
+                  key={e.id}
+                  onClick={() => selectExam(e.id)}
+                  className={`cursor-pointer border-b border-ink/5 last:border-0 ${
+                    selectedExam?.id === e.id ? 'bg-brand-50' : 'hover:bg-ink/5'
+                  }`}
+                >
+                  <td className="px-3 py-2">
+                    <div className="flex items-center gap-2">
+                      <FileCheck2 size={15} className="flex-shrink-0 text-brand-500" />
+                      <span className="font-semibold text-ink">{e.title}</span>
+                      {e.level && <LevelBadge level={e.level} />}
+                      {closedSection && (
+                        <span className="flex items-center gap-1 rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-bold text-brand-600">
+                          <CheckCircle2 size={11} /> {t('completedBadge')}
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-3 py-2 text-ink/70">{t(`examType.${e.exam_type || 'Written'}`)}</td>
+                  <td className="px-3 py-2 text-ink/70">{lessonOf(e.lesson_id)?.topic || '—'}</td>
+                  <td className="px-3 py-2 text-ink/70">{e.exam_date}</td>
+                  <td className="px-3 py-2 text-ink/70">{studentCountOf(e)}</td>
+                  <td className="px-3 py-2">
+                    <div className="flex items-center justify-end gap-1">
+                      <button
+                        onClick={(ev) => {
+                          ev.stopPropagation();
+                          startEdit(e);
+                        }}
+                        className="text-brand-500 hover:bg-brand-50"
+                        aria-label={t('editExamAria')}
+                      >
+                        <Pencil size={14} />
+                      </button>
+                      <button
+                        onClick={(ev) => {
+                          ev.stopPropagation();
+                          setDeletingExam(e);
+                        }}
+                        className="text-inactive hover:bg-inactive/10"
+                        aria-label={t('deleteExamAria')}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -319,67 +421,10 @@ export default function Exams() {
           <p className="font-display text-lg font-semibold text-ink">{t('noExamsYet')}</p>
         </div>
       ) : (
-        <div className="mb-4 overflow-x-auto rounded-xl bg-white shadow-card">
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-ink/10 text-xs font-semibold uppercase tracking-wide text-ink/40">
-                <th className="px-3 py-2">{t('colTitle')}</th>
-                <th className="px-3 py-2">{t('colType')}</th>
-                <th className="px-3 py-2">{t('colLesson')}</th>
-                <th className="px-3 py-2">{t('colDate')}</th>
-                <th className="px-3 py-2">{t('colStudentCount')}</th>
-                <th className="px-3 py-2" />
-              </tr>
-            </thead>
-            <tbody>
-              {sortedExams.map((e) => (
-                <tr
-                  key={e.id}
-                  onClick={() => setSelectedExamId(e.id)}
-                  className={`cursor-pointer border-b border-ink/5 last:border-0 ${
-                    selectedExam?.id === e.id ? 'bg-brand-50' : 'hover:bg-ink/5'
-                  }`}
-                >
-                  <td className="px-3 py-2">
-                    <div className="flex items-center gap-2">
-                      <FileCheck2 size={15} className="flex-shrink-0 text-brand-500" />
-                      <span className="font-semibold text-ink">{e.title}</span>
-                      {e.level && <LevelBadge level={e.level} />}
-                    </div>
-                  </td>
-                  <td className="px-3 py-2 text-ink/70">{t(`examType.${e.exam_type || 'Written'}`)}</td>
-                  <td className="px-3 py-2 text-ink/70">{lessonOf(e.lesson_id)?.topic || '—'}</td>
-                  <td className="px-3 py-2 text-ink/70">{e.exam_date}</td>
-                  <td className="px-3 py-2 text-ink/70">{studentCountOf(e)}</td>
-                  <td className="px-3 py-2">
-                    <div className="flex items-center justify-end gap-1">
-                      <button
-                        onClick={(ev) => {
-                          ev.stopPropagation();
-                          startEdit(e);
-                        }}
-                        className="text-brand-500 hover:bg-brand-50"
-                        aria-label={t('editExamAria')}
-                      >
-                        <Pencil size={14} />
-                      </button>
-                      <button
-                        onClick={(ev) => {
-                          ev.stopPropagation();
-                          setDeletingExam(e);
-                        }}
-                        className="text-inactive hover:bg-inactive/10"
-                        aria-label={t('deleteExamAria')}
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <>
+          {renderExamsTable(activeExams, t('sectionActive'))}
+          {renderExamsTable(closedExams, t('sectionCompleted'), true)}
+        </>
       )}
 
       {selectedExam && (
@@ -414,16 +459,34 @@ export default function Exams() {
               >
                 <MessageSquare size={13} /> {t('discuss')}
               </Link>
+              {selectedExamClosed && !editingGrades && (
+                <button
+                  onClick={() => setEditingGrades(true)}
+                  className="flex items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-semibold text-ink/60 hover:bg-ink/5"
+                >
+                  <Pencil size={13} /> {t('editGrades')}
+                </button>
+              )}
             </div>
           </div>
-          <ExamGradingRoster
-            examMaxScore={selectedExam.max_score}
-            students={filteredStudents}
-            answerOf={answerOf}
-            onOpenFile={handleOpenFile}
-            onSetScore={(studentId, score, feedback) => setExamScoreForStudent(selectedExam.id, studentId, score, feedback)}
-            t={t}
-          />
+          {selectedExamClosed && !editingGrades ? (
+            <ExamResultsView
+              examMaxScore={selectedExam.max_score}
+              students={filteredStudents}
+              answerOf={answerOf}
+              onOpenFile={handleOpenFile}
+              t={t}
+            />
+          ) : (
+            <ExamGradingRoster
+              examMaxScore={selectedExam.max_score}
+              students={filteredStudents}
+              answerOf={answerOf}
+              onOpenFile={handleOpenFile}
+              onSetScore={(studentId, score, feedback) => setExamScoreForStudent(selectedExam.id, studentId, score, feedback)}
+              t={t}
+            />
+          )}
         </>
       )}
 
