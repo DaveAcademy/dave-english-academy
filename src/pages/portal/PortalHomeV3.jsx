@@ -26,7 +26,7 @@ import {
   LESSON_STATUS, teacherPaceFor, lessonCapFor, progressByLessonNumber, lessonStatusFor, nextUnfinishedLesson,
 } from '../../lib/lessonLogic';
 import { useAcademy } from '../../lib/AcademyDataContext';
-import { getLeaderboard } from '../../lib/db';
+import { getGroupLeaderboard } from '../../lib/db';
 import { getStudentPaymentStatus } from '../../lib/storageBridge';
 import Panel from '../../components/Panel';
 import StatCard from '../../components/StatCard';
@@ -119,15 +119,23 @@ export default function PortalHomeV3() {
   const [paymentStatus, setPaymentStatus] = useState(null);
   const { current, previous } = useMemo(() => currentAndPreviousMonth(), []);
 
+  // get_group_leaderboard(level, 'all_time') - same RPC/convention as the
+  // corrected MyProgress.jsx and MyRanking.jsx, scoped to active students
+  // in this student's own level. Ranks server-side with SQL RANK() over
+  // lifetime point_transactions totals, so ties share a rank and no
+  // sequential client-side rank math is needed. Previously this called the
+  // academy-wide get_leaderboard() RPC, which is why My Rank could reflect
+  // the entire academy population instead of just this student's level.
   useEffect(() => {
+    if (!me?.level) return;
     let cancelled = false;
-    getLeaderboard()
-      .then((rows) => !cancelled && setLeaderboard([...(rows || [])].sort((a, b) => b.points - a.points || a.real_name.localeCompare(b.real_name))))
+    getGroupLeaderboard(me.level, 'all_time')
+      .then((rows) => !cancelled && setLeaderboard(rows || []))
       .catch(() => !cancelled && setLeaderboard([]));
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [me?.level]);
 
   useEffect(() => {
     if (!me) return;
@@ -142,8 +150,8 @@ export default function PortalHomeV3() {
 
   const { points, rank } = useMemo(() => {
     if (!me || !leaderboard) return { points: 0, rank: null };
-    const idx = leaderboard.findIndex((r) => r.student_id === me.id);
-    return { points: leaderboard[idx]?.points ?? 0, rank: idx >= 0 ? idx + 1 : null };
+    const row = leaderboard.find((r) => r.student_id === me.id);
+    return { points: row?.points ?? 0, rank: row?.rank ?? null };
   }, [leaderboard, me]);
 
   // Lessons no longer carry a meaningful scheduled_at (it's set to
