@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { CheckCircle2, Clock, XCircle, Star, Trophy, CalendarCheck, FileCheck2, BookOpen } from 'lucide-react';
 import { useAcademy } from '../../lib/AcademyDataContext';
-import { getLeaderboard } from '../../lib/db';
+import { getGroupLeaderboard } from '../../lib/db';
 import {
   LESSON_STATUS, teacherPaceFor, lessonCapFor, progressByLessonNumber, lessonStatusFor,
   nextUnfinishedLesson, completionStreak,
@@ -32,24 +32,31 @@ export default function MyProgress() {
   const me = students[0];
   const [leaderboard, setLeaderboard] = useState(null);
 
-  // Same get_leaderboard() call and sort PortalHomeV3's hero card uses, so
-  // the rank/points shown here always agree with the Dashboard - not a
-  // second, differently-scoped ranking (get_group_leaderboard) that could
-  // disagree with what the student already sees there.
+  // get_group_leaderboard(level, 'all_time') - the same RPC and ranking
+  // convention the admin Rankings page's Level Leaderboard already uses
+  // (see Rankings.jsx), scoped to active students in this student's own
+  // level. It computes rank server-side with SQL RANK() over lifetime
+  // point_transactions totals, so ties already get the same rank number
+  // instead of an arbitrary sequential position - no rank math is
+  // duplicated here. Previously this called the academy-wide
+  // get_leaderboard() RPC (no level filter), which is why "My Rank" could
+  // reflect the entire academy population instead of just this student's
+  // level.
   useEffect(() => {
+    if (!me?.level) return;
     let cancelled = false;
-    getLeaderboard()
-      .then((rows) => !cancelled && setLeaderboard([...(rows || [])].sort((a, b) => b.points - a.points || a.real_name.localeCompare(b.real_name))))
+    getGroupLeaderboard(me.level, 'all_time')
+      .then((rows) => !cancelled && setLeaderboard(rows || []))
       .catch(() => !cancelled && setLeaderboard([]));
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [me?.level]);
 
   const { points, rank } = useMemo(() => {
     if (!me || !leaderboard) return { points: 0, rank: null };
-    const idx = leaderboard.findIndex((r) => r.student_id === me.id);
-    return { points: leaderboard[idx]?.points ?? 0, rank: idx >= 0 ? idx + 1 : null };
+    const row = leaderboard.find((r) => r.student_id === me.id);
+    return { points: row?.points ?? 0, rank: row?.rank ?? null };
   }, [leaderboard, me]);
 
   // Real attendance records (see Attendance.jsx / attendance table) - the
