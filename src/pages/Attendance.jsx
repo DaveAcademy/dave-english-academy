@@ -5,14 +5,16 @@ import { useTranslation } from 'react-i18next';
 import { CheckCircle2, Clock, XCircle } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { todayISO } from '../utils/date';
+import { LEVELS } from '../lib/levels';
 
 // labelKey is a translation key (looked up at render time inside the
 // component, not here at module scope - see Nav.jsx for the same pattern).
+// Tabs are derived from the shared LEVELS source (see lib/levels.js) rather
+// than a local list, so a level added there (like A1 was) never silently
+// goes missing from Attendance again.
 const LEVEL_TABS = [
   { key: '', labelKey: 'allTab' },
-  { key: 'A', labelKey: 'common:levelA' },
-  { key: 'B', labelKey: 'common:levelB' },
-  { key: 'C', labelKey: 'common:levelC' },
+  ...LEVELS.map((lvl) => ({ key: lvl, labelKey: `common:level${lvl}` })),
 ];
 
 export default function Attendance() {
