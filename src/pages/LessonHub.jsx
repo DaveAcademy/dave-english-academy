@@ -46,6 +46,7 @@ import HomeworkGradingRoster from '../components/HomeworkGradingRoster';
 import ExamGradingRoster from '../components/ExamGradingRoster';
 import LessonWorkReviewRoster from '../components/LessonWorkReviewRoster';
 import { translatedLessonTitle } from '../lib/lessonLogic';
+import { examTypeIcon } from '../utils/examLabel';
 
 // LessonHub doesn't use i18n elsewhere (see file header - all copy here is
 // plain English), so the grading rosters get the same plain labels inline
@@ -1045,7 +1046,10 @@ export default function LessonHub() {
                 <div key={ex.id} className="rounded-lg border border-ink/10 p-3">
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="font-semibold text-ink">{ex.title}</p>
+                      <p className="font-semibold text-ink">
+                        {(ex.exam_type === 'Written' || ex.exam_type === 'Oral') && `${examTypeIcon(ex.exam_type)} `}
+                        {ex.title}
+                      </p>
                       <p className="text-xs text-ink/50">{t('hubQuizMeta', { date: ex.exam_date, max: ex.max_score })}</p>
                       {ex.description && <p className="mt-1 whitespace-pre-wrap text-sm text-ink/70">{ex.description}</p>}
                     </div>

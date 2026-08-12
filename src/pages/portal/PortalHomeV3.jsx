@@ -26,7 +26,7 @@ import {
   LESSON_STATUS, teacherPaceFor, lessonCapFor, progressByLessonNumber, lessonStatusFor, nextUnfinishedLesson, translatedLessonTitle,
 } from '../../lib/lessonLogic';
 import { useAcademy } from '../../lib/AcademyDataContext';
-import { getLeaderboard } from '../../lib/db';
+import { getGroupLeaderboard } from '../../lib/db';
 import { getStudentPaymentStatus } from '../../lib/storageBridge';
 import Panel from '../../components/Panel';
 import StatCard from '../../components/StatCard';
@@ -119,15 +119,23 @@ export default function PortalHomeV3() {
   const [paymentStatus, setPaymentStatus] = useState(null);
   const { current, previous } = useMemo(() => currentAndPreviousMonth(), []);
 
+  // get_group_leaderboard(level, 'all_time') - same RPC/convention as the
+  // corrected MyProgress.jsx and MyRanking.jsx, scoped to active students
+  // in this student's own level. Ranks server-side with SQL RANK() over
+  // lifetime point_transactions totals, so ties share a rank and no
+  // sequential client-side rank math is needed. Previously this called the
+  // academy-wide get_leaderboard() RPC, which is why My Rank could reflect
+  // the entire academy population instead of just this student's level.
   useEffect(() => {
+    if (!me?.level) return;
     let cancelled = false;
-    getLeaderboard()
-      .then((rows) => !cancelled && setLeaderboard([...(rows || [])].sort((a, b) => b.points - a.points || a.real_name.localeCompare(b.real_name))))
+    getGroupLeaderboard(me.level, 'all_time')
+      .then((rows) => !cancelled && setLeaderboard(rows || []))
       .catch(() => !cancelled && setLeaderboard([]));
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [me?.level]);
 
   useEffect(() => {
     if (!me) return;
@@ -142,11 +150,9 @@ export default function PortalHomeV3() {
 
   const { points, rank } = useMemo(() => {
     if (!me || !leaderboard) return { points: 0, rank: null };
-    const idx = leaderboard.findIndex((r) => r.student_id === me.id);
-    return { points: leaderboard[idx]?.points ?? 0, rank: idx >= 0 ? idx + 1 : null };
+    const row = leaderboard.find((r) => r.student_id === me.id);
+    return { points: row?.points ?? 0, rank: row?.rank ?? null };
   }, [leaderboard, me]);
-
-  const topFour = useMemo(() => (leaderboard || []).slice(0, 4), [leaderboard]);
 
   // Lessons no longer carry a meaningful scheduled_at (it's set to
   // creation time and never edited - see Lessons.jsx and PortalHome.jsx's
@@ -476,7 +482,7 @@ export default function PortalHomeV3() {
         <BadgeShelf badges={badges} />
       </div>
 
-      <div className="mb-6 grid gap-4 lg:grid-cols-2">
+      <div className="mb-6">
         <Panel title={t('v3SmartInsightsTitle')}>
           <div className="space-y-2">
             {insights.map((ins, i) => (
@@ -486,24 +492,6 @@ export default function PortalHomeV3() {
               </div>
             ))}
           </div>
-        </Panel>
-
-        <Panel title={t('v3ClassLeaderboardTitle')} action={<Link to="/my-ranking" className="text-xs font-semibold text-brand-500 hover:underline">{t('fullLeaderboard')}</Link>}>
-          {topFour.length === 0 ? (
-            <p className="text-sm text-ink/50">{t('noRankingDataYet')}</p>
-          ) : (
-            <div className="space-y-2">
-              {topFour.map((r, i) => (
-                <div key={r.student_id} className={`flex items-center gap-2 rounded-lg px-2 py-1 text-sm ${r.student_id === me.id ? 'bg-brand-50' : ''}`}>
-                  <span className="w-5 font-mono text-xs font-bold text-levelB">{i + 1}</span>
-                  <span className={`flex-1 truncate ${r.student_id === me.id ? 'font-bold text-brand-500' : 'text-ink'}`}>
-                    {r.student_id === me.id ? t('v3YouLabel') : r.real_name}
-                  </span>
-                  <span className="font-mono text-xs text-ink/50">{r.points} {t('points')}</span>
-                </div>
-              ))}
-            </div>
-          )}
         </Panel>
       </div>
 

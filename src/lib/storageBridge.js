@@ -1210,6 +1210,19 @@ export async function listLessonWorkSubmissionsForLesson(lessonId) {
   return data;
 }
 
+// Every submission across every lesson (teacher_all RLS gives full
+// access) - used by the admin Homework page to surface "Submit Work"
+// submissions alongside the Homework-domain ones in one combined view.
+// Read-only aggregation; does not touch the per-lesson review flow.
+export async function listAllLessonWorkSubmissions() {
+  const { data, error } = await supabase
+    .from('lesson_work_submissions')
+    .select('*')
+    .order('submitted_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
 // Files for a batch of submissions in one request - the caller passes
 // every submission id from listLessonWorkSubmissionsForLesson.
 export async function listLessonWorkSubmissionFilesForSubmissions(submissionIds) {

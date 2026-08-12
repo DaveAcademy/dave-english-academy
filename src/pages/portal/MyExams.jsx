@@ -12,6 +12,7 @@ import { FileCheck2, Download, Upload, MessageSquare } from 'lucide-react';
 import { useAcademy } from '../../lib/AcademyDataContext';
 import { uploadAttachment, getAttachmentUrl } from '../../lib/db';
 import LessonSectionTabs from '../../components/lesson/LessonSectionTabs';
+import { examTypeIcon } from '../../utils/examLabel';
 
 export default function MyExams() {
   const { t } = useTranslation(['exams', 'common']);
@@ -121,12 +122,17 @@ export default function MyExams() {
             return (
               <div key={e.id} className="rounded-xl bg-white p-3 shadow-card">
                 <div className="flex items-start gap-3">
-                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-500">
-                    <FileCheck2 size={18} />
+                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-brand-50 text-lg">
+                    {e.exam_type === 'Written' || e.exam_type === 'Oral' ? examTypeIcon(e.exam_type) : <FileCheck2 size={18} className="text-brand-500" />}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-1.5">
                       <p className="font-semibold text-ink">{e.title}</p>
+                      {(e.exam_type === 'Written' || e.exam_type === 'Oral') && (
+                        <span className="rounded-full bg-ink/5 px-2 py-0.5 text-[10px] font-bold text-ink/50">
+                          {t(`examType.${e.exam_type}`)}
+                        </span>
+                      )}
                       <span
                         className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
                           status === 'graded'

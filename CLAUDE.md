@@ -146,3 +146,27 @@ a different curriculum position. If content needs improvement, edit the
 lesson in place - Lesson 34 must always stay Lesson 34. Homework, exams, and
 vocabulary all reference lessons by number, so renumbering silently breaks
 those references.
+
+# Project Rule: Production Deployment (Permanent)
+
+Never run `vercel --prod` directly, from any directory. Always run `npm run
+deploy:production`. It never deploys your own working directory - it resets
+a disposable worktree (`C:/Dave-Academy-Deploy`) to
+`origin/release/dashboard-redesign` and deploys that, so a stale or
+diverged local session can't overwrite another session's already-pushed
+work. This exists because multiple past sessions each ran `vercel --prod`
+from a different/stale local clone and Vercel silently uploaded whatever
+was on disk, deleting features only present in the other clone (Homework
+Admin Aggregation, Final Exams UI, and others were lost this way on
+2026-08-12). Consequences: (1) push your commits before deploying -
+unpushed local commits will not go live, silently; (2) only one session
+should deploy at a time; (3) if the script refuses or warns, fix the
+reason, don't bypass it. At the start of any session that may touch
+deployable code, run `git fetch && git checkout release/dashboard-redesign
+&& git pull` first. Full detail: `docs/DEPLOYMENT.md`.
+
+Only one implementation session may modify `release/dashboard-redesign` at
+a time - finish, merge, deploy, then start the next session. The deploy
+script prevents an old/stale tree from silently overwriting production, but
+it can't reconcile two sessions editing the same file concurrently on the
+same branch; that's a workflow rule, not something a script can enforce.

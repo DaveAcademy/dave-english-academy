@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { CheckCircle2, Clock, XCircle, Star, Trophy, CalendarCheck, FileCheck2, BookOpen } from 'lucide-react';
 import { useAcademy } from '../../lib/AcademyDataContext';
-import { getLeaderboard } from '../../lib/db';
+import { getGroupLeaderboard } from '../../lib/db';
 import {
   LESSON_STATUS, teacherPaceFor, lessonCapFor, progressByLessonNumber, lessonStatusFor,
   nextUnfinishedLesson, completionStreak,
@@ -32,24 +32,31 @@ export default function MyProgress() {
   const me = students[0];
   const [leaderboard, setLeaderboard] = useState(null);
 
-  // Same get_leaderboard() call and sort PortalHomeV3's hero card uses, so
-  // the rank/points shown here always agree with the Dashboard - not a
-  // second, differently-scoped ranking (get_group_leaderboard) that could
-  // disagree with what the student already sees there.
+  // get_group_leaderboard(level, 'all_time') - the same RPC and ranking
+  // convention the admin Rankings page's Level Leaderboard already uses
+  // (see Rankings.jsx), scoped to active students in this student's own
+  // level. It computes rank server-side with SQL RANK() over lifetime
+  // point_transactions totals, so ties already get the same rank number
+  // instead of an arbitrary sequential position - no rank math is
+  // duplicated here. Previously this called the academy-wide
+  // get_leaderboard() RPC (no level filter), which is why "My Rank" could
+  // reflect the entire academy population instead of just this student's
+  // level.
   useEffect(() => {
+    if (!me?.level) return;
     let cancelled = false;
-    getLeaderboard()
-      .then((rows) => !cancelled && setLeaderboard([...(rows || [])].sort((a, b) => b.points - a.points || a.real_name.localeCompare(b.real_name))))
+    getGroupLeaderboard(me.level, 'all_time')
+      .then((rows) => !cancelled && setLeaderboard(rows || []))
       .catch(() => !cancelled && setLeaderboard([]));
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [me?.level]);
 
   const { points, rank } = useMemo(() => {
     if (!me || !leaderboard) return { points: 0, rank: null };
-    const idx = leaderboard.findIndex((r) => r.student_id === me.id);
-    return { points: leaderboard[idx]?.points ?? 0, rank: idx >= 0 ? idx + 1 : null };
+    const row = leaderboard.find((r) => r.student_id === me.id);
+    return { points: row?.points ?? 0, rank: row?.rank ?? null };
   }, [leaderboard, me]);
 
   // Real attendance records (see Attendance.jsx / attendance table) - the
@@ -76,6 +83,18 @@ export default function MyProgress() {
       ? Math.round((scored.reduce((sum, s) => sum + Number(s.score) / (s.exam.max_score || 100), 0) / scored.length) * 100)
       : null;
   }, [examRows]);
+
+  // Final Exams highlight - each 10-lesson cycle ends with one Written and
+  // one Oral exam (exam_type is the modality axis, not the title text -
+  // real exam titles vary, e.g. "Test" / "Speaking Exam"). examRows is
+  // already sorted newest-first, so the first match per type is this
+  // student's latest cycle's exam - null if none exists yet for either.
+  const finalWriting = useMemo(() => examRows.find((s) => s.exam.exam_type === 'Written') || null, [examRows]);
+  const finalSpeaking = useMemo(() => examRows.find((s) => s.exam.exam_type === 'Oral') || null, [examRows]);
+  const finalExamContribution = useMemo(() => {
+    const parts = [finalWriting, finalSpeaking].filter((s) => s?.score != null);
+    return parts.length > 0 ? parts.reduce((sum, s) => sum + Number(s.score), 0) : null;
+  }, [finalWriting, finalSpeaking]);
 
   // Improvement indicator: latest two exams, normalized to a percent of
   // each exam's own max_score so exams with different point totals stay
@@ -260,6 +279,41 @@ export default function MyProgress() {
         )}
       </Panel>
 
+      {(finalWriting || finalSpeaking) && (
+        <div className="mb-6 rounded-xl border-2 border-brand-200 bg-brand-50/40 p-4 shadow-card">
+          <h2 className="mb-3 flex items-center gap-1.5 text-sm font-bold uppercase tracking-wide text-brand-700">
+            🏆 {t('portal:finalExamsTitle')}
+          </h2>
+          <div className="space-y-2">
+            {finalWriting && (
+              <div className="flex items-center justify-between rounded-lg bg-white px-3 py-2">
+                <span className="text-sm font-semibold text-ink">✍️ {t('portal:finalWritingExam')}</span>
+                {finalWriting.score != null ? (
+                  <span className="text-sm font-bold text-brand-600">{finalWriting.score}/{finalWriting.exam.max_score}</span>
+                ) : (
+                  <StatusPill tone="info">{t('dashboard:awaitingGrading')}</StatusPill>
+                )}
+              </div>
+            )}
+            {finalSpeaking && (
+              <div className="flex items-center justify-between rounded-lg bg-white px-3 py-2">
+                <span className="text-sm font-semibold text-ink">🗣️ {t('portal:finalSpeakingExam')}</span>
+                {finalSpeaking.score != null ? (
+                  <span className="text-sm font-bold text-brand-600">{finalSpeaking.score}/{finalSpeaking.exam.max_score}</span>
+                ) : (
+                  <StatusPill tone="info">{t('dashboard:awaitingGrading')}</StatusPill>
+                )}
+              </div>
+            )}
+          </div>
+          {finalExamContribution != null && (
+            <p className="mt-3 text-xs font-semibold text-brand-700">
+              {t('portal:finalExamContribution')}: {t('portal:finalExamContributionPoints', { points: finalExamContribution })}
+            </p>
+          )}
+        </div>
+      )}
+
       <h2 className="mb-3 mt-6 text-sm font-bold uppercase tracking-wide text-ink/50">{t('portal:examScores')}</h2>
       {examTrend && (
         <p className="mb-3 text-sm text-ink/60">
@@ -281,9 +335,13 @@ export default function MyProgress() {
                   <p className="font-semibold text-ink">{s.exam.title}</p>
                   <p className="text-xs text-ink/50">{s.exam.exam_date}</p>
                 </div>
-                <p className="text-sm font-bold text-brand-500">
-                  {s.score} / {s.exam.max_score}
-                </p>
+                {s.score != null ? (
+                  <p className="text-sm font-bold text-brand-500">
+                    {s.score} / {s.exam.max_score}
+                  </p>
+                ) : (
+                  <StatusPill tone="info">{t('dashboard:awaitingGrading')}</StatusPill>
+                )}
               </div>
               {s.feedback && <p className="mt-1 text-xs text-ink/50">{t('portal:teacherFeedbackLabel')}: {s.feedback}</p>}
             </div>

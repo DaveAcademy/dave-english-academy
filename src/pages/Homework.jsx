@@ -4,14 +4,19 @@
 // their own assignments on the separate portal page
 // src/pages/portal/MyHomework.jsx (same admin/portal split as Exams).
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Plus, BookOpen, Pencil, Trash2, Paperclip, MessageSquare, Download, X } from 'lucide-react';
+import { Plus, BookOpen, Pencil, Trash2, Paperclip, MessageSquare, Download, X, Image as ImageIcon, ExternalLink, ChevronDown, ChevronRight } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { LevelBadge } from '../components/Badge';
 import ConfirmDialog from '../components/ConfirmDialog';
-import { uploadAttachment, getAttachmentUrl } from '../lib/db';
+import {
+  uploadAttachment,
+  getAttachmentUrl,
+  listAllLessonWorkSubmissions,
+  listLessonWorkSubmissionFilesForSubmissions,
+} from '../lib/db';
 import { LEVELS } from '../lib/levels';
 import HomeworkGradingRoster from '../components/HomeworkGradingRoster';
 
@@ -44,6 +49,38 @@ export default function Homework() {
   const [editingId, setEditingId] = useState(null);
   const [deletingHomework, setDeletingHomework] = useState(null);
   const [statusFilter, setStatusFilter] = useState('all');
+  const [expandedStudentId, setExpandedStudentId] = useState(null);
+
+  // "Submit Work" domain (lesson_work_submissions) - separate from the
+  // Homework domain above, written from LessonHub.jsx's per-lesson
+  // widget. Loaded here read-only so admins can find a submission
+  // regardless of which widget the student used; grading itself still
+  // happens in LessonHub's per-lesson Review panel (linked below), not
+  // duplicated here.
+  const [workSubmissions, setWorkSubmissions] = useState([]);
+  const [workFiles, setWorkFiles] = useState([]);
+  const [workLoading, setWorkLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const submissions = await listAllLessonWorkSubmissions();
+        if (cancelled) return;
+        setWorkSubmissions(submissions);
+        const files = await listLessonWorkSubmissionFilesForSubmissions(submissions.map((s) => s.id));
+        if (cancelled) return;
+        setWorkFiles(files);
+      } catch {
+        // Non-fatal: the Homework-domain UI above still works if this fails.
+      } finally {
+        if (!cancelled) setWorkLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const sortedHomework = useMemo(() => [...homework].sort((a, b) => new Date(b.due_date) - new Date(a.due_date)), [homework]);
   const selected = sortedHomework.find((h) => h.id === selectedHomeworkId) || sortedHomework[0] || null;
@@ -96,6 +133,81 @@ export default function Homework() {
     [lessons]
   );
   const lessonOf = (lessonId) => (lessonId ? lessons.find((l) => l.id === lessonId) : null);
+
+  // Level -> Student -> merged submission list (both domains), used by
+  // the "Pending Submissions" section below. A student appears only if
+  // they have at least one actual submission row (Homework-domain
+  // answer_file_url/files, or any Submit Work row) in either domain -
+  // "Assigned but never touched" homework_status rows are not activity.
+  // Pending = Homework: score == null on a submitted item (same
+  // needsGrading definition as gradingStateOf above); Submit Work:
+  // points_awarded == null && status !== 'reviewed' (same needsReview
+  // definition LessonWorkReviewRoster.jsx uses).
+  const levelGroups = useMemo(() => {
+    const groups = {};
+    for (const lvl of LEVELS) groups[lvl] = [];
+    for (const s of students) {
+      const hwItems = homework
+        .map((h) => {
+          const hs = homeworkStatus.find((x) => x.homework_id === h.id && x.student_id === s.id);
+          if (!hs) return null;
+          const files = homeworkSubmissionFiles
+            .filter((f) => f.homework_id === h.id && f.student_id === s.id)
+            .sort((a, b) => a.position - b.position);
+          const hasSubmission = Boolean(hs.answer_file_url) || files.length > 0;
+          if (hs.score == null && !hasSubmission) return null;
+          return {
+            source: 'homework',
+            id: `hw-${h.id}-${s.id}`,
+            homeworkId: h.id,
+            title: h.title,
+            lessonTopic: lessonOf(h.lesson_id)?.topic,
+            date: hs.submitted_at || h.due_date,
+            pending: hs.score == null,
+            files,
+            answerFileUrl: hs.answer_file_url,
+            answerFileName: hs.answer_file_name,
+            score: hs.score,
+          };
+        })
+        .filter(Boolean);
+
+      const workItems = workSubmissions
+        .filter((w) => w.student_id === s.id)
+        .map((w) => {
+          const files = workFiles.filter((f) => f.submission_id === w.id).sort((a, b) => a.position - b.position);
+          return {
+            source: 'work',
+            id: `wk-${w.id}`,
+            lessonId: w.lesson_id,
+            lessonTopic: lessonOf(w.lesson_id)?.topic,
+            date: w.submitted_at,
+            pending: w.points_awarded == null && w.status !== 'reviewed',
+            files,
+            pointsAwarded: w.points_awarded,
+          };
+        });
+
+      const items = [...hwItems, ...workItems];
+      if (items.length === 0) continue;
+      items.sort((a, b) => new Date(b.date) - new Date(a.date));
+      const lvl = s.level && groups[s.level] ? s.level : null;
+      if (!lvl) continue;
+      groups[lvl].push({ student: s, submissionCount: items.length, items });
+    }
+    for (const lvl of Object.keys(groups)) {
+      groups[lvl].sort((a, b) => b.submissionCount - a.submissionCount || a.student.real_name.localeCompare(b.student.real_name));
+    }
+    return groups;
+  }, [students, homework, homeworkStatus, homeworkSubmissionFiles, workSubmissions, workFiles, lessons]);
+
+  const goToHomeworkGrading = (homeworkId) => {
+    setSelectedHomeworkId(homeworkId);
+    setStatusFilter('all');
+    requestAnimationFrame(() => {
+      document.getElementById('homework-grading-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  };
 
   const filteredStudents = useMemo(
     () => activeStudents.filter((s) => statusFilter === 'all' || gradingStateOf(s.id) === statusFilter),
@@ -339,7 +451,7 @@ export default function Homework() {
 
       {selected && (
         <>
-          <div className="mb-2 mt-6 flex flex-wrap items-center justify-between gap-2">
+          <div id="homework-grading-section" className="mb-2 mt-6 flex flex-wrap items-center justify-between gap-2">
             <div>
               <h2 className="text-sm font-bold uppercase tracking-wide text-ink/50">{t('statusFor', { title: selected.title })}</h2>
               {lessonOf(selected.lesson_id) && (
@@ -390,6 +502,134 @@ export default function Homework() {
           />
         </>
       )}
+
+      {/* Pending Submissions: Level -> Student -> expand, merging both the
+          Homework domain (graded inline via HomeworkGradingRoster, reached
+          by "Go to grading" which selects the item above) and the "Submit
+          Work" domain (lesson_work_submissions, reviewed/pointed on the
+          lesson's own Review panel via "Review on lesson"). Replaces the
+          previous flat Submit Work list - this is now the one place to
+          find who has pending work across either domain. */}
+      <div className="mt-8">
+        <h2 className="mb-1 text-sm font-bold uppercase tracking-wide text-ink/50">Pending Submissions</h2>
+        <p className="mb-2 text-xs text-ink/50">
+          Students with any homework or Submit Work history, grouped by level. Click a student to see their submissions.
+        </p>
+        {workLoading && <p className="mb-2 text-xs text-ink/40">Loading Submit Work submissions…</p>}
+        {LEVELS.every((lvl) => levelGroups[lvl].length === 0) ? (
+          <div className="rounded-xl bg-white p-6 text-center text-sm text-ink/50 shadow-card">No submissions yet.</div>
+        ) : (
+          <div className="space-y-4">
+            {LEVELS.filter((lvl) => levelGroups[lvl].length > 0).map((lvl) => (
+              <div key={lvl}>
+                <div className="mb-1.5 flex items-center gap-2">
+                  <LevelBadge level={lvl} />
+                  <span className="text-xs font-semibold text-ink/40">{levelGroups[lvl].length} student{levelGroups[lvl].length === 1 ? '' : 's'}</span>
+                </div>
+                <div className="space-y-1.5">
+                  {levelGroups[lvl].map(({ student, submissionCount, items }) => {
+                    const expanded = expandedStudentId === student.id;
+                    return (
+                      <div key={student.id} className="rounded-xl bg-white shadow-card">
+                        <button
+                          onClick={() => setExpandedStudentId(expanded ? null : student.id)}
+                          className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left"
+                        >
+                          <span className="flex items-center gap-1.5">
+                            {expanded ? <ChevronDown size={14} className="text-ink/40" /> : <ChevronRight size={14} className="text-ink/40" />}
+                            <span className="font-semibold text-ink">{student.real_name}</span>
+                          </span>
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                              submissionCount > 0 ? 'bg-active/10 text-active' : 'bg-ink/5 text-ink/40'
+                            }`}
+                          >
+                            {submissionCount > 0 ? `${submissionCount} submission${submissionCount === 1 ? '' : 's'}` : 'No submissions'}
+                          </span>
+                        </button>
+                        {expanded && (
+                          <div className="space-y-2 border-t border-ink/5 p-3 pt-2">
+                            {items.map((item) => (
+                              <div key={item.id} className="rounded-lg bg-ink/[0.02] p-2.5">
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                  <div>
+                                    <div className="flex flex-wrap items-center gap-1.5">
+                                      <span className="rounded-full bg-ink/5 px-2 py-0.5 text-[10px] font-bold text-ink/50">
+                                        {item.source === 'homework' ? 'Homework' : 'Submit Work'}
+                                      </span>
+                                      <span
+                                        className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                                          !item.pending ? 'bg-brand-50 text-brand-600' : 'bg-active/10 text-active'
+                                        }`}
+                                      >
+                                        {item.source === 'homework'
+                                          ? item.pending
+                                            ? 'Needs grading'
+                                            : `Graded · ${item.score}`
+                                          : item.pending
+                                            ? 'Needs review'
+                                            : item.pointsAwarded != null
+                                              ? `Reviewed · +${item.pointsAwarded}`
+                                              : 'Reviewed'}
+                                      </span>
+                                    </div>
+                                    <p className="mt-0.5 text-xs text-ink/50">
+                                      {item.source === 'homework' ? item.title : item.lessonTopic || 'Unknown lesson'}
+                                      {item.date && ` · ${new Date(item.date).toLocaleString()}`}
+                                    </p>
+                                    {(item.answerFileUrl || item.files.length > 0) && (
+                                      <div className="mt-1 flex flex-wrap gap-2">
+                                        {item.answerFileUrl && (
+                                          <button
+                                            onClick={() => handleOpenFile(item.answerFileUrl)}
+                                            className="flex items-center gap-1 text-xs text-brand-500 hover:underline"
+                                          >
+                                            <Paperclip size={11} /> {item.answerFileName || 'Submission'}
+                                          </button>
+                                        )}
+                                        {item.files.map((f, i) => (
+                                          <button
+                                            key={f.id}
+                                            onClick={() => handleOpenFile(f.file_url)}
+                                            className="flex items-center gap-1 text-xs text-brand-500 hover:underline"
+                                          >
+                                            <ImageIcon size={11} /> Image {i + 1}
+                                          </button>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                  {item.source === 'homework' ? (
+                                    <button
+                                      onClick={() => goToHomeworkGrading(item.homeworkId)}
+                                      className="flex items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-semibold text-ink/60 hover:bg-ink/5"
+                                    >
+                                      <Pencil size={13} /> Go to grading
+                                    </button>
+                                  ) : (
+                                    item.lessonId && (
+                                      <Link
+                                        to={`/lessons/${item.lessonId}`}
+                                        className="flex items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-semibold text-ink/60 hover:bg-ink/5"
+                                      >
+                                        <ExternalLink size={13} /> Review on lesson
+                                      </Link>
+                                    )
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {deletingHomework && (
         <ConfirmDialog
