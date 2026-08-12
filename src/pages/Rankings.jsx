@@ -97,6 +97,7 @@ export default function Rankings() {
   const [awardReason, setAwardReason] = useState('');
   const [awardPending, setAwardPending] = useState(false);
   const [awardMessage, setAwardMessage] = useState('');
+  const [awardConfirming, setAwardConfirming] = useState(null); // { student, points, reason, categoryKey } | null
 
   // Idempotency guard for award submissions. The ledger is insert-only (see
   // migration 0019), so there is nothing server-side preventing an identical
@@ -114,15 +115,29 @@ export default function Rankings() {
   const [lastBulkSignature, setLastBulkSignature] = useState(null);
   const DUP_WINDOW_MS = 2 * 60 * 1000;
 
-  const submitAward = async (e) => {
+  // Save opens a confirm step instead of awarding immediately - the actual
+  // insert only happens from confirmAward() below, once the admin/teacher
+  // has seen student/points/direction/reason spelled out and clicked
+  // Confirm.
+  const requestAward = (e) => {
     e.preventDefault();
     const student = students.find((s) => String(s.id) === String(awardStudentId));
     const points = Number(awardPointsValue);
-    if (!student || !Number.isFinite(points) || points === 0 || !canAwardLevel(student.level)) return;
+    const reason = awardReason.trim();
+    if (!student || !Number.isFinite(points) || points === 0 || !reason || !canAwardLevel(student.level)) return;
     const categoryKey = points > 0 ? 'bonus' : 'penalty';
-    const sig = `${student.id}|${categoryKey}|${points}|${awardReason.trim() || ''}`;
+    setAwardConfirming({ student, points, reason, categoryKey });
+  };
+
+  const cancelAwardConfirm = () => setAwardConfirming(null);
+
+  const confirmAward = async () => {
+    if (!awardConfirming) return;
+    const { student, points, reason, categoryKey } = awardConfirming;
+    const sig = `${student.id}|${categoryKey}|${points}|${reason}`;
     if (lastAwardSignature?.sig === sig && Date.now() - lastAwardSignature.at < DUP_WINDOW_MS) {
       setAwardMessage('That exact award was just submitted. Check the leaderboard before resubmitting.');
+      setAwardConfirming(null);
       return;
     }
     setLastAwardSignature({ sig, at: Date.now() });
@@ -135,16 +150,18 @@ export default function Rankings() {
         categoryId: categoryByKey[categoryKey]?.id ?? null,
         categoryKey,
         points,
-        reason: awardReason.trim() || null,
+        reason,
         awardedBy: session.user.id,
       });
-      setAwardMessage(`Awarded ${points > 0 ? '+' : ''}${points} to ${student.real_name}.`);
+      setAwardMessage(`${points > 0 ? 'Added' : 'Deducted'} ${points > 0 ? '+' : ''}${points} ${points > 0 ? 'to' : 'from'} ${student.real_name}.`);
       setAwardStudentId('');
       setAwardPointsValue('');
       setAwardReason('');
+      setAwardConfirming(null);
       bumpRefresh();
     } catch {
       setAwardMessage('Could not award points. Please try again.');
+      setAwardConfirming(null);
     } finally {
       setAwardPending(false);
     }
@@ -397,9 +414,9 @@ export default function Rankings() {
           {detailedOpen && (
             <div className="border-t border-ink/5 p-4 pt-3">
               <p className="mb-3 text-xs text-ink/50">
-                Pick a student, type the points (use a minus sign to subtract), and write why - one entry, one confirm.
+                Pick a student, type the points (use a minus sign to deduct - the badge confirms ADD or DEDUCT), and write why. Reason is required.
               </p>
-              <form onSubmit={submitAward} className="grid gap-2 sm:grid-cols-3">
+              <form onSubmit={requestAward} className="grid gap-2 sm:grid-cols-3">
                 <select
                   value={awardStudentId}
                   onChange={(e) => setAwardStudentId(e.target.value)}
@@ -413,21 +430,33 @@ export default function Rankings() {
                     </option>
                   ))}
                 </select>
-                <input
-                  type="number"
-                  step="1"
-                  value={awardPointsValue}
-                  onChange={(e) => setAwardPointsValue(e.target.value)}
-                  placeholder="Points (e.g. 5 or -2)"
-                  className="input sm:col-span-1"
-                  required
-                />
+                <div className="relative sm:col-span-1">
+                  <input
+                    type="number"
+                    step="1"
+                    value={awardPointsValue}
+                    onChange={(e) => setAwardPointsValue(e.target.value)}
+                    placeholder="Points (e.g. 5 or -2)"
+                    className="input w-full pr-20"
+                    required
+                  />
+                  {awardPointsValue !== '' && Number.isFinite(Number(awardPointsValue)) && Number(awardPointsValue) !== 0 && (
+                    <span
+                      className={`pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 rounded-full px-2 py-0.5 text-xs font-bold ${
+                        Number(awardPointsValue) > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                      }`}
+                    >
+                      {Number(awardPointsValue) > 0 ? 'ADD' : 'DEDUCT'}
+                    </span>
+                  )}
+                </div>
                 <input
                   type="text"
                   value={awardReason}
                   onChange={(e) => setAwardReason(e.target.value)}
-                  placeholder="Reason (e.g. homework, behavior)"
+                  placeholder="Reason (required)"
                   className="input sm:col-span-1"
+                  required
                 />
                 <button
                   type="submit"
@@ -437,6 +466,52 @@ export default function Rankings() {
                   {awardPending ? 'Saving...' : 'Save'}
                 </button>
               </form>
+              {awardConfirming && (
+                <div className="mt-3 rounded-lg border border-ink/10 bg-ink/[0.02] p-3">
+                  <p className="mb-2 text-sm font-semibold text-ink">Confirm this adjustment</p>
+                  <dl className="grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 text-sm">
+                    <dt className="text-ink/50">Student</dt>
+                    <dd className="font-medium text-ink">{awardConfirming.student.real_name}</dd>
+                    <dt className="text-ink/50">Direction</dt>
+                    <dd>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-xs font-bold ${
+                          awardConfirming.points > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                        }`}
+                      >
+                        {awardConfirming.points > 0 ? 'ADD' : 'DEDUCT'}
+                      </span>
+                    </dd>
+                    <dt className="text-ink/50">Points</dt>
+                    <dd className="font-medium text-ink">
+                      {awardConfirming.points > 0 ? '+' : ''}
+                      {awardConfirming.points}
+                    </dd>
+                    <dt className="text-ink/50">Reason</dt>
+                    <dd className="text-ink">{awardConfirming.reason}</dd>
+                  </dl>
+                  <div className="mt-3 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={confirmAward}
+                      disabled={awardPending}
+                      className={`flex-1 rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 ${
+                        awardConfirming.points > 0 ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
+                      }`}
+                    >
+                      {awardPending ? 'Saving...' : `Confirm ${awardConfirming.points > 0 ? 'ADD' : 'DEDUCT'}`}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={cancelAwardConfirm}
+                      disabled={awardPending}
+                      className="rounded-lg border border-ink/15 px-4 py-2 text-sm font-semibold text-ink/60 hover:bg-ink/5 disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
               {awardMessage && <p className="mt-2 text-sm text-ink/60">{awardMessage}</p>}
             </div>
           )}
