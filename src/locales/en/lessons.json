@@ -71,7 +71,7 @@
   "hubNoHomework": "No homework assigned for this lesson yet.",
   "hubDue": "Due {{date}}",
   "hubHwGraded": "Graded",
-  "hubHwAwaitingGrading": "Awaiting grading",
+  "hubHwAwaitingGrading": "Submitted",
   "hubHwNotSubmitted": "Not submitted",
   "hubUploading": "Uploading...",
   "hubVocabularyTitle": "Vocabulary",

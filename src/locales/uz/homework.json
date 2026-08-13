@@ -26,7 +26,6 @@
   "notSubmitted": "Topshirilmagan",
   "needsGrading": "Baholash kerak",
   "filterAll": "Hammasi",
-  "awaitingGrading": "Topshirildi, baholanishi kutilmoqda",
   "dueDateOverdue": "{{date}} dan beri muddati o'tgan",
   "deadlinePassedWarning": "Bu uy vazifasining muddati o'tgan. Baribir topshirishingiz mumkin, lekin avval o'qituvchingiz bilan gaplashing.",
   "openFileFailed": "Faylni ochib bo'lmadi. Qaytadan urinib ko'ring.",

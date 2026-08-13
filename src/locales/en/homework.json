@@ -26,7 +26,6 @@
   "notSubmitted": "Not submitted",
   "needsGrading": "Needs grading",
   "filterAll": "All",
-  "awaitingGrading": "Submitted, awaiting grading",
   "dueDateOverdue": "Overdue since {{date}}",
   "deadlinePassedWarning": "The deadline for this homework has passed. You can still submit, but check with your teacher first.",
   "openFileFailed": "Could not open this file. Please try again.",

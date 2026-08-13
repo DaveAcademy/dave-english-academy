@@ -50,6 +50,16 @@ export default function PdfViewer({ path, fileName, initialPage = 1, onPageChang
   // --- Load the document once, resume at initialPage ---------------------
   useEffect(() => {
     let cancelled = false;
+    // pdf.js requires an explicit destroy() to free a document's worker and
+    // internal caches - letting the JS wrapper get garbage-collected does
+    // NOT terminate the worker thread. The parent unmounts PdfViewer
+    // entirely on close ({viewPdf && <PdfViewer .../>}), so without this
+    // every close+reopen leaked another worker: the first open worked fine,
+    // the second (now competing with the still-alive first worker for
+    // memory) could fail outright on a constrained device. Tracked in a
+    // local var (not the `doc` state) so cleanup can destroy it even if the
+    // component unmounts while getDocument() is still in flight.
+    let loadedDoc = null;
     (async () => {
       try {
         setLoading(true);
@@ -58,7 +68,11 @@ export default function PdfViewer({ path, fileName, initialPage = 1, onPageChang
         const blob = await getAttachmentBlob(path);
         const buffer = await blob.arrayBuffer();
         const loaded = await pdfjs.getDocument({ data: buffer }).promise;
-        if (cancelled) return;
+        if (cancelled) {
+          loaded.destroy();
+          return;
+        }
+        loadedDoc = loaded;
         setDoc(loaded);
         setNumPages(loaded.numPages);
 
@@ -70,13 +84,22 @@ export default function PdfViewer({ path, fileName, initialPage = 1, onPageChang
         setScale(Math.max(0.5, (width - 16) / v1.width));
         const start = Math.min(Math.max(1, Number(initialPage) || 1), loaded.numPages);
         setPageNum(start);
-      } catch {
+      } catch (e) {
+        // Was a bare catch with no logging - a failure here (network blip,
+        // or pdf.js/canvas running out of memory on a low-RAM device) was
+        // fully silent, indistinguishable from any other cause. Logging the
+        // real error is the only change needed to actually debug the next
+        // "student can't open the PDF" report instead of guessing.
+        console.error('[PdfViewer] failed to load PDF', path, e);
         if (!cancelled) setLoadError(t('pdfLoadError'));
       } finally {
         if (!cancelled) setLoading(false);
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      if (loadedDoc) loadedDoc.destroy();
+    };
   }, [path]); // initialPage is only read at open time, not a dependency
 
   // --- Render the current page ------------------------------------------
@@ -89,7 +112,13 @@ export default function PdfViewer({ path, fileName, initialPage = 1, onPageChang
         const viewport = page.getViewport({ scale });
         const canvas = canvasRef.current;
         const ctx = canvas.getContext('2d');
-        const dpr = window.devicePixelRatio || 1;
+        // Uncapped devicePixelRatio (2-3x on most phones today) multiplies
+        // canvas.width/height quadratically - on a low-RAM Android device
+        // this can allocate a bitmap large enough to crash the WebView mid-
+        // render, which looked identical to "the PDF won't open" from the
+        // outside with nothing logged. Capping at 2x keeps pages sharp on
+        // real devices while bounding worst-case memory use.
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
         canvas.width = Math.floor(viewport.width * dpr);
         canvas.height = Math.floor(viewport.height * dpr);
         canvas.style.width = `${Math.floor(viewport.width)}px`;
@@ -100,7 +129,9 @@ export default function PdfViewer({ path, fileName, initialPage = 1, onPageChang
         await task.promise;
       } catch (e) {
         if (e?.name === 'RenderingCancelledException' || cancelled) return;
-        // Non-critical - a failed page render shouldn't kill the viewer.
+        // Non-critical - a failed page render shouldn't kill the viewer, but
+        // still worth seeing in the console instead of failing silently.
+        console.error('[PdfViewer] failed to render page', pageNum, e);
       }
     })();
     return () => {

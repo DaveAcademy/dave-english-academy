@@ -736,7 +736,7 @@ export default function LessonHub() {
                   {t('hubStatusLabel')}{' '}
                   {workSubmission?.status === 'reviewed'
                     ? t('hubStatusReviewed')
-                    : workSubmission
+                    : workSubmission && workFiles.length > 0
                     ? t('hubStatusSubmitted')
                     : t('hubStatusNotSubmitted')}
                 </span>

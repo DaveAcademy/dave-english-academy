@@ -34,7 +34,21 @@ function RosterRow({ student, submission, files, onOpenFile, onMarkReviewed, onA
   const [points, setPoints] = useState(defaultPoints);
   const [busy, setBusy] = useState(false);
 
-  const state = !submission ? 'notSubmitted' : submission.points_awarded != null ? 'awarded' : submission.status === 'reviewed' ? 'reviewed' : 'needsReview';
+  // A submission row is created as soon as the student hits Submit, before
+  // any file upload actually finishes - if that upload then fails, the row
+  // is left behind with zero files. Treat that the same as no submission at
+  // all (nothing to review), unless it was already reviewed/awarded in the
+  // past - that historical action should still show, regardless of what the
+  // file list looks like now.
+  const alreadyActioned = submission?.points_awarded != null || submission?.status === 'reviewed';
+  const hasSubmission = submission && (files.length > 0 || alreadyActioned);
+  const state = !hasSubmission
+    ? 'notSubmitted'
+    : submission.points_awarded != null
+      ? 'awarded'
+      : submission.status === 'reviewed'
+        ? 'reviewed'
+        : 'needsReview';
 
   const handleAward = async () => {
     setBusy(true);
