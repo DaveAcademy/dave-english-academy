@@ -186,7 +186,13 @@ export default function Homework() {
             files,
             pointsAwarded: w.points_awarded,
           };
-        });
+        })
+        // A lesson_work_submissions row is created as soon as the student
+        // hits Submit, before any file upload actually finishes - if that
+        // upload then fails, the row is left behind with zero files but
+        // still reads as "submitted." Only a submission with at least one
+        // actual picture attached should count as a real submission.
+        .filter((item) => item.files.length > 0);
 
       const items = [...hwItems, ...workItems];
       if (items.length === 0) continue;
