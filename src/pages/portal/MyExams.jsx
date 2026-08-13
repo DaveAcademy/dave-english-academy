@@ -13,9 +13,11 @@ import { useAcademy } from '../../lib/AcademyDataContext';
 import { uploadAttachment, getAttachmentUrl } from '../../lib/db';
 import LessonSectionTabs from '../../components/lesson/LessonSectionTabs';
 import { examTypeIcon } from '../../utils/examLabel';
+import { formatDateOnly } from '../../utils/date';
 
 export default function MyExams() {
-  const { t } = useTranslation(['exams', 'common']);
+  const { t, i18n } = useTranslation(['exams', 'common']);
+  const dateLocale = i18n.language === 'uz' ? 'uz' : 'en-US';
   const { students, exams, examScores, submitMyExamAnswer } = useAcademy();
   const me = students[0];
   const [submittingId, setSubmittingId] = useState(null);
@@ -30,17 +32,22 @@ export default function MyExams() {
 
   const scoreFor = (examId) => examScores.find((s) => s.exam_id === examId && s.student_id === me?.id);
 
-  // graded / awaitingGrading / expired / notSubmitted / upcoming - purely
-  // derived from existing score/answer_file_url columns plus the exam_date
-  // and deadline, no new schema field. Priority matters: a graded or
-  // submitted exam must never read as expired or upcoming just because its
-  // date has since passed or was scheduled ahead, so those checks come
-  // first; "upcoming" only applies once nothing has been graded or
-  // submitted yet.
-  const statusOf = (result, overdue, upcoming) => {
+  // graded / awaitingGrading / expired / notSubmitted / resultPending /
+  // upcoming - purely derived from existing score/answer_file_url columns
+  // plus the exam_date and deadline, no new schema field. Priority matters:
+  // a graded or submitted exam must never read as expired or upcoming just
+  // because its date has since passed or was scheduled ahead, so those
+  // checks come first; "upcoming" only applies once nothing has been graded
+  // or submitted yet. Oral (Speaking) exams have no submission step at all
+  // (see the upload button below, hidden for exam_type === 'Oral'), so
+  // "notSubmitted"/"expired" - both of which read as "you were supposed to
+  // upload something" - are never accurate for them; isOral collapses that
+  // branch to a neutral "result not available yet" instead.
+  const statusOf = (result, overdue, upcoming, isOral) => {
     if (result?.score != null) return 'graded';
     if (result?.answer_file_url) return 'awaitingGrading';
     if (upcoming) return 'upcoming';
+    if (isOral) return 'resultPending';
     if (overdue) return 'expired';
     return 'notSubmitted';
   };
@@ -137,9 +144,10 @@ export default function MyExams() {
           {myExams.map((e) => {
             const result = scoreFor(e.id);
             const graded = result?.score != null;
+            const isOral = e.exam_type === 'Oral';
             const overdue = isOverdue(e);
             const upcoming = isUpcoming(e);
-            const status = statusOf(result, overdue, upcoming);
+            const status = statusOf(result, overdue, upcoming, isOral);
             const expired = status === 'expired';
             return (
               <div key={e.id} className="rounded-xl bg-white p-3 shadow-card">
@@ -172,17 +180,19 @@ export default function MyExams() {
                       </span>
                     </div>
                     <p className="text-xs text-ink/50">
-                      {e.exam_date} · {t('outOfScore', { max: e.max_score })}
-                      {e.deadline &&
+                      {formatDateOnly(e.exam_date, dateLocale)} · {t('outOfScore', { max: e.max_score })}
+                      {/* Deadline is an answer-submission deadline - meaningless for Oral
+                          exams, which have no submission step at all. */}
+                      {e.deadline && !isOral &&
                         (expired ? (
-                          <span className="font-semibold text-inactive"> · {t('dueDateOverdue', { date: e.deadline.slice(0, 10) })}</span>
+                          <span className="font-semibold text-inactive"> · {t('dueDateOverdue', { date: formatDateOnly(e.deadline.slice(0, 10), dateLocale) })}</span>
                         ) : (
-                          ` · ${t('dueDate', { date: e.deadline.slice(0, 10) })}`
+                          ` · ${t('dueDate', { date: formatDateOnly(e.deadline.slice(0, 10), dateLocale) })}`
                         ))}
                     </p>
                     {upcoming && (
                       <p className="mt-1 text-sm text-brand-700">
-                        {t('upcomingExamDate', { date: e.exam_date })} · {t('upcomingPrepareMessage')}
+                        {t('upcomingExamDate', { date: formatDateOnly(e.exam_date, dateLocale) })} · {t('upcomingPrepareMessage')}
                       </p>
                     )}
                     {e.description && <p className="mt-1 whitespace-pre-wrap text-sm text-ink/70">{e.description}</p>}

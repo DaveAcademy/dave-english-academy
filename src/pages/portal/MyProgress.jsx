@@ -301,7 +301,10 @@ export default function MyProgress() {
                 {finalSpeaking.score != null ? (
                   <span className="text-sm font-bold text-brand-600">{finalSpeaking.score}/{finalSpeaking.exam.max_score}</span>
                 ) : (
-                  <StatusPill tone="info">{t('dashboard:awaitingGrading')}</StatusPill>
+                  /* "Awaiting grading" implies the student submitted something and it's in
+                     a grading queue - Speaking exams have no submission step at all, so
+                     that phrasing doesn't apply here the way it does for Writing. */
+                  <StatusPill tone="info">{t('exams:resultPending')}</StatusPill>
                 )}
               </div>
             )}

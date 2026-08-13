@@ -77,6 +77,7 @@
   "uploadMyAnswer": "Upload my answer",
   "viewMySubmittedAnswer": "View my submitted answer",
   "awaitingGrading": "Submitted, awaiting grading",
+  "resultPending": "Result not available yet",
   "upcoming": "Coming soon",
   "upcomingExamDate": "Scheduled for {{date}}",
   "upcomingPrepareMessage": "Start preparing now.",

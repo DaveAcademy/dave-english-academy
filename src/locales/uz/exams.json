@@ -77,6 +77,7 @@
   "uploadMyAnswer": "Javobimni yuklash",
   "viewMySubmittedAnswer": "Yuborilgan javobimni ko'rish",
   "awaitingGrading": "Topshirildi, baholanishi kutilmoqda",
+  "resultPending": "Natija hali mavjud emas",
   "upcoming": "Tez orada",
   "upcomingExamDate": "{{date}} sanasiga rejalashtirilgan",
   "upcomingPrepareMessage": "Hozirdan tayyorgarlik ko'rishni boshlang.",
