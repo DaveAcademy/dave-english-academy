@@ -221,7 +221,10 @@ export default function MyHomework() {
                               : 'bg-ink/5 text-ink/40'
                         }`}
                       >
-                        {t(pill === 'notSubmitted' ? 'notSubmitted' : pill === 'awaitingGrading' ? 'awaitingGrading' : 'statusGraded')}
+                        {/* The academy doesn't use a homework grading workflow - homework is
+                            just submitted and reviewed manually, so the pill only ever needs to
+                            say "Submitted", not "Submitted, awaiting grading". */}
+                        {t(pill === 'notSubmitted' ? 'notSubmitted' : pill === 'awaitingGrading' ? 'statusSubmitted' : 'statusGraded')}
                       </span>
                     </div>
                     <p className="text-xs text-ink/50">
