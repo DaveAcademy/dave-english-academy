@@ -50,33 +50,62 @@ export default function Exams() {
   const selectedExam = sortedExams.find((e) => e.id === selectedExamId) || sortedExams[0] || null;
   const editingExam = editingId ? exams.find((e) => e.id === editingId) : null;
 
-  // An exam is Completed/Closed once every currently-active, eligible
-  // student has a score - not a stored status field, purely derived from
-  // exam_scores so no schema/migration is needed. A level with zero active
-  // students never counts as "closed" (vacuously-true would mark it closed
-  // the instant it's created).
-  const isExamClosed = (exam) => {
-    const eligible = students.filter((s) => s.status === 'Active' && (!exam.level || s.level === exam.level));
-    if (eligible.length === 0) return false;
-    return eligible.every((s) => examScores.some((sc) => sc.exam_id === exam.id && sc.student_id === s.id && sc.score != null));
-  };
-
   // exam_date is a plain `date` column (no time-of-day), always compared as
   // local calendar days - same "compare local calendar days" pattern already
   // used in MyExams.jsx's isUpcoming, reused here for consistency instead of
   // inventing a second date-comparison method.
+  const toLocalDay = (dateStr) => {
+    if (!dateStr) return null;
+    const [y, m, d] = dateStr.slice(0, 10).split('-').map(Number);
+    if (!y || !m || !d) return null;
+    return new Date(y, m - 1, d);
+  };
+
   const isUpcoming = (exam) => {
-    if (!exam.exam_date) return false;
-    const [y, m, d] = exam.exam_date.slice(0, 10).split('-').map(Number);
-    if (!y || !m || !d) return false;
-    const examDay = new Date(y, m - 1, d);
+    const examDay = toLocalDay(exam.exam_date);
+    if (!examDay) return false;
     const today = new Date();
     const todayLocal = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     return examDay > todayLocal;
   };
 
+  // "Eligible for this exam" used to mean "currently active student in the
+  // exam's level" - but that includes students who joined the level long
+  // after the exam happened and never actually took it, which permanently
+  // stuck old exams on Active. A student only counts toward an exam if they
+  // were already enrolled by the exam date (join_date <= exam_date); anyone
+  // who joined later simply wasn't a participant and can't block closing.
+  // This is the smallest existing signal available - exam_scores rows are
+  // only created when a student submits or a score is saved (see
+  // storageBridge.js's exam_scores upserts), so row-existence means
+  // "graded/submitted", not "was expected to take it", and can't be used to
+  // define the eligible/participant set.
+  const eligibleStudentsFor = (exam) => {
+    const examDay = toLocalDay(exam.exam_date);
+    return students.filter((s) => {
+      if (s.status !== 'Active') return false;
+      if (exam.level && s.level !== exam.level) return false;
+      if (examDay) {
+        const joinDay = toLocalDay(s.join_date);
+        if (joinDay && joinDay > examDay) return false;
+      }
+      return true;
+    });
+  };
+
+  // An exam is Completed/Closed once every actual participant (see
+  // eligibleStudentsFor above) has a score - not a stored status field,
+  // purely derived from exam_scores so no schema/migration is needed. A
+  // level with zero eligible students never counts as "closed"
+  // (vacuously-true would mark it closed the instant it's created).
+  const isExamClosed = (exam) => {
+    const eligible = eligibleStudentsFor(exam);
+    if (eligible.length === 0) return false;
+    return eligible.every((s) => examScores.some((sc) => sc.exam_id === exam.id && sc.student_id === s.id && sc.score != null));
+  };
+
   const gradedProgressOf = (exam) => {
-    const eligible = students.filter((s) => s.status === 'Active' && (!exam.level || s.level === exam.level));
+    const eligible = eligibleStudentsFor(exam);
     const graded = eligible.filter((s) => examScores.some((sc) => sc.exam_id === exam.id && sc.student_id === s.id && sc.score != null));
     return { graded: graded.length, total: eligible.length };
   };
