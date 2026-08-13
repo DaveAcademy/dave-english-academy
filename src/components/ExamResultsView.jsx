@@ -8,9 +8,39 @@
 
 import { Paperclip } from 'lucide-react';
 
-export default function ExamResultsView({ examMaxScore, students, answerOf, onOpenFile, t }) {
+// Stats are derived from the already-loaded students/answerOf data passed in
+// by the caller - no new query. `students` here is the full eligible roster
+// for the exam (not filtered), so the header reflects the whole class even
+// if a status filter is narrowing the list below it.
+function StatsHeader({ examMaxScore, students, answerOf, t }) {
+  const scores = students.map((s) => answerOf(s.id).score).filter((sc) => sc != null);
+  const total = students.length;
+  const graded = scores.length;
+  const average = graded ? (scores.reduce((sum, sc) => sum + sc, 0) / graded).toFixed(1) : null;
+  const highest = graded ? Math.max(...scores) : null;
+  const lowest = graded ? Math.min(...scores) : null;
+  const stat = (label, value) => (
+    <div className="flex-1 min-w-[6rem] rounded-xl bg-white p-3 text-center shadow-card">
+      <p className="text-lg font-bold text-ink">{value ?? '—'}</p>
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-ink/40">{label}</p>
+    </div>
+  );
   return (
-    <div className="space-y-2">
+    <div className="mb-3 flex flex-wrap gap-2">
+      {stat(t('statsTotal'), total)}
+      {stat(t('statsGraded'), `${graded}/${total}`)}
+      {stat(t('statsAverage'), average != null ? `${average} / ${examMaxScore}` : null)}
+      {stat(t('statsHighest'), highest != null ? `${highest} / ${examMaxScore}` : null)}
+      {stat(t('statsLowest'), lowest != null ? `${lowest} / ${examMaxScore}` : null)}
+    </div>
+  );
+}
+
+export default function ExamResultsView({ examMaxScore, students, allStudents, answerOf, onOpenFile, t }) {
+  return (
+    <div>
+      <StatsHeader examMaxScore={examMaxScore} students={allStudents || students} answerOf={answerOf} t={t} />
+      <div className="space-y-2">
       {students.map((s) => {
         const answer = answerOf(s.id);
         const submitted = !!answer.answer_file_url;
@@ -46,6 +76,7 @@ export default function ExamResultsView({ examMaxScore, students, answerOf, onOp
           </div>
         );
       })}
+      </div>
     </div>
   );
 }

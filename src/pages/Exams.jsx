@@ -60,9 +60,32 @@ export default function Exams() {
     if (eligible.length === 0) return false;
     return eligible.every((s) => examScores.some((sc) => sc.exam_id === exam.id && sc.student_id === s.id && sc.score != null));
   };
-  const activeExams = useMemo(() => sortedExams.filter((e) => !isExamClosed(e)), [sortedExams, students, examScores]);
-  const closedExams = useMemo(() => sortedExams.filter((e) => isExamClosed(e)), [sortedExams, students, examScores]);
+
+  // exam_date is a plain `date` column (no time-of-day), always compared as
+  // local calendar days - same "compare local calendar days" pattern already
+  // used in MyExams.jsx's isUpcoming, reused here for consistency instead of
+  // inventing a second date-comparison method.
+  const isUpcoming = (exam) => {
+    if (!exam.exam_date) return false;
+    const [y, m, d] = exam.exam_date.slice(0, 10).split('-').map(Number);
+    if (!y || !m || !d) return false;
+    const examDay = new Date(y, m - 1, d);
+    const today = new Date();
+    const todayLocal = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    return examDay > todayLocal;
+  };
+
+  const gradedProgressOf = (exam) => {
+    const eligible = students.filter((s) => s.status === 'Active' && (!exam.level || s.level === exam.level));
+    const graded = eligible.filter((s) => examScores.some((sc) => sc.exam_id === exam.id && sc.student_id === s.id && sc.score != null));
+    return { graded: graded.length, total: eligible.length };
+  };
+
+  const upcomingExams = useMemo(() => sortedExams.filter((e) => isUpcoming(e)), [sortedExams]);
+  const activeExams = useMemo(() => sortedExams.filter((e) => !isUpcoming(e) && !isExamClosed(e)), [sortedExams, students, examScores]);
+  const closedExams = useMemo(() => sortedExams.filter((e) => !isUpcoming(e) && isExamClosed(e)), [sortedExams, students, examScores]);
   const selectedExamClosed = selectedExam ? isExamClosed(selectedExam) : false;
+  const selectedExamUpcoming = selectedExam ? isUpcoming(selectedExam) : false;
 
   const sortedLessons = useMemo(
     () =>
@@ -92,9 +115,15 @@ export default function Exams() {
   // Selecting a different exam always starts back on the read-only results
   // view for a closed exam - "Edit grades" is a per-visit explicit choice,
   // not a state that should carry over from whichever exam was open before.
+  // The status filter also resets per-exam: an active exam defaults to
+  // showing outstanding (not-yet-graded) students first, while a closed exam
+  // defaults to "all" since it's read-only anyway - neither should carry
+  // over the previous exam's filter selection.
   const selectExam = (id) => {
     setSelectedExamId(id);
     setEditingGrades(false);
+    const exam = sortedExams.find((e) => e.id === id);
+    setStatusFilter(exam && isExamClosed(exam) ? 'all' : 'notGraded');
   };
 
   const filteredStudents = useMemo(
@@ -205,10 +234,12 @@ export default function Exams() {
     if (url) window.open(url, '_blank', 'noopener');
   };
 
-  // Same row markup for both sections - only the exam list and whether the
-  // "Completed" pill shows differ, so upcoming/active exams don't gain any
-  // visual weight they didn't have before this change.
-  const renderExamsTable = (list, heading, closedSection = false) => {
+  // Same row markup for all three sections - only the exam list and the
+  // trailing status column differ (Upcoming shows nothing extra, Active
+  // shows a live graded/total progress count, Completed shows the
+  // "Completed" pill), so no section gains visual weight it didn't have
+  // before this change.
+  const renderExamsTable = (list, heading, section = 'active') => {
     if (list.length === 0) return null;
     return (
       <div className="mb-4">
@@ -222,11 +253,14 @@ export default function Exams() {
                 <th className="px-3 py-2">{t('colLesson')}</th>
                 <th className="px-3 py-2">{t('colDate')}</th>
                 <th className="px-3 py-2">{t('colStudentCount')}</th>
+                {section === 'active' && <th className="px-3 py-2">{t('colProgress')}</th>}
                 <th className="px-3 py-2" />
               </tr>
             </thead>
             <tbody>
-              {list.map((e) => (
+              {list.map((e) => {
+                const progress = section === 'active' ? gradedProgressOf(e) : null;
+                return (
                 <tr
                   key={e.id}
                   onClick={() => selectExam(e.id)}
@@ -239,7 +273,12 @@ export default function Exams() {
                       <FileCheck2 size={15} className="flex-shrink-0 text-brand-500" />
                       <span className="font-semibold text-ink">{e.title}</span>
                       {e.level && <LevelBadge level={e.level} />}
-                      {closedSection && (
+                      {section === 'upcoming' && (
+                        <span className="flex items-center gap-1 rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-bold text-brand-700">
+                          {t('upcomingBadge')}
+                        </span>
+                      )}
+                      {section === 'completed' && (
                         <span className="flex items-center gap-1 rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-bold text-brand-600">
                           <CheckCircle2 size={11} /> {t('completedBadge')}
                         </span>
@@ -250,6 +289,11 @@ export default function Exams() {
                   <td className="px-3 py-2 text-ink/70">{lessonOf(e.lesson_id)?.topic || '—'}</td>
                   <td className="px-3 py-2 text-ink/70">{e.exam_date}</td>
                   <td className="px-3 py-2 text-ink/70">{studentCountOf(e)}</td>
+                  {section === 'active' && (
+                    <td className="px-3 py-2 text-ink/70">
+                      {progress.total === 0 ? '—' : `${progress.graded}/${progress.total}`}
+                    </td>
+                  )}
                   <td className="px-3 py-2">
                     <div className="flex items-center justify-end gap-1">
                       <button
@@ -275,7 +319,7 @@ export default function Exams() {
                     </div>
                   </td>
                 </tr>
-              ))}
+              );})}
             </tbody>
           </table>
         </div>
@@ -422,12 +466,13 @@ export default function Exams() {
         </div>
       ) : (
         <>
-          {renderExamsTable(activeExams, t('sectionActive'))}
-          {renderExamsTable(closedExams, t('sectionCompleted'), true)}
+          {renderExamsTable(upcomingExams, t('sectionUpcoming'), 'upcoming')}
+          {renderExamsTable(activeExams, t('sectionActive'), 'active')}
+          {renderExamsTable(closedExams, t('sectionCompleted'), 'completed')}
         </>
       )}
 
-      {selectedExam && (
+      {selectedExam && !selectedExamUpcoming && (
         <>
           <div className="mb-2 mt-6 flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-sm font-bold uppercase tracking-wide text-ink/50">
@@ -462,9 +507,9 @@ export default function Exams() {
               {selectedExamClosed && !editingGrades && (
                 <button
                   onClick={() => setEditingGrades(true)}
-                  className="flex items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-semibold text-ink/60 hover:bg-ink/5"
+                  className="flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-brand-600"
                 >
-                  <Pencil size={13} /> {t('editGrades')}
+                  <Pencil size={15} /> {t('editGrades')}
                 </button>
               )}
             </div>
@@ -473,10 +518,17 @@ export default function Exams() {
             <ExamResultsView
               examMaxScore={selectedExam.max_score}
               students={filteredStudents}
+              allStudents={activeStudents}
               answerOf={answerOf}
               onOpenFile={handleOpenFile}
               t={t}
             />
+          ) : filteredStudents.length === 0 ? (
+            <div className="rounded-xl bg-white p-8 text-center shadow-card">
+              <p className="text-sm font-semibold text-ink/60">
+                {activeStudents.length === 0 ? t('noStudentsForLevel') : t('noOutstandingStudents')}
+              </p>
+            </div>
           ) : (
             <ExamGradingRoster
               examMaxScore={selectedExam.max_score}
