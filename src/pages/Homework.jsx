@@ -451,7 +451,11 @@ export default function Homework() {
 
       {selected && (
         <>
-          <div id="homework-grading-section" className="mb-2 mt-6 flex flex-wrap items-center justify-between gap-2">
+          <p className="mt-6 text-xs text-ink/50">
+            This only shows submissions for admin-assigned Homework. Students can also upload work directly from a
+            lesson ("Submit Work") - see <strong>All Submissions</strong> below for those too.
+          </p>
+          <div id="homework-grading-section" className="mb-2 mt-2 flex flex-wrap items-center justify-between gap-2">
             <div>
               <h2 className="text-sm font-bold uppercase tracking-wide text-ink/50">{t('statusFor', { title: selected.title })}</h2>
               {lessonOf(selected.lesson_id) && (
@@ -511,9 +515,11 @@ export default function Homework() {
           previous flat Submit Work list - this is now the one place to
           find who has pending work across either domain. */}
       <div className="mt-8">
-        <h2 className="mb-1 text-sm font-bold uppercase tracking-wide text-ink/50">Pending Submissions</h2>
+        <h2 className="mb-1 text-sm font-bold uppercase tracking-wide text-ink/50">All Submissions (Homework + Submit Work)</h2>
         <p className="mb-2 text-xs text-ink/50">
-          Students with any homework or Submit Work history, grouped by level. Click a student to see their submissions.
+          Every student with homework or Submit Work history, grouped by level - both graded/reviewed and still
+          needing attention. This is the complete picture across both upload paths; the roster above only covers
+          Homework-domain assignments. Click a student to see their submissions.
         </p>
         {workLoading && <p className="mb-2 text-xs text-ink/40">Loading Submit Work submissions…</p>}
         {LEVELS.every((lvl) => levelGroups[lvl].length === 0) ? (
