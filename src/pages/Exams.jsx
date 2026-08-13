@@ -336,13 +336,13 @@ export default function Exams() {
                     </td>
                   )}
                   <td className="px-3 py-2">
-                    <div className="flex items-center justify-end gap-1">
+                    <div className="flex items-center justify-end gap-3">
                       <button
                         onClick={(ev) => {
                           ev.stopPropagation();
                           startEdit(e);
                         }}
-                        className="text-brand-500 hover:bg-brand-50"
+                        className="rounded-lg p-2 text-brand-500 hover:bg-brand-50"
                         aria-label={t('editExamAria')}
                       >
                         <Pencil size={14} />
@@ -352,7 +352,7 @@ export default function Exams() {
                           ev.stopPropagation();
                           setDeletingExam(e);
                         }}
-                        className="text-inactive hover:bg-inactive/10"
+                        className="rounded-lg p-2 text-red-600 hover:bg-red-50"
                         aria-label={t('deleteExamAria')}
                       >
                         <Trash2 size={14} />
