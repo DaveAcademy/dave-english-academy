@@ -43,23 +43,28 @@ export default function ExamResultsView({ examMaxScore, students, allStudents, a
       <div className="space-y-2">
       {students.map((s) => {
         const answer = answerOf(s.id);
-        const submitted = !!answer.answer_file_url;
+        const hasFile = !!answer.answer_file_url;
         const graded = answer.score != null;
+        // This is a read-only summary of a closed exam: whether a file was
+        // uploaded is not meaningful here (Oral/Speaking exams never have
+        // one - see MyExams.jsx - and a Written student can still be graded
+        // without one), so the only status that matters is graded/not
+        // graded, shown via the score column on the right. A file link is
+        // still shown whenever one exists, purely as a convenience to open
+        // it - it's not a status claim.
         return (
           <div key={s.id} className="rounded-xl bg-white p-3 shadow-card">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
                 <div className="flex flex-wrap items-center gap-1.5">
                   <p className="font-semibold text-ink">{s.real_name}</p>
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                      submitted ? 'bg-active/10 text-active' : 'bg-ink/5 text-ink/40'
-                    }`}
-                  >
-                    {submitted ? t('submitted') : t('notSubmitted')}
-                  </span>
+                  {!graded && (
+                    <span className="rounded-full bg-ink/5 px-2 py-0.5 text-[10px] font-bold text-ink/40">
+                      {t('notGraded')}
+                    </span>
+                  )}
                 </div>
-                {submitted && (
+                {hasFile && (
                   <button
                     onClick={() => onOpenFile(answer.answer_file_url)}
                     className="mt-1 flex items-center gap-1 text-xs text-brand-500 hover:underline"

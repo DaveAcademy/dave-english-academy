@@ -155,9 +155,21 @@ export default function Exams() {
     setStatusFilter(exam && isExamClosed(exam) ? 'all' : 'notGraded');
   };
 
+  // Completed exams should list only actual participants (see
+  // eligibleStudentsFor above), not the full current roster - a student who
+  // joined after the exam date has no score/file for a legitimate reason
+  // (they weren't there) and must not be shown as an outstanding
+  // "not submitted"/"not graded" case in the read-only results view. Active
+  // exams keep showing the full current roster (activeStudents) so grading
+  // behavior (ExamGradingRoster) is unaffected.
+  const closedExamStudentsBase = useMemo(
+    () => (selectedExam && isExamClosed(selectedExam) ? eligibleStudentsFor(selectedExam) : activeStudents),
+    [selectedExam, activeStudents, students, examScores]
+  );
+
   const filteredStudents = useMemo(
     () =>
-      activeStudents.filter((s) => {
+      closedExamStudentsBase.filter((s) => {
         const answer = answerOf(s.id);
         const submitted = !!answer.answer_file_url;
         const graded = answer.score != null;
@@ -547,7 +559,7 @@ export default function Exams() {
             <ExamResultsView
               examMaxScore={selectedExam.max_score}
               students={filteredStudents}
-              allStudents={activeStudents}
+              allStudents={closedExamStudentsBase}
               answerOf={answerOf}
               onOpenFile={handleOpenFile}
               t={t}
