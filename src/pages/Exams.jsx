@@ -104,15 +104,25 @@ export default function Exams() {
   // purely derived from exam_scores so no schema/migration is needed. A
   // level with zero eligible students never counts as "closed"
   // (vacuously-true would mark it closed the instant it's created).
+  //
+  // Only a currently-Active eligible student can block closure. A student
+  // who has since gone Inactive still belongs in the historical roster
+  // (eligibleStudentsFor), but there is no one left to grade them - nobody
+  // can submit a score on a withdrawn student's behalf - so requiring their
+  // score too would leave the exam stuck Active forever (confirmed live:
+  // exams #6, #24, #35 each had a since-inactive eligible student with no
+  // score, permanently blocking closure).
+  const isExamGraded = (exam, s) => examScores.some((sc) => sc.exam_id === exam.id && sc.student_id === s.id && sc.score != null);
+
   const isExamClosed = (exam) => {
     const eligible = eligibleStudentsFor(exam);
     if (eligible.length === 0) return false;
-    return eligible.every((s) => examScores.some((sc) => sc.exam_id === exam.id && sc.student_id === s.id && sc.score != null));
+    return eligible.every((s) => s.status !== 'Active' || isExamGraded(exam, s));
   };
 
   const gradedProgressOf = (exam) => {
     const eligible = eligibleStudentsFor(exam);
-    const graded = eligible.filter((s) => examScores.some((sc) => sc.exam_id === exam.id && sc.student_id === s.id && sc.score != null));
+    const graded = eligible.filter((s) => isExamGraded(exam, s));
     return { graded: graded.length, total: eligible.length };
   };
 
