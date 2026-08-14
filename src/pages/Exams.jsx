@@ -80,10 +80,16 @@ export default function Exams() {
   // storageBridge.js's exam_scores upserts), so row-existence means
   // "graded/submitted", not "was expected to take it", and can't be used to
   // define the eligible/participant set.
+  // Point-in-time eligibility, not current status: a student who was
+  // enrolled and in-level when the exam happened stays a "participant" for
+  // completion-tracking purposes even if they later become Inactive -
+  // otherwise an inactive-but-ungraded participant silently drops out of
+  // the eligible set and the exam reads as falsely Completed/Closed. Status
+  // still gates whether that student *can act* on the exam now (RLS), just
+  // not whether they counted as a historical participant.
   const eligibleStudentsFor = (exam) => {
     const examDay = toLocalDay(exam.exam_date);
     return students.filter((s) => {
-      if (s.status !== 'Active') return false;
       if (exam.level && s.level !== exam.level) return false;
       if (examDay) {
         const joinDay = toLocalDay(s.join_date);
