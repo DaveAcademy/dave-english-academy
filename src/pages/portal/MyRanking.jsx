@@ -39,7 +39,9 @@ export default function MyRanking() {
   const [awards, setAwards] = useState(null);
   const [summary, setSummary] = useState(null);
   const [achievementDefs, setAchievementDefs] = useState(null);
+  const [achievementDefsError, setAchievementDefsError] = useState(false);
   const [earnedAchievements, setEarnedAchievements] = useState(null);
+  const [earnedAchievementsError, setEarnedAchievementsError] = useState(false);
 
   // This Week / This Month / Total Points, all three at once - the same
   // week_bounds()/month_bounds()-summed ledger figures as the leaderboard
@@ -102,12 +104,16 @@ export default function MyRanking() {
   // doesn't block the others.
   useEffect(() => {
     let cancelled = false;
+    setAchievementDefsError(false);
     listAchievementDefinitions()
       .then((rows) => {
         if (!cancelled) setAchievementDefs(rows || []);
       })
       .catch(() => {
-        if (!cancelled) setAchievementDefs([]);
+        if (!cancelled) {
+          setAchievementDefs([]);
+          setAchievementDefsError(true);
+        }
       });
     return () => {
       cancelled = true;
@@ -118,12 +124,16 @@ export default function MyRanking() {
     if (!me?.id) return undefined;
     let cancelled = false;
     setEarnedAchievements(null);
+    setEarnedAchievementsError(false);
     getStudentAchievements(me.id)
       .then((rows) => {
         if (!cancelled) setEarnedAchievements(rows || []);
       })
       .catch(() => {
-        if (!cancelled) setEarnedAchievements([]);
+        if (!cancelled) {
+          setEarnedAchievements([]);
+          setEarnedAchievementsError(true);
+        }
       });
     return () => {
       cancelled = true;
@@ -196,6 +206,10 @@ export default function MyRanking() {
         <h2 className="mb-2 font-display text-base font-bold text-ink">{t('portal:achievementsTitle')}</h2>
         {earnedAchievements === null || achievementDefs === null ? (
           <div className="rounded-xl bg-white p-6 text-center text-sm text-ink/50 shadow-card">{t('common:loading')}</div>
+        ) : achievementDefsError || earnedAchievementsError ? (
+          <div className="rounded-xl bg-white p-6 text-center shadow-card">
+            <p className="text-sm text-ink/50">{t('dashboard:sectionUnavailable')}</p>
+          </div>
         ) : earnedAchievements.length === 0 && lockedAchievements.length === 0 ? (
           <div className="rounded-xl bg-white p-6 text-center shadow-card">
             <p className="text-sm text-ink/50">{t('portal:achievementsEmpty')}</p>
