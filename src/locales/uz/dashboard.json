@@ -104,7 +104,7 @@
   "ctaViewLeaderboard": "Reytingni ko'rish",
   "quickActionsLabel": "Tezkor amallar",
   "leaderboard": "Reyting",
-  "achievementsTitle": "Yutuqlar",
+  "milestonesTitle": "Bosqichlar",
   "achievementsEmpty": "Hali sertifikatlaringiz yo'q — birinchisini qo'lga kiritish uchun o'qishda davom eting.",
 
   "adminHeroSummary": "{{active}} ta faol o'quvchi · bu oy {{collectionRate}}% yig'ildi · {{attendanceFragment}}",

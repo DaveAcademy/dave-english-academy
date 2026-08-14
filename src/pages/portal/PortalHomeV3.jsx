@@ -478,7 +478,7 @@ export default function PortalHomeV3() {
       </div>
 
       <div className="mb-6">
-        <SectionLabel>{t('achievementsTitle')}</SectionLabel>
+        <SectionLabel>{t('milestonesTitle')}</SectionLabel>
         <BadgeShelf badges={badges} />
       </div>
 

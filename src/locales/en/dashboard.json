@@ -104,7 +104,7 @@
   "ctaViewLeaderboard": "View leaderboard",
   "quickActionsLabel": "Quick actions",
   "leaderboard": "Leaderboard",
-  "achievementsTitle": "Achievements",
+  "milestonesTitle": "Milestones",
   "achievementsEmpty": "No certificates yet - keep learning to earn your first one.",
 
   "adminHeroSummary": "{{active}} active students · {{collectionRate}}% collected this month · {{attendanceFragment}}",

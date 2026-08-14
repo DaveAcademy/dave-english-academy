@@ -231,7 +231,7 @@ export default function MyProgress() {
         </>
       )}
 
-      <SectionLabel>{t('dashboard:achievementsTitle')}</SectionLabel>
+      <SectionLabel>{t('dashboard:milestonesTitle')}</SectionLabel>
       <div className="mb-6">
         <BadgeShelf badges={badges} />
       </div>
