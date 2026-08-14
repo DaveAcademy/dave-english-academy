@@ -212,7 +212,7 @@
   "v3AcademyPoints": "Akademiya ballari",
   "v3PointsUntilNextLevel": "{{level}}-darajagacha {{points}} ball qoldi",
   "v3RankLabel": "O'rin",
-  "v3DayStreakLabel": "Ketma-ket kunlar",
+  "v3DayStreakLabel": "Davomat seriyasi",
   "v3LevelUpTitle": "Daraja oshdi!",
   "v3LevelUpBody": "Tabriklaymiz! Siz {{level}}-darajaga yetdingiz. {{nextLevel}}-darajaga yetish uchun o'qishda davom eting.",
 

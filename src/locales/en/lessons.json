@@ -32,7 +32,7 @@
   "inProgressLabel": "In progress",
   "remainingLabel": "Remaining",
   "totalLabel": "Total",
-  "streakLabel": "Day streak",
+  "streakLabel": "Study streak",
   "vocabLearnedLabel": "Words covered",
   "progressPercent": "{{percent}}%",
   "noStudentRecord": "Your account isn't linked to a student record yet.",

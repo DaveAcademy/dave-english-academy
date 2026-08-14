@@ -212,7 +212,7 @@
   "v3AcademyPoints": "Academy Points",
   "v3PointsUntilNextLevel": "{{points}} points until Level {{level}}",
   "v3RankLabel": "Rank",
-  "v3DayStreakLabel": "Day streak",
+  "v3DayStreakLabel": "Attendance streak",
   "v3LevelUpTitle": "Level Up!",
   "v3LevelUpBody": "Congratulations! You reached Level {{level}}. Keep learning to reach Level {{nextLevel}}.",
 
