@@ -53,6 +53,8 @@
   "marks": "marks",
   "notLinkedYet": "Not linked yet",
   "notLinkedSubtitle": "Your account isn't linked to a student record yet - ask your administrator to link it.",
+  "accountInactiveTitle": "Your account is inactive",
+  "accountInactiveSubtitle": "Please contact the academy if you'd like your access restored.",
   "welcome": "Welcome, {{name}}",
   "progressSubtitle": "Your progress at a glance.",
   "myPoints": "My points",

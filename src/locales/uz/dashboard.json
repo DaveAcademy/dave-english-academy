@@ -53,6 +53,8 @@
   "marks": "belgi",
   "notLinkedYet": "Hali bog'lanmagan",
   "notLinkedSubtitle": "Hisobingiz hali o'quvchi yozuviga bog'lanmagan - administratoringizdan bog'lashni so'rang.",
+  "accountInactiveTitle": "Hisobingiz faol emas",
+  "accountInactiveSubtitle": "Kirish huquqini tiklashni istasangiz, akademiya bilan bog'laning.",
   "welcome": "Xush kelibsiz, {{name}}",
   "progressSubtitle": "Sizning natijalaringiz bir qarashda.",
   "myPoints": "Mening ballarim",

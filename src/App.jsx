@@ -5,7 +5,7 @@ import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Sidebar, BottomNav } from './components/Nav';
 import { PortalSidebar, PortalBottomNav } from './components/PortalNav';
-import { AcademyDataProvider } from './lib/AcademyDataContext';
+import { AcademyDataProvider, useAcademy } from './lib/AcademyDataContext';
 import { AuthProvider, useAuth } from './lib/AuthContext';
 import AuthGate from './components/auth/AuthGate';
 import RouteErrorBoundary from './components/RouteErrorBoundary';
@@ -99,10 +99,15 @@ function AppShell() {
 // instance (hasError: false) on every navigation.
 function RoutedContent({ isStudent }) {
   const location = useLocation();
+  const { me } = useAcademy();
+  const isInactiveStudent = isStudent && me && me.status && me.status !== 'Active';
+
   return (
     <RouteErrorBoundary key={location.pathname}>
       <Suspense fallback={<PageLoading />}>
-        {isStudent ? (
+        {isInactiveStudent ? (
+          <InactiveAccountNotice />
+        ) : isStudent ? (
           <Routes>
             <Route path="/" element={<PortalHomeV3 />} />
             <Route path="/dashboard-v3" element={<PortalHomeV3 />} />
@@ -148,6 +153,20 @@ function RoutedContent({ isStudent }) {
         )}
       </Suspense>
     </RouteErrorBoundary>
+  );
+}
+
+// Blocks every student route once students.status !== 'Active' - mirrors
+// PortalHomeV3's existing "not linked yet" pattern rather than inventing a
+// new one. Data isn't touched (RLS still lets the student read their own
+// row), this only stops the UI from rendering current-student functionality.
+function InactiveAccountNotice() {
+  const { t } = useTranslation('dashboard');
+  return (
+    <div className="rounded-xl bg-white p-10 text-center shadow-card">
+      <p className="font-display text-lg font-semibold text-ink">{t('accountInactiveTitle')}</p>
+      <p className="mt-1 text-sm text-ink/50">{t('accountInactiveSubtitle')}</p>
+    </div>
   );
 }
 
