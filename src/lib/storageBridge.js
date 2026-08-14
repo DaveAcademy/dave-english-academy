@@ -880,13 +880,13 @@ export async function deleteCertificate(id) {
 // Server-computed (see migration 0006) - a student's own RLS-scoped reads
 // don't include enough data to rank themselves against classmates
 // client-side, unlike admin/teacher who already have full access.
-
-export async function getLeaderboard() {
-  const { data, error } = await supabase.rpc('get_leaderboard');
-  if (error) throw error;
-  return data;
-}
-
+//
+// get_leaderboard() (0008) - the academy-wide, unscoped equivalent this
+// once called - was removed in 0128: every page that used it (Dashboard,
+// My Ranking, My Progress) was already migrated to the level-scoped RPC
+// below, so it had zero remaining callers (see the Points & Ranking
+// Consistency Audit).
+//
 // Level + period-scoped leaderboard (see migration 0023) - rank_change vs.
 // the prior equivalent period and attendance_rate are null for 'all_time'
 // (there's no "previous all-time" to compare against). periodStart is only
