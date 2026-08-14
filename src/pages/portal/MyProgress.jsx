@@ -267,7 +267,7 @@ export default function MyProgress() {
                 <div key={h.id} className="rounded-lg border border-ink/[0.06] p-2.5">
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-sm font-semibold text-ink">{h.title}</p>
-                    <StatusPill tone={HOMEWORK_TONE[status]}>{t(`dashboard:${status === 'Assigned' ? 'assigned' : status === 'Submitted' ? 'awaitingSubmission' : 'graded'}`)}</StatusPill>
+                    <StatusPill tone={HOMEWORK_TONE[status]}>{t(`dashboard:${status === 'Assigned' ? 'assigned' : status === 'Submitted' ? 'awaitingGrading' : 'graded'}`)}</StatusPill>
                   </div>
                   {h.statusRow?.feedback && (
                     <p className="mt-1 text-xs text-ink/50">{t('portal:teacherFeedbackLabel')}: {h.statusRow.feedback}</p>
