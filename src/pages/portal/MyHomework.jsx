@@ -16,6 +16,12 @@ import { BookOpen, Download, Upload, MessageSquare, X, Image as ImageIcon } from
 import { useAcademy } from '../../lib/AcademyDataContext';
 import { uploadAttachment, getAttachmentUrl } from '../../lib/db';
 import LessonSectionTabs from '../../components/lesson/LessonSectionTabs';
+import { TONE } from '../../utils/tone';
+
+// Same semantic tones StatCard/AttentionCard use elsewhere, so "graded" /
+// "submitted" / "not submitted" read as the same colors as everywhere else
+// in the app instead of a one-off pill palette.
+const PILL_TONE = { graded: 'brand', awaitingGrading: 'success', notSubmitted: 'neutral' };
 
 const MAX_IMAGES = 5;
 
@@ -171,7 +177,7 @@ export default function MyHomework() {
 
   if (!me) {
     return (
-      <div className="rounded-xl bg-white p-10 text-center shadow-card">
+      <div className="rounded-xl border border-ink/[0.06] bg-white p-10 text-center shadow-card">
         <p className="font-display text-lg font-semibold text-ink">{t('notLinkedYet')}</p>
       </div>
     );
@@ -189,7 +195,7 @@ export default function MyHomework() {
       {actionError && <div className="mb-4 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{actionError}</div>}
 
       {myHomework.length === 0 ? (
-        <div className="rounded-xl bg-white p-10 text-center shadow-card">
+        <div className="rounded-xl border border-ink/[0.06] bg-white p-10 text-center shadow-card">
           <p className="font-display text-lg font-semibold text-ink">{t('noHomeworkAssignedYet')}</p>
         </div>
       ) : (
@@ -204,23 +210,15 @@ export default function MyHomework() {
             const submittedFiles = submittedFilesFor(h.id);
             const roomLeft = Math.max(0, MAX_IMAGES - submittedFiles.length - pending.length);
             return (
-              <div key={h.id} className="rounded-xl bg-white p-3 shadow-card">
+              <div key={h.id} className="rounded-xl border border-ink/[0.06] bg-white p-3 shadow-card sm:p-4">
                 <div className="flex items-start gap-3">
                   <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-500">
                     <BookOpen size={18} />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <p className="font-semibold text-ink">{h.title}</p>
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                          pill === 'graded'
-                            ? 'bg-brand-50 text-brand-600'
-                            : pill === 'awaitingGrading'
-                              ? 'bg-active/10 text-active'
-                              : 'bg-ink/5 text-ink/40'
-                        }`}
-                      >
+                      <p className="break-words font-semibold text-ink">{h.title}</p>
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${TONE[PILL_TONE[pill]].soft} ${TONE[PILL_TONE[pill]].text}`}>
                         {/* The academy doesn't use a homework grading workflow - homework is
                             just submitted and reviewed manually, so the pill only ever needs to
                             say "Submitted", not "Submitted, awaiting grading". */}
@@ -237,7 +235,7 @@ export default function MyHomework() {
                     </p>
                     {h.description && <p className="mt-1 whitespace-pre-wrap text-sm text-ink/70">{h.description}</p>}
                   </div>
-                  {graded && <p className="flex-shrink-0 text-sm font-bold text-brand-500">{t('scoreOutOf', { score: status.score })}</p>}
+                  {graded && <p className="flex-shrink-0 whitespace-nowrap text-sm font-bold text-brand-500">{t('scoreOutOf', { score: status.score })}</p>}
                 </div>
 
                 {graded && status.feedback && (
@@ -286,13 +284,13 @@ export default function MyHomework() {
                   {h.file_url && (
                     <button
                       onClick={() => handleOpenFile(h.file_url)}
-                      className="flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-xs font-semibold text-brand-500 hover:bg-brand-50"
+                      className="flex min-w-0 max-w-full items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-2 text-xs font-semibold text-brand-500 hover:bg-brand-50 sm:py-1.5"
                     >
-                      <Download size={13} /> {h.file_name || t('homeworkFileDefault')}
+                      <Download size={13} className="flex-shrink-0" /> <span className="min-w-0 max-w-[55vw] truncate sm:max-w-[220px]">{h.file_name || t('homeworkFileDefault')}</span>
                     </button>
                   )}
                   {!graded && roomLeft > 0 && (
-                    <label className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-semibold text-ink/60 hover:bg-ink/5">
+                    <label className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-2 text-xs font-semibold text-ink/60 hover:bg-ink/5 sm:py-1.5">
                       <Upload size={13} />
                       {t('selectImages', { max: MAX_IMAGES })}
                       <input
@@ -312,19 +310,19 @@ export default function MyHomework() {
                     <button
                       onClick={() => handleUploadPending(h.id)}
                       disabled={submittingId === h.id}
-                      className="flex items-center gap-1.5 rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-600 disabled:opacity-60"
+                      className="flex items-center gap-1.5 rounded-lg bg-brand-500 px-3 py-2 text-xs font-semibold text-white hover:bg-brand-600 disabled:opacity-60 sm:py-1.5"
                     >
                       {submittingId === h.id ? t('uploading') : t('uploadImagesCount', { count: pending.length })}
                     </button>
                   )}
                   {status.answer_file_url && (
-                    <button onClick={() => handleOpenFile(status.answer_file_url)} className="text-xs text-ink/50 hover:underline">
+                    <button onClick={() => handleOpenFile(status.answer_file_url)} className="py-2 text-xs text-ink/50 hover:underline sm:py-0">
                       {t('viewMySubmission')}
                     </button>
                   )}
                   <Link
                     to={`/chat?type=homework&id=${h.id}`}
-                    className="ml-auto flex items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-semibold text-ink/60 hover:bg-ink/5"
+                    className="flex items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-2 text-xs font-semibold text-ink/60 hover:bg-ink/5 sm:ml-auto sm:py-1.5"
                   >
                     <MessageSquare size={13} /> {t('discuss')}
                   </Link>

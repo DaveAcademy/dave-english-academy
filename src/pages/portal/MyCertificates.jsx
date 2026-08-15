@@ -76,36 +76,39 @@ export default function MyCertificates() {
       {certError && <div className="mb-4 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{certError}</div>}
 
       {certificates.length === 0 ? (
-        <div className="rounded-xl bg-white p-10 text-center shadow-card">
+        <div className="rounded-xl border border-ink/[0.06] bg-white p-10 text-center shadow-card">
           <p className="font-display text-lg font-semibold text-ink">{t('noCertificatesYet')}</p>
         </div>
       ) : (
         <div className="space-y-2">
           {certificates.map((c) => (
-            <div key={c.id} className="flex flex-wrap items-center gap-3 rounded-xl bg-white p-3 shadow-card">
+            <div
+              key={c.id}
+              className="flex flex-wrap items-center gap-3 rounded-xl border border-ink/[0.06] bg-white p-3 shadow-card sm:p-4"
+            >
               <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-500">
                 <Award size={18} />
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="font-semibold text-ink">{c.title}</p>
+              <div className="min-w-0 flex-1 basis-40">
+                <p className="break-words font-semibold text-ink">{c.title}</p>
                 <p className="text-xs text-ink/50">{t('issuedOn', { date: c.issued_date })}</p>
               </div>
-              <div className="flex flex-shrink-0 items-center gap-1.5">
+              <div className="flex w-full flex-shrink-0 flex-wrap items-center gap-1.5 sm:w-auto">
                 <button
                   onClick={() => handleDownload(c)}
-                  className="flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-xs font-semibold text-brand-500 hover:bg-brand-50"
+                  className="flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-2 text-xs font-semibold text-brand-500 hover:bg-brand-50 sm:py-1.5"
                 >
                   <Download size={14} /> PDF
                 </button>
                 <button
                   onClick={() => handlePrint(c)}
-                  className="flex items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-semibold text-ink/60 hover:bg-ink/5"
+                  className="flex items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-2 text-xs font-semibold text-ink/60 hover:bg-ink/5 sm:py-1.5"
                 >
                   <Printer size={14} /> {t('print')}
                 </button>
                 <Link
                   to={`/chat?type=certificate&id=${c.id}`}
-                  className="rounded-md p-1.5 text-ink/40 hover:bg-ink/5"
+                  className="rounded-md p-2 text-ink/40 hover:bg-ink/5 sm:p-1.5"
                   aria-label={t('discussCertificateAria')}
                 >
                   <MessageSquare size={15} />
