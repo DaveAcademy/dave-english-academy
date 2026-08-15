@@ -972,6 +972,36 @@ export async function getStudentRankingSummary(studentId) {
   return data[0];
 }
 
+// class_session-backed leaderboards (migration 0139) - deliberately
+// separate from getGroupLeaderboard/getStudentRankingSummary above,
+// which stay untouched. Only points explicitly attached to a real,
+// opened class_session appear here; a period with no session opened
+// yet returns an empty array, not a zero-filled roster - see the
+// migration's own comments for why that's intentional.
+export async function getClassLeaderboard(classSessionId) {
+  const { data, error } = await supabase.rpc('get_class_leaderboard', { p_class_session_id: classSessionId });
+  if (error) throw error;
+  return data;
+}
+
+export async function getWeeklyClassLeaderboard(classGroupId, weekStart = null) {
+  const { data, error } = await supabase.rpc('get_weekly_class_leaderboard', {
+    p_class_group_id: classGroupId,
+    p_week_start: weekStart,
+  });
+  if (error) throw error;
+  return data;
+}
+
+export async function getMonthlyClassLeaderboard(classGroupId, monthStart = null) {
+  const { data, error } = await supabase.rpc('get_monthly_class_leaderboard', {
+    p_class_group_id: classGroupId,
+    p_month_start: monthStart,
+  });
+  if (error) throw error;
+  return data;
+}
+
 // Per-class breakdown for the Rankings weekly/monthly view - a raw,
 // RLS-scoped select over point_transactions rather than a new RPC: the
 // existing table-level policies (pt_admin_select/pt_teacher_select,

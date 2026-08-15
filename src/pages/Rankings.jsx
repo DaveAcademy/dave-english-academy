@@ -33,11 +33,22 @@ import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { Tag, Users, ChevronDown, ChevronUp, ArrowUp, ArrowDown } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { useAuth } from '../lib/AuthContext';
-import { listPointCategories, listMyTeacherLevels, getGroupLeaderboard, listClassGroups, getClassSession, openClassSession } from '../lib/db';
+import {
+  listPointCategories,
+  listMyTeacherLevels,
+  getGroupLeaderboard,
+  listClassGroups,
+  getClassSession,
+  openClassSession,
+  getClassLeaderboard,
+  getWeeklyClassLeaderboard,
+  getMonthlyClassLeaderboard,
+} from '../lib/db';
 import { LEVELS } from '../lib/levels';
+import { addDaysISO, addMonthsISO, todayISO, formatMonthDay } from '../utils/date';
 
-const PERIODS = ['week', 'month', 'all_time'];
-const PERIOD_LABEL = { week: 'This Week', month: 'This Month', all_time: 'All Time' };
+const PERIODS = ['class', 'week', 'month', 'all_time'];
+const PERIOD_LABEL = { class: 'Class', week: 'This Week', month: 'This Month', all_time: 'All Time' };
 
 export default function Rankings() {
   const { students, awardStudentPoints, bulkAwardStudentPoints, error } = useAcademy();
@@ -345,9 +356,23 @@ export default function Rankings() {
   };
 
   // ---------- Level Leaderboard (read-only, level + period scoped) ----------
+  // Four tabs: Class / Week / Month / All Time. All Time still comes
+  // straight from get_group_leaderboard() (unchanged, migration 0129) -
+  // the calculation layer for Overall points was deliberately left alone
+  // (see docs/ranking-v2-class-session-design.md and migration 0139's own
+  // comments). Class/Week/Month now come from the class_session-backed
+  // RPCs added in 0139 instead of the retired lesson_date breakdown: only
+  // points explicitly attached to a real, opened class_session appear -
+  // a period with no session opened yet shows "no classes recorded" markers,
+  // never a fabricated zero-filled roster (see 0139's own comments on why
+  // that's intentional, not a gap to fill in later).
   const [boardLevel, setBoardLevel] = useState('A');
   const [boardPeriod, setBoardPeriod] = useState('month');
-  const [board, setBoard] = useState(null);
+  const [board, setBoard] = useState(null); // all_time only
+  const [boardGroups, setBoardGroups] = useState(null);
+  const [boardGroupId, setBoardGroupId] = useState('');
+  const [boardReferenceDate, setBoardReferenceDate] = useState(todayISO);
+  const [sessionBoard, setSessionBoard] = useState(null); // class/week/month: { sessions, rows } | []
   const boardLevelInitialized = useRef(false);
 
   useEffect(() => {
@@ -358,9 +383,10 @@ export default function Rankings() {
   }, [isTeacher, teacherLevels]);
 
   useEffect(() => {
+    if (boardPeriod !== 'all_time') return;
     let cancelled = false;
     setBoard(null);
-    getGroupLeaderboard(boardLevel, boardPeriod)
+    getGroupLeaderboard(boardLevel, 'all_time')
       .then((rows) => {
         if (!cancelled) setBoard(rows || []);
       })
@@ -372,17 +398,98 @@ export default function Rankings() {
     };
   }, [boardLevel, boardPeriod, refreshKey]);
 
-  // The per-class-date breakdown that used to render here (one column per
-  // lesson_date, capped to the 3 most recent) was retired 2026-08-15: it
-  // inferred "a class" from raw lesson_date and assumed a fixed Tue/Thu/Sat
-  // schedule, both of which the Ranking V2 audit found to be wrong (real
-  // award dates don't follow a fixed weekday pattern). Showing it alongside
-  // the new class_session model (see docs/ranking-v2-class-session-design.md)
-  // would present two different, disagreeing definitions of "a class" on
-  // the same page. It will be replaced by a session-based breakdown once
-  // the Week/Month ranking RPCs are rebuilt around class_session - not in
-  // this change. listClassPointTransactions() itself is left defined in
-  // storageBridge.js (unused for now) rather than deleted.
+  // Resolve the class_group(s) for the selected level - same lookup the
+  // Class Session panel above already uses. Auto-selects the sole group
+  // when there's exactly one (true for every level today).
+  useEffect(() => {
+    let cancelled = false;
+    setBoardGroups(null);
+    setBoardGroupId('');
+    listClassGroups(boardLevel)
+      .then((groups) => {
+        if (cancelled) return;
+        setBoardGroups(groups || []);
+        if ((groups || []).length === 1) setBoardGroupId(String(groups[0].id));
+      })
+      .catch(() => {
+        if (!cancelled) setBoardGroups([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [boardLevel]);
+
+  useEffect(() => {
+    if (boardPeriod === 'all_time' || !boardGroupId) return;
+    let cancelled = false;
+    setSessionBoard(null);
+    const load = async () => {
+      if (boardPeriod === 'class') {
+        const existing = await getClassSession(boardGroupId, boardReferenceDate);
+        if (!existing) return [];
+        return getClassLeaderboard(existing.id);
+      }
+      if (boardPeriod === 'week') return getWeeklyClassLeaderboard(boardGroupId, boardReferenceDate);
+      return getMonthlyClassLeaderboard(boardGroupId, boardReferenceDate);
+    };
+    load()
+      .then((rows) => {
+        if (!cancelled) setSessionBoard(rows || []);
+      })
+      .catch(() => {
+        if (!cancelled) setSessionBoard([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [boardPeriod, boardGroupId, boardReferenceDate, refreshKey]);
+
+  // Pivots the long-format week/month rows (one row per student per
+  // session) into one row per student with a column per real session -
+  // the same shape the old, now-retired lesson_date breakdown rendered,
+  // just built from real class_session rows instead of inferred dates.
+  // Class period rows are already one-per-student (a single session has
+  // no columns to pivot), so they pass through as-is with total=points.
+  const sessionView = useMemo(() => {
+    if (!sessionBoard) return null;
+    if (boardPeriod === 'class') {
+      return {
+        sessions: [],
+        rows: [...sessionBoard]
+          .sort((a, b) => a.rank - b.rank || a.real_name.localeCompare(b.real_name))
+          .map((r) => ({ studentId: r.student_id, realName: r.real_name, perSession: {}, total: Number(r.points), rank: r.rank })),
+      };
+    }
+    const totalKey = boardPeriod === 'week' ? 'week_total' : 'month_total';
+    const rankKey = boardPeriod === 'week' ? 'week_rank' : 'month_rank';
+    const sessionsMap = new Map();
+    const byStudent = new Map();
+    for (const r of sessionBoard) {
+      sessionsMap.set(r.session_id, r.session_date);
+      let entry = byStudent.get(r.student_id);
+      if (!entry) {
+        entry = { studentId: r.student_id, realName: r.real_name, perSession: {}, total: Number(r[totalKey]), rank: r[rankKey] };
+        byStudent.set(r.student_id, entry);
+      }
+      entry.perSession[r.session_id] = Number(r.session_points);
+    }
+    const sessions = [...sessionsMap.entries()].map(([id, date]) => ({ id, date })).sort((a, b) => a.date.localeCompare(b.date));
+    const rows = [...byStudent.values()].sort((a, b) => a.rank - b.rank || a.realName.localeCompare(b.realName));
+    return { sessions, rows };
+  }, [sessionBoard, boardPeriod]);
+
+  // Month navigation anchors to the 1st of the currently-viewed month
+  // before stepping, so addMonthsISO never lands on a day that doesn't
+  // exist in the target month (e.g. stepping from the 31st) - this only
+  // touches boardReferenceDate at the moment of navigating, not as a
+  // side effect of switching tabs, so Week/Class keep showing "today" by
+  // default even after the Month tab has been visited.
+  const navReferenceDate = (deltaWeeks, deltaMonths) => {
+    setBoardReferenceDate((d) =>
+      deltaMonths ? addMonthsISO(`${d.slice(0, 7)}-01`, deltaMonths) : addDaysISO(d, deltaWeeks * 7)
+    );
+  };
+
   const medal = (i) => (i === 0 ? 'bg-levelB' : i === 1 ? 'bg-ink/20' : i === 2 ? 'bg-levelA' : 'bg-ink/5');
   const medalText = (i) => (i <= 2 ? 'text-white' : 'text-ink/50');
 
@@ -720,45 +827,144 @@ export default function Rankings() {
           </div>
         </div>
 
-        {board === null ? (
+        {boardPeriod !== 'all_time' && (
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            {boardGroups && boardGroups.length > 1 && (
+              <select value={boardGroupId} onChange={(e) => setBoardGroupId(e.target.value)} className="input w-auto text-xs">
+                <option value="">Select group...</option>
+                {boardGroups.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name}
+                  </option>
+                ))}
+              </select>
+            )}
+            {boardPeriod === 'class' ? (
+              <input
+                type="date"
+                value={boardReferenceDate}
+                onChange={(e) => setBoardReferenceDate(e.target.value)}
+                className="input w-auto text-xs"
+              />
+            ) : (
+              <div className="flex items-center gap-1.5 text-xs text-ink/60">
+                <button
+                  type="button"
+                  onClick={() => navReferenceDate(boardPeriod === 'week' ? -1 : 0, boardPeriod === 'month' ? -1 : 0)}
+                  className="rounded-lg bg-ink/5 px-2 py-1 font-semibold hover:bg-ink/10"
+                >
+                  ← Prev
+                </button>
+                <span className="font-medium text-ink/70">
+                  {boardPeriod === 'week'
+                    ? `Week of ${formatMonthDay(new Date(`${boardReferenceDate}T00:00:00Z`))}`
+                    : new Date(`${boardReferenceDate}T00:00:00Z`).toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' })}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => navReferenceDate(boardPeriod === 'week' ? 1 : 0, boardPeriod === 'month' ? 1 : 0)}
+                  className="rounded-lg bg-ink/5 px-2 py-1 font-semibold hover:bg-ink/10"
+                >
+                  Next →
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {boardPeriod === 'all_time' ? (
+          board === null ? (
+            <p className="py-6 text-center text-sm text-ink/50">Loading...</p>
+          ) : board.length === 0 ? (
+            <p className="py-6 text-center text-sm text-ink/50">No active students in Level {boardLevel}.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[520px] text-left text-sm">
+                <thead>
+                  <tr className="border-b border-ink/10">
+                    <th className="px-3 py-2 font-semibold text-ink/70">Rank</th>
+                    <th className="px-3 py-2 font-semibold text-ink/70">Name</th>
+                    <th className="px-3 py-2 font-semibold text-ink/70">Points</th>
+                    <th className="px-3 py-2 font-semibold text-ink/70">Change</th>
+                    <th className="px-3 py-2 font-semibold text-ink/70">Attendance</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {board.map((row) => (
+                    <tr key={row.student_id} className="border-b border-ink/5 last:border-0">
+                      <td className="px-3 py-2 font-bold text-ink/70">
+                        <span
+                          className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold ${medal(row.rank - 1)} ${medalText(row.rank - 1)}`}
+                        >
+                          {row.rank}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2 font-medium text-ink">{row.real_name}</td>
+                      <td className="px-3 py-2 font-bold text-brand-500">{row.points}</td>
+                      <td className="px-3 py-2">
+                        {row.rank_change == null || row.rank_change === 0 ? (
+                          <span className="text-ink/30">—</span>
+                        ) : (
+                          <span className={`flex items-center gap-0.5 font-semibold ${row.rank_change > 0 ? 'text-active' : 'text-inactive'}`}>
+                            {row.rank_change > 0 ? <ArrowUp size={13} /> : <ArrowDown size={13} />}
+                            {Math.abs(row.rank_change)}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-3 py-2 text-ink/60">{row.attendance_rate != null ? `${row.attendance_rate}%` : '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )
+        ) : !boardGroupId ? (
+          <p className="py-6 text-center text-sm text-ink/50">
+            {boardGroups === null ? 'Loading...' : 'Select a group to see its leaderboard.'}
+          </p>
+        ) : sessionView === null ? (
           <p className="py-6 text-center text-sm text-ink/50">Loading...</p>
-        ) : board.length === 0 ? (
-          <p className="py-6 text-center text-sm text-ink/50">No active students in Level {boardLevel}.</p>
+        ) : sessionView.rows.length === 0 ? (
+          <p className="py-6 text-center text-sm text-ink/50">
+            {boardPeriod === 'class'
+              ? 'No session opened for this date.'
+              : `No classes recorded for Level ${boardLevel} in this ${boardPeriod}.`}
+          </p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[520px] text-left text-sm">
+            <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-ink/10">
-                  <th className="px-3 py-2 font-semibold text-ink/70">Rank</th>
-                  <th className="px-3 py-2 font-semibold text-ink/70">Name</th>
-                  <th className="px-3 py-2 font-semibold text-ink/70">Points</th>
-                  <th className="px-3 py-2 font-semibold text-ink/70">Change</th>
-                  <th className="px-3 py-2 font-semibold text-ink/70">Attendance</th>
+                  <th className="sticky left-0 z-10 whitespace-nowrap bg-white px-3 py-2 font-semibold text-ink/70">Student</th>
+                  {sessionView.sessions.map((s) => (
+                    <th key={s.id} className="whitespace-nowrap px-3 py-2 text-center font-semibold text-ink/70">
+                      {formatMonthDay(new Date(`${s.date}T00:00:00Z`))}
+                    </th>
+                  ))}
+                  <th className="whitespace-nowrap px-3 py-2 text-center font-bold text-ink">
+                    {boardPeriod === 'class' ? 'Points' : boardPeriod === 'week' ? 'Week Total' : 'Month Total'}
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {board.map((row) => (
-                  <tr key={row.student_id} className="border-b border-ink/5 last:border-0">
-                    <td className="px-3 py-2 font-bold text-ink/70">
-                      <span
-                        className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold ${medal(row.rank - 1)} ${medalText(row.rank - 1)}`}
-                      >
-                        {row.rank}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2 font-medium text-ink">{row.real_name}</td>
-                    <td className="px-3 py-2 font-bold text-brand-500">{row.points}</td>
-                    <td className="px-3 py-2">
-                      {row.rank_change == null || row.rank_change === 0 ? (
-                        <span className="text-ink/30">—</span>
-                      ) : (
-                        <span className={`flex items-center gap-0.5 font-semibold ${row.rank_change > 0 ? 'text-active' : 'text-inactive'}`}>
-                          {row.rank_change > 0 ? <ArrowUp size={13} /> : <ArrowDown size={13} />}
-                          {Math.abs(row.rank_change)}
+                {sessionView.rows.map((row) => (
+                  <tr key={row.studentId} className="border-b border-ink/5 last:border-0">
+                    <td className="sticky left-0 z-10 whitespace-nowrap bg-white px-3 py-2">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold ${medal(row.rank - 1)} ${medalText(row.rank - 1)}`}
+                        >
+                          {row.rank}
                         </span>
-                      )}
+                        <span className="font-medium text-ink">{row.realName}</span>
+                      </div>
                     </td>
-                    <td className="px-3 py-2 text-ink/60">{row.attendance_rate != null ? `${row.attendance_rate}%` : '—'}</td>
+                    {sessionView.sessions.map((s) => (
+                      <td key={s.id} className="px-3 py-2 text-center text-ink/70">
+                        {row.perSession[s.id] ?? 0}
+                      </td>
+                    ))}
+                    <td className="px-3 py-2 text-center text-base font-bold text-brand-500">{row.total}</td>
                   </tr>
                 ))}
               </tbody>
