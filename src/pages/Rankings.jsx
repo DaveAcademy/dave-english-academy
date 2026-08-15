@@ -21,13 +21,14 @@
 // enforce the real security boundary identically for both.
 //
 // The Level Leaderboard below is read-only: no award controls in its rows.
-// Week/Month/All Time all render the same Rank/Points/Change/Attendance
-// table, straight from get_group_leaderboard(). A per-class-date breakdown
-// used to render here too; retired 2026-08-15 (see note further down) since
-// it inferred "a class" from raw lesson_date under an assumed Tue/Thu/Sat
-// schedule that turned out not to hold. A session-based breakdown, keyed
-// on the real class_session model, replaces it once the Week/Month RPCs
-// are rebuilt around class_session.
+// Four tabs: Class / Week / Month / All Time. All Time renders the
+// Rank/Points/Change/Attendance table straight from get_group_leaderboard()
+// (migration 0129), unchanged. Class/Week/Month render a per-session
+// breakdown from get_class_leaderboard()/get_weekly_class_leaderboard()/
+// get_monthly_class_leaderboard() (migration 0139) - real class_session
+// rows, not lesson_date. This replaced an older per-class-date breakdown
+// (retired 2026-08-15) that inferred "a class" from raw lesson_date under
+// an assumed Tue/Thu/Sat schedule that turned out not to hold.
 
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { Tag, Users, ChevronDown, ChevronUp, ArrowUp, ArrowDown } from 'lucide-react';
