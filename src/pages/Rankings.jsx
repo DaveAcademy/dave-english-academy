@@ -21,18 +21,19 @@
 // enforce the real security boundary identically for both.
 //
 // The Level Leaderboard below is read-only: no award controls in its rows.
-// Its Month/Week views show a per-class-date breakdown (capped to the most
-// recent 3 classes - see recentClassDates) alongside the period total, from
-// the same get_group_leaderboard() + listClassPointTransactions() data this
-// page already fetched - the cap only trims which columns render, it never
-// changes the fetched data or the total/rank shown (those still come
-// straight from get_group_leaderboard(), same as always).
+// Week/Month/All Time all render the same Rank/Points/Change/Attendance
+// table, straight from get_group_leaderboard(). A per-class-date breakdown
+// used to render here too; retired 2026-08-15 (see note further down) since
+// it inferred "a class" from raw lesson_date under an assumed Tue/Thu/Sat
+// schedule that turned out not to hold. A session-based breakdown, keyed
+// on the real class_session model, replaces it once the Week/Month RPCs
+// are rebuilt around class_session.
 
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { Tag, Users, ChevronDown, ChevronUp, ArrowUp, ArrowDown } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { useAuth } from '../lib/AuthContext';
-import { listPointCategories, listMyTeacherLevels, getGroupLeaderboard, getPeriodBounds, listClassPointTransactions } from '../lib/db';
+import { listPointCategories, listMyTeacherLevels, getGroupLeaderboard, listClassGroups, getClassSession, openClassSession } from '../lib/db';
 import { LEVELS } from '../lib/levels';
 
 const PERIODS = ['week', 'month', 'all_time'];
@@ -89,6 +90,89 @@ export default function Rankings() {
   }, [students]);
 
   const awardableStudents = useMemo(() => ranked.filter((s) => canAwardLevel(s.level)), [ranked, isAdmin, isTeacher, teacherLevels]);
+
+  // ---------- Class Session (open/select today's session) ----------
+  // A point award never implies a class happened - a session must be
+  // explicitly opened first (docs/ranking-v2-class-session-design.md
+  // §4). This section is the explicit-open step; Add Points/Award Class
+  // Points below only attach class_session_id when the session's level
+  // matches the award's level, and only if a session has been opened.
+  // Not opening one is fine - the award still records, just without a
+  // session attached, same as before this feature existed.
+  const todayLocalISO = () => {
+    const d = new Date();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${d.getFullYear()}-${m}-${day}`;
+  };
+
+  const [sessionLevel, setSessionLevel] = useState('');
+  const [sessionClassGroups, setSessionClassGroups] = useState(null);
+  const [sessionGroupId, setSessionGroupId] = useState('');
+  const [sessionDate, setSessionDate] = useState(todayLocalISO);
+  const [openSession, setOpenSession] = useState(null); // { id, class_group_id, session_date } | null
+  const [sessionPending, setSessionPending] = useState(false);
+  const [sessionMessage, setSessionMessage] = useState('');
+  const sessionLevelInitialized = useRef(false);
+
+  useEffect(() => {
+    if (awardableLevels.length > 0 && !sessionLevelInitialized.current) {
+      setSessionLevel(awardableLevels[0]);
+      sessionLevelInitialized.current = true;
+    }
+  }, [awardableLevels]);
+
+  useEffect(() => {
+    if (!sessionLevel) return;
+    let cancelled = false;
+    setSessionClassGroups(null);
+    setSessionGroupId('');
+    listClassGroups(sessionLevel)
+      .then((groups) => {
+        if (cancelled) return;
+        setSessionClassGroups(groups || []);
+        if ((groups || []).length === 1) setSessionGroupId(String(groups[0].id));
+      })
+      .catch(() => {
+        if (!cancelled) setSessionClassGroups([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [sessionLevel]);
+
+  useEffect(() => {
+    if (!sessionGroupId || !sessionDate) {
+      setOpenSession(null);
+      return;
+    }
+    let cancelled = false;
+    getClassSession(sessionGroupId, sessionDate)
+      .then((row) => {
+        if (!cancelled) setOpenSession(row);
+      })
+      .catch(() => {
+        if (!cancelled) setOpenSession(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [sessionGroupId, sessionDate]);
+
+  const handleOpenSession = async () => {
+    if (!sessionGroupId || !sessionDate) return;
+    setSessionPending(true);
+    setSessionMessage('');
+    try {
+      const row = await openClassSession({ classGroupId: sessionGroupId, sessionDate, openedBy: session.user.id });
+      setOpenSession(row);
+      setSessionMessage('Session ready.');
+    } catch {
+      setSessionMessage('Could not open session. Please try again.');
+    } finally {
+      setSessionPending(false);
+    }
+  };
 
   // ---------- Add Points (primary workflow, open by default) ----------
   const [detailedOpen, setDetailedOpen] = useState(true);
@@ -152,6 +236,7 @@ export default function Rankings() {
         points,
         reason,
         awardedBy: session.user.id,
+        classSessionId: openSession && sessionLevel === student.level ? openSession.id : null,
       });
       setAwardMessage(`${points > 0 ? 'Added' : 'Deducted'} ${points > 0 ? '+' : ''}${points} ${points > 0 ? 'to' : 'from'} ${student.real_name}.`);
       setAwardStudentId('');
@@ -235,6 +320,7 @@ export default function Rankings() {
     setBulkPending(true);
     setBulkMessage('');
     try {
+      const bulkSessionId = openSession && sessionLevel === bulkLevel ? openSession.id : null;
       await bulkAwardStudentPoints(
         entries.map(({ student, points }) => ({
           studentId: student.id,
@@ -244,6 +330,7 @@ export default function Rankings() {
           points,
           reason: 'Bulk class points via Rankings',
           awardedBy: session.user.id,
+          classSessionId: bulkSessionId,
         }))
       );
       setBulkMessage(`Awarded points to ${entries.length} student${entries.length === 1 ? '' : 's'}.`);
@@ -285,91 +372,17 @@ export default function Rankings() {
     };
   }, [boardLevel, boardPeriod, refreshKey]);
 
-  // ---------- Class-by-class breakdown (Week/Month leaderboard views) ----------
-  // week_bounds()/month_bounds() (migration 0023, exposed via
-  // get_period_bounds in 0025) stay the single source of truth for what
-  // "this week"/"this month" means - period_start/period_end are always
-  // asked of the server, never computed here, so this can't quietly drift
-  // from the same boundaries get_group_leaderboard() itself uses.
-  const [classTransactions, setClassTransactions] = useState(null);
-
-  useEffect(() => {
-    if (boardPeriod === 'all_time') {
-      setClassTransactions(null);
-      return;
-    }
-    let cancelled = false;
-    setClassTransactions(null);
-    getPeriodBounds(boardPeriod)
-      .then((bounds) => listClassPointTransactions(boardLevel, bounds.period_start, bounds.period_end))
-      .then((rows) => {
-        if (!cancelled) setClassTransactions(rows || []);
-      })
-      .catch(() => {
-        if (!cancelled) setClassTransactions([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [boardLevel, boardPeriod, refreshKey]);
-
-  // Distinct class dates actually present in the ledger for this
-  // level/period, ascending. recentClassDates below is what actually
-  // renders as columns - capped to the most recent 3 so a full month's
-  // worth of classes doesn't turn into a dozen-plus column table. The
-  // Monthly/Weekly Total column (from `board`, not summed from these
-  // dates) is unaffected by the cap either way.
-  const classDates = useMemo(() => {
-    if (!classTransactions) return [];
-    return [...new Set(classTransactions.map((t) => t.lesson_date))].sort();
-  }, [classTransactions]);
-
-  const recentClassDates = useMemo(() => classDates.slice(-3), [classDates]);
-
-  // Classes are held Tue/Thu/Sat, so a complete week has exactly 3 distinct
-  // class dates. classDates (not the display-capped recentClassDates) is
-  // the true count of classes actually recorded so far this week - if it's
-  // under 3, the week's total below is real but partial, not a silent zero
-  // for the missing class(es). Only meaningful for the week tab; a month is
-  // expected to be "incomplete" until it ends, so this doesn't apply there.
-  const isIncompleteWeek = boardPeriod === 'week' && classDates.length > 0 && classDates.length < 3;
-
-  // Pivoted student x date grid, ordered and ranked from `board` (already
-  // fetched above via get_group_leaderboard for this exact level/period)
-  // rather than re-sorting/re-ranking client-side from the raw
-  // transactions - board's total and rank() already are the authoritative
-  // numbers get_group_leaderboard computes for this level/period, so this
-  // can never show a total that disagrees with them, and two students the
-  // ledger says are genuinely tied get the same rank here too, instead of
-  // a false #1/#2 split from array position. classTransactions is still
-  // needed for the one thing board doesn't have: the per-class-date
-  // breakdown. Every active student in the level is included (board
-  // already includes zero-point students) so nobody is silently omitted.
-  const classRows = useMemo(() => {
-    if (!classTransactions || !board) return [];
-    const byStudent = {};
-    for (const t of classTransactions) {
-      const perDate = byStudent[t.student_id] || (byStudent[t.student_id] = {});
-      perDate[t.lesson_date] = (perDate[t.lesson_date] || 0) + Number(t.points);
-    }
-    return board.map((row) => ({
-      studentId: row.student_id,
-      realName: row.real_name,
-      perDate: byStudent[row.student_id] || {},
-      total: row.points,
-      rank: row.rank,
-    }));
-  }, [classTransactions, board]);
-
-  // Date-only formatting via Date.UTC, deliberately never touching the
-  // browser's local timezone - same reasoning as addDaysISO in utils/date.js
-  // (a plain `new Date(iso)` parse-then-local-getter can shift the
-  // displayed day depending on where the browser is).
-  const formatClassDate = (iso) => {
-    const [y, m, d] = iso.split('-').map(Number);
-    return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
-  };
-
+  // The per-class-date breakdown that used to render here (one column per
+  // lesson_date, capped to the 3 most recent) was retired 2026-08-15: it
+  // inferred "a class" from raw lesson_date and assumed a fixed Tue/Thu/Sat
+  // schedule, both of which the Ranking V2 audit found to be wrong (real
+  // award dates don't follow a fixed weekday pattern). Showing it alongside
+  // the new class_session model (see docs/ranking-v2-class-session-design.md)
+  // would present two different, disagreeing definitions of "a class" on
+  // the same page. It will be replaced by a session-based breakdown once
+  // the Week/Month ranking RPCs are rebuilt around class_session - not in
+  // this change. listClassPointTransactions() itself is left defined in
+  // storageBridge.js (unused for now) rather than deleted.
   const medal = (i) => (i === 0 ? 'bg-levelB' : i === 1 ? 'bg-ink/20' : i === 2 ? 'bg-levelA' : 'bg-ink/5');
   const medalText = (i) => (i <= 2 ? 'text-white' : 'text-ink/50');
 
@@ -396,6 +409,62 @@ export default function Rankings() {
         <div className="mb-4 rounded-xl bg-white p-10 text-center shadow-card">
           <p className="font-display text-lg font-semibold text-ink">No active students</p>
         </div>
+      )}
+
+      {canAwardAtAll && awardableLevels.length > 0 && (
+        <section className="mb-4 rounded-xl bg-white p-4 shadow-card">
+          <h2 className="mb-1 font-display text-sm font-bold text-ink">Class Session</h2>
+          <p className="mb-3 text-xs text-ink/50">
+            Open today's class before adding points, so they're tied to this session. Skipping this still records
+            points - they just won't show up in the per-class breakdown once that's built.
+          </p>
+          <div className="flex flex-wrap items-end gap-2">
+            <div className="flex gap-1">
+              {awardableLevels.map((lvl) => (
+                <button
+                  key={lvl}
+                  type="button"
+                  onClick={() => setSessionLevel(lvl)}
+                  className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+                    sessionLevel === lvl ? 'bg-brand-500 text-white' : 'bg-ink/5 text-ink/60 hover:text-ink'
+                  }`}
+                >
+                  Level {lvl}
+                </button>
+              ))}
+            </div>
+            {sessionClassGroups && sessionClassGroups.length > 1 && (
+              <select value={sessionGroupId} onChange={(e) => setSessionGroupId(e.target.value)} className="input w-auto text-xs">
+                <option value="">Select group...</option>
+                {sessionClassGroups.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name}
+                  </option>
+                ))}
+              </select>
+            )}
+            <input
+              type="date"
+              value={sessionDate}
+              onChange={(e) => setSessionDate(e.target.value)}
+              className="input w-auto text-xs"
+            />
+            <button
+              type="button"
+              onClick={handleOpenSession}
+              disabled={sessionPending || !sessionGroupId || !!openSession}
+              className="rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-600 disabled:opacity-50"
+            >
+              {sessionPending ? 'Opening...' : openSession ? 'Session Open' : 'Open Session'}
+            </button>
+          </div>
+          {openSession && (
+            <p className="mt-2 text-xs font-medium text-active">
+              Session open for Level {sessionLevel} on {sessionDate}. New points below will attach to it automatically for this level.
+            </p>
+          )}
+          {sessionMessage && !openSession && <p className="mt-2 text-xs text-ink/60">{sessionMessage}</p>}
+        </section>
       )}
 
       {canAwardAtAll && awardableStudents.length > 0 && (
@@ -651,109 +720,49 @@ export default function Rankings() {
           </div>
         </div>
 
-        {boardPeriod === 'all_time' ? (
-          board === null ? (
-            <p className="py-6 text-center text-sm text-ink/50">Loading...</p>
-          ) : board.length === 0 ? (
-            <p className="py-6 text-center text-sm text-ink/50">No active students in Level {boardLevel}.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[520px] text-left text-sm">
-                <thead>
-                  <tr className="border-b border-ink/10">
-                    <th className="px-3 py-2 font-semibold text-ink/70">Rank</th>
-                    <th className="px-3 py-2 font-semibold text-ink/70">Name</th>
-                    <th className="px-3 py-2 font-semibold text-ink/70">Points</th>
-                    <th className="px-3 py-2 font-semibold text-ink/70">Change</th>
-                    <th className="px-3 py-2 font-semibold text-ink/70">Attendance</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {board.map((row) => (
-                    <tr key={row.student_id} className="border-b border-ink/5 last:border-0">
-                      <td className="px-3 py-2 font-bold text-ink/70">{row.rank}</td>
-                      <td className="px-3 py-2 font-medium text-ink">{row.real_name}</td>
-                      <td className="px-3 py-2 font-bold text-brand-500">{row.points}</td>
-                      <td className="px-3 py-2">
-                        {row.rank_change == null || row.rank_change === 0 ? (
-                          <span className="text-ink/30">—</span>
-                        ) : (
-                          <span className={`flex items-center gap-0.5 font-semibold ${row.rank_change > 0 ? 'text-active' : 'text-inactive'}`}>
-                            {row.rank_change > 0 ? <ArrowUp size={13} /> : <ArrowDown size={13} />}
-                            {Math.abs(row.rank_change)}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-3 py-2 text-ink/60">{row.attendance_rate != null ? `${row.attendance_rate}%` : '—'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )
-        ) : classTransactions === null || board === null ? (
+        {board === null ? (
           <p className="py-6 text-center text-sm text-ink/50">Loading...</p>
-        ) : classRows.length === 0 ? (
+        ) : board.length === 0 ? (
           <p className="py-6 text-center text-sm text-ink/50">No active students in Level {boardLevel}.</p>
         ) : (
-          // Class-by-class breakdown: one column per class date, capped to
-          // the most recent 3 (recentClassDates) so this stays readable at
-          // a glance instead of growing to a dozen-plus columns over a full
-          // month. A 0 cell wherever a student has no recorded points for
-          // that class rather than a blank/ambiguous dash. Rank/Total are
-          // always exactly what get_group_leaderboard says (board, via the
-          // classRows memo above) - never a client-recomputed number, so
-          // capping the visible dates can't disagree with the real total,
-          // and a genuine tie still renders identically (medal keys off
-          // row.rank, not array position). The student-name column stays
-          // pinned while date columns scroll horizontally.
           <div className="overflow-x-auto">
-            {isIncompleteWeek && (
-              <p className="mb-2 rounded-lg bg-levelB/10 px-3 py-2 text-xs font-medium text-ink/70">
-                Incomplete week - {classDates.length} of 3 classes recorded so far. The 3-Class Weekly Total below only reflects
-                classes held so far this week, not a zero for the rest.
-              </p>
-            )}
-            <table className="w-full text-left text-sm">
+            <table className="w-full min-w-[520px] text-left text-sm">
               <thead>
                 <tr className="border-b border-ink/10">
-                  <th className="sticky left-0 z-10 whitespace-nowrap bg-white px-3 py-2 font-semibold text-ink/70">Student</th>
-                  {recentClassDates.map((d) => (
-                    <th key={d} className="whitespace-nowrap px-3 py-2 text-center font-semibold text-ink/70">
-                      {formatClassDate(d)}
-                    </th>
-                  ))}
-                  <th className="whitespace-nowrap px-3 py-2 text-center font-bold text-ink">
-                    {boardPeriod === 'week' ? '3-Class Weekly Total' : 'Monthly Total'}
-                  </th>
+                  <th className="px-3 py-2 font-semibold text-ink/70">Rank</th>
+                  <th className="px-3 py-2 font-semibold text-ink/70">Name</th>
+                  <th className="px-3 py-2 font-semibold text-ink/70">Points</th>
+                  <th className="px-3 py-2 font-semibold text-ink/70">Change</th>
+                  <th className="px-3 py-2 font-semibold text-ink/70">Attendance</th>
                 </tr>
               </thead>
               <tbody>
-                {classRows.map((row) => (
-                  <tr key={row.studentId} className="border-b border-ink/5 last:border-0">
-                    <td className="sticky left-0 z-10 whitespace-nowrap bg-white px-3 py-2">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold ${medal(row.rank - 1)} ${medalText(row.rank - 1)}`}
-                        >
-                          {row.rank}
-                        </span>
-                        <span className="font-medium text-ink">{row.realName}</span>
-                      </div>
+                {board.map((row) => (
+                  <tr key={row.student_id} className="border-b border-ink/5 last:border-0">
+                    <td className="px-3 py-2 font-bold text-ink/70">
+                      <span
+                        className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold ${medal(row.rank - 1)} ${medalText(row.rank - 1)}`}
+                      >
+                        {row.rank}
+                      </span>
                     </td>
-                    {recentClassDates.map((d) => (
-                      <td key={d} className="px-3 py-2 text-center text-ink/70">
-                        {row.perDate[d] ?? 0}
-                      </td>
-                    ))}
-                    <td className="px-3 py-2 text-center text-base font-bold text-brand-500">{row.total}</td>
+                    <td className="px-3 py-2 font-medium text-ink">{row.real_name}</td>
+                    <td className="px-3 py-2 font-bold text-brand-500">{row.points}</td>
+                    <td className="px-3 py-2">
+                      {row.rank_change == null || row.rank_change === 0 ? (
+                        <span className="text-ink/30">—</span>
+                      ) : (
+                        <span className={`flex items-center gap-0.5 font-semibold ${row.rank_change > 0 ? 'text-active' : 'text-inactive'}`}>
+                          {row.rank_change > 0 ? <ArrowUp size={13} /> : <ArrowDown size={13} />}
+                          {Math.abs(row.rank_change)}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-3 py-2 text-ink/60">{row.attendance_rate != null ? `${row.attendance_rate}%` : '—'}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            {classDates.length === 0 && (
-              <p className="py-3 text-center text-xs text-ink/40">No classes recorded for Level {boardLevel} in this period yet.</p>
-            )}
           </div>
         )}
       </section>

@@ -93,6 +93,7 @@ export async function awardPoints({
   awardedBy,
   isReversal = false,
   reversedTransactionId = null,
+  classSessionId = null,
 }) {
   const { data, error } = await supabase
     .from('point_transactions')
@@ -106,6 +107,7 @@ export async function awardPoints({
       awarded_by: awardedBy,
       is_reversal: isReversal,
       reversed_transaction_id: reversedTransactionId,
+      class_session_id: classSessionId,
     })
     .select('id')
     .single();
@@ -122,7 +124,7 @@ export async function awardPoints({
 export async function bulkAwardPoints(entries) {
   if (!entries.length) return;
   const { error } = await supabase.from('point_transactions').insert(
-    entries.map(({ studentId, level, categoryId, categoryKey, points, reason, awardedBy }) => ({
+    entries.map(({ studentId, level, categoryId, categoryKey, points, reason, awardedBy, classSessionId }) => ({
       student_id: studentId,
       level,
       category_id: categoryId ?? null,
@@ -130,9 +132,67 @@ export async function bulkAwardPoints(entries) {
       points,
       reason,
       awarded_by: awardedBy,
+      class_session_id: classSessionId ?? null,
     }))
   );
   if (error) throw error;
+}
+
+// ---------------------------------------------------------------------
+// Ranking V2: class_group / class_session (migrations 0137-0138).
+// Session identity is the teaching group, never the awarding teacher -
+// see docs/ranking-v2-class-session-design.md. A session must be
+// explicitly opened; nothing here infers one from a point award.
+
+// Groups a level/teacher is actually allowed to see, per the same RLS
+// (class_group_teacher_all / class_group_admin_all, migration 0137) that
+// governs every other read here - this is just what that RLS returns for
+// the given level, no separate authorization logic on the client.
+export async function listClassGroups(level) {
+  const { data, error } = await supabase
+    .from('class_group')
+    .select('id, level, name, active')
+    .eq('level', level)
+    .eq('active', true)
+    .order('name');
+  if (error) throw error;
+  return data;
+}
+
+// Does a session already exist for this group/date? Read-only lookup so
+// the UI can show "session already open" before the teacher tries to
+// open one, without relying on catching an insert error for that case.
+export async function getClassSession(classGroupId, sessionDate) {
+  const { data, error } = await supabase
+    .from('class_session')
+    .select('id, class_group_id, session_date, opened_by')
+    .eq('class_group_id', classGroupId)
+    .eq('session_date', sessionDate)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+// Opens a session for (classGroupId, sessionDate), or returns the one
+// that's already open - idempotent by construction via the
+// UNIQUE(class_group_id, session_date) constraint (migration 0137), not
+// by a client-side check-then-insert race. Insert first; on a unique
+// violation (23505), the session was opened concurrently (or already
+// existed), so fetch and return that row instead of surfacing an error.
+// Authorization is enforced by class_session RLS the same as every other
+// write in this app - this function adds no security logic of its own.
+export async function openClassSession({ classGroupId, sessionDate, openedBy }) {
+  const { data, error } = await supabase
+    .from('class_session')
+    .insert({ class_group_id: classGroupId, session_date: sessionDate, opened_by: openedBy })
+    .select('id, class_group_id, session_date, opened_by')
+    .single();
+  if (!error) return data;
+  if (error.code === '23505') {
+    const existing = await getClassSession(classGroupId, sessionDate);
+    if (existing) return existing;
+  }
+  throw error;
 }
 
 // Active categories in display order - id is what makes get_my_point_history()
