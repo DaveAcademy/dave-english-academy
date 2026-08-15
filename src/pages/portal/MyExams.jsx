@@ -126,7 +126,7 @@ export default function MyExams() {
 
   if (!me) {
     return (
-      <div className="rounded-xl bg-white p-10 text-center shadow-card">
+      <div className="rounded-xl border border-ink/[0.06] bg-white p-10 text-center shadow-card">
         <p className="font-display text-lg font-semibold text-ink">{t('notLinkedYet')}</p>
       </div>
     );
@@ -161,14 +161,14 @@ export default function MyExams() {
             const status = statusOf(result, overdue, upcoming, isOral);
             const expired = status === 'expired';
             return (
-              <div key={e.id} className="rounded-xl bg-white p-3 shadow-card">
+              <div key={e.id} className="rounded-xl border border-ink/[0.06] bg-white p-3 shadow-card sm:p-4">
                 <div className="flex items-start gap-3">
                   <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-brand-50 text-lg">
                     {e.exam_type === 'Written' || e.exam_type === 'Oral' ? examTypeIcon(e.exam_type) : <FileCheck2 size={18} className="text-brand-500" />}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <p className="font-semibold text-ink">{e.title}</p>
+                      <p className="break-words font-semibold text-ink">{e.title}</p>
                       {(e.exam_type === 'Written' || e.exam_type === 'Oral') && (
                         <span className="rounded-full bg-ink/5 px-2 py-0.5 text-[10px] font-bold text-ink/50">
                           {t(`examType.${e.exam_type}`)}
@@ -194,7 +194,7 @@ export default function MyExams() {
                     )}
                     {e.description && <p className="mt-1 whitespace-pre-wrap text-sm text-ink/70">{e.description}</p>}
                   </div>
-                  {graded && <p className="flex-shrink-0 text-sm font-bold text-brand-500">{t('scoreOutOfMax', { score: result.score, max: e.max_score })}</p>}
+                  {graded && <p className="flex-shrink-0 whitespace-nowrap text-sm font-bold text-brand-500">{t('scoreOutOfMax', { score: result.score, max: e.max_score })}</p>}
                 </div>
 
                 {result?.feedback && (
@@ -209,13 +209,13 @@ export default function MyExams() {
                   {e.file_url && (
                     <button
                       onClick={() => handleOpenFile(e.file_url)}
-                      className="flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-xs font-semibold text-brand-500 transition-colors hover:bg-brand-50"
+                      className="flex min-w-0 max-w-full items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-2 text-xs font-semibold text-brand-500 transition-colors hover:bg-brand-50 sm:py-1.5"
                     >
-                      <Download size={13} /> {e.file_name || t('examFileDefault')}
+                      <Download size={13} className="flex-shrink-0" /> <span className="min-w-0 max-w-[55vw] truncate sm:max-w-[220px]">{e.file_name || t('examFileDefault')}</span>
                     </button>
                   )}
                   {e.exam_type !== 'Oral' && !graded && (
-                    <label className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-semibold text-ink/60 transition-colors hover:bg-ink/5">
+                    <label className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-2 text-xs font-semibold text-ink/60 transition-colors hover:bg-ink/5 sm:py-1.5">
                       <Upload size={13} />
                       {submittingId === e.id ? t('uploading') : result?.answer_file_name ? t('replaceMyAnswer') : t('uploadMyAnswer')}
                       <input
@@ -230,14 +230,14 @@ export default function MyExams() {
                   {e.exam_type !== 'Oral' && result?.answer_file_url && (
                     <button
                       onClick={() => handleOpenFile(result.answer_file_url)}
-                      className="text-xs text-ink/50 hover:underline"
+                      className="py-2 text-xs text-ink/50 hover:underline sm:py-0"
                     >
                       {t('viewMySubmittedAnswer')}
                     </button>
                   )}
                   <Link
                     to={`/chat?type=exam&id=${e.id}`}
-                    className="ml-auto flex items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-semibold text-ink/60 transition-colors hover:bg-ink/5"
+                    className="flex items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-2 text-xs font-semibold text-ink/60 transition-colors hover:bg-ink/5 sm:ml-auto sm:py-1.5"
                   >
                     <MessageSquare size={13} /> {t('discuss')}
                   </Link>
