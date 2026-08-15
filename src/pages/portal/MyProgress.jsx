@@ -243,7 +243,10 @@ export default function MyProgress() {
           <SkeletonList count={3} lines={1} />
         </div>
       ) : attendanceRows.length === 0 ? (
-        <div className="mb-6 rounded-xl border border-ink/[0.06] bg-white p-6 text-center text-sm text-ink/50 shadow-card">{t('portal:noAttendanceRecorded')}</div>
+        <div className="mb-6 rounded-xl border border-ink/[0.06] bg-white p-6 text-center shadow-card">
+          <CalendarCheck className="mx-auto mb-2 text-ink/15" size={28} aria-hidden="true" />
+          <p className="text-sm text-ink/50">{t('portal:noAttendanceRecorded')}</p>
+        </div>
       ) : (
         <div className="mb-6 space-y-2">
           {attendanceRows.map((a) => {
@@ -265,7 +268,10 @@ export default function MyProgress() {
         {loading ? (
           <SkeletonList count={3} lines={1} />
         ) : homeworkRows.length === 0 ? (
-          <p className="text-sm text-ink/50">{t('dashboard:noHomeworkAssignedYet')}</p>
+          <div className="py-2 text-center">
+            <BookOpen className="mx-auto mb-2 text-ink/15" size={26} aria-hidden="true" />
+            <p className="text-sm text-ink/50">{t('dashboard:noHomeworkAssignedYet')}</p>
+          </div>
         ) : (
           <div className="space-y-2">
             {homeworkRows.slice(0, 5).map((h) => {
@@ -337,7 +343,10 @@ export default function MyProgress() {
       {loading ? (
         <SkeletonList count={3} />
       ) : examRows.length === 0 ? (
-        <div className="rounded-xl border border-ink/[0.06] bg-white p-6 text-center text-sm text-ink/50 shadow-card">{t('portal:noExamScoresYet')}</div>
+        <div className="rounded-xl border border-ink/[0.06] bg-white p-6 text-center shadow-card">
+          <FileCheck2 className="mx-auto mb-2 text-ink/15" size={28} aria-hidden="true" />
+          <p className="text-sm text-ink/50">{t('portal:noExamScoresYet')}</p>
+        </div>
       ) : (
         <div className="space-y-2">
           {examRows.map((s) => (

@@ -146,7 +146,8 @@ export default function MyExams() {
       {loading ? (
         <SkeletonList count={3} />
       ) : myExams.length === 0 ? (
-        <div className="rounded-xl bg-white p-10 text-center shadow-card">
+        <div className="rounded-xl border border-ink/[0.06] bg-white p-10 text-center shadow-card">
+          <FileCheck2 className="mx-auto mb-3 text-ink/15" size={32} aria-hidden="true" />
           <p className="font-display text-lg font-semibold text-ink">{t('noExamsAssignedYet')}</p>
         </div>
       ) : (
@@ -208,13 +209,13 @@ export default function MyExams() {
                   {e.file_url && (
                     <button
                       onClick={() => handleOpenFile(e.file_url)}
-                      className="flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-xs font-semibold text-brand-500 hover:bg-brand-50"
+                      className="flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-xs font-semibold text-brand-500 transition-colors hover:bg-brand-50"
                     >
                       <Download size={13} /> {e.file_name || t('examFileDefault')}
                     </button>
                   )}
                   {e.exam_type !== 'Oral' && !graded && (
-                    <label className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-semibold text-ink/60 hover:bg-ink/5">
+                    <label className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-semibold text-ink/60 transition-colors hover:bg-ink/5">
                       <Upload size={13} />
                       {submittingId === e.id ? t('uploading') : result?.answer_file_name ? t('replaceMyAnswer') : t('uploadMyAnswer')}
                       <input
@@ -236,7 +237,7 @@ export default function MyExams() {
                   )}
                   <Link
                     to={`/chat?type=exam&id=${e.id}`}
-                    className="ml-auto flex items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-semibold text-ink/60 hover:bg-ink/5"
+                    className="ml-auto flex items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-semibold text-ink/60 transition-colors hover:bg-ink/5"
                   >
                     <MessageSquare size={13} /> {t('discuss')}
                   </Link>

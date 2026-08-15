@@ -295,7 +295,7 @@ export default function PortalHomeV3() {
 
   if (!me) {
     return (
-      <div className="rounded-xl bg-white p-10 text-center shadow-card">
+      <div className="rounded-xl border border-ink/[0.06] bg-white p-10 text-center shadow-card">
         <p className="font-display text-lg font-semibold text-ink">{t('notLinkedYet')}</p>
         <p className="mt-1 text-sm text-ink/50">{t('notLinkedSubtitle')}</p>
       </div>
@@ -498,7 +498,10 @@ export default function PortalHomeV3() {
       <div className="mb-6 grid gap-4 lg:grid-cols-2">
         <Panel title={t('certificatesTitle')} icon={Award} action={<Link to="/my-certificates" className="text-xs font-semibold text-brand-500 hover:underline">{t('viewAll')}</Link>}>
           {certificates.length === 0 ? (
-            <p className="text-sm text-ink/50">{t('noCertificatesYet')}</p>
+            <div className="py-4 text-center">
+              <Award className="mx-auto mb-2 text-ink/15" size={28} aria-hidden="true" />
+              <p className="text-sm text-ink/50">{t('noCertificatesYet')}</p>
+            </div>
           ) : (
             <div className="grid grid-cols-2 gap-2">
               {certificates.slice(0, 4).map((c) => (
@@ -513,7 +516,10 @@ export default function PortalHomeV3() {
 
         <Panel title={t('upcomingLessons')} icon={CalendarClock}>
           {upcoming.length === 0 ? (
-            <p className="text-sm text-ink/50">{t('noUpcomingLessons')}</p>
+            <div className="py-4 text-center">
+              <CalendarClock className="mx-auto mb-2 text-ink/15" size={28} aria-hidden="true" />
+              <p className="text-sm text-ink/50">{t('noUpcomingLessons')}</p>
+            </div>
           ) : (
             <div className="space-y-2">
               {upcoming.map((l) => (

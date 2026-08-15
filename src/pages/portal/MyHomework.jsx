@@ -201,6 +201,7 @@ export default function MyHomework() {
         <SkeletonList count={3} />
       ) : myHomework.length === 0 ? (
         <div className="rounded-xl border border-ink/[0.06] bg-white p-10 text-center shadow-card">
+          <BookOpen className="mx-auto mb-3 text-ink/15" size={32} aria-hidden="true" />
           <p className="font-display text-lg font-semibold text-ink">{t('noHomeworkAssignedYet')}</p>
         </div>
       ) : (
@@ -289,13 +290,13 @@ export default function MyHomework() {
                   {h.file_url && (
                     <button
                       onClick={() => handleOpenFile(h.file_url)}
-                      className="flex min-w-0 max-w-full items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-2 text-xs font-semibold text-brand-500 hover:bg-brand-50 sm:py-1.5"
+                      className="flex min-w-0 max-w-full items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-2 text-xs font-semibold text-brand-500 transition-colors hover:bg-brand-50 sm:py-1.5"
                     >
                       <Download size={13} className="flex-shrink-0" /> <span className="min-w-0 max-w-[55vw] truncate sm:max-w-[220px]">{h.file_name || t('homeworkFileDefault')}</span>
                     </button>
                   )}
                   {!graded && roomLeft > 0 && (
-                    <label className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-2 text-xs font-semibold text-ink/60 hover:bg-ink/5 sm:py-1.5">
+                    <label className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-2 text-xs font-semibold text-ink/60 transition-colors hover:bg-ink/5 sm:py-1.5">
                       <Upload size={13} />
                       {t('selectImages', { max: MAX_IMAGES })}
                       <input
@@ -315,7 +316,7 @@ export default function MyHomework() {
                     <button
                       onClick={() => handleUploadPending(h.id)}
                       disabled={submittingId === h.id}
-                      className="flex items-center gap-1.5 rounded-lg bg-brand-500 px-3 py-2 text-xs font-semibold text-white hover:bg-brand-600 disabled:opacity-60 sm:py-1.5"
+                      className="flex items-center gap-1.5 rounded-lg bg-brand-500 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-brand-600 disabled:opacity-60 sm:py-1.5"
                     >
                       {submittingId === h.id ? t('uploading') : t('uploadImagesCount', { count: pending.length })}
                     </button>
@@ -327,7 +328,7 @@ export default function MyHomework() {
                   )}
                   <Link
                     to={`/chat?type=homework&id=${h.id}`}
-                    className="flex items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-2 text-xs font-semibold text-ink/60 hover:bg-ink/5 sm:ml-auto sm:py-1.5"
+                    className="flex items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-2 text-xs font-semibold text-ink/60 transition-colors hover:bg-ink/5 sm:ml-auto sm:py-1.5"
                   >
                     <MessageSquare size={13} /> {t('discuss')}
                   </Link>

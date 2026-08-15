@@ -81,6 +81,7 @@ export default function MyCertificates() {
         <SkeletonList count={3} />
       ) : certificates.length === 0 ? (
         <div className="rounded-xl border border-ink/[0.06] bg-white p-10 text-center shadow-card">
+          <Award className="mx-auto mb-3 text-ink/15" size={32} aria-hidden="true" />
           <p className="font-display text-lg font-semibold text-ink">{t('noCertificatesYet')}</p>
         </div>
       ) : (
@@ -100,19 +101,19 @@ export default function MyCertificates() {
               <div className="flex w-full flex-shrink-0 flex-wrap items-center gap-1.5 sm:w-auto">
                 <button
                   onClick={() => handleDownload(c)}
-                  className="flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-2 text-xs font-semibold text-brand-500 hover:bg-brand-50 sm:py-1.5"
+                  className="flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-2 text-xs font-semibold text-brand-500 transition-colors hover:bg-brand-50 sm:py-1.5"
                 >
                   <Download size={14} /> PDF
                 </button>
                 <button
                   onClick={() => handlePrint(c)}
-                  className="flex items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-2 text-xs font-semibold text-ink/60 hover:bg-ink/5 sm:py-1.5"
+                  className="flex items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-2 text-xs font-semibold text-ink/60 transition-colors hover:bg-ink/5 sm:py-1.5"
                 >
                   <Printer size={14} /> {t('print')}
                 </button>
                 <Link
                   to={`/chat?type=certificate&id=${c.id}`}
-                  className="rounded-md p-2 text-ink/40 hover:bg-ink/5 sm:p-1.5"
+                  className="rounded-md p-2 text-ink/40 transition-colors hover:bg-ink/5 sm:p-1.5"
                   aria-label={t('discussCertificateAria')}
                 >
                   <MessageSquare size={15} />

@@ -16,8 +16,8 @@ export default function BadgeShelf({ badges }) {
         <div
           key={b.id}
           title={t(b.descriptionKey)}
-          className={`w-20 flex-shrink-0 rounded-xl border p-2.5 text-center sm:w-auto ${
-            b.unlocked ? 'border-levelB bg-levelB/10' : 'border-ink/[0.06] bg-white opacity-40'
+          className={`w-20 flex-shrink-0 rounded-xl border p-2.5 text-center transition-transform duration-150 sm:w-auto ${
+            b.unlocked ? 'border-levelB bg-levelB/10 hover:scale-105' : 'border-ink/[0.06] bg-white opacity-40'
           }`}
         >
           <div className="text-lg" aria-hidden="true">{b.emoji}</div>
