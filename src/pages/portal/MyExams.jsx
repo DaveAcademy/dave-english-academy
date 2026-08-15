@@ -14,11 +14,19 @@ import { uploadAttachment, getAttachmentUrl } from '../../lib/db';
 import LessonSectionTabs from '../../components/lesson/LessonSectionTabs';
 import { examTypeIcon } from '../../utils/examLabel';
 import { formatDateOnly } from '../../utils/date';
+import StatusPill from '../../components/StatusPill';
+import ErrorBanner from '../../components/ErrorBanner';
+import { SkeletonList } from '../../components/Skeleton';
+
+// Same semantic tones StatCard/AttentionCard/StatusPill use elsewhere
+// (see the identical mapping in MyHomework.jsx), extended with the two
+// exam-only states.
+const STATUS_TONE = { graded: 'brand', awaitingGrading: 'success', upcoming: 'info', expired: 'danger', resultPending: 'neutral', notSubmitted: 'neutral' };
 
 export default function MyExams() {
   const { t, i18n } = useTranslation(['exams', 'common']);
   const dateLocale = i18n.language === 'uz' ? 'uz' : 'en-US';
-  const { students, exams, examScores, submitMyExamAnswer } = useAcademy();
+  const { students, exams, examScores, submitMyExamAnswer, loading } = useAcademy();
   const me = students[0];
   const [submittingId, setSubmittingId] = useState(null);
   const [actionError, setActionError] = useState(null);
@@ -133,9 +141,11 @@ export default function MyExams() {
 
       <LessonSectionTabs />
 
-      {actionError && <div className="mb-4 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{actionError}</div>}
+      <ErrorBanner>{actionError}</ErrorBanner>
 
-      {myExams.length === 0 ? (
+      {loading ? (
+        <SkeletonList count={3} />
+      ) : myExams.length === 0 ? (
         <div className="rounded-xl bg-white p-10 text-center shadow-card">
           <p className="font-display text-lg font-semibold text-ink">{t('noExamsAssignedYet')}</p>
         </div>
@@ -163,21 +173,7 @@ export default function MyExams() {
                           {t(`examType.${e.exam_type}`)}
                         </span>
                       )}
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                          status === 'graded'
-                            ? 'bg-brand-50 text-brand-600'
-                            : status === 'awaitingGrading'
-                              ? 'bg-active/10 text-active'
-                              : status === 'upcoming'
-                                ? 'bg-brand-100 text-brand-700'
-                                : status === 'expired'
-                                  ? 'bg-inactive/10 text-inactive'
-                                  : 'bg-ink/5 text-ink/40'
-                        }`}
-                      >
-                        {t(status)}
-                      </span>
+                      <StatusPill tone={STATUS_TONE[status]}>{t(status)}</StatusPill>
                     </div>
                     <p className="text-xs text-ink/50">
                       {formatDateOnly(e.exam_date, dateLocale)} · {t('outOfScore', { max: e.max_score })}
