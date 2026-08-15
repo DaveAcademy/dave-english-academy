@@ -42,8 +42,6 @@ import {
   getClassSession,
   openClassSession,
   getClassLeaderboard,
-  getWeeklyClassLeaderboard,
-  getMonthlyClassLeaderboard,
 } from '../lib/db';
 import { LEVELS } from '../lib/levels';
 import { addDaysISO, addMonthsISO, todayISO, formatMonthDay } from '../utils/date';
@@ -357,16 +355,27 @@ export default function Rankings() {
   };
 
   // ---------- Level Leaderboard (read-only, level + period scoped) ----------
-  // Four tabs: Class / Week / Month / All Time. All Time still comes
-  // straight from get_group_leaderboard() (unchanged, migration 0129) -
-  // the calculation layer for Overall points was deliberately left alone
-  // (see docs/ranking-v2-class-session-design.md and migration 0139's own
-  // comments). Class/Week/Month now come from the class_session-backed
-  // RPCs added in 0139 instead of the retired lesson_date breakdown: only
-  // points explicitly attached to a real, opened class_session appear -
-  // a period with no session opened yet shows "no classes recorded" markers,
-  // never a fabricated zero-filled roster (see 0139's own comments on why
-  // that's intentional, not a gap to fill in later).
+  // Four tabs: Class / Week / Month / All Time.
+  //
+  // Week/Month/All Time all come straight from get_group_leaderboard() -
+  // the authoritative point_transactions ledger - exactly like All Time
+  // always has. They previously (2026-08-15, briefly) came from the new
+  // class_session-backed RPCs added in 0139 instead, but that shipped
+  // ahead of any real adoption: class_session_id is null on every
+  // historical point_transactions row (no session-opening workflow was
+  // actually in use yet), so those RPCs had nothing to sum and Week/Month
+  // silently showed 0 for every student - a real students-see-wrong-points
+  // incident, not a data problem (the ledger itself was always intact).
+  // Reverted to the ledger pending actual adoption of the session
+  // workflow; see the Points & Ranking incident writeup, 2026-08-15.
+  //
+  // Class stays on the new session-backed path (get_class_session() +
+  // get_class_leaderboard()) - it's the one view that's meaningless
+  // without a real opened session (a single class's points), so there's
+  // no ledger-based fallback to revert it to, and it doesn't feed any
+  // ranking total students see. class_session/class_group and their RPCs
+  // are untouched - this is a display-routing fix only, not a rollback of
+  // that schema.
   const [boardLevel, setBoardLevel] = useState('A');
   const [boardPeriod, setBoardPeriod] = useState('month');
   const [board, setBoard] = useState(null); // all_time only
@@ -384,10 +393,10 @@ export default function Rankings() {
   }, [isTeacher, teacherLevels]);
 
   useEffect(() => {
-    if (boardPeriod !== 'all_time') return;
+    if (boardPeriod === 'class') return;
     let cancelled = false;
     setBoard(null);
-    getGroupLeaderboard(boardLevel, 'all_time')
+    getGroupLeaderboard(boardLevel, boardPeriod, boardPeriod === 'all_time' ? null : boardReferenceDate)
       .then((rows) => {
         if (!cancelled) setBoard(rows || []);
       })
@@ -397,7 +406,7 @@ export default function Rankings() {
     return () => {
       cancelled = true;
     };
-  }, [boardLevel, boardPeriod, refreshKey]);
+  }, [boardLevel, boardPeriod, boardReferenceDate, refreshKey]);
 
   // Resolve the class_group(s) for the selected level - same lookup the
   // Class Session panel above already uses. Auto-selects the sole group
@@ -421,17 +430,13 @@ export default function Rankings() {
   }, [boardLevel]);
 
   useEffect(() => {
-    if (boardPeriod === 'all_time' || !boardGroupId) return;
+    if (boardPeriod !== 'class' || !boardGroupId) return;
     let cancelled = false;
     setSessionBoard(null);
     const load = async () => {
-      if (boardPeriod === 'class') {
-        const existing = await getClassSession(boardGroupId, boardReferenceDate);
-        if (!existing) return [];
-        return getClassLeaderboard(existing.id);
-      }
-      if (boardPeriod === 'week') return getWeeklyClassLeaderboard(boardGroupId, boardReferenceDate);
-      return getMonthlyClassLeaderboard(boardGroupId, boardReferenceDate);
+      const existing = await getClassSession(boardGroupId, boardReferenceDate);
+      if (!existing) return [];
+      return getClassLeaderboard(existing.id);
     };
     load()
       .then((rows) => {
@@ -445,39 +450,18 @@ export default function Rankings() {
     };
   }, [boardPeriod, boardGroupId, boardReferenceDate, refreshKey]);
 
-  // Pivots the long-format week/month rows (one row per student per
-  // session) into one row per student with a column per real session -
-  // the same shape the old, now-retired lesson_date breakdown rendered,
-  // just built from real class_session rows instead of inferred dates.
-  // Class period rows are already one-per-student (a single session has
-  // no columns to pivot), so they pass through as-is with total=points.
+  // Class tab only now (Week/Month reverted to the ledger-based `board`
+  // above) - a single real class_session's points, one row per student,
+  // no columns to pivot.
   const sessionView = useMemo(() => {
     if (!sessionBoard) return null;
-    if (boardPeriod === 'class') {
-      return {
-        sessions: [],
-        rows: [...sessionBoard]
-          .sort((a, b) => a.rank - b.rank || a.real_name.localeCompare(b.real_name))
-          .map((r) => ({ studentId: r.student_id, realName: r.real_name, perSession: {}, total: Number(r.points), rank: r.rank })),
-      };
-    }
-    const totalKey = boardPeriod === 'week' ? 'week_total' : 'month_total';
-    const rankKey = boardPeriod === 'week' ? 'week_rank' : 'month_rank';
-    const sessionsMap = new Map();
-    const byStudent = new Map();
-    for (const r of sessionBoard) {
-      sessionsMap.set(r.session_id, r.session_date);
-      let entry = byStudent.get(r.student_id);
-      if (!entry) {
-        entry = { studentId: r.student_id, realName: r.real_name, perSession: {}, total: Number(r[totalKey]), rank: r[rankKey] };
-        byStudent.set(r.student_id, entry);
-      }
-      entry.perSession[r.session_id] = Number(r.session_points);
-    }
-    const sessions = [...sessionsMap.entries()].map(([id, date]) => ({ id, date })).sort((a, b) => a.date.localeCompare(b.date));
-    const rows = [...byStudent.values()].sort((a, b) => a.rank - b.rank || a.realName.localeCompare(b.realName));
-    return { sessions, rows };
-  }, [sessionBoard, boardPeriod]);
+    return {
+      sessions: [],
+      rows: [...sessionBoard]
+        .sort((a, b) => a.rank - b.rank || a.real_name.localeCompare(b.real_name))
+        .map((r) => ({ studentId: r.student_id, realName: r.real_name, perSession: {}, total: Number(r.points), rank: r.rank })),
+    };
+  }, [sessionBoard]);
 
   // Month navigation anchors to the 1st of the currently-viewed month
   // before stepping, so addMonthsISO never lands on a day that doesn't
@@ -830,7 +814,7 @@ export default function Rankings() {
 
         {boardPeriod !== 'all_time' && (
           <div className="mb-3 flex flex-wrap items-center gap-2">
-            {boardGroups && boardGroups.length > 1 && (
+            {boardPeriod === 'class' && boardGroups && boardGroups.length > 1 && (
               <select value={boardGroupId} onChange={(e) => setBoardGroupId(e.target.value)} className="input w-auto text-xs">
                 <option value="">Select group...</option>
                 {boardGroups.map((g) => (
@@ -873,7 +857,7 @@ export default function Rankings() {
           </div>
         )}
 
-        {boardPeriod === 'all_time' ? (
+        {boardPeriod !== 'class' ? (
           board === null ? (
             <p className="py-6 text-center text-sm text-ink/50">Loading...</p>
           ) : board.length === 0 ? (
@@ -926,11 +910,7 @@ export default function Rankings() {
         ) : sessionView === null ? (
           <p className="py-6 text-center text-sm text-ink/50">Loading...</p>
         ) : sessionView.rows.length === 0 ? (
-          <p className="py-6 text-center text-sm text-ink/50">
-            {boardPeriod === 'class'
-              ? 'No session opened for this date.'
-              : `No classes recorded for Level ${boardLevel} in this ${boardPeriod}.`}
-          </p>
+          <p className="py-6 text-center text-sm text-ink/50">No session opened for this date.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
@@ -942,9 +922,7 @@ export default function Rankings() {
                       {formatMonthDay(new Date(`${s.date}T00:00:00Z`))}
                     </th>
                   ))}
-                  <th className="whitespace-nowrap px-3 py-2 text-center font-bold text-ink">
-                    {boardPeriod === 'class' ? 'Points' : boardPeriod === 'week' ? 'Week Total' : 'Month Total'}
-                  </th>
+                  <th className="whitespace-nowrap px-3 py-2 text-center font-bold text-ink">Points</th>
                 </tr>
               </thead>
               <tbody>
