@@ -17,8 +17,8 @@ const iconsDir = path.join(__dirname, '..', 'public', 'icons');
 const publicDir = path.join(__dirname, '..', 'public');
 mkdirSync(iconsDir, { recursive: true });
 
-const BRAND_700 = '#0F373F';
-const PAPER = '#F5F6F8';
+export const BRAND_700 = '#0F373F';
+export const PAPER = '#F5F6F8';
 
 // The "D" outer silhouette (rounded-left spine + one semicircular bowl arc,
 // radius 150 centered on (256,256), bulging right to x=406 - a single
@@ -26,7 +26,7 @@ const PAPER = '#F5F6F8';
 // counter cut via fill-rule evenodd - the "window" the A reads through.
 // Coordinates tuned by rendering to PNG and visually checking proportions
 // at 512, 48, and on a dark background during this session.
-function dPath() {
+export function dPath() {
   return `
     M 176 122
     A 16 16 0 0 1 192 106
@@ -47,7 +47,7 @@ function dPath() {
 // the actual downscaling for every output size, so the path math never has
 // to change per target size. scale shrinks+centers the glyph for the
 // maskable variant so it stays inside the OS's safe-zone crop.
-function svg({ bg, glyph, scale = 1 }) {
+export function svg({ bg, glyph, scale = 1 }) {
   const c = 256;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
     <rect width="512" height="512" fill="${bg}"/>
@@ -117,4 +117,6 @@ async function main() {
   console.log('wrote', path.join(publicDir, 'favicon.ico'), `(${ico.length} bytes, ${sizes.join('/')}px)`);
 }
 
-main();
+// Only run when executed directly (`node scripts/generate-icons.mjs`), not
+// when imported by scripts/preview-icon-sheet.mjs for the shared geometry.
+if (import.meta.url === `file://${process.argv[1]}`) main();
