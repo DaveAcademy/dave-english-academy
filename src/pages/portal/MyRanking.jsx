@@ -11,6 +11,8 @@ import { ArrowUp, ArrowDown } from 'lucide-react';
 import { useAcademy } from '../../lib/AcademyDataContext';
 import { getGroupLeaderboard, getRecognitionAwards, getStudentRankingSummary, listAchievementDefinitions, getStudentAchievements } from '../../lib/db';
 import { formatMonthDay } from '../../utils/date';
+import StatCard from '../../components/StatCard';
+import Panel from '../../components/Panel';
 
 const RARITY_STYLE = {
   common: 'bg-ink/10 text-ink/60',
@@ -155,101 +157,90 @@ export default function MyRanking() {
 
       <section className="mb-6">
         <h2 className="mb-2 font-display text-base font-bold text-ink">{t('portal:myPointsSummaryTitle')}</h2>
-        <div className="grid grid-cols-3 gap-2">
-          <div className="rounded-xl bg-white p-3 text-center shadow-card">
-            <p className="text-xs text-ink/50">{t('portal:period_week')}</p>
-            <p className="mt-1 font-display text-xl font-bold text-ink">{summary ? summary.week_points : '…'}</p>
-          </div>
-          <div className="rounded-xl bg-white p-3 text-center shadow-card">
-            <p className="text-xs text-ink/50">{t('portal:period_month')}</p>
-            <p className="mt-1 font-display text-xl font-bold text-ink">{summary ? summary.month_points : '…'}</p>
-          </div>
-          <div className="rounded-xl bg-brand-500 p-3 text-center shadow-card">
-            <p className="text-xs text-white/70">{t('portal:totalPointsLabel')}</p>
-            <p className="mt-1 font-display text-xl font-bold text-white">{summary ? summary.lifetime_points : '…'}</p>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          <StatCard label={t('portal:period_week')} value={summary?.week_points} tone="neutral" loading={!summary} />
+          <StatCard label={t('portal:period_month')} value={summary?.month_points} tone="info" loading={!summary} />
+          <div className="col-span-2 sm:col-span-1">
+            <StatCard label={t('portal:totalPointsLabel')} value={summary?.lifetime_points} tone="brand" loading={!summary} />
           </div>
         </div>
       </section>
 
       <section className="mb-6">
-        <h2 className="mb-2 font-display text-base font-bold text-ink">{t('portal:recognitionTitle')}</h2>
-        {awards === null ? (
-          <div className="rounded-xl bg-white p-6 text-center text-sm text-ink/50 shadow-card">{t('common:loading')}</div>
-        ) : awards.length === 0 ? (
-          <div className="rounded-xl bg-white p-6 text-center shadow-card">
-            <p className="text-sm text-ink/50">{t('portal:recognitionEmpty')}</p>
-          </div>
-        ) : (
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {awards.map((a) => {
-              const info = AWARD_TYPE_INFO[a.award_type] || { icon: '🎖️', key: 'awardStudentOfWeek' };
-              return (
-                <div key={a.id} className="flex items-center gap-3 rounded-xl bg-white p-3 shadow-card">
-                  <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-levelB/10 text-lg">
-                    {info.icon}
-                  </span>
-                  <div className="flex-1">
-                    <p className="font-semibold text-ink">{t(`portal:${info.key}`)}</p>
-                    <p className="text-xs text-ink/50">
-                      {formatMonthDay(new Date(a.period_start), dateLocale)} – {formatMonthDay(new Date(a.period_end), dateLocale)}
-                      {a.is_co_winner ? ` · ${t('portal:coWinnerLabel')}` : ''}
-                    </p>
+        <Panel title={t('portal:recognitionTitle')}>
+          {awards === null ? (
+            <p className="py-4 text-center text-sm text-ink/50">{t('common:loading')}</p>
+          ) : awards.length === 0 ? (
+            <p className="py-4 text-center text-sm text-ink/50">{t('portal:recognitionEmpty')}</p>
+          ) : (
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {awards.map((a) => {
+                const info = AWARD_TYPE_INFO[a.award_type] || { icon: '🎖️', key: 'awardStudentOfWeek' };
+                return (
+                  <div key={a.id} className="flex items-center gap-3 rounded-xl border border-ink/[0.06] bg-white p-3 shadow-card sm:p-4">
+                    <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-levelB/10 text-lg">
+                      {info.icon}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="break-words font-semibold text-ink">{t(`portal:${info.key}`)}</p>
+                      <p className="text-xs text-ink/50">
+                        {formatMonthDay(new Date(a.period_start), dateLocale)} – {formatMonthDay(new Date(a.period_end), dateLocale)}
+                        {a.is_co_winner ? ` · ${t('portal:coWinnerLabel')}` : ''}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                );
+              })}
+            </div>
+          )}
+        </Panel>
       </section>
 
       <section className="mb-6">
-        <h2 className="mb-2 font-display text-base font-bold text-ink">{t('portal:achievementsTitle')}</h2>
-        {earnedAchievements === null || achievementDefs === null ? (
-          <div className="rounded-xl bg-white p-6 text-center text-sm text-ink/50 shadow-card">{t('common:loading')}</div>
-        ) : achievementDefsError || earnedAchievementsError ? (
-          <div className="rounded-xl bg-white p-6 text-center shadow-card">
-            <p className="text-sm text-ink/50">{t('dashboard:sectionUnavailable')}</p>
-          </div>
-        ) : earnedAchievements.length === 0 && lockedAchievements.length === 0 ? (
-          <div className="rounded-xl bg-white p-6 text-center shadow-card">
-            <p className="text-sm text-ink/50">{t('portal:achievementsEmpty')}</p>
-          </div>
-        ) : (
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {earnedAchievements.map((a) => (
-              <div key={a.achievement?.key} className="flex items-start gap-3 rounded-xl bg-white p-3 shadow-card">
-                <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-brand-500/10 text-lg">
-                  {a.achievement?.icon || '🏆'}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5">
-                    <p className="truncate font-semibold text-ink">{a.achievement?.name}</p>
-                    {a.achievement?.rarity && (
-                      <span className={`flex-shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase ${RARITY_STYLE[a.achievement.rarity] || RARITY_STYLE.common}`}>
-                        {a.achievement.rarity}
-                      </span>
-                    )}
+        <Panel title={t('portal:achievementsTitle')}>
+          {earnedAchievements === null || achievementDefs === null ? (
+            <p className="py-4 text-center text-sm text-ink/50">{t('common:loading')}</p>
+          ) : achievementDefsError || earnedAchievementsError ? (
+            <p className="py-4 text-center text-sm text-ink/50">{t('dashboard:sectionUnavailable')}</p>
+          ) : earnedAchievements.length === 0 && lockedAchievements.length === 0 ? (
+            <p className="py-4 text-center text-sm text-ink/50">{t('portal:achievementsEmpty')}</p>
+          ) : (
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {earnedAchievements.map((a) => (
+                <div key={a.achievement?.key} className="flex items-start gap-3 rounded-xl border border-ink/[0.06] bg-white p-3 shadow-card sm:p-4">
+                  <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-brand-500/10 text-lg">
+                    {a.achievement?.icon || '🏆'}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <p className="break-words font-semibold text-ink">{a.achievement?.name}</p>
+                      {a.achievement?.rarity && (
+                        <span className={`flex-shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase ${RARITY_STYLE[a.achievement.rarity] || RARITY_STYLE.common}`}>
+                          {a.achievement.rarity}
+                        </span>
+                      )}
+                    </div>
+                    {a.achievement?.description && <p className="text-xs text-ink/50">{a.achievement.description}</p>}
+                    <p className="mt-1 text-xs text-ink/40">
+                      {formatMonthDay(new Date(a.earned_at), dateLocale)}
+                      {a.bonus_transaction?.points > 0 && ` · +${a.bonus_transaction.points} ${t('portal:points')}`}
+                    </p>
                   </div>
-                  {a.achievement?.description && <p className="text-xs text-ink/50">{a.achievement.description}</p>}
-                  <p className="mt-1 text-xs text-ink/40">
-                    {formatMonthDay(new Date(a.earned_at), dateLocale)}
-                    {a.bonus_transaction?.points > 0 && ` · +${a.bonus_transaction.points} ${t('portal:points')}`}
-                  </p>
                 </div>
-              </div>
-            ))}
-            {lockedAchievements.map((d) => (
-              <div key={d.key} className="flex items-start gap-3 rounded-xl bg-ink/[0.02] p-3 opacity-60 shadow-card">
-                <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-ink/5 text-lg grayscale">{d.icon || '🔒'}</span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-semibold text-ink/70">{d.name}</p>
-                  {d.description && <p className="text-xs text-ink/40">{d.description}</p>}
-                  <p className="mt-1 text-xs font-semibold uppercase text-ink/30">{t('portal:achievementLocked')}</p>
+              ))}
+              {lockedAchievements.map((d) => (
+                <div key={d.key} className="flex items-start gap-3 rounded-xl border border-ink/[0.06] bg-ink/[0.02] p-3 opacity-60 shadow-card sm:p-4">
+                  <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-ink/5 text-lg grayscale">{d.icon || '🔒'}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="break-words font-semibold text-ink/70">{d.name}</p>
+                    {d.description && <p className="text-xs text-ink/40">{d.description}</p>}
+                    <p className="mt-1 text-xs font-semibold uppercase text-ink/30">{t('portal:achievementLocked')}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
+        </Panel>
       </section>
 
       <h2 className="font-display text-base font-bold text-ink">{t('portal:leaderboardTitle', { level: me?.level })}</h2>
@@ -272,9 +263,9 @@ export default function MyRanking() {
       </section>
 
       {leaderboard === null ? (
-        <div className="rounded-xl bg-white p-10 text-center text-sm text-ink/50 shadow-card">{t('common:loading')}</div>
+        <div className="rounded-xl border border-ink/[0.06] bg-white p-10 text-center text-sm text-ink/50 shadow-card">{t('common:loading')}</div>
       ) : leaderboard.length === 0 ? (
-        <div className="rounded-xl bg-white p-10 text-center shadow-card">
+        <div className="rounded-xl border border-ink/[0.06] bg-white p-10 text-center shadow-card">
           <p className="font-display text-lg font-semibold text-ink">{t('dashboard:noData')}</p>
         </div>
       ) : (
@@ -284,7 +275,7 @@ export default function MyRanking() {
             return (
               <div
                 key={row.student_id}
-                className={`flex items-center gap-3 rounded-xl p-3 shadow-card ${isMe ? 'bg-brand-500 text-white' : 'bg-white text-ink'}`}
+                className={`flex items-center gap-3 rounded-xl border p-3 shadow-card sm:p-4 ${isMe ? 'border-brand-600 bg-brand-500 text-white' : 'border-ink/[0.06] bg-white text-ink'}`}
               >
                 <div
                   className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold ${medal(row.rank - 1)} ${medalText(row.rank - 1)}`}
