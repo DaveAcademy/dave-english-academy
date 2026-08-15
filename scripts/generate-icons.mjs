@@ -1,14 +1,20 @@
 // generate-icons.mjs
-// Builds the "Windowed D" app icon (docs/app-icon-redesign-exploration-2026-08-15.md,
-// Variation C) from a single SVG source into every PWA/favicon asset the app
+// Builds the "D-ring + arrow" app icon into every PWA/favicon asset the app
 // needs: icon-512.png, icon-192.png, icon-maskable-512.png, favicon.ico.
+// Same D outline + forward-arrow shape as Dave's reference, reimplemented
+// from scratch as an original mark (the reference was a pasted image of
+// unknown origin, not something to reproduce pixel-for-pixel). Color is
+// the reference's blue gradient, per explicit confirmation that this
+// replaces the app's teal brand.700 for the icon specifically - a
+// deliberate departure from the rest of the product's palette, not an
+// oversight.
 //
 // Run with: npm install --no-save sharp && node scripts/generate-icons.mjs
 // (sharp is intentionally not a persisted devDependency - install it
 // on-demand with --no-save when regenerating, this is a one-off asset
 // build step, not part of the app runtime or Vite build).
 import { writeFileSync, mkdirSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
 import sharp from 'sharp';
 
@@ -19,40 +25,68 @@ mkdirSync(iconsDir, { recursive: true });
 
 export const BRAND_700 = '#0F373F';
 export const PAPER = '#F5F6F8';
+// Icon-specific blue gradient (matches the approved reference), used only
+// for the app icon - not introduced anywhere else in the app's palette.
+export const ICON_BLUE_LIGHT = '#5B8DEF';
+export const ICON_BLUE_DARK = '#3355C8';
 
-// The "D" outer silhouette (rounded-left spine + one semicircular bowl arc,
-// radius 150 centered on (256,256), bulging right to x=406 - a single
-// closed path, no self-intersection) with one upward-pointing triangular
-// counter cut via fill-rule evenodd - the "window" the A reads through.
-// Coordinates tuned by rendering to PNG and visually checking proportions
-// at 512, 48, and on a dark background during this session.
-export function dPath() {
+// D drawn as a stroked ring (open counter, not filled) - centerline path:
+// a vertical spine + one large semicircular bowl arc (radius 120, centered
+// on (246,256), bulging right to x=366), rendered with round caps/joins so
+// the stroke reads as one continuous, friendly shape rather than sharp
+// mitered corners.
+export function dRingPath() {
   return `
-    M 176 122
-    A 16 16 0 0 1 192 106
-    L 256 106
-    A 150 150 0 0 1 406 256
-    A 150 150 0 0 1 256 406
-    L 192 406
-    A 16 16 0 0 1 176 390
-    Z
-    M 321 176
-    L 356 346
-    L 286 346
+    M 186 146
+    L 246 146
+    A 120 120 0 0 1 366 256
+    A 120 120 0 0 1 246 366
+    L 186 366
+  `;
+}
+
+// Solid right-pointing arrowhead sitting inside the D's open counter -
+// "forward progress", matches the D's own visual weight so neither
+// competes with the other at small sizes.
+export function arrowPath() {
+  return `
+    M 236 196
+    L 236 316
+    L 326 256
     Z
   `;
 }
 
 // Source is always authored on a fixed 512 viewBox; sharp's resize() does
-// the actual downscaling for every output size, so the path math never has
-// to change per target size. scale shrinks+centers the glyph for the
-// maskable variant so it stays inside the OS's safe-zone crop.
+// the actual downscaling for every output size. scale shrinks+centers the
+// glyph for the maskable variant so it stays inside the OS's own safe zone.
+//
+// Background is always a plain, fully-opaque, full-bleed square - never
+// pre-rounded here. iOS/Android/most launchers apply their own squircle or
+// circle mask on top of the source icon; baking rounded corners in ourselves
+// would leave transparent corners in the PNG (confirmed: isOpaque === false
+// on an earlier pre-rounded render), and iOS specifically flattens any
+// transparency in an apple-touch-icon to solid black - the "rounded card"
+// look this design wants is what iOS/Android already render automatically
+// from a plain square source, not something to duplicate in the asset.
+// bg: either a solid color string, or { from, to } for a diagonal
+// (top-left to bottom-right) linear gradient, matching the reference.
 export function svg({ bg, glyph, scale = 1 }) {
   const c = 256;
+  const isGradient = typeof bg === 'object';
+  const bgFill = isGradient ? 'url(#bg)' : bg;
+  const defs = isGradient
+    ? `<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+         <stop offset="0" stop-color="${bg.from}"/>
+         <stop offset="1" stop-color="${bg.to}"/>
+       </linearGradient></defs>`
+    : '';
   return `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-    <rect width="512" height="512" fill="${bg}"/>
+    ${defs}
+    <rect width="512" height="512" fill="${bgFill}"/>
     <g transform="translate(${c} ${c}) scale(${scale}) translate(${-c} ${-c})">
-      <path fill-rule="evenodd" fill="${glyph}" d="${dPath()}"/>
+      <path d="${dRingPath()}" fill="none" stroke="${glyph}" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="${arrowPath()}" fill="${glyph}"/>
     </g>
   </svg>`;
 }
@@ -94,18 +128,19 @@ function buildIco(pngs, sizes) {
   return Buffer.concat([header, ...entries, ...pngs]);
 }
 
+const BG = { from: ICON_BLUE_LIGHT, to: ICON_BLUE_DARK };
+
 async function main() {
-  // Standard "any"-purpose icons: opaque paper background (transparent PNGs
-  // render badly as apple-touch-icon - iOS flattens transparency to black),
-  // full-size glyph (no safe-zone shrink needed - nothing crops these).
-  const standardSvg = svg({ bg: PAPER, glyph: BRAND_700, scale: 1 });
+  // Standard "any"-purpose icons: blue-gradient square, white D-ring +
+  // arrow, fully opaque. Each platform applies its own rounding (iOS
+  // squircle, Android circle/squircle) - see the svg() comment above.
+  const standardSvg = svg({ bg: BG, glyph: PAPER, scale: 1 });
   await renderToFile(standardSvg, path.join(iconsDir, 'icon-512.png'), 512);
   await renderToFile(standardSvg, path.join(iconsDir, 'icon-192.png'), 192);
 
-  // Maskable: full-bleed background (the OS applies its own mask shape over
-  // this), glyph scaled down so all of it stays inside the ~66% "safe zone"
-  // regardless of mask shape (circle/squircle/rounded-square).
-  const maskableSvg = svg({ bg: BRAND_700, glyph: PAPER, scale: 0.62 });
+  // Maskable: same full-bleed square, glyph scaled down so it stays inside
+  // the ~66% safe zone regardless of mask shape (circle/squircle/rounded-square).
+  const maskableSvg = svg({ bg: BG, glyph: PAPER, scale: 0.62 });
   await renderToFile(maskableSvg, path.join(iconsDir, 'icon-maskable-512.png'), 512);
 
   // favicon.ico: 16/32/48 rendered in-memory (never written to public/ as
@@ -119,4 +154,4 @@ async function main() {
 
 // Only run when executed directly (`node scripts/generate-icons.mjs`), not
 // when imported by scripts/preview-icon-sheet.mjs for the shared geometry.
-if (import.meta.url === `file://${process.argv[1]}`) main();
+if (import.meta.url === pathToFileURL(process.argv[1]).href) main();

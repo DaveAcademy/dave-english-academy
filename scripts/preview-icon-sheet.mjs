@@ -1,22 +1,26 @@
 // preview-icon-sheet.mjs
-// Read-only review artifact: composites the already-approved Windowed D
-// icon (scripts/generate-icons.mjs - not modified here) into realistic
-// mock contexts so it can be judged at true relative scale instead of as
-// an isolated 512px PNG. Does not touch any shipped asset.
+// Read-only review artifact: composites the current icon
+// (scripts/generate-icons.mjs - not modified here) into realistic mock
+// contexts so it can be judged at true relative scale instead of as an
+// isolated 512px PNG. Does not touch any shipped asset.
 // Run with: npm install --no-save sharp && node scripts/preview-icon-sheet.mjs
-import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import sharp from 'sharp';
-import { svg, BRAND_700, PAPER } from './generate-icons.mjs';
+import { svg, PAPER, ICON_BLUE_LIGHT, ICON_BLUE_DARK } from './generate-icons.mjs';
+
+const BG = { from: ICON_BLUE_LIGHT, to: ICON_BLUE_DARK };
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Written outside the repo (scratchpad) - this is a review artifact, not a
 // shipped asset, so it should never be at risk of being staged/committed.
 const outPath = 'C:\\Users\\miste\\AppData\\Local\\Temp\\claude\\C--Users-miste--claude-projects\\e59d0505-1353-4681-9ef4-a417bcb161af\\scratchpad\\icon-preview-sheet.png';
 
-const standardSvg = svg({ bg: PAPER, glyph: BRAND_700, scale: 1 }); // opaque card, for OSes that don't remask
-const maskableSvg = svg({ bg: BRAND_700, glyph: PAPER, scale: 0.62 }); // safe-zone inset, for OS-masked contexts
+// Both are plain opaque squares, as shipped - iOS/Android's own rounding
+// is applied by the mock crops below (clip()), matching what the real OS
+// does to a square source icon rather than double-rounding a pre-rounded one.
+const standardSvg = svg({ bg: BG, glyph: PAPER, scale: 1 });
+const maskableSvg = svg({ bg: BG, glyph: PAPER, scale: 0.62 });
 const NEAR_BLACK = '#15181D';
 const WALLPAPER = '#3A4A55';
 
