@@ -11,7 +11,7 @@ import { ArrowUp, ArrowDown } from 'lucide-react';
 import { useAcademy } from '../../lib/AcademyDataContext';
 import { getGroupLeaderboard, getRecognitionAwards, getStudentRankingSummary, listAchievementDefinitions, getStudentAchievements } from '../../lib/db';
 import { formatMonthDay } from '../../utils/date';
-import StatCard from '../../components/StatCard';
+import PointsSummary from '../../components/PointsSummary';
 import Panel from '../../components/Panel';
 
 const RARITY_STYLE = {
@@ -157,13 +157,15 @@ export default function MyRanking() {
 
       <section className="mb-6">
         <h2 className="mb-2 font-display text-base font-bold text-ink">{t('portal:myPointsSummaryTitle')}</h2>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-          <StatCard label={t('portal:period_week')} value={summary?.week_points} tone="neutral" loading={!summary} />
-          <StatCard label={t('portal:period_month')} value={summary?.month_points} tone="info" loading={!summary} />
-          <div className="col-span-2 sm:col-span-1">
-            <StatCard label={t('portal:totalPointsLabel')} value={summary?.lifetime_points} tone="brand" loading={!summary} />
-          </div>
-        </div>
+        <PointsSummary
+          week={summary?.week_points}
+          month={summary?.month_points}
+          lifetime={summary?.lifetime_points}
+          weekLabel={t('portal:pointsSummaryWeek')}
+          monthLabel={t('portal:pointsSummaryMonth')}
+          lifetimeLabel={t('portal:pointsSummaryLifetime')}
+          loading={!summary}
+        />
       </section>
 
       <section className="mb-6">
