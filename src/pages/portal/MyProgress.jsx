@@ -20,6 +20,7 @@ import SectionLabel from '../../components/SectionLabel';
 import StatusPill from '../../components/StatusPill';
 import BadgeShelf from '../../components/BadgeShelf';
 import LessonStatsBar from '../../components/lesson/LessonStatsBar';
+import { SkeletonList } from '../../components/Skeleton';
 
 const STATUS_ICON = { Present: CheckCircle2, Late: Clock, Absent: XCircle };
 const STATUS_COLOR = { Present: 'text-active', Late: 'text-levelB', Absent: 'text-inactive' };
@@ -28,7 +29,7 @@ const HOMEWORK_TONE = { Assigned: 'watch', Submitted: 'info', Graded: 'good' };
 export default function MyProgress() {
   const { t, i18n } = useTranslation(['portal', 'attendance', 'dashboard']);
   const dateLocale = i18n.language === 'uz' ? 'uz' : 'en-US';
-  const { students, attendance, homework, homeworkStatus, exams, examScores, lessons, curriculumProgress, lessonProgress } = useAcademy();
+  const { students, attendance, homework, homeworkStatus, exams, examScores, lessons, curriculumProgress, lessonProgress, loading } = useAcademy();
   const me = students[0];
   const [leaderboard, setLeaderboard] = useState(null);
 
@@ -177,7 +178,7 @@ export default function MyProgress() {
 
   if (!me) {
     return (
-      <div className="rounded-xl bg-white p-10 text-center shadow-card">
+      <div className="rounded-xl border border-ink/[0.06] bg-white p-10 text-center shadow-card">
         <p className="font-display text-lg font-semibold text-ink">{t('dashboard:notLinkedYet')}</p>
       </div>
     );
@@ -214,7 +215,7 @@ export default function MyProgress() {
               streak={lessonBlock.streak}
               vocabCount={lessonBlock.vocabCount}
             />
-            <div className="flex flex-wrap items-center gap-x-5 gap-y-1 rounded-xl bg-white px-4 py-3 text-sm text-ink/70 shadow-card">
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-1 rounded-xl border border-ink/[0.06] bg-white px-4 py-3 text-sm text-ink/70 shadow-card">
               <span>
                 <strong className="font-semibold text-ink">{t('portal:lessonCapLabel')}</strong>: {lessonBlock.cap}
               </span>
@@ -237,14 +238,18 @@ export default function MyProgress() {
       </div>
 
       <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-ink/50">{t('portal:attendanceHistory')}</h2>
-      {attendanceRows.length === 0 ? (
-        <div className="mb-6 rounded-xl bg-white p-6 text-center text-sm text-ink/50 shadow-card">{t('portal:noAttendanceRecorded')}</div>
+      {loading ? (
+        <div className="mb-6">
+          <SkeletonList count={3} lines={1} />
+        </div>
+      ) : attendanceRows.length === 0 ? (
+        <div className="mb-6 rounded-xl border border-ink/[0.06] bg-white p-6 text-center text-sm text-ink/50 shadow-card">{t('portal:noAttendanceRecorded')}</div>
       ) : (
         <div className="mb-6 space-y-2">
           {attendanceRows.map((a) => {
             const Icon = STATUS_ICON[a.status];
             return (
-              <div key={a.id} className="flex items-center justify-between rounded-xl bg-white p-3 shadow-card">
+              <div key={a.id} className="flex items-center justify-between rounded-xl border border-ink/[0.06] bg-white p-3 shadow-card sm:p-4">
                 <p className="font-semibold text-ink">{formatWeekdayDate(new Date(a.date), dateLocale)}</p>
                 <span className={`flex items-center gap-1 text-sm font-semibold ${STATUS_COLOR[a.status]}`}>
                   <Icon size={16} /> {t(`attendance:${a.status.toLowerCase()}`)}
@@ -257,7 +262,9 @@ export default function MyProgress() {
 
       <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-ink/50">{t('portal:homeworkProgressTitle')}</h2>
       <Panel title={t('portal:recentHomeworkTitle')} action={<span className="text-xs font-semibold text-ink/50">{t('portal:homeworkCompletedOfTotal', { completed: homeworkStats.completed, total: homeworkStats.total })}</span>}>
-        {homeworkRows.length === 0 ? (
+        {loading ? (
+          <SkeletonList count={3} lines={1} />
+        ) : homeworkRows.length === 0 ? (
           <p className="text-sm text-ink/50">{t('dashboard:noHomeworkAssignedYet')}</p>
         ) : (
           <div className="space-y-2">
@@ -327,12 +334,14 @@ export default function MyProgress() {
               : t('portal:examTrendDown', { delta: examTrend.delta })}
         </p>
       )}
-      {examRows.length === 0 ? (
-        <div className="rounded-xl bg-white p-6 text-center text-sm text-ink/50 shadow-card">{t('portal:noExamScoresYet')}</div>
+      {loading ? (
+        <SkeletonList count={3} />
+      ) : examRows.length === 0 ? (
+        <div className="rounded-xl border border-ink/[0.06] bg-white p-6 text-center text-sm text-ink/50 shadow-card">{t('portal:noExamScoresYet')}</div>
       ) : (
         <div className="space-y-2">
           {examRows.map((s) => (
-            <div key={s.id} className="rounded-xl bg-white p-3 shadow-card">
+            <div key={s.id} className="rounded-xl border border-ink/[0.06] bg-white p-3 shadow-card sm:p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-semibold text-ink">{s.exam.title}</p>

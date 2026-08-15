@@ -7,10 +7,12 @@ import { Award, Download, Printer, MessageSquare } from 'lucide-react';
 import { useAcademy } from '../../lib/AcademyDataContext';
 import { downloadCertificatePdf, printCertificatePdf, pickCertificateTemplate } from '../../utils/pdf';
 import { getAttachmentUrl } from '../../lib/db';
+import ErrorBanner from '../../components/ErrorBanner';
+import { SkeletonList } from '../../components/Skeleton';
 
 export default function MyCertificates() {
   const { t } = useTranslation('portal');
-  const { students, certificates, certificateTemplates } = useAcademy();
+  const { students, certificates, certificateTemplates, loading } = useAcademy();
   const me = students[0];
   const [certError, setCertError] = useState('');
 
@@ -73,9 +75,11 @@ export default function MyCertificates() {
         <p className="mt-1 text-sm text-ink/50">{t('certificatesSubtitle')}</p>
       </header>
 
-      {certError && <div className="mb-4 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{certError}</div>}
+      <ErrorBanner>{certError}</ErrorBanner>
 
-      {certificates.length === 0 ? (
+      {loading ? (
+        <SkeletonList count={3} />
+      ) : certificates.length === 0 ? (
         <div className="rounded-xl border border-ink/[0.06] bg-white p-10 text-center shadow-card">
           <p className="font-display text-lg font-semibold text-ink">{t('noCertificatesYet')}</p>
         </div>

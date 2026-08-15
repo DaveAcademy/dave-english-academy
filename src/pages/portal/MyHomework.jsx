@@ -16,11 +16,13 @@ import { BookOpen, Download, Upload, MessageSquare, X, Image as ImageIcon } from
 import { useAcademy } from '../../lib/AcademyDataContext';
 import { uploadAttachment, getAttachmentUrl } from '../../lib/db';
 import LessonSectionTabs from '../../components/lesson/LessonSectionTabs';
-import { TONE } from '../../utils/tone';
+import StatusPill from '../../components/StatusPill';
+import ErrorBanner from '../../components/ErrorBanner';
+import { SkeletonList } from '../../components/Skeleton';
 
-// Same semantic tones StatCard/AttentionCard use elsewhere, so "graded" /
-// "submitted" / "not submitted" read as the same colors as everywhere else
-// in the app instead of a one-off pill palette.
+// Same semantic tones StatCard/AttentionCard/StatusPill use elsewhere, so
+// "graded" / "submitted" / "not submitted" read as the same colors as
+// everywhere else in the app instead of a one-off pill palette.
 const PILL_TONE = { graded: 'brand', awaitingGrading: 'success', notSubmitted: 'neutral' };
 
 const MAX_IMAGES = 5;
@@ -35,6 +37,7 @@ export default function MyHomework() {
     lessons,
     submitMyHomeworkFiles,
     removeMyHomeworkSubmissionFile,
+    loading,
   } = useAcademy();
   const me = students[0];
   const [submittingId, setSubmittingId] = useState(null);
@@ -192,9 +195,11 @@ export default function MyHomework() {
 
       <LessonSectionTabs />
 
-      {actionError && <div className="mb-4 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{actionError}</div>}
+      <ErrorBanner>{actionError}</ErrorBanner>
 
-      {myHomework.length === 0 ? (
+      {loading ? (
+        <SkeletonList count={3} />
+      ) : myHomework.length === 0 ? (
         <div className="rounded-xl border border-ink/[0.06] bg-white p-10 text-center shadow-card">
           <p className="font-display text-lg font-semibold text-ink">{t('noHomeworkAssignedYet')}</p>
         </div>
@@ -218,12 +223,12 @@ export default function MyHomework() {
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-1.5">
                       <p className="break-words font-semibold text-ink">{h.title}</p>
-                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${TONE[PILL_TONE[pill]].soft} ${TONE[PILL_TONE[pill]].text}`}>
+                      <StatusPill tone={PILL_TONE[pill]}>
                         {/* The academy doesn't use a homework grading workflow - homework is
                             just submitted and reviewed manually, so the pill only ever needs to
                             say "Submitted", not "Submitted, awaiting grading". */}
                         {t(pill === 'notSubmitted' ? 'notSubmitted' : pill === 'awaitingGrading' ? 'statusSubmitted' : 'statusGraded')}
-                      </span>
+                      </StatusPill>
                     </div>
                     <p className="text-xs text-ink/50">
                       {overdue ? (
