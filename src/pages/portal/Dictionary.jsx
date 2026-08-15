@@ -85,7 +85,7 @@ export default function Dictionary() {
       </div>
 
       {!query && (
-        <div className="flex flex-col items-center gap-2 rounded-xl bg-white p-10 text-center shadow-card">
+        <div className="flex flex-col items-center gap-2 rounded-xl border border-ink/[0.06] bg-white p-10 text-center shadow-card">
           <BookOpenText size={28} className="text-brand-300" />
           <p className="font-display text-base font-semibold text-ink">{t('typeToSearch')}</p>
           <p className="text-xs text-ink/40">{t('typeToSearchHint')}</p>
@@ -100,14 +100,14 @@ export default function Dictionary() {
       )}
 
       {!loading && error && (
-        <div className="flex flex-col items-center gap-2 rounded-xl bg-white p-8 text-center shadow-card">
+        <div className="flex flex-col items-center gap-2 rounded-xl border border-ink/[0.06] bg-white p-8 text-center shadow-card">
           <AlertCircle size={24} className="text-inactive" />
           <p className="font-display text-base font-semibold text-ink">{t('searchError')}</p>
         </div>
       )}
 
       {!loading && !error && query && searched && results.length === 0 && (
-        <div className="rounded-xl bg-white p-8 text-center shadow-card">
+        <div className="rounded-xl border border-ink/[0.06] bg-white p-8 text-center shadow-card">
           <p className="font-display text-base font-semibold text-ink">{t('noResults')}</p>
           <p className="mt-1 text-xs text-ink/40">{t('noResultsHint')}</p>
         </div>
@@ -153,7 +153,7 @@ function DictionaryCard({ entry, t }) {
   };
 
   return (
-    <div className="overflow-hidden rounded-xl bg-white p-4 shadow-card">
+    <div className="overflow-hidden rounded-xl border border-ink/[0.06] bg-white p-4 shadow-card">
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
         <h2 className="break-words font-display text-lg font-bold text-ink">{entry.english}</h2>
         {entry.part_of_speech && (

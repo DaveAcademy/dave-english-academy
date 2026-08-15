@@ -95,7 +95,7 @@ export default function MyVocabulary() {
 
   if (!me) {
     return (
-      <div className="rounded-xl bg-white p-10 text-center shadow-card">
+      <div className="rounded-xl border border-ink/[0.06] bg-white p-10 text-center shadow-card">
         <p className="font-display text-lg font-semibold text-ink">Your account isn't linked to a student record yet.</p>
       </div>
     );
@@ -136,13 +136,13 @@ export default function MyVocabulary() {
       {loading ? (
         <p className="p-6 text-center text-sm text-ink/40">Loading...</p>
       ) : visibleWords.length === 0 ? (
-        <div className="rounded-xl bg-white p-10 text-center shadow-card">
+        <div className="rounded-xl border border-ink/[0.06] bg-white p-10 text-center shadow-card">
           <p className="font-display text-lg font-semibold text-ink">No vocabulary to show.</p>
         </div>
       ) : (
         <div className="space-y-2">
           {visibleWords.map((w) => (
-            <div key={w.id} className="rounded-xl bg-white p-3 shadow-card">
+            <div key={w.id} className="rounded-xl border border-ink/[0.06] bg-white p-3 shadow-card">
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setOpenWord(openWord === w.id ? null : w.id)}

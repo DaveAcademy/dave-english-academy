@@ -167,7 +167,7 @@ export default function MyLessons() {
 
   if (!me) {
     return (
-      <div className="rounded-xl bg-white p-10 text-center shadow-card">
+      <div className="rounded-xl border border-ink/[0.06] bg-white p-10 text-center shadow-card">
         <p className="font-display text-lg font-semibold text-ink">{t('noStudentRecord')}</p>
       </div>
     );
@@ -215,7 +215,7 @@ export default function MyLessons() {
       ) : null}
 
       {myLessons.length === 0 ? (
-        <div className="rounded-xl bg-white p-10 text-center shadow-card">
+        <div className="rounded-xl border border-ink/[0.06] bg-white p-10 text-center shadow-card">
           <p className="font-display text-lg font-semibold text-ink">{t('noLessonsYet')}</p>
         </div>
       ) : (
@@ -230,7 +230,7 @@ export default function MyLessons() {
           />
 
           {/* Search + filters */}
-          <div className="mt-4 rounded-xl bg-white p-3 shadow-card">
+          <div className="mt-4 rounded-xl border border-ink/[0.06] bg-white p-3 shadow-card">
             <div className="flex flex-wrap items-center gap-2">
               <label className="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-ink/10 bg-ink/[0.02] px-3 py-2">
                 <Search size={15} className="flex-shrink-0 text-ink/40" aria-hidden="true" />
@@ -274,7 +274,7 @@ export default function MyLessons() {
                 <button
                   type="button"
                   onClick={resetFilters}
-                  className="flex items-center gap-1 rounded-lg border border-ink/10 px-3 py-2 text-xs font-semibold text-ink/60 hover:bg-ink/5"
+                  className="flex items-center gap-1 rounded-lg border border-ink/10 px-3 py-2 text-xs font-semibold text-ink/60 transition-colors hover:bg-ink/5"
                 >
                   <RotateCcw size={13} /> {t('resetFilters')}
                 </button>
@@ -284,7 +284,7 @@ export default function MyLessons() {
 
           {/* Month-grouped lesson list */}
           {filtered.length === 0 ? (
-            <div className="mt-4 rounded-xl bg-white p-10 text-center shadow-card">
+            <div className="mt-4 rounded-xl border border-ink/[0.06] bg-white p-10 text-center shadow-card">
               <Sparkles size={22} className="mx-auto text-ink/30" aria-hidden="true" />
               <p className="mt-2 font-display text-base font-semibold text-ink">{t('noLessonsMatch')}</p>
               {filtersActive && (

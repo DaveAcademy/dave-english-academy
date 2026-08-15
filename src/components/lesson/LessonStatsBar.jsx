@@ -19,7 +19,7 @@ export default function LessonStatsBar({ total, completed, inProgress, remaining
   ];
 
   return (
-    <div className="rounded-xl bg-white p-4 shadow-card">
+    <div className="rounded-xl border border-ink/[0.06] bg-white p-4 shadow-card sm:p-5">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-semibold text-ink">
           {t('progressPercent', { percent })}

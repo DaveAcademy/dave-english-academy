@@ -16,7 +16,7 @@ export default function MonthGroup({ label, count, forceOpen = false, children }
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left hover:bg-ink/5"
+        className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-ink/5"
         aria-expanded={isOpen}
       >
         <ChevronDown size={16} className={`flex-shrink-0 text-ink/40 transition-transform ${isOpen ? '' : '-rotate-90'}`} />
