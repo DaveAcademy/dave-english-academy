@@ -46,6 +46,11 @@ const WordScramble = lazy(() => import('./pages/portal/WordScramble'));
 const VocabularyQuiz = lazy(() => import('./pages/portal/VocabularyQuiz'));
 const WordMatch = lazy(() => import('./pages/portal/WordMatch'));
 const SpeedChallenge = lazy(() => import('./pages/portal/SpeedChallenge'));
+const WordBuilder = lazy(() => import('./pages/portal/WordBuilder'));
+const SentenceScramble = lazy(() => import('./pages/portal/SentenceScramble'));
+const ListeningChallenge = lazy(() => import('./pages/portal/ListeningChallenge'));
+const WordDetective = lazy(() => import('./pages/portal/WordDetective'));
+const GrammarBattle = lazy(() => import('./pages/portal/GrammarBattle'));
 const GameCenter = lazy(() => import('./pages/portal/GameCenter'));
 
 export default function App() {
@@ -123,6 +128,11 @@ function RoutedContent({ isStudent }) {
             <Route path="/vocabulary-quiz" element={<VocabularyQuiz />} />
             <Route path="/word-match" element={<WordMatch />} />
             <Route path="/speed-challenge" element={<SpeedChallenge />} />
+            <Route path="/word-builder" element={<WordBuilder />} />
+            <Route path="/sentence-scramble" element={<SentenceScramble />} />
+            <Route path="/listening-challenge" element={<ListeningChallenge />} />
+            <Route path="/word-detective" element={<WordDetective />} />
+            <Route path="/grammar-battle" element={<GrammarBattle />} />
             <Route path="/my-certificates" element={<MyCertificates />} />
             <Route path="/my-ranking" element={<MyRanking />} />
             <Route path="/chat" element={<Chat />} />

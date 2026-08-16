@@ -90,6 +90,8 @@ $$;
 revoke execute on function public.get_word_scramble_round() from public;
 grant execute on function public.get_word_scramble_round() to authenticated;
 
+drop function if exists public.get_vocabulary_quiz_round();
+
 create or replace function public.get_vocabulary_quiz_round()
 returns table (round_id uuid, id uuid, english text, options text[])
 language plpgsql
@@ -140,6 +142,8 @@ $$;
 revoke execute on function public.get_vocabulary_quiz_round() from public;
 grant execute on function public.get_vocabulary_quiz_round() to authenticated;
 
+drop function if exists public.get_word_match_round();
+
 create or replace function public.get_word_match_round()
 returns table (round_id uuid, id uuid, english text, uzbek text)
 language plpgsql
@@ -178,6 +182,8 @@ $$;
 
 revoke execute on function public.get_word_match_round() from public;
 grant execute on function public.get_word_match_round() to authenticated;
+
+drop function if exists public.get_speed_challenge_round();
 
 create or replace function public.get_speed_challenge_round()
 returns table (round_id uuid, id uuid, english text, options text[])

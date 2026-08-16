@@ -15,8 +15,11 @@
 -- the fact that a (mistaken) payment was recorded and later reversed
 -- stays visible in her timeline instead of silently disappearing.
 
+-- Guarded on student existence so this migration is a safe no-op when
+-- student id 37 doesn't exist (e.g. a fresh database) rather than failing
+-- the FK constraint, same pattern as migration 0060.
 insert into public.payment_transactions
   (student_id, amount, transaction_type, payment_method, covers_period_start, covers_period_end, paid_at, notes)
-values
-  (37, -250000, 'correction', null, null, null, now(),
-   'Reversal of duplicate manual payment (id 108, 2026-08-01) - confirmed with admin: Asal paid until 14 August only, one period, not two.');
+select 37, -250000, 'correction', null, null, null, now(),
+   'Reversal of duplicate manual payment (id 108, 2026-08-01) - confirmed with admin: Asal paid until 14 August only, one period, not two.'
+where exists (select 1 from public.students where id = 37);

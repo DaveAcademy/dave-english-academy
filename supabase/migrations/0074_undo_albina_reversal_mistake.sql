@@ -7,8 +7,11 @@
 -- add a new one that cancels it out, same append-only principle as every
 -- other correction this session.
 
+-- Guarded on student existence so this migration is a safe no-op when
+-- student id 18 doesn't exist (e.g. a fresh database) rather than failing
+-- the FK constraint, same pattern as migration 0060.
 insert into public.payment_transactions
   (student_id, amount, transaction_type, payment_method, covers_period_start, covers_period_end, paid_at, notes)
-values
-  (18, 200000, 'correction', null, null, null, now(),
-   'Undoes the mistaken reversal in migration 0073 (correction id 121) - confirmed with admin: Albina''s 2026-08-01 payment (id 110) was real, not test data.');
+select 18, 200000, 'correction', null, null, null, now(),
+   'Undoes the mistaken reversal in migration 0073 (correction id 121) - confirmed with admin: Albina''s 2026-08-01 payment (id 110) was real, not test data.'
+where exists (select 1 from public.students where id = 18);

@@ -1207,6 +1207,36 @@ export async function getSpeedChallengeRound() {
   return splitRoundId(data);
 }
 
+export async function getWordBuilderRound() {
+  const { data, error } = await supabase.rpc('get_word_builder_round');
+  if (error) throw error;
+  return splitRoundId(data);
+}
+
+export async function getListeningChallengeRound() {
+  const { data, error } = await supabase.rpc('get_listening_challenge_round');
+  if (error) throw error;
+  return splitRoundId(data);
+}
+
+export async function getSentenceScrambleRound() {
+  const { data, error } = await supabase.rpc('get_sentence_scramble_round');
+  if (error) throw error;
+  return splitRoundId(data);
+}
+
+export async function getWordDetectiveRound() {
+  const { data, error } = await supabase.rpc('get_word_detective_round');
+  if (error) throw error;
+  return splitRoundId(data);
+}
+
+export async function getGrammarBattleRound() {
+  const { data, error } = await supabase.rpc('get_grammar_battle_round');
+  if (error) throw error;
+  return splitRoundId(data);
+}
+
 export async function submitGameRound(gameType, roundId, answers) {
   const { data, error } = await supabase.rpc('submit_game_round', {
     p_round_id: roundId,
