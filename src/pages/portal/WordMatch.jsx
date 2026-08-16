@@ -30,6 +30,7 @@ function shuffle(list) {
 export default function WordMatch() {
   const { t } = useTranslation('game');
   const [round, setRound] = useState(null); // [{ id, english, uzbek }]
+  const [roundId, setRoundId] = useState(null);
   const [uzbekTiles, setUzbekTiles] = useState([]); // [{ vocabularyId, text }] shuffled
   const [matchedIds, setMatchedIds] = useState(new Set());
   const [selectedEnglishId, setSelectedEnglishId] = useState(null);
@@ -52,7 +53,8 @@ export default function WordMatch() {
     setWrongPair(null);
     setError(null);
     try {
-      const words = await getWordMatchRound();
+      const { roundId: rid, words } = await getWordMatchRound();
+      setRoundId(rid);
       setRound(words);
       setUzbekTiles(shuffle(words.map((w) => ({ vocabularyId: w.id, text: w.uzbek }))));
     } catch (err) {
@@ -72,13 +74,13 @@ export default function WordMatch() {
     async (finalAnswers) => {
       setSubmitting(true);
       try {
-        const res = await submitGameRound('word_match', finalAnswers);
+        const res = await submitGameRound('word_match', roundId, finalAnswers);
         setResult(res);
       } finally {
         setSubmitting(false);
       }
     },
-    []
+    [roundId]
   );
 
   const tryMatch = (englishId, uzbekTileIndex) => {

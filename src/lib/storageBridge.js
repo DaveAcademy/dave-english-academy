@@ -1167,34 +1167,52 @@ export async function removeVocabularyFavorite(studentId, vocabularyId) {
 // game round to points is an achievement bonus, awarded by the existing
 // evaluate_achievements() engine, not by this code. Adding a new game on
 // the frontend means one new get*Round() wrapper here plus a
-// submitGameRound(gameType, answers) call - not a new submit function.
+// submitGameRound(gameType, roundId, answers) call - not a new submit
+// function.
+//
+// Since 0141: every get*Round() RPC now returns a round_id column on
+// each row (same value per row - one round token per round, not per
+// word). The wrappers below pull it off the first row and strip it out
+// of the per-word objects so callers keep working with plain
+// { id, english, ... } shapes; submitGameRound() must be given that
+// round_id back so the server can enforce single-use submission.
+
+function splitRoundId(data) {
+  const roundId = data?.[0]?.round_id ?? null;
+  const words = (data || []).map(({ round_id, ...w }) => w);
+  return { roundId, words };
+}
 
 export async function getWordScrambleRound() {
   const { data, error } = await supabase.rpc('get_word_scramble_round');
   if (error) throw error;
-  return data;
+  return splitRoundId(data);
 }
 
 export async function getVocabularyQuizRound() {
   const { data, error } = await supabase.rpc('get_vocabulary_quiz_round');
   if (error) throw error;
-  return data;
+  return splitRoundId(data);
 }
 
 export async function getWordMatchRound() {
   const { data, error } = await supabase.rpc('get_word_match_round');
   if (error) throw error;
-  return data;
+  return splitRoundId(data);
 }
 
 export async function getSpeedChallengeRound() {
   const { data, error } = await supabase.rpc('get_speed_challenge_round');
   if (error) throw error;
-  return data;
+  return splitRoundId(data);
 }
 
-export async function submitGameRound(gameType, answers) {
-  const { data, error } = await supabase.rpc('submit_game_round', { p_game_type: gameType, p_answers: answers });
+export async function submitGameRound(gameType, roundId, answers) {
+  const { data, error } = await supabase.rpc('submit_game_round', {
+    p_round_id: roundId,
+    p_game_type: gameType,
+    p_answers: answers,
+  });
   if (error) throw error;
   return data;
 }

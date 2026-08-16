@@ -82,6 +82,7 @@ function LetterTiles({ text }) {
 export default function WordScramble() {
   const { t } = useTranslation('game');
   const [round, setRound] = useState(null); // [{ id, english, scrambled }]
+  const [roundId, setRoundId] = useState(null);
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState([]);
   const [input, setInput] = useState('');
@@ -101,7 +102,8 @@ export default function WordScramble() {
     setHintUsed(false);
     setError(null);
     try {
-      const words = await getWordScrambleRound();
+      const { roundId: rid, words } = await getWordScrambleRound();
+      setRoundId(rid);
       setRound(words.map((w) => ({ ...w, scrambled: scramble(w.english) })));
     } catch (err) {
       // Same distinction as VocabularyQuiz.jsx: a failed RPC call must not
@@ -153,7 +155,7 @@ export default function WordScramble() {
     }
     setLoading(true);
     try {
-      const res = await submitGameRound('word_scramble', answers);
+      const res = await submitGameRound('word_scramble', roundId, answers);
       setResult(res);
     } finally {
       setLoading(false);

@@ -19,6 +19,7 @@ const OPTION_LETTERS = ['A', 'B', 'C', 'D'];
 export default function VocabularyQuiz() {
   const { t } = useTranslation('game');
   const [round, setRound] = useState(null); // [{ id, english, options }]
+  const [roundId, setRoundId] = useState(null);
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState([]);
   const [chosen, setChosen] = useState(null);
@@ -34,7 +35,9 @@ export default function VocabularyQuiz() {
     setChosen(null);
     setError(null);
     try {
-      setRound(await getVocabularyQuizRound());
+      const { roundId: rid, words } = await getVocabularyQuizRound();
+      setRoundId(rid);
+      setRound(words);
     } catch (err) {
       // A failed RPC call (e.g. it doesn't exist yet on this environment)
       // must not look like "you've simply run out of vocabulary" - those
@@ -67,7 +70,7 @@ export default function VocabularyQuiz() {
     }
     setLoading(true);
     try {
-      const res = await submitGameRound('vocabulary_quiz', answers);
+      const res = await submitGameRound('vocabulary_quiz', roundId, answers);
       setResult(res);
     } finally {
       setLoading(false);

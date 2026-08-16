@@ -49,6 +49,7 @@ function CountdownRing({ fractionLeft }) {
 export default function SpeedChallenge() {
   const { t } = useTranslation('game');
   const [round, setRound] = useState(null); // [{ id, english, options }]
+  const [roundId, setRoundId] = useState(null);
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState([]);
   const [chosen, setChosen] = useState(null);
@@ -69,7 +70,9 @@ export default function SpeedChallenge() {
     setChosen(null);
     setError(null);
     try {
-      setRound(await getSpeedChallengeRound());
+      const { roundId: rid, words } = await getSpeedChallengeRound();
+      setRoundId(rid);
+      setRound(words);
     } catch (err) {
       setError(err.message || String(err));
       setRound(null);
@@ -92,13 +95,13 @@ export default function SpeedChallenge() {
     async (finalAnswers) => {
       setSubmitting(true);
       try {
-        const res = await submitGameRound('speed_challenge', finalAnswers);
+        const res = await submitGameRound('speed_challenge', roundId, finalAnswers);
         setResult(res);
       } finally {
         setSubmitting(false);
       }
     },
-    []
+    [roundId]
   );
 
   const goToNext = useCallback(
