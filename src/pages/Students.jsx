@@ -138,7 +138,7 @@ export default function Students() {
           <div className="flex gap-2">
             <button
               onClick={() => setImportOpen(true)}
-              className="flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-2 text-sm font-semibold text-brand-500 hover:bg-brand-50"
+              className="flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-2 text-sm font-semibold text-brand-600 hover:bg-brand-50"
             >
               <Upload size={16} /> {t('import')}
             </button>
@@ -147,7 +147,7 @@ export default function Students() {
                 setEditingStudent(null);
                 setFormOpen(true);
               }}
-              className="flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600"
+              className="flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
             >
               <Plus size={16} /> {t('addStudent')}
             </button>
@@ -275,7 +275,7 @@ export default function Students() {
                                 setEditingStudent(s);
                                 setFormOpen(true);
                               }}
-                              className="rounded-md px-2 py-1 text-xs font-semibold text-brand-500 hover:bg-brand-50"
+                              className="rounded-md px-2 py-1 text-xs font-semibold text-brand-600 hover:bg-brand-50"
                             >
                               {t('common:edit')}
                             </button>
@@ -314,7 +314,7 @@ export default function Students() {
                           setEditingStudent(s);
                           setFormOpen(true);
                         }}
-                        className="rounded-md p-1.5 text-brand-500 active:bg-brand-50"
+                        className="rounded-md p-1.5 text-brand-600 active:bg-brand-50"
                       >
                         <Pencil size={15} />
                       </button>
@@ -347,7 +347,7 @@ export default function Students() {
                 )}
                 <div className="mt-1.5 flex items-center justify-between">
                   {s.phone && <p className="text-xs text-ink/50">{s.phone}</p>}
-                  <p className="text-xs font-semibold text-brand-500">{formatUZS(s.monthly_fee)}{t('perMonth')}</p>
+                  <p className="text-xs font-semibold text-brand-600">{formatUZS(s.monthly_fee)}{t('perMonth')}</p>
                 </div>
               </div>
               );

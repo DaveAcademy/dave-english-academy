@@ -60,7 +60,7 @@ export default function Attendance() {
             key={tab.key}
             onClick={() => setLevel(tab.key)}
             className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold ${
-              level === tab.key ? 'bg-brand-500 text-white' : 'bg-white text-ink/60 shadow-sm'
+              level === tab.key ? 'bg-brand-600 text-white' : 'bg-white text-ink/60 shadow-sm'
             }`}
           >
             {t(tab.labelKey)}

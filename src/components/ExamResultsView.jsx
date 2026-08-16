@@ -67,14 +67,14 @@ export default function ExamResultsView({ examMaxScore, students, allStudents, a
                 {hasFile && (
                   <button
                     onClick={() => onOpenFile(answer.answer_file_url)}
-                    className="mt-1 flex items-center gap-1 text-xs text-brand-500 hover:underline"
+                    className="mt-1 flex items-center gap-1 text-xs text-brand-600 hover:underline"
                   >
                     <Paperclip size={11} /> {answer.answer_file_name || t('studentAnswerDefault')}
                   </button>
                 )}
                 {answer.feedback && <p className="mt-1 text-xs text-ink/60">{answer.feedback}</p>}
               </div>
-              <p className="flex-shrink-0 text-sm font-bold text-brand-500">
+              <p className="flex-shrink-0 text-sm font-bold text-brand-600">
                 {graded ? t('scoreOutOfMax', { score: answer.score, max: examMaxScore }) : t('notGraded')}
               </p>
             </div>

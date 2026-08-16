@@ -238,7 +238,7 @@ export default function Recognition() {
             type="button"
             onClick={() => switchAwardType(a.key)}
             className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
-              awardTypeKey === a.key ? 'bg-brand-500 text-white' : 'bg-white text-ink/60 shadow-card hover:text-ink'
+              awardTypeKey === a.key ? 'bg-brand-600 text-white' : 'bg-white text-ink/60 shadow-card hover:text-ink'
             }`}
           >
             {a.title}
@@ -280,7 +280,7 @@ export default function Recognition() {
                   <button
                     type="button"
                     onClick={() => setEditingLevel(isEditingThis ? null : level)}
-                    className="text-xs font-semibold text-brand-500 hover:underline"
+                    className="text-xs font-semibold text-brand-600 hover:underline"
                   >
                     {isEditingThis ? 'Cancel edit' : 'Edit'}
                   </button>
@@ -334,7 +334,7 @@ export default function Recognition() {
                           <button
                             type="button"
                             onClick={() => setPendingConfirm({ level, candidate: c, isEdit: !!alreadyFinalized })}
-                            className="flex-shrink-0 rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-600"
+                            className="flex-shrink-0 rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700"
                           >
                             {alreadyFinalized ? 'Select' : 'Confirm'}
                           </button>
@@ -416,7 +416,7 @@ export default function Recognition() {
                 type="button"
                 onClick={submitConfirm}
                 disabled={confirmSubmitting || (pendingConfirm.isEdit && !confirmReason.trim())}
-                className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-50"
+                className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
               >
                 {confirmSubmitting ? 'Saving...' : pendingConfirm.isEdit ? 'Confirm change' : 'Confirm winner'}
               </button>

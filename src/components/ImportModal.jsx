@@ -68,7 +68,7 @@ export default function ImportModal({ onClose, onImport }) {
             <button
               onClick={handleImportClick}
               disabled={importing || !text.trim()}
-              className="flex-1 rounded-lg bg-brand-500 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+              className="flex-1 rounded-lg bg-brand-600 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
             >
               {importing ? 'Importing...' : 'Import'}
             </button>

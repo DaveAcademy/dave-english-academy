@@ -46,7 +46,7 @@ export default function HomeworkGradingRoster({
                 {current.answer_file_url && (
                   <button
                     onClick={() => onOpenFile(current.answer_file_url)}
-                    className="mt-1 flex items-center gap-1 text-xs text-brand-500 hover:underline"
+                    className="mt-1 flex items-center gap-1 text-xs text-brand-600 hover:underline"
                   >
                     <Paperclip size={11} /> {current.answer_file_name || t('studentSubmissionDefault')}
                   </button>
@@ -57,7 +57,7 @@ export default function HomeworkGradingRoster({
                       <button
                         key={f.id}
                         onClick={() => onOpenFile(f.file_url)}
-                        className="flex items-center gap-1 text-xs text-brand-500 hover:underline"
+                        className="flex items-center gap-1 text-xs text-brand-600 hover:underline"
                       >
                         <ImageIcon size={11} /> {t('imageN', { n: i + 1 })}
                       </button>

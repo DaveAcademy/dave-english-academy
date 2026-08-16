@@ -93,7 +93,7 @@ export default function ChangePasswordForm() {
         <button
           type="submit"
           disabled={submitting}
-          className="rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-50"
+          className="rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
         >
           {submitting ? t('settings:changingPassword') : t('settings:changePassword')}
         </button>

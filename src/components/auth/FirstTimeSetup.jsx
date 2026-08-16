@@ -63,7 +63,7 @@ export default function FirstTimeSetup({ onSetupComplete }) {
           </p>
           <button
             onClick={() => setShowLoginInstead(true)}
-            className="w-full rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600"
+            className="w-full rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700"
           >
             {t('auth:confirmedSignIn')}
           </button>
@@ -122,7 +122,7 @@ export default function FirstTimeSetup({ onSetupComplete }) {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-50"
+            className="w-full rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
           >
             {submitting ? t('auth:creatingAdmin') : t('auth:createAdminAccount')}
           </button>
@@ -131,7 +131,7 @@ export default function FirstTimeSetup({ onSetupComplete }) {
         <p className="mt-4 text-center text-xs text-ink/40">{t('auth:onlyOnceWarning')}</p>
         <button
           onClick={() => setShowLoginInstead(true)}
-          className="mt-3 w-full text-center text-xs text-brand-500 hover:underline"
+          className="mt-3 w-full text-center text-xs text-brand-600 hover:underline"
         >
           {t('auth:alreadySetUp')}
         </button>

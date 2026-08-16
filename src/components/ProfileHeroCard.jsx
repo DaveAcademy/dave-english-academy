@@ -50,7 +50,7 @@ export default function ProfileHeroCard({ studentId, name, meta, points, rank, s
 
       <div className="flex flex-wrap items-center gap-4 border-t border-ink/[0.06] pt-4">
         <div className="relative h-14 w-14 flex-shrink-0 sm:h-16 sm:w-16">
-          <div className="absolute inset-[-4px] rounded-full" style={{ background: `conic-gradient(#F2A93B ${percent * 3.6}deg, #CFE4E3 0)` }} />
+          <div className="absolute inset-[-4px] rounded-full" style={{ background: `conic-gradient(#F2A93B ${percent * 3.6}deg, #D6E3FF 0)` }} />
           <div className="absolute inset-1 flex items-center justify-center rounded-full bg-gradient-to-br from-brand-600 to-brand-500 text-base font-bold text-white sm:text-lg">
             {initials}
           </div>

@@ -100,7 +100,7 @@ function RosterRow({ student, submission, files, onOpenFile, onMarkReviewed, onA
                 <button
                   key={f.id}
                   onClick={() => onOpenFile(f.file_url)}
-                  className="flex items-center gap-1 text-xs text-brand-500 hover:underline"
+                  className="flex items-center gap-1 text-xs text-brand-600 hover:underline"
                 >
                   <ImageIcon size={11} /> Image {i + 1}
                 </button>
@@ -120,7 +120,7 @@ function RosterRow({ student, submission, files, onOpenFile, onMarkReviewed, onA
             <button
               onClick={handleAward}
               disabled={busy || !points}
-              className="rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-600 disabled:opacity-60"
+              className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
             >
               Award points
             </button>

@@ -155,7 +155,7 @@ export default function ProgressAnalytics({ rows: allRows, levelFilter, loading:
           <button
             onClick={handleExportPdf}
             disabled={sortedRows.length === 0}
-            className="flex items-center gap-1.5 rounded-lg bg-brand-500 px-3 py-2 text-xs font-semibold text-white hover:bg-brand-600 disabled:opacity-50"
+            className="flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-2 text-xs font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
           >
             <Download size={14} /> PDF
           </button>

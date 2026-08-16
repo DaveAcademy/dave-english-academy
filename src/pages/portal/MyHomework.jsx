@@ -218,7 +218,7 @@ export default function MyHomework() {
             return (
               <div key={h.id} className="rounded-xl border border-ink/[0.06] bg-white p-3 shadow-card sm:p-4">
                 <div className="flex items-start gap-3">
-                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-500">
+                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600">
                     <BookOpen size={18} />
                   </div>
                   <div className="min-w-0 flex-1">
@@ -241,7 +241,7 @@ export default function MyHomework() {
                     </p>
                     {h.description && <p className="mt-1 whitespace-pre-wrap text-sm text-ink/70">{h.description}</p>}
                   </div>
-                  {graded && <p className="flex-shrink-0 whitespace-nowrap text-sm font-bold text-brand-500">{t('scoreOutOf', { score: status.score })}</p>}
+                  {graded && <p className="flex-shrink-0 whitespace-nowrap text-sm font-bold text-brand-600">{t('scoreOutOf', { score: status.score })}</p>}
                 </div>
 
                 {graded && status.feedback && (
@@ -290,7 +290,7 @@ export default function MyHomework() {
                   {h.file_url && (
                     <button
                       onClick={() => handleOpenFile(h.file_url)}
-                      className="flex min-w-0 max-w-full items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-2 text-xs font-semibold text-brand-500 transition-colors hover:bg-brand-50 sm:py-1.5"
+                      className="flex min-w-0 max-w-full items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-2 text-xs font-semibold text-brand-600 transition-colors hover:bg-brand-50 sm:py-1.5"
                     >
                       <Download size={13} className="flex-shrink-0" /> <span className="min-w-0 max-w-[55vw] truncate sm:max-w-[220px]">{h.file_name || t('homeworkFileDefault')}</span>
                     </button>
@@ -316,7 +316,7 @@ export default function MyHomework() {
                     <button
                       onClick={() => handleUploadPending(h.id)}
                       disabled={submittingId === h.id}
-                      className="flex items-center gap-1.5 rounded-lg bg-brand-500 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-brand-600 disabled:opacity-60 sm:py-1.5"
+                      className="flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-60 sm:py-1.5"
                     >
                       {submittingId === h.id ? t('uploading') : t('uploadImagesCount', { count: pending.length })}
                     </button>

@@ -105,7 +105,7 @@ export default function MyVocabulary() {
     <div>
       <header className="mb-4">
         {lesson ? (
-          <Link to="/my-vocabulary" className="mb-2 flex items-center gap-1 text-xs font-semibold text-brand-500 hover:underline">
+          <Link to="/my-vocabulary" className="mb-2 flex items-center gap-1 text-xs font-semibold text-brand-600 hover:underline">
             <ArrowLeft size={13} /> All Vocabulary
           </Link>
         ) : null}

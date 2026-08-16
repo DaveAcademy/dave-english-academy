@@ -47,7 +47,7 @@ export default class RouteErrorBoundary extends Component {
           <p className="font-display text-lg font-semibold text-ink">Something went wrong loading this page.</p>
           <button
             onClick={this.handleRetry}
-            className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600"
+            className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
           >
             Try again
           </button>

@@ -316,7 +316,7 @@ export default function Homework() {
         </div>
         <button
           onClick={() => (formOpen ? resetForm() : setFormOpen(true))}
-          className="flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600"
+          className="flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
         >
           <Plus size={16} /> {t('newHomework')}
         </button>
@@ -388,7 +388,7 @@ export default function Homework() {
                 <button
                   type="button"
                   onClick={() => handleOpenFile(editingHomework.file_url)}
-                  className="flex items-center gap-1 text-xs font-semibold text-brand-500 hover:underline"
+                  className="flex items-center gap-1 text-xs font-semibold text-brand-600 hover:underline"
                 >
                   <Download size={13} /> {editingHomework.file_name || t('homeworkFileDefault')}
                 </button>
@@ -407,7 +407,7 @@ export default function Homework() {
             <button
               type="submit"
               disabled={saving}
-              className="flex-1 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-60"
+              className="flex-1 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
             >
               {uploading ? t('uploading') : saving ? t('common:saving') : editingId ? t('common:saveChanges') : t('addHomework')}
             </button>
@@ -430,7 +430,7 @@ export default function Homework() {
             <div
               key={h.id}
               className={`flex flex-shrink-0 items-center gap-2 rounded-xl px-3 py-2 shadow-card ${
-                selected?.id === h.id ? 'bg-brand-500 text-white' : 'bg-white text-ink'
+                selected?.id === h.id ? 'bg-brand-600 text-white' : 'bg-white text-ink'
               }`}
             >
               <button onClick={() => setSelectedHomeworkId(h.id)} className="flex items-center gap-2 text-left">
@@ -444,7 +444,7 @@ export default function Homework() {
                 </div>
                 {h.level && <LevelBadge level={h.level} />}
               </button>
-              <button onClick={() => startEdit(h)} className={selected?.id === h.id ? 'text-white/80 hover:text-white' : 'text-brand-500 hover:bg-brand-50'} aria-label={t('editHomeworkAria')}>
+              <button onClick={() => startEdit(h)} className={selected?.id === h.id ? 'text-white/80 hover:text-white' : 'text-brand-600 hover:bg-brand-50'} aria-label={t('editHomeworkAria')}>
                 <Pencil size={14} />
               </button>
               <button onClick={() => setDeletingHomework(h)} className={selected?.id === h.id ? 'text-white/80 hover:text-white' : 'text-inactive hover:bg-inactive/10'} aria-label={t('deleteHomeworkAria')}>
@@ -487,7 +487,7 @@ export default function Homework() {
               {selected.file_url && (
                 <button
                   onClick={() => handleOpenFile(selected.file_url)}
-                  className="flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-xs font-semibold text-brand-500 hover:bg-brand-50"
+                  className="flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-xs font-semibold text-brand-600 hover:bg-brand-50"
                 >
                   <Download size={13} /> {selected.file_name || t('homeworkFileDefault')}
                 </button>
@@ -594,7 +594,7 @@ export default function Homework() {
                                         {item.answerFileUrl && (
                                           <button
                                             onClick={() => handleOpenFile(item.answerFileUrl)}
-                                            className="flex items-center gap-1 text-xs text-brand-500 hover:underline"
+                                            className="flex items-center gap-1 text-xs text-brand-600 hover:underline"
                                           >
                                             <Paperclip size={11} /> {item.answerFileName || 'Submission'}
                                           </button>
@@ -603,7 +603,7 @@ export default function Homework() {
                                           <button
                                             key={f.id}
                                             onClick={() => handleOpenFile(f.file_url)}
-                                            className="flex items-center gap-1 text-xs text-brand-500 hover:underline"
+                                            className="flex items-center gap-1 text-xs text-brand-600 hover:underline"
                                           >
                                             <ImageIcon size={11} /> Image {i + 1}
                                           </button>

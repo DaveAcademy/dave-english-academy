@@ -194,7 +194,7 @@ export default function MyExams() {
                     )}
                     {e.description && <p className="mt-1 whitespace-pre-wrap text-sm text-ink/70">{e.description}</p>}
                   </div>
-                  {graded && <p className="flex-shrink-0 whitespace-nowrap text-sm font-bold text-brand-500">{t('scoreOutOfMax', { score: result.score, max: e.max_score })}</p>}
+                  {graded && <p className="flex-shrink-0 whitespace-nowrap text-sm font-bold text-brand-600">{t('scoreOutOfMax', { score: result.score, max: e.max_score })}</p>}
                 </div>
 
                 {result?.feedback && (
@@ -209,7 +209,7 @@ export default function MyExams() {
                   {e.file_url && (
                     <button
                       onClick={() => handleOpenFile(e.file_url)}
-                      className="flex min-w-0 max-w-full items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-2 text-xs font-semibold text-brand-500 transition-colors hover:bg-brand-50 sm:py-1.5"
+                      className="flex min-w-0 max-w-full items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-2 text-xs font-semibold text-brand-600 transition-colors hover:bg-brand-50 sm:py-1.5"
                     >
                       <Download size={13} className="flex-shrink-0" /> <span className="min-w-0 max-w-[55vw] truncate sm:max-w-[220px]">{e.file_name || t('examFileDefault')}</span>
                     </button>

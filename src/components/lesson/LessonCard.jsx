@@ -21,7 +21,7 @@ const STATUS_STYLES = {
 };
 
 const BADGE_STYLES = {
-  completed: 'bg-brand-500 text-white',
+  completed: 'bg-brand-600 text-white',
   in_progress: 'bg-brand-100 text-brand-600',
   not_started: 'bg-ink/5 text-ink/60',
   locked: 'bg-ink/10 text-ink/40',
@@ -115,7 +115,7 @@ export default function LessonCard({ lesson, status, openHref, onViewPdf, vocabH
               onClick={() => onViewPdf(lesson)}
               title={t('viewPdf')}
               aria-label={t('viewPdf')}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-ink/10 text-ink/60 hover:bg-brand-50 hover:text-brand-500"
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-ink/10 text-ink/60 hover:bg-brand-50 hover:text-brand-600"
             >
               <FileText size={15} />
             </button>
@@ -125,7 +125,7 @@ export default function LessonCard({ lesson, status, openHref, onViewPdf, vocabH
               to={vocabHref}
               title={t('vocabulary')}
               aria-label={t('vocabulary')}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-ink/10 text-ink/60 hover:bg-brand-50 hover:text-brand-500"
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-ink/10 text-ink/60 hover:bg-brand-50 hover:text-brand-600"
             >
               <Languages size={15} />
             </Link>
@@ -135,7 +135,7 @@ export default function LessonCard({ lesson, status, openHref, onViewPdf, vocabH
               to={discussHref}
               title={t('discuss')}
               aria-label={t('discuss')}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-ink/10 text-ink/60 hover:bg-brand-50 hover:text-brand-500"
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-ink/10 text-ink/60 hover:bg-brand-50 hover:text-brand-600"
             >
               <MessageSquare size={15} />
             </Link>

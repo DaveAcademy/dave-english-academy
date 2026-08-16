@@ -518,7 +518,7 @@ export default function Rankings() {
                   type="button"
                   onClick={() => setSessionLevel(lvl)}
                   className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
-                    sessionLevel === lvl ? 'bg-brand-500 text-white' : 'bg-ink/5 text-ink/60 hover:text-ink'
+                    sessionLevel === lvl ? 'bg-brand-600 text-white' : 'bg-ink/5 text-ink/60 hover:text-ink'
                   }`}
                 >
                   Level {lvl}
@@ -545,7 +545,7 @@ export default function Rankings() {
               type="button"
               onClick={handleOpenSession}
               disabled={sessionPending || !sessionGroupId || !!openSession}
-              className="rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-600 disabled:opacity-50"
+              className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
             >
               {sessionPending ? 'Opening...' : openSession ? 'Session Open' : 'Open Session'}
             </button>
@@ -622,7 +622,7 @@ export default function Rankings() {
                 <button
                   type="submit"
                   disabled={awardPending}
-                  className="rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-50 sm:col-span-3"
+                  className="rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50 sm:col-span-3"
                 >
                   {awardPending ? 'Saving...' : 'Save'}
                 </button>
@@ -704,7 +704,7 @@ export default function Rankings() {
                         setBulkGroup('');
                       }}
                       className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
-                        bulkLevel === lvl ? 'bg-brand-500 text-white' : 'bg-ink/5 text-ink/60 hover:text-ink'
+                        bulkLevel === lvl ? 'bg-brand-600 text-white' : 'bg-ink/5 text-ink/60 hover:text-ink'
                       }`}
                     >
                       Level {lvl}
@@ -756,7 +756,7 @@ export default function Rankings() {
                         value={bulkValues[s.id] ?? ''}
                         onChange={(e) => setBulkValue(s.id, e.target.value)}
                         placeholder="0"
-                        className="w-20 rounded-lg border border-ink/10 px-2 py-1 text-center text-sm font-bold text-brand-500"
+                        className="w-20 rounded-lg border border-ink/10 px-2 py-1 text-center text-sm font-bold text-brand-600"
                       />
                     </div>
                   ))}
@@ -767,7 +767,7 @@ export default function Rankings() {
                 type="button"
                 onClick={submitBulk}
                 disabled={bulkPending || bulkPendingCount === 0}
-                className="mt-3 w-full rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-50"
+                className="mt-3 w-full rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
               >
                 {bulkPending ? 'Awarding...' : `Award to ${bulkPendingCount} student${bulkPendingCount === 1 ? '' : 's'}`}
               </button>
@@ -788,7 +788,7 @@ export default function Rankings() {
                   type="button"
                   onClick={() => setBoardLevel(lvl)}
                   className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
-                    boardLevel === lvl ? 'bg-brand-500 text-white' : 'bg-ink/5 text-ink/60 hover:text-ink'
+                    boardLevel === lvl ? 'bg-brand-600 text-white' : 'bg-ink/5 text-ink/60 hover:text-ink'
                   }`}
                 >
                   {lvl}
@@ -802,7 +802,7 @@ export default function Rankings() {
                   type="button"
                   onClick={() => setBoardPeriod(p)}
                   className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
-                    boardPeriod === p ? 'bg-brand-500 text-white' : 'bg-ink/5 text-ink/60 hover:text-ink'
+                    boardPeriod === p ? 'bg-brand-600 text-white' : 'bg-ink/5 text-ink/60 hover:text-ink'
                   }`}
                 >
                   {PERIOD_LABEL[p]}
@@ -885,7 +885,7 @@ export default function Rankings() {
                         </span>
                       </td>
                       <td className="px-3 py-2 font-medium text-ink">{row.real_name}</td>
-                      <td className="px-3 py-2 font-bold text-brand-500">{row.points}</td>
+                      <td className="px-3 py-2 font-bold text-brand-600">{row.points}</td>
                       <td className="px-3 py-2">
                         {row.rank_change == null || row.rank_change === 0 ? (
                           <span className="text-ink/30">—</span>
@@ -943,7 +943,7 @@ export default function Rankings() {
                         {row.perSession[s.id] ?? 0}
                       </td>
                     ))}
-                    <td className="px-3 py-2 text-center text-base font-bold text-brand-500">{row.total}</td>
+                    <td className="px-3 py-2 text-center text-base font-bold text-brand-600">{row.total}</td>
                   </tr>
                 ))}
               </tbody>

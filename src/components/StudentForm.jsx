@@ -174,7 +174,7 @@ export default function StudentForm({ student, onClose, onSave }) {
             <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 text-sm font-semibold text-ink/60 hover:bg-ink/5">
               {t('common:cancel')}
             </button>
-            <button type="submit" disabled={saving} className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-60">
+            <button type="submit" disabled={saving} className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60">
               {saving ? t('common:saving') : isEditing ? t('common:saveChanges') : t('addStudent')}
             </button>
           </div>

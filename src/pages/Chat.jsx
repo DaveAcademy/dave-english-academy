@@ -446,7 +446,7 @@ export default function Chat() {
       <button
         key={`${a.url}-${idx}`}
         onClick={() => handleOpenAttachment(a.url)}
-        className="flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-xs font-semibold text-brand-500 hover:bg-brand-50"
+        className="flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-xs font-semibold text-brand-600 hover:bg-brand-50"
       >
         <Paperclip size={13} /> {a.name || t('chat:attachmentLabel')}
       </button>
@@ -586,7 +586,7 @@ export default function Chat() {
             <button
               type="submit"
               disabled={sending || (!body.trim() && files.length === 0)}
-              className="ml-auto flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-50"
+              className="ml-auto flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
             >
               <Send size={15} /> {sending ? (files.length > 0 ? t('chat:uploadingMessage') : t('chat:sendingMessage')) : t('chat:send')}
             </button>

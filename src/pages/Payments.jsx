@@ -385,7 +385,7 @@ export default function Payments() {
             key={f.key}
             onClick={() => setStatusFilter(f.key)}
             className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold ${
-              statusFilter === f.key ? 'bg-brand-500 text-white' : 'bg-white text-ink/60 shadow-sm'
+              statusFilter === f.key ? 'bg-brand-600 text-white' : 'bg-white text-ink/60 shadow-sm'
             }`}
           >
             {f.label}
@@ -427,7 +427,7 @@ export default function Payments() {
                     </Link>
                     <button
                       onClick={() => openModal(s, 'record')}
-                      className="rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-semibold text-white"
+                      className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white"
                     >
                       Record payment
                     </button>
@@ -546,7 +546,7 @@ export default function Payments() {
                   <button
                     type="submit"
                     disabled={recording}
-                    className="w-full rounded-lg bg-brand-500 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                    className="w-full rounded-lg bg-brand-600 py-2 text-sm font-semibold text-white disabled:opacity-50"
                   >
                     {recording ? 'Saving…' : 'Save payment'}
                   </button>

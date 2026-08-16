@@ -200,7 +200,7 @@ export default function Lessons() {
         </div>
         <button
           onClick={() => (formOpen ? resetForm() : setFormOpen(true))}
-          className="flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600"
+          className="flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
         >
           <Plus size={16} /> Add lesson
         </button>
@@ -221,7 +221,7 @@ export default function Lessons() {
             <button
               onClick={() => handleProgressSave(level)}
               disabled={progressSaving === level}
-              className="rounded-lg bg-brand-500 px-2 py-1 text-xs font-semibold text-white hover:bg-brand-600 disabled:opacity-60"
+              className="rounded-lg bg-brand-600 px-2 py-1 text-xs font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
             >
               {progressSaving === level ? 'Saving...' : 'Update'}
             </button>
@@ -245,7 +245,7 @@ export default function Lessons() {
             <button
               key={value}
               onClick={() => setScopeFilter(value)}
-              className={`px-3 py-2 ${scopeFilter === value ? 'bg-brand-500 text-white' : 'bg-white text-ink/60 hover:bg-ink/5'}`}
+              className={`px-3 py-2 ${scopeFilter === value ? 'bg-brand-600 text-white' : 'bg-white text-ink/60 hover:bg-ink/5'}`}
             >
               {label}
             </button>
@@ -306,7 +306,7 @@ export default function Lessons() {
                 <button
                   type="button"
                   onClick={() => handleOpenPdf(editingLesson.pdf_path)}
-                  className="flex items-center gap-1 text-xs font-semibold text-brand-500 hover:underline"
+                  className="flex items-center gap-1 text-xs font-semibold text-brand-600 hover:underline"
                 >
                   <Download size={13} /> {editingLesson.pdf_name || 'Current PDF'}
                 </button>
@@ -326,7 +326,7 @@ export default function Lessons() {
             <button
               type="submit"
               disabled={saving}
-              className="flex-1 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-60"
+              className="flex-1 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
             >
               {uploading ? 'Uploading PDF...' : saving ? 'Saving...' : editingId ? 'Save changes' : 'Add lesson'}
             </button>
@@ -380,7 +380,7 @@ export default function Lessons() {
             <div
               key={row.key}
               className={`flex items-center justify-between rounded-xl p-3 shadow-card ${
-                selectedLesson?.id === l.id ? 'bg-brand-500 text-white' : 'bg-white text-ink'
+                selectedLesson?.id === l.id ? 'bg-brand-600 text-white' : 'bg-white text-ink'
               }`}
             >
               <Link to={`/lessons/${l.id}`} className="min-w-0 flex-1" title="Open Lesson Hub">

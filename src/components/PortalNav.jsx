@@ -117,7 +117,7 @@ export function PortalBottomNav() {
           end={end}
           className={({ isActive }) =>
             `relative flex flex-1 flex-col items-center gap-0.5 py-2.5 text-xs font-medium ${
-              isActive ? 'text-brand-500' : 'text-ink/40'
+              isActive ? 'text-brand-600' : 'text-ink/40'
             }`
           }
         >

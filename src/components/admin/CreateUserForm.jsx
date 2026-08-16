@@ -80,7 +80,7 @@ export default function CreateUserForm() {
           )}
           <button
             onClick={handleCopy}
-            className="mt-2 flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-xs font-semibold text-brand-500 hover:bg-brand-100"
+            className="mt-2 flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-xs font-semibold text-brand-600 hover:bg-brand-100"
           >
             {copied ? <Check size={14} /> : <Copy size={14} />} {copied ? 'Copied' : 'Copy credentials'}
           </button>
@@ -144,7 +144,7 @@ export default function CreateUserForm() {
         <button
           type="submit"
           disabled={submitting}
-          className="rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-50"
+          className="rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
         >
           {submitting ? 'Creating...' : 'Create account'}
         </button>

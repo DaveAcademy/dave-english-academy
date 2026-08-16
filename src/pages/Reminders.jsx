@@ -46,7 +46,7 @@ function CandidateSection({ title, tone, candidates, selected, onToggle, onToggl
           {title} ({candidates.length})
         </h2>
         {selectable.length > 0 && (
-          <button onClick={() => onToggleAll(selectable, !allSelected)} className="text-xs font-semibold text-brand-500">
+          <button onClick={() => onToggleAll(selectable, !allSelected)} className="text-xs font-semibold text-brand-600">
             {allSelected ? 'Deselect all' : 'Select all'}
           </button>
         )}
@@ -167,7 +167,7 @@ function ConfirmSendModal({ candidates, onCancel, onConfirm, sending }) {
             type="button"
             onClick={onConfirm}
             disabled={sending}
-            className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-60"
+            className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
           >
             {sending ? 'Sending…' : 'Send reminders'}
           </button>
@@ -477,7 +477,7 @@ export default function Reminders() {
             key={t.key}
             onClick={() => setTab(t.key)}
             className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
-              tab === t.key ? 'bg-brand-500 text-white' : 'bg-white text-ink/60 shadow-sm'
+              tab === t.key ? 'bg-brand-600 text-white' : 'bg-white text-ink/60 shadow-sm'
             }`}
           >
             {t.label}
@@ -508,7 +508,7 @@ export default function Reminders() {
             <button
               onClick={() => setShowConfirm(true)}
               disabled={selected.size === 0}
-              className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:bg-ink/10 disabled:text-ink/40"
+              className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-ink/10 disabled:text-ink/40"
             >
               Send reminders
             </button>

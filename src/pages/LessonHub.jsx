@@ -565,7 +565,7 @@ export default function LessonHub() {
     return (
       <div className="rounded-xl bg-white p-10 text-center shadow-card">
         <p className="font-display text-lg font-semibold text-ink">{t('hubNotFound')}</p>
-        <Link to={backHref} className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-brand-500 hover:underline">
+        <Link to={backHref} className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:underline">
           <ArrowLeft size={14} /> {t('hubBackToLessons')}
         </Link>
       </div>
@@ -577,7 +577,7 @@ export default function LessonHub() {
       <div className="rounded-xl bg-white p-10 text-center shadow-card">
         <p className="font-display text-lg font-semibold text-ink">🔒 {t('hubLockedTitle')}</p>
         <p className="mt-1 text-sm text-ink/50">{t('hubLockedSub')}</p>
-        <Link to={backHref} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-brand-500 hover:underline">
+        <Link to={backHref} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:underline">
           <ArrowLeft size={14} /> {t('hubBackToLessons')}
         </Link>
       </div>
@@ -598,7 +598,7 @@ export default function LessonHub() {
 
       <header>
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-          <Link to={backHref} className="flex items-center gap-1 text-xs font-semibold text-brand-500 hover:underline">
+          <Link to={backHref} className="flex items-center gap-1 text-xs font-semibold text-brand-600 hover:underline">
             <ArrowLeft size={13} /> {t('hubBackToLessons')}
           </Link>
           {navLessons.length > 1 && (
@@ -659,7 +659,7 @@ export default function LessonHub() {
             ) : (
               <button
                 onClick={handleMarkCompleted}
-                className="flex items-center gap-1.5 rounded-lg bg-brand-500 px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-600"
+                className="flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-700"
               >
                 <CheckCircle2 size={15} /> {t('hubMarkCompleted')}
               </button>
@@ -678,7 +678,7 @@ export default function LessonHub() {
               {navIndex + 1} / {navLessons.length}
             </span>
             {nextLesson ? (
-              <button onClick={() => goToLesson(nextLesson)} className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-semibold text-brand-500 hover:bg-brand-50">
+              <button onClick={() => goToLesson(nextLesson)} className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-semibold text-brand-600 hover:bg-brand-50">
                 {t('hubNext')} <ChevronRight size={15} />
               </button>
             ) : <span className="px-2" />}
@@ -693,7 +693,7 @@ export default function LessonHub() {
           {lesson.pdf_path ? (
             <button
               onClick={handleOpenPdf}
-              className="flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-sm font-semibold text-brand-500 hover:bg-brand-50"
+              className="flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-sm font-semibold text-brand-600 hover:bg-brand-50"
             >
               <Download size={14} /> {lesson.pdf_name || t('hubOpenPdf')}
             </button>
@@ -815,7 +815,7 @@ export default function LessonHub() {
                     <button
                       onClick={handleSubmitWork}
                       disabled={workUploading}
-                      className="flex items-center gap-1.5 rounded-lg bg-brand-500 px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-60"
+                      className="flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
                     >
                       {workUploading ? t('hubSubmitting') : t('hubSubmit')}
                     </button>
@@ -835,7 +835,7 @@ export default function LessonHub() {
           action={
             <button
               onClick={() => setWorkReviewExpanded((v) => !v)}
-              className="text-xs font-semibold text-brand-500 hover:underline"
+              className="text-xs font-semibold text-brand-600 hover:underline"
             >
               {workReviewExpanded ? 'Hide' : 'Review'}
             </button>
@@ -868,7 +868,7 @@ export default function LessonHub() {
           !isStudent && (
             <button
               onClick={() => (hwFormOpen ? resetHwForm() : setHwFormOpen(true))}
-              className="flex items-center gap-1 rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-600"
+              className="flex items-center gap-1 rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700"
             >
               <Plus size={13} /> Add homework
             </button>
@@ -881,7 +881,7 @@ export default function LessonHub() {
             <textarea placeholder="Description (optional)" rows={2} value={hwForm.description} onChange={(e) => setHwForm({ ...hwForm, description: e.target.value })} className="input sm:col-span-2" />
             <input required type="date" value={hwForm.due_date} onChange={(e) => setHwForm({ ...hwForm, due_date: e.target.value })} className="input" />
             <div className="flex gap-2">
-              <button type="submit" disabled={hwSaving} className="flex-1 rounded-lg bg-brand-500 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-60">
+              <button type="submit" disabled={hwSaving} className="flex-1 rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60">
                 {hwSaving ? 'Saving...' : hwEditingId ? 'Save changes' : 'Add'}
               </button>
               {hwEditingId && (
@@ -908,11 +908,11 @@ export default function LessonHub() {
                     </div>
                     {!isStudent ? (
                       <div className="flex flex-shrink-0 items-center gap-1">
-                        <button onClick={() => startHwEdit(h)} className="rounded p-1 text-brand-500 hover:bg-brand-50" aria-label="Edit homework"><Pencil size={14} /></button>
+                        <button onClick={() => startHwEdit(h)} className="rounded p-1 text-brand-600 hover:bg-brand-50" aria-label="Edit homework"><Pencil size={14} /></button>
                         <button onClick={() => setDeletingHomework(h)} className="rounded p-1 text-inactive hover:bg-inactive/10" aria-label="Delete homework"><Trash2 size={14} /></button>
                       </div>
                     ) : (
-                      graded && <p className="flex-shrink-0 text-sm font-bold text-brand-500">{status.score}/100</p>
+                      graded && <p className="flex-shrink-0 text-sm font-bold text-brand-600">{status.score}/100</p>
                     )}
                   </div>
                   {isStudent && (
@@ -922,7 +922,7 @@ export default function LessonHub() {
                       </span>
                       {status?.feedback && <span className="text-xs text-ink/60">{status.feedback}</span>}
                       {!graded && (
-                        <label className="flex cursor-pointer items-center gap-1 text-xs font-semibold text-brand-500 hover:underline">
+                        <label className="flex cursor-pointer items-center gap-1 text-xs font-semibold text-brand-600 hover:underline">
                           <Upload size={12} /> {hwUploading === h.id ? t('hubUploading') : t('hubSubmit')}
                           <input
                             type="file"
@@ -952,7 +952,7 @@ export default function LessonHub() {
                     className="flex w-full items-center justify-between rounded-lg px-1 py-1 text-xs font-semibold text-ink/60 hover:text-ink"
                   >
                     <span>{h.title} &middot; {hwSubmittedCount(h.id)}/{lessonRoster.length} submissions</span>
-                    <span className="text-brand-500">{expanded ? 'Hide grading ▲' : 'Grade ▼'}</span>
+                    <span className="text-brand-600">{expanded ? 'Hide grading ▲' : 'Grade ▼'}</span>
                   </button>
                   {expanded && (
                     <div className="mt-2">
@@ -1011,7 +1011,7 @@ export default function LessonHub() {
           !isStudent && (
             <button
               onClick={() => (quizFormOpen ? resetQuizForm() : setQuizFormOpen(true))}
-              className="flex items-center gap-1 rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-600"
+              className="flex items-center gap-1 rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700"
             >
               <Plus size={13} /> Add quiz
             </button>
@@ -1025,7 +1025,7 @@ export default function LessonHub() {
             <input required type="date" value={quizForm.exam_date} onChange={(e) => setQuizForm({ ...quizForm, exam_date: e.target.value })} className="input" />
             <input required type="number" min="1" placeholder="Max score" value={quizForm.max_score} onChange={(e) => setQuizForm({ ...quizForm, max_score: e.target.value })} className="input" />
             <div className="flex gap-2 sm:col-span-2">
-              <button type="submit" disabled={quizSaving} className="flex-1 rounded-lg bg-brand-500 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-60">
+              <button type="submit" disabled={quizSaving} className="flex-1 rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60">
                 {quizSaving ? 'Saving...' : quizEditingId ? 'Save changes' : 'Add'}
               </button>
               {quizEditingId && (
@@ -1055,11 +1055,11 @@ export default function LessonHub() {
                     </div>
                     {!isStudent ? (
                       <div className="flex flex-shrink-0 items-center gap-1">
-                        <button onClick={() => startQuizEdit(ex)} className="rounded p-1 text-brand-500 hover:bg-brand-50" aria-label="Edit quiz"><Pencil size={14} /></button>
+                        <button onClick={() => startQuizEdit(ex)} className="rounded p-1 text-brand-600 hover:bg-brand-50" aria-label="Edit quiz"><Pencil size={14} /></button>
                         <button onClick={() => setDeletingQuiz(ex)} className="rounded p-1 text-inactive hover:bg-inactive/10" aria-label="Delete quiz"><Trash2 size={14} /></button>
                       </div>
                     ) : (
-                      graded && <p className="flex-shrink-0 text-sm font-bold text-brand-500">{result.score}/{ex.max_score}</p>
+                      graded && <p className="flex-shrink-0 text-sm font-bold text-brand-600">{result.score}/{ex.max_score}</p>
                     )}
                   </div>
                   {isStudent && (
@@ -1069,7 +1069,7 @@ export default function LessonHub() {
                       </span>
                       {result?.feedback && <span className="text-xs text-ink/60">{result.feedback}</span>}
                       {!graded && (
-                        <label className="flex cursor-pointer items-center gap-1 text-xs font-semibold text-brand-500 hover:underline">
+                        <label className="flex cursor-pointer items-center gap-1 text-xs font-semibold text-brand-600 hover:underline">
                           <Upload size={12} /> {quizUploading === ex.id ? t('hubUploading') : t('hubStartQuiz')}
                           <input
                             type="file"
@@ -1098,7 +1098,7 @@ export default function LessonHub() {
                     className="flex w-full items-center justify-between rounded-lg px-1 py-1 text-xs font-semibold text-ink/60 hover:text-ink"
                   >
                     <span>{ex.title} &middot; {examSubmittedCount(ex.id)}/{lessonRoster.length} submissions</span>
-                    <span className="text-brand-500">{expanded ? 'Hide grading ▲' : 'Grade ▼'}</span>
+                    <span className="text-brand-600">{expanded ? 'Hide grading ▲' : 'Grade ▼'}</span>
                   </button>
                   {expanded && (
                     <div className="mt-2">
@@ -1141,7 +1141,7 @@ export default function LessonHub() {
               className="input w-full"
             />
             <div className="mt-2 flex gap-2">
-              <button onClick={handleNotesSave} disabled={notesSaving} className="rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-600 disabled:opacity-60">
+              <button onClick={handleNotesSave} disabled={notesSaving} className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700 disabled:opacity-60">
                 {notesSaving ? 'Saving...' : 'Save'}
               </button>
               <button onClick={() => setNotesEditing(false)} className="rounded-lg border border-ink/15 px-3 py-1.5 text-xs font-semibold text-ink/60">Cancel</button>

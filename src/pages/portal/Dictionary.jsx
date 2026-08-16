@@ -167,7 +167,7 @@ function DictionaryCard({ entry, t }) {
             aria-label={t('pronunciation')}
             aria-pressed={speaking}
             className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full transition-colors ${
-              speaking ? 'bg-brand-500 text-white' : 'bg-brand-50 text-brand-600 hover:bg-brand-100'
+              speaking ? 'bg-brand-600 text-white' : 'bg-brand-50 text-brand-600 hover:bg-brand-100'
             }`}
           >
             <Volume2 size={16} />

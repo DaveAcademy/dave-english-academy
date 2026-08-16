@@ -261,7 +261,7 @@ export default function Reports() {
         <button
           onClick={handleExport}
           disabled={rows.length === 0}
-          className="flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-50"
+          className="flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
         >
           <Download size={16} /> Export PDF
         </button>
@@ -273,7 +273,7 @@ export default function Reports() {
             key={r.key}
             onClick={() => setReportType(r.key)}
             className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold ${
-              reportType === r.key ? 'bg-brand-500 text-white' : 'bg-white text-ink/60 shadow-sm'
+              reportType === r.key ? 'bg-brand-600 text-white' : 'bg-white text-ink/60 shadow-sm'
             }`}
           >
             {r.label}

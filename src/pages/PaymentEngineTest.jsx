@@ -196,7 +196,7 @@ export default function PaymentEngineTest() {
               ))}
             </select>
           </div>
-          <button type="submit" className="rounded-lg bg-brand-500 px-3 py-2 text-xs font-semibold text-white">
+          <button type="submit" className="rounded-lg bg-brand-600 px-3 py-2 text-xs font-semibold text-white">
             Record test payment
           </button>
         </form>

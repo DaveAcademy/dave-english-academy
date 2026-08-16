@@ -227,7 +227,7 @@ export default function Vocabulary() {
               <button
                 onClick={handleImport}
                 disabled={importing || !bulkText.trim()}
-                className="flex flex-shrink-0 items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-60"
+                className="flex flex-shrink-0 items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
               >
                 <Upload size={15} /> {importing ? 'Importing...' : 'Import Vocabulary'}
               </button>
@@ -374,7 +374,7 @@ export default function Vocabulary() {
               <button
                 type="submit"
                 disabled={savingWord}
-                className="flex-1 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-60"
+                className="flex-1 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
               >
                 {savingWord ? 'Saving...' : 'Save'}
               </button>

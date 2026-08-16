@@ -12,7 +12,7 @@ export default function LessonStatsBar({ total, completed, inProgress, remaining
 
   const stats = [
     { label: t('completedLabel'), value: completed, Icon: CheckCircle2, tone: 'text-active' },
-    { label: t('inProgressLabel'), value: inProgress, Icon: PlayCircle, tone: 'text-brand-500' },
+    { label: t('inProgressLabel'), value: inProgress, Icon: PlayCircle, tone: 'text-brand-600' },
     { label: t('remainingLabel'), value: remaining, Icon: ListChecks, tone: 'text-ink/60' },
     { label: t('streakLabel'), value: streak, Icon: Flame, tone: 'text-levelB' },
     { label: t('vocabLearnedLabel'), value: vocabCount, Icon: Languages, tone: 'text-levelA' },

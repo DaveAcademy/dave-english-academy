@@ -234,7 +234,7 @@ export default function BulkCreateStudentAccounts() {
             <button
               onClick={handleCreateAll}
               disabled={running}
-              className="rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-50"
+              className="rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
             >
               Create Missing Student Accounts ({rows.length})
             </button>
@@ -251,13 +251,13 @@ export default function BulkCreateStudentAccounts() {
                 <div className="flex flex-wrap gap-2">
                   <button
                     onClick={handleCopyAll}
-                    className="flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-xs font-semibold text-brand-500 hover:bg-brand-100"
+                    className="flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-xs font-semibold text-brand-600 hover:bg-brand-100"
                   >
                     {copied ? <Check size={14} /> : <Copy size={14} />} {copied ? 'Copied' : 'Copy all credentials'}
                   </button>
                   <button
                     onClick={handleDownload}
-                    className="flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-xs font-semibold text-brand-500 hover:bg-brand-100"
+                    className="flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-xs font-semibold text-brand-600 hover:bg-brand-100"
                   >
                     <Download size={14} /> Download as file
                   </button>

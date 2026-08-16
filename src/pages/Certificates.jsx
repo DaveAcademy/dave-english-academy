@@ -226,7 +226,7 @@ export default function Certificates() {
                     Show award title text
                   </label>
                 )}
-                <label className="flex flex-shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-xs font-semibold text-brand-500 hover:bg-brand-50">
+                <label className="flex flex-shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-xs font-semibold text-brand-600 hover:bg-brand-50">
                   <ImageIcon size={13} /> {uploadingKey === tpl.key ? 'Uploading...' : tpl.file_url ? 'Replace file' : 'Upload file'}
                   <input
                     type="file"
@@ -271,7 +271,7 @@ export default function Certificates() {
         <button
           type="submit"
           disabled={saving}
-          className="flex items-center justify-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-60 sm:col-span-1"
+          className="flex items-center justify-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60 sm:col-span-1"
         >
           <Plus size={16} /> {saving ? 'Issuing...' : 'Issue certificate'}
         </button>
@@ -364,7 +364,7 @@ export default function Certificates() {
                     <button
                       onClick={() => saveEdit(c.id)}
                       disabled={isBusy}
-                      className="flex items-center gap-1 rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-600 disabled:opacity-60"
+                      className="flex items-center gap-1 rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
                     >
                       <Check size={14} /> {isBusy ? 'Saving...' : 'Save'}
                     </button>
@@ -375,7 +375,7 @@ export default function Certificates() {
 
             return (
               <div key={c.id} className="flex flex-wrap items-center gap-3 rounded-xl bg-white p-3 shadow-card">
-                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-500">
+                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600">
                   <Award size={18} />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -388,7 +388,7 @@ export default function Certificates() {
                 <div className="flex flex-shrink-0 flex-wrap items-center gap-1.5">
                   <button
                     onClick={() => handleDownload(c, student)}
-                    className="flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-xs font-semibold text-brand-500 hover:bg-brand-50"
+                    className="flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-xs font-semibold text-brand-600 hover:bg-brand-50"
                   >
                     <Download size={14} /> PDF
                   </button>
@@ -407,7 +407,7 @@ export default function Certificates() {
                   </button>
                   <button
                     onClick={() => startEdit(c)}
-                    className="rounded-md p-1.5 text-brand-500 hover:bg-brand-50"
+                    className="rounded-md p-1.5 text-brand-600 hover:bg-brand-50"
                     aria-label="Edit certificate"
                   >
                     <Pencil size={15} />

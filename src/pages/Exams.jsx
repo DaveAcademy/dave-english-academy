@@ -358,7 +358,7 @@ export default function Exams() {
                           ev.stopPropagation();
                           startEdit(e);
                         }}
-                        className="rounded-lg p-2 text-brand-500 hover:bg-brand-50"
+                        className="rounded-lg p-2 text-brand-600 hover:bg-brand-50"
                         aria-label={t('editExamAria')}
                       >
                         <Pencil size={14} />
@@ -393,7 +393,7 @@ export default function Exams() {
         </div>
         <button
           onClick={() => (formOpen ? resetForm() : setFormOpen(true))}
-          className="flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600"
+          className="flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
         >
           <Plus size={16} /> {t('newExam')}
         </button>
@@ -485,7 +485,7 @@ export default function Exams() {
                 <button
                   type="button"
                   onClick={() => handleOpenFile(editingExam.file_url)}
-                  className="flex items-center gap-1 text-xs font-semibold text-brand-500 hover:underline"
+                  className="flex items-center gap-1 text-xs font-semibold text-brand-600 hover:underline"
                 >
                   <Download size={13} /> {editingExam.file_name || t('examFileDefault')}
                 </button>
@@ -504,7 +504,7 @@ export default function Exams() {
             <button
               type="submit"
               disabled={saving}
-              className="flex-1 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-60"
+              className="flex-1 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
             >
               {uploading ? t('uploading') : saving ? t('common:saving') : editingId ? t('common:saveChanges') : t('addExam')}
             </button>
@@ -550,7 +550,7 @@ export default function Exams() {
               {selectedExam.file_url && (
                 <button
                   onClick={() => handleOpenFile(selectedExam.file_url)}
-                  className="flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-xs font-semibold text-brand-500 hover:bg-brand-50"
+                  className="flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-xs font-semibold text-brand-600 hover:bg-brand-50"
                 >
                   <Download size={13} /> {selectedExam.file_name || t('examFileDefault')}
                 </button>
@@ -564,7 +564,7 @@ export default function Exams() {
               {selectedExamClosed && !editingGrades && (
                 <button
                   onClick={() => setEditingGrades(true)}
-                  className="flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-brand-600"
+                  className="flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-brand-700"
                 >
                   <Pencil size={15} /> {t('editGrades')}
                 </button>

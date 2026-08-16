@@ -14,7 +14,7 @@ export default defineConfig({
         name: 'Dave Academy',
         short_name: 'Dave Academy',
         description: 'Student, payment, attendance and rankings management for Dave Academy',
-        theme_color: '#0f373f',
+        theme_color: '#2948d2',
         background_color: '#f5f6f8',
         display: 'standalone',
         orientation: 'portrait',

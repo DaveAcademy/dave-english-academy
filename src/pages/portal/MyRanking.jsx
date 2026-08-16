@@ -16,7 +16,7 @@ import Panel from '../../components/Panel';
 
 const RARITY_STYLE = {
   common: 'bg-ink/10 text-ink/60',
-  rare: 'bg-brand-500/10 text-brand-500',
+  rare: 'bg-brand-500/10 text-brand-600',
   epic: 'bg-levelB/20 text-levelB',
 };
 
@@ -256,7 +256,7 @@ export default function MyRanking() {
             type="button"
             onClick={() => setPeriod(p)}
             className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition ${
-              period === p ? 'bg-brand-500 text-white' : 'bg-white text-ink/60 shadow-card hover:text-ink'
+              period === p ? 'bg-brand-600 text-white' : 'bg-white text-ink/60 shadow-card hover:text-ink'
             }`}
           >
             {t(`portal:period_${p}`)}
@@ -277,7 +277,7 @@ export default function MyRanking() {
             return (
               <div
                 key={row.student_id}
-                className={`flex items-center gap-3 rounded-xl border p-3 shadow-card sm:p-4 ${isMe ? 'border-brand-600 bg-brand-500 text-white' : 'border-ink/[0.06] bg-white text-ink'}`}
+                className={`flex items-center gap-3 rounded-xl border p-3 shadow-card sm:p-4 ${isMe ? 'border-brand-600 bg-brand-600 text-white' : 'border-ink/[0.06] bg-white text-ink'}`}
               >
                 <div
                   className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold ${medal(row.rank - 1)} ${medalText(row.rank - 1)}`}
@@ -293,7 +293,7 @@ export default function MyRanking() {
                   )}
                 </div>
                 <div className="flex flex-shrink-0 flex-col items-end gap-0.5">
-                  <p className={`text-sm font-bold ${isMe ? 'text-white' : 'text-brand-500'}`}>
+                  <p className={`text-sm font-bold ${isMe ? 'text-white' : 'text-brand-600'}`}>
                     {row.points} {t('portal:points')}
                   </p>
                   {row.rank_change != null && row.rank_change !== 0 && (

@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { CheckCircle2, Clock, XCircle, Star, Trophy, CalendarCheck, FileCheck2, BookOpen } from 'lucide-react';
 import { useAcademy } from '../../lib/AcademyDataContext';
 import { getGroupLeaderboard } from '../../lib/db';
+import { getStudentAchievements } from '../../lib/storageBridge';
 import {
   LESSON_STATUS, teacherPaceFor, lessonCapFor, progressByLessonNumber, lessonStatusFor,
   nextUnfinishedLesson, completionStreak,
@@ -32,6 +33,22 @@ export default function MyProgress() {
   const { students, attendance, homework, homeworkStatus, exams, examScores, lessons, curriculumProgress, lessonProgress, loading } = useAcademy();
   const me = students[0];
   const [leaderboard, setLeaderboard] = useState(null);
+  const [earnedAchievementKeys, setEarnedAchievementKeys] = useState(null);
+
+  // The DB-backed achievement engine is the canonical source for the
+  // 'lesson-explorer' badge below (real 'ten_lessons' award, see
+  // utils/badges.js) - fetched here only to resolve that one badge
+  // against what's actually recorded, not to re-derive it client-side.
+  useEffect(() => {
+    if (!me) return;
+    let cancelled = false;
+    getStudentAchievements(me.id)
+      .then((rows) => !cancelled && setEarnedAchievementKeys(new Set((rows || []).map((r) => r.achievement?.key))))
+      .catch(() => !cancelled && setEarnedAchievementKeys(new Set()));
+    return () => {
+      cancelled = true;
+    };
+  }, [me?.id]);
 
   // get_group_leaderboard(level, 'all_time') - the same RPC and ranking
   // convention the admin Rankings page's Level Leaderboard already uses
@@ -172,8 +189,9 @@ export default function MyProgress() {
         examAvg,
         lessonsCompleted: lessonBlock?.completed ?? 0,
         rank,
+        dbLessonExplorerUnlocked: earnedAchievementKeys ? earnedAchievementKeys.has('ten_lessons') : undefined,
       }),
-    [attendancePct, homeworkStats, examAvg, rank, lessonBlock]
+    [attendancePct, homeworkStats, examAvg, rank, lessonBlock, earnedAchievementKeys]
   );
 
   if (!me) {
@@ -221,7 +239,7 @@ export default function MyProgress() {
               </span>
               <span className="text-ink/30">·</span>
               {lessonBlock.next ? (
-                <Link to={`/my-lessons/${lessonBlock.next.id}`} className="font-semibold text-brand-500 hover:underline">
+                <Link to={`/my-lessons/${lessonBlock.next.id}`} className="font-semibold text-brand-600 hover:underline">
                   {t('portal:nextLessonLabel')}: {lessonBlock.next.topic || lessonBlock.next.curriculum_lessons?.title || ''} (#{lessonBlock.next.curriculum_lessons?.lesson_number})
                 </Link>
               ) : (
@@ -357,7 +375,7 @@ export default function MyProgress() {
                   <p className="text-xs text-ink/50">{s.exam.exam_date}</p>
                 </div>
                 {s.score != null ? (
-                  <p className="text-sm font-bold text-brand-500">
+                  <p className="text-sm font-bold text-brand-600">
                     {s.score} / {s.exam.max_score}
                   </p>
                 ) : (

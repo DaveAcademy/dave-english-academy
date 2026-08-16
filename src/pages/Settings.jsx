@@ -174,13 +174,13 @@ export default function Settings() {
           <div className="flex flex-col gap-2 sm:flex-row">
             <button
               onClick={handleDownload}
-              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600"
+              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700"
             >
               <Download size={16} /> {t('settings:downloadBackup')}
             </button>
             <button
               onClick={handleRestoreClick}
-              className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-brand-500 px-4 py-2.5 text-sm font-semibold text-brand-500 hover:bg-brand-50"
+              className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-brand-500 px-4 py-2.5 text-sm font-semibold text-brand-600 hover:bg-brand-50"
             >
               <Upload size={16} /> {t('settings:restoreFromFile')}
             </button>

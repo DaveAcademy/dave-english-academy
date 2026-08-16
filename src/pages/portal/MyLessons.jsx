@@ -288,7 +288,7 @@ export default function MyLessons() {
               <Sparkles size={22} className="mx-auto text-ink/30" aria-hidden="true" />
               <p className="mt-2 font-display text-base font-semibold text-ink">{t('noLessonsMatch')}</p>
               {filtersActive && (
-                <button onClick={resetFilters} className="mt-2 text-sm font-semibold text-brand-500 hover:underline">
+                <button onClick={resetFilters} className="mt-2 text-sm font-semibold text-brand-600 hover:underline">
                   {t('resetFilters')}
                 </button>
               )}

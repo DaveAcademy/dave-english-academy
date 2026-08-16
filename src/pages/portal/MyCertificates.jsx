@@ -91,7 +91,7 @@ export default function MyCertificates() {
               key={c.id}
               className="flex flex-wrap items-center gap-3 rounded-xl border border-ink/[0.06] bg-white p-3 shadow-card sm:p-4"
             >
-              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-500">
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600">
                 <Award size={18} />
               </div>
               <div className="min-w-0 flex-1 basis-40">
@@ -101,7 +101,7 @@ export default function MyCertificates() {
               <div className="flex w-full flex-shrink-0 flex-wrap items-center gap-1.5 sm:w-auto">
                 <button
                   onClick={() => handleDownload(c)}
-                  className="flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-2 text-xs font-semibold text-brand-500 transition-colors hover:bg-brand-50 sm:py-1.5"
+                  className="flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-2 text-xs font-semibold text-brand-600 transition-colors hover:bg-brand-50 sm:py-1.5"
                 >
                   <Download size={14} /> PDF
                 </button>

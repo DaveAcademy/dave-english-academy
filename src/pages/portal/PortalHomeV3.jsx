@@ -27,7 +27,7 @@ import {
 } from '../../lib/lessonLogic';
 import { useAcademy } from '../../lib/AcademyDataContext';
 import { getGroupLeaderboard } from '../../lib/db';
-import { getStudentPaymentStatus } from '../../lib/storageBridge';
+import { getStudentAchievements, getStudentPaymentStatus } from '../../lib/storageBridge';
 import Panel from '../../components/Panel';
 import StatCard from '../../components/StatCard';
 import StatusPill from '../../components/StatusPill';
@@ -117,6 +117,7 @@ export default function PortalHomeV3() {
   const { lessons, attendance, homework, homeworkStatus, exams, examScores, certificates, curriculumProgress, lessonProgress, me } = useAcademy();
   const [leaderboard, setLeaderboard] = useState(null);
   const [paymentStatus, setPaymentStatus] = useState(null);
+  const [earnedAchievementKeys, setEarnedAchievementKeys] = useState(null);
   const { current, previous } = useMemo(() => currentAndPreviousMonth(), []);
 
   // get_group_leaderboard(level, 'all_time') - same RPC/convention as the
@@ -143,6 +144,23 @@ export default function PortalHomeV3() {
     getStudentPaymentStatus(me.id)
       .then((st) => !cancelled && setPaymentStatus(st))
       .catch(() => !cancelled && setPaymentStatus(null));
+    return () => {
+      cancelled = true;
+    };
+  }, [me]);
+
+  // The DB-backed achievement engine is the canonical source for
+  // lesson-count milestones (evaluate_achievements(), 0127) - fetched
+  // here only to resolve the 'lesson-explorer' badge below against the
+  // real 'ten_lessons' award rather than re-deriving it client-side, so
+  // it can't drift from what's actually recorded for the student. Every
+  // other computeBadges() badge is untouched.
+  useEffect(() => {
+    if (!me) return;
+    let cancelled = false;
+    getStudentAchievements(me.id)
+      .then((rows) => !cancelled && setEarnedAchievementKeys(new Set((rows || []).map((r) => r.achievement?.key))))
+      .catch(() => !cancelled && setEarnedAchievementKeys(new Set()));
     return () => {
       cancelled = true;
     };
@@ -250,8 +268,9 @@ export default function PortalHomeV3() {
         examAvg: stats.examAvg,
         lessonsCompleted: stats.lessonsCompleted,
         rank,
+        dbLessonExplorerUnlocked: earnedAchievementKeys ? earnedAchievementKeys.has('ten_lessons') : undefined,
       }),
-    [stats, rank]
+    [stats, rank, earnedAchievementKeys]
   );
 
   const insights = useMemo(() => {
@@ -381,7 +400,7 @@ export default function PortalHomeV3() {
       >
         <span className="text-2xl" aria-hidden="true">{nextStep.icon}</span>
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-bold uppercase tracking-wide text-brand-500">{t('v3YourNextStepLabel')}</p>
+          <p className="text-xs font-bold uppercase tracking-wide text-brand-600">{t('v3YourNextStepLabel')}</p>
           <p className="mt-0.5 text-sm font-semibold text-ink">{t(nextStep.titleKey)}</p>
           <p className="text-xs text-ink/60">{t(nextStep.textKey)}</p>
         </div>
@@ -487,7 +506,7 @@ export default function PortalHomeV3() {
           <div className="space-y-2">
             {insights.map((ins, i) => (
               <div key={i} className="rounded-lg border border-brand-100 bg-brand-50 p-2.5">
-                <p className="text-xs font-bold uppercase tracking-wide text-brand-500">{ins.tag}</p>
+                <p className="text-xs font-bold uppercase tracking-wide text-brand-600">{ins.tag}</p>
                 <p className="mt-0.5 text-sm text-ink">{ins.text}</p>
               </div>
             ))}
@@ -496,7 +515,7 @@ export default function PortalHomeV3() {
       </div>
 
       <div className="mb-6 grid gap-4 lg:grid-cols-2">
-        <Panel title={t('certificatesTitle')} icon={Award} action={<Link to="/my-certificates" className="text-xs font-semibold text-brand-500 hover:underline">{t('viewAll')}</Link>}>
+        <Panel title={t('certificatesTitle')} icon={Award} action={<Link to="/my-certificates" className="text-xs font-semibold text-brand-600 hover:underline">{t('viewAll')}</Link>}>
           {certificates.length === 0 ? (
             <div className="py-4 text-center">
               <Award className="mx-auto mb-2 text-ink/15" size={28} aria-hidden="true" />

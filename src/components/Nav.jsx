@@ -129,7 +129,7 @@ export function BottomNav() {
           end={end}
           className={({ isActive }) =>
             `relative flex flex-1 flex-shrink-0 flex-col items-center gap-0.5 px-3 py-2.5 text-xs font-medium ${
-              isActive ? 'text-brand-500' : 'text-ink/40'
+              isActive ? 'text-brand-600' : 'text-ink/40'
             }`
           }
         >
