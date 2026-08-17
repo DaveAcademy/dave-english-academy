@@ -1,4 +1,8 @@
 {
+  "levelLabel": "{{level}}-daraja",
+  "levelCompleteTitle": "{{level}}-daraja tugallandi!",
+  "levelUnlockedBody": "{{next}}-daraja ochildi",
+  "levelRetryBody": "O'tish uchun 70% kerak - qayta urinib ko'ring!",
   "gameCenterEyebrow": "Mashq maydoni",
   "gameCenterTitle": "Mashq",
   "gameCenterSubtitle": "O'rganganlaringizni mashq qilish uchun o'yin tanlang.",

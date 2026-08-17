@@ -11,7 +11,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Play, Lock, Star, Trophy } from 'lucide-react';
 
-export default function GameCard({ icon, name, description, gradient, iconBg, to, bestScore, record, disabled }) {
+export default function GameCard({ icon, name, description, gradient, iconBg, to, bestScore, record, level, disabled }) {
   const { t } = useTranslation('game');
   return (
     <div
@@ -23,12 +23,17 @@ export default function GameCard({ icon, name, description, gradient, iconBg, to
         <span className={`flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl text-3xl shadow-sm ${iconBg}`} aria-hidden="true">
           {icon}
         </span>
-        {bestScore != null && (
-          <span className="flex items-center gap-1 rounded-full bg-white/80 px-2.5 py-1 text-xs font-bold text-ink/70 shadow-sm">
-            <Star size={12} className="fill-amber-400 text-amber-400" aria-hidden="true" />
-            {bestScore}
-          </span>
-        )}
+        <div className="flex flex-col items-end gap-1">
+          {level != null && (
+            <span className="rounded-full bg-ink/90 px-2.5 py-1 text-xs font-bold text-white shadow-sm">{t('levelLabel', { level })}</span>
+          )}
+          {bestScore != null && (
+            <span className="flex items-center gap-1 rounded-full bg-white/80 px-2.5 py-1 text-xs font-bold text-ink/70 shadow-sm">
+              <Star size={12} className="fill-amber-400 text-amber-400" aria-hidden="true" />
+              {bestScore}
+            </span>
+          )}
+        </div>
       </div>
 
       <h3 className="mt-3 font-display text-lg font-bold text-ink">{name}</h3>

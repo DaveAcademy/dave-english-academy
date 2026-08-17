@@ -15,6 +15,7 @@ import { RefreshCw as Reset, ArrowLeft, CheckCircle2, XCircle } from 'lucide-rea
 import { Link } from 'react-router-dom';
 import GameProgress from '../../components/GameProgress';
 import GameResults from '../../components/GameResults';
+import { LevelBadge } from '../../components/GameLevelStatus';
 import useGameStreak from '../../hooks/useGameStreak';
 import { getSentenceScrambleRound, submitGameRound } from '../../lib/storageBridge';
 
@@ -22,6 +23,7 @@ export default function SentenceScramble() {
   const { t } = useTranslation('game');
   const [round, setRound] = useState(null); // [{ id, words, type }]
   const [roundId, setRoundId] = useState(null);
+  const [level, setLevel] = useState(null);
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState([]);
   const [pool, setPool] = useState([]); // [{ id, word }]
@@ -46,8 +48,9 @@ export default function SentenceScramble() {
     setError(null);
     resetStreak();
     try {
-      const { roundId: rid, words } = await getSentenceScrambleRound();
+      const { roundId: rid, level: lvl, words } = await getSentenceScrambleRound();
       setRoundId(rid);
+      setLevel(lvl);
       setRound(words);
       if (words.length > 0) setupItem(words[0]);
     } catch (err) {
@@ -133,6 +136,9 @@ export default function SentenceScramble() {
         bestStreak={bestStreak}
         isNewBest={result.is_new_best}
         gameType="sentence_scramble"
+        level={result.level}
+        pass={result.pass}
+        leveledUp={result.leveled_up}
         onPlayAgain={startRound}
       />
     );
@@ -164,6 +170,9 @@ export default function SentenceScramble() {
       </header>
 
       <div className="mb-4">
+        <div className="mb-2 flex justify-center">
+          <LevelBadge level={level} />
+        </div>
         <GameProgress current={index} total={round.length} />
         <p className="mt-1.5 text-center text-xs font-semibold text-ink/40">{t('wordOf', { current: index + 1, total: round.length })}</p>
       </div>

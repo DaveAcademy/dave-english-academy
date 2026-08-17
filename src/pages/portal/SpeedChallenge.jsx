@@ -20,6 +20,7 @@ import GameProgress from '../../components/GameProgress';
 import { getSpeedChallengeRound, submitGameRound } from '../../lib/storageBridge';
 import useGameRecord from '../../hooks/useGameRecord';
 import GameLeaderboardBlock from '../../components/GameLeaderboardBlock';
+import GameLevelStatus, { LevelBadge } from '../../components/GameLevelStatus';
 
 const TIME_LIMIT_MS = 10000;
 const RING_RADIUS = 20;
@@ -52,6 +53,7 @@ export default function SpeedChallenge() {
   const { t } = useTranslation('game');
   const [round, setRound] = useState(null); // [{ id, english, options }]
   const [roundId, setRoundId] = useState(null);
+  const [level, setLevel] = useState(null);
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState([]);
   const [chosen, setChosen] = useState(null);
@@ -73,8 +75,9 @@ export default function SpeedChallenge() {
     setChosen(null);
     setError(null);
     try {
-      const { roundId: rid, words } = await getSpeedChallengeRound();
+      const { roundId: rid, level: lvl, words } = await getSpeedChallengeRound();
       setRoundId(rid);
+      setLevel(lvl);
       setRound(words);
     } catch (err) {
       setError(err.message || String(err));
@@ -173,6 +176,8 @@ export default function SpeedChallenge() {
             <p className="mt-3 inline-block rounded-full bg-amber-400 px-3 py-1 text-xs font-bold text-amber-950">{t('newBest')}</p>
           )}
 
+          <GameLevelStatus level={result.level} pass={result.pass} leveledUp={result.leveled_up} />
+
           <GameLeaderboardBlock record={record} isNewBest={result.is_new_best} />
 
           <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
@@ -222,6 +227,7 @@ export default function SpeedChallenge() {
           <Zap size={18} className="mr-1 inline text-rose-500" aria-hidden="true" />
           {t('speedChallengeTitle')}
         </h1>
+        <span className="ml-auto"><LevelBadge level={level} /></span>
       </header>
 
       <div className="mb-4">

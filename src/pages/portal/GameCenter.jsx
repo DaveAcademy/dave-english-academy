@@ -12,7 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { Gamepad2 } from 'lucide-react';
 import { useAcademy } from '../../lib/AcademyDataContext';
 import GameCard from '../../components/GameCard';
-import { getGameBestRecords } from '../../lib/storageBridge';
+import { getGameBestRecords, listMyGameLevels } from '../../lib/storageBridge';
 import { formatStudentDisplayName } from '../../lib/gameRecordFormat';
 
 const GAME_CENTER_ITEMS = [
@@ -105,6 +105,7 @@ export default function GameCenter() {
   const me = students[0];
   const [bestScores, setBestScores] = useState({});
   const [records, setRecords] = useState({});
+  const [levels, setLevels] = useState({});
 
   useEffect(() => {
     if (!me) return;
@@ -132,6 +133,13 @@ export default function GameCenter() {
     }).catch(() => {
       // Leaderboard is supplementary here - a failed fetch should leave
       // the game tiles playable with no score chips, not break the page.
+    });
+    listMyGameLevels(me.id).then((rows) => {
+      if (cancelled) return;
+      setLevels(Object.fromEntries(rows.map((r) => [r.game_type, r.current_level])));
+    }).catch(() => {
+      // A student who has never played a game simply has no row yet -
+      // an empty/failed fetch just means no level chip, not an error state.
     });
     return () => {
       cancelled = true;
@@ -161,6 +169,7 @@ export default function GameCenter() {
             disabled={g.disabled}
             bestScore={bestScores[g.key]}
             record={records[g.key]}
+            level={levels[g.key]}
           />
         ))}
       </div>

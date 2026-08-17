@@ -15,6 +15,7 @@ import GameProgress from '../../components/GameProgress';
 import { getVocabularyQuizRound, submitGameRound } from '../../lib/storageBridge';
 import useGameRecord from '../../hooks/useGameRecord';
 import GameLeaderboardBlock from '../../components/GameLeaderboardBlock';
+import GameLevelStatus, { LevelBadge } from '../../components/GameLevelStatus';
 
 const OPTION_LETTERS = ['A', 'B', 'C', 'D'];
 
@@ -22,6 +23,7 @@ export default function VocabularyQuiz() {
   const { t } = useTranslation('game');
   const [round, setRound] = useState(null); // [{ id, english, options }]
   const [roundId, setRoundId] = useState(null);
+  const [level, setLevel] = useState(null);
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState([]);
   const [chosen, setChosen] = useState(null);
@@ -38,8 +40,9 @@ export default function VocabularyQuiz() {
     setChosen(null);
     setError(null);
     try {
-      const { roundId: rid, words } = await getVocabularyQuizRound();
+      const { roundId: rid, level: lvl, words } = await getVocabularyQuizRound();
       setRoundId(rid);
+      setLevel(lvl);
       setRound(words);
     } catch (err) {
       // A failed RPC call (e.g. it doesn't exist yet on this environment)
@@ -96,6 +99,8 @@ export default function VocabularyQuiz() {
             <p className="mt-3 inline-block rounded-full bg-amber-400 px-3 py-1 text-xs font-bold text-amber-950">{t('newBest')}</p>
           )}
 
+          <GameLevelStatus level={result.level} pass={result.pass} leveledUp={result.leveled_up} />
+
           <GameLeaderboardBlock record={record} isNewBest={result.is_new_best} />
           <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
             <button
@@ -139,6 +144,7 @@ export default function VocabularyQuiz() {
           <ArrowLeft size={20} aria-hidden="true" />
         </Link>
         <h1 className="font-display text-lg font-bold text-ink">🧠 {t('vocabularyQuizTitle')}</h1>
+        <span className="ml-auto"><LevelBadge level={level} /></span>
       </header>
 
       <div className="mb-4">

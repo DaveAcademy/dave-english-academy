@@ -18,6 +18,7 @@ import GameProgress from '../../components/GameProgress';
 import { getWordScrambleRound, submitGameRound } from '../../lib/storageBridge';
 import useGameRecord from '../../hooks/useGameRecord';
 import GameLeaderboardBlock from '../../components/GameLeaderboardBlock';
+import GameLevelStatus, { LevelBadge } from '../../components/GameLevelStatus';
 
 // Same character multiset (same length, same letters, same counts) -
 // the one property every generated scramble and every hint reveal must
@@ -85,6 +86,7 @@ export default function WordScramble() {
   const { t } = useTranslation('game');
   const [round, setRound] = useState(null); // [{ id, english, scrambled }]
   const [roundId, setRoundId] = useState(null);
+  const [level, setLevel] = useState(null);
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState([]);
   const [input, setInput] = useState('');
@@ -105,8 +107,9 @@ export default function WordScramble() {
     setHintUsed(false);
     setError(null);
     try {
-      const { roundId: rid, words } = await getWordScrambleRound();
+      const { roundId: rid, level: lvl, words } = await getWordScrambleRound();
       setRoundId(rid);
+      setLevel(lvl);
       setRound(words.map((w) => ({ ...w, scrambled: scramble(w.english) })));
     } catch (err) {
       // Same distinction as VocabularyQuiz.jsx: a failed RPC call must not
@@ -181,6 +184,8 @@ export default function WordScramble() {
             <p className="mt-3 inline-block rounded-full bg-amber-400 px-3 py-1 text-xs font-bold text-amber-950">{t('newBest')}</p>
           )}
 
+          <GameLevelStatus level={result.level} pass={result.pass} leveledUp={result.leveled_up} />
+
           <GameLeaderboardBlock record={record} isNewBest={result.is_new_best} />
 
           <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
@@ -225,6 +230,7 @@ export default function WordScramble() {
           <ArrowLeft size={20} aria-hidden="true" />
         </Link>
         <h1 className="font-display text-lg font-bold text-ink">🔤 {t('wordScrambleTitle')}</h1>
+        <span className="ml-auto"><LevelBadge level={level} /></span>
       </header>
 
       <div className="mb-4">

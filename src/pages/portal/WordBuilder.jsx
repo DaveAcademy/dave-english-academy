@@ -16,6 +16,7 @@ import { RefreshCw as Reset, ArrowLeft, CheckCircle2, XCircle } from 'lucide-rea
 import { Link } from 'react-router-dom';
 import GameProgress from '../../components/GameProgress';
 import GameResults from '../../components/GameResults';
+import { LevelBadge } from '../../components/GameLevelStatus';
 import useGameStreak from '../../hooks/useGameStreak';
 import { getWordBuilderRound, submitGameRound } from '../../lib/storageBridge';
 
@@ -42,6 +43,7 @@ export default function WordBuilder() {
   const { t } = useTranslation('game');
   const [round, setRound] = useState(null);
   const [roundId, setRoundId] = useState(null);
+  const [level, setLevel] = useState(null);
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState([]);
   const [tiles, setTiles] = useState([]); // available letter tiles for current word
@@ -66,8 +68,9 @@ export default function WordBuilder() {
     setError(null);
     resetStreak();
     try {
-      const { roundId: rid, words } = await getWordBuilderRound();
+      const { roundId: rid, level: lvl, words } = await getWordBuilderRound();
       setRoundId(rid);
+      setLevel(lvl);
       setRound(words);
       if (words.length > 0) setupWord(words[0].english);
     } catch (err) {
@@ -153,6 +156,9 @@ export default function WordBuilder() {
         bestStreak={bestStreak}
         isNewBest={result.is_new_best}
         gameType="word_builder"
+        level={result.level}
+        pass={result.pass}
+        leveledUp={result.leveled_up}
         onPlayAgain={startRound}
       />
     );
@@ -183,6 +189,7 @@ export default function WordBuilder() {
           <ArrowLeft size={20} aria-hidden="true" />
         </Link>
         <h1 className="font-display text-lg font-bold text-ink">🧱 {t('wordBuilderTitle')}</h1>
+        <span className="ml-auto"><LevelBadge level={level} /></span>
       </header>
 
       <div className="mb-4">

@@ -17,6 +17,7 @@ import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Heart, Flame, Timer } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import GameResults from '../../components/GameResults';
+import { LevelBadge } from '../../components/GameLevelStatus';
 import useGameStreak from '../../hooks/useGameStreak';
 import { getGrammarBattleRound, submitGameRound } from '../../lib/storageBridge';
 
@@ -43,6 +44,7 @@ export default function GrammarBattle() {
   const { t } = useTranslation('game');
   const [pool, setPool] = useState(null);
   const [roundId, setRoundId] = useState(null);
+  const [level, setLevel] = useState(null);
   const [usedIds, setUsedIds] = useState(new Set());
   const [current, setCurrent] = useState(null);
   const [tier, setTier] = useState('easy');
@@ -74,8 +76,9 @@ export default function GrammarBattle() {
     setError(null);
     resetStreak();
     try {
-      const { roundId: rid, words } = await getGrammarBattleRound();
+      const { roundId: rid, level: lvl, words } = await getGrammarBattleRound();
       setRoundId(rid);
+      setLevel(lvl);
       setPool(words);
       const used = new Set();
       const first = pickNextQuestion(words, used, 'easy');
@@ -253,6 +256,9 @@ export default function GrammarBattle() {
         bestStreak={bestStreak}
         isNewBest={result.is_new_best}
         gameType="grammar_battle"
+        level={result.level}
+        pass={result.pass}
+        leveledUp={result.leveled_up}
         extra={accuracyExtra}
         onPlayAgain={startGame}
       />
@@ -276,6 +282,7 @@ export default function GrammarBattle() {
           <ArrowLeft size={20} aria-hidden="true" />
         </Link>
         <h1 className="font-display text-lg font-bold text-ink">⚔️ {t('grammarBattleTitle')}</h1>
+        <span className="ml-auto"><LevelBadge level={level} /></span>
       </header>
 
       <div className="mb-4 flex items-center justify-between px-1">

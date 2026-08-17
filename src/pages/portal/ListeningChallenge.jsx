@@ -19,6 +19,7 @@ import { Volume2, ArrowLeft, CheckCircle2, XCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import GameProgress from '../../components/GameProgress';
 import GameResults from '../../components/GameResults';
+import { LevelBadge } from '../../components/GameLevelStatus';
 import useGameStreak from '../../hooks/useGameStreak';
 import { getListeningChallengeRound, submitGameRound } from '../../lib/storageBridge';
 
@@ -38,6 +39,7 @@ export default function ListeningChallenge() {
   const { t } = useTranslation('game');
   const [round, setRound] = useState(null);
   const [roundId, setRoundId] = useState(null);
+  const [level, setLevel] = useState(null);
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState([]);
   const [chosen, setChosen] = useState(null);
@@ -57,8 +59,9 @@ export default function ListeningChallenge() {
     setError(null);
     resetStreak();
     try {
-      const { roundId: rid, words } = await getListeningChallengeRound();
+      const { roundId: rid, level: lvl, words } = await getListeningChallengeRound();
       setRoundId(rid);
+      setLevel(lvl);
       setRound(words);
     } catch (err) {
       setError(err.message || String(err));
@@ -136,6 +139,9 @@ export default function ListeningChallenge() {
         bestStreak={bestStreak}
         isNewBest={result.is_new_best}
         gameType="listening_challenge"
+        level={result.level}
+        pass={result.pass}
+        leveledUp={result.leveled_up}
         onPlayAgain={startRound}
       />
     );
@@ -164,6 +170,7 @@ export default function ListeningChallenge() {
           <ArrowLeft size={20} aria-hidden="true" />
         </Link>
         <h1 className="font-display text-lg font-bold text-ink">🎧 {t('listeningChallengeTitle')}</h1>
+        <span className="ml-auto"><LevelBadge level={level} /></span>
       </header>
 
       <div className="mb-4">

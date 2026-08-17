@@ -15,6 +15,7 @@ import { ArrowLeft, CheckCircle2, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import GameProgress from '../../components/GameProgress';
 import GameResults from '../../components/GameResults';
+import { LevelBadge } from '../../components/GameLevelStatus';
 import useGameStreak from '../../hooks/useGameStreak';
 import { getWordDetectiveRound, submitGameRound } from '../../lib/storageBridge';
 
@@ -22,6 +23,7 @@ export default function WordDetective() {
   const { t } = useTranslation('game');
   const [round, setRound] = useState(null); // [{ id, sentence, category }]
   const [roundId, setRoundId] = useState(null);
+  const [level, setLevel] = useState(null);
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState([]);
   const [pickedIndex, setPickedIndex] = useState(null);
@@ -43,8 +45,9 @@ export default function WordDetective() {
     setCorrectionInput('');
     resetStreak();
     try {
-      const { roundId: rid, words } = await getWordDetectiveRound();
+      const { roundId: rid, level: lvl, words } = await getWordDetectiveRound();
       setRoundId(rid);
+      setLevel(lvl);
       setRound(words);
     } catch (err) {
       setError(err.message || String(err));
@@ -112,6 +115,9 @@ export default function WordDetective() {
         bestStreak={bestStreak}
         isNewBest={result.is_new_best}
         gameType="word_detective"
+        level={result.level}
+        pass={result.pass}
+        leveledUp={result.leveled_up}
         onPlayAgain={startRound}
       />
     );
@@ -143,6 +149,9 @@ export default function WordDetective() {
       </header>
 
       <div className="mb-4">
+        <div className="mb-2 flex justify-center">
+          <LevelBadge level={level} />
+        </div>
         <GameProgress current={index} total={round.length} />
         <p className="mt-1.5 text-center text-xs font-semibold text-ink/40">{t('wordOf', { current: index + 1, total: round.length })}</p>
       </div>

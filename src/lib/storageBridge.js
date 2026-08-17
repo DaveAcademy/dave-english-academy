@@ -1179,8 +1179,9 @@ export async function removeVocabularyFavorite(studentId, vocabularyId) {
 
 function splitRoundId(data) {
   const roundId = data?.[0]?.round_id ?? null;
-  const words = (data || []).map(({ round_id, ...w }) => w);
-  return { roundId, words };
+  const level = data?.[0]?.level ?? null;
+  const words = (data || []).map(({ round_id, level: _level, ...w }) => w);
+  return { roundId, level, words };
 }
 
 export async function getWordScrambleRound() {
@@ -1252,6 +1253,18 @@ export async function submitGameRound(gameType, roundId, answers) {
 // caller's own level server-side - no game_type/level params needed.
 export async function getGameBestRecords() {
   const { data, error } = await supabase.rpc('get_game_best_records');
+  if (error) throw error;
+  return data;
+}
+
+// Level Progression (migration 0149): a student's own current/best level
+// per game, for GameCenter's per-tile level chip. game_level_progress RLS
+// already scopes this to is_own_student, no RPC needed.
+export async function listMyGameLevels(studentId) {
+  const { data, error } = await supabase
+    .from('game_level_progress')
+    .select('game_type, current_level, best_level_reached')
+    .eq('student_id', studentId);
   if (error) throw error;
   return data;
 }
