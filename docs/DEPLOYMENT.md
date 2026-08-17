@@ -85,3 +85,28 @@ fully guarantee by itself.
 - Final Exams student UI renders and accepts submissions
 - Rankings / leaderboard page loads
 - Student Dashboard loads
+
+---
+
+## Addendum (2026-08-17 documentation consolidation pass)
+
+The sections above remain the authoritative deploy process description; this addendum adds confirmed details found during a full docs consolidation and does not change any rule stated above.
+
+### Confirmed current state
+
+- Production branch: `release/dashboard-redesign`, HEAD `15e17ae` at doc time.
+- Deploy command: `npm run deploy:production` → `scripts/deploy-production.sh` (confirmed present in `package.json` scripts). **Note:** this repo has an uncommitted local modification to `scripts/deploy-production.sh` at doc time (pre-existing, not made by this documentation pass) — do not assume the script's exact current behavior matches what's committed until that diff is reviewed and either committed or discarded by whoever owns it.
+- Hosting: Vercel project `dave-english-academy` (`prj_FLDdh0LHWW2J1YRfhNFOPtLDOeaY`), team `student-management-system2`, confirmed via `vercel.json` (SPA rewrite) plus the root-cause section above.
+- Migration deploys go through the Supabase CLI/MCP separately from the Vercel frontend deploy — **not** part of `deploy-production.sh`. Always confirm migration-ledger/production parity (`supabase migration list --linked`) before any `supabase db push`; see `DATABASE.md` §1 and §5 for why this has bitten the project more than once historically.
+
+### PWA stale-cache consideration
+
+`vite-plugin-pwa` is present (confirmed in `package.json`/`ARCHITECTURE.md`). No dedicated stale-cache incident writeup was found among the existing `docs/*.md` files searched this pass — treat "students may see a stale cached build after a deploy until the service worker updates" as a **standing PWA risk to consider when verifying a deploy**, not a documented past incident with a specific fix. If a future session finds a specific stale-cache bug report, record it here.
+
+### Windows considerations
+
+This repo is developed on Windows (confirmed: environment is `win32`, PowerShell/Bash both available per session tooling). `scripts/deploy-production.sh` is a Bash script — run it via Git Bash or WSL-equivalent, not native PowerShell, consistent with how the working sessions that produced this doc set operated (Bash tool used throughout for git/repo commands in this project).
+
+### Runtime verification, restated
+
+Per the standing rule already established in `PROJECT-HANDOFF.md`/`DATABASE.md`/`GAMING-SYSTEM.md`: a deploy is not "verified" from a clean build + static code review alone. At least two production bugs in the gaming system (an adaptive-difficulty tier-scale issue and an unlocked-lesson join issue) were caught only by an actual logged-in runtime session, not by reading migrations or diffs. Apply the same standard to any future deploy-verification claim across every system in this doc set, not just gaming.
