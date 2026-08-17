@@ -11,7 +11,7 @@ Status labels: **COMPLETE**, **COMPLETE+VERIFIED** (runtime-tested in production
 | Architecture (React/Vite + Supabase RPC/RLS) | COMPLETE | `ARCHITECTURE.md`, confirmed against `package.json`/repo structure | None known |
 | Database / migrations (151 numbered + 6 `PROD_RECONCILED_*`) | COMPLETE | `DATABASE.md`; migration-ledger reconciliation passes done; achievement-engine schema reconciled into `0105`–`0110` (`4fe705b`), confirmed applied in prod ledger | A few latent RLS gaps (`files`, `curriculum_progress`) |
 | Curriculum (12 lessons live of a 100-lesson target) | IN PROGRESS | `CURRICULUM.md`; 12/100 lesson teaching instances built | 100-lesson expansion is a written proposal only, not inserted; needs Dave's approval |
-| Admin system (students/groups/attendance/exams/homework/reports/certificates) | COMPLETE | `ADMIN-SYSTEM.md`; all pages exist and routed | `PaymentEngineTest.jsx` production-status unresolved; no reversal UI beyond session-local undo |
+| Admin system (students/groups/attendance/exams/homework/reports/certificates) | COMPLETE | `ADMIN-SYSTEM.md`; all pages exist and routed | No reversal UI beyond session-local undo |
 | Payments (ledger + Telegram reminders) | COMPLETE | `PAYMENTS.md`; ledger confirmed, reminder candidate flow confirmed | Whether reminder sends are truly scheduled vs. admin-triggered-only not fully resolved |
 | Gaming — 9 games, server-authoritative | COMPLETE+VERIFIED | `GAMING-SYSTEM.md`; replay protection, curriculum gating, no P0s across 2 audits | Ongoing content/balance tuning |
 | Game Level Progression (0149-0151) | IMPLEMENTED+VERIFIED (server mechanism) | 2026-08-17: Grammar Battle verified across two levels via direct RPC call (impersonating test student) — pass/leveled-up/persist/UI-resume confirmed for 1→2 and 2→3; fail-path confirmed non-advancing; curriculum gating spot-checked at Level 3 (content ceiling held under unlocked-lesson limit); anti-skip enforcement confirmed by code audit (no `p_level` param exists on any `get_*_round()`); academy-level/game-level decoupling confirmed by code audit (no `students.level` reference in 0149/0150) | Full human-paced UI playthrough of the 8s timer still not verified (method limitation, documented); Family V/Family C games only verified for the initial 1→2 hop (prior session), not multi-level continuation like Grammar Battle got this pass |
@@ -37,7 +37,7 @@ Core admin system; points ledger + class ranking (Ranking V2 core); payments led
 ~~Recognition (Student of the Week/Month) tie-break~~ — **FIXED 2026-08-17**: `0153_fix_recognition_tie_break.sql` applied to production; `finalize_recognition_winner()` (the function actually wired to Recognition.jsx) now detects genuine rank-1 ties and recognizes all tied students as co-winners, in place, without touching its interface/certificate behavior. SQL-logic verified (synthetic data) + confirmed live in prod; RPC end-to-end and UI not verified (environment blocked all test writes to `students`/`point_transactions` across two sessions) — recommend a runtime check next time Recognition is actually used for a tied period.
 - `get_leaderboard()` (0008) is dead, unscoped, still granted — low severity, flagged for removal, not yet dropped.
 - No CHECK constraint on `point_transactions.points` magnitude.
-- `PaymentEngineTest.jsx` production status (keep vs. remove) unresolved.
+- ~~`PaymentEngineTest.jsx`~~ — **REMOVED 2026-08-17**: obsolete diagnostic page (from the `0054`-`0060` ledger migration verification) deleted along with its `/dev/payment-engine-test` route; it was an unnecessary secondary path capable of creating real payment records. Normal Payment Engine/Payments UI unchanged.
 - `scripts/deploy-production.sh` has an uncommitted local modification at doc time — not made by any doc session, ownership/intent not established here.
 
 ## 5. Decisions still required from Dave
@@ -47,8 +47,7 @@ Core admin system; points ledger + class ranking (Ranking V2 core); payments led
 3. Whether the achievement→points bridge (paused 2026-08-15) stays paused permanently or resumes.
 4. Badge consolidation approach — retire `computeBadges()` in favor of the DB-backed engine, or keep both with a defined split of responsibility.
 5. 100-lesson curriculum expansion — approve or reject `docs/curriculum-plan-lessons-21-120-proposed.md` before any `curriculum_lessons` insert.
-6. `PaymentEngineTest.jsx` — keep as an intentional diagnostic tool, or remove.
-7. Whether/when Class Session (Ranking V2 Phase 4) Week/Month views re-enable — gated on real adoption evidence, not a date (see `RANKING-SYSTEM.md` §6 for the exact conditions).
+6. Whether/when Class Session (Ranking V2 Phase 4) Week/Month views re-enable — gated on real adoption evidence, not a date (see `RANKING-SYSTEM.md` §6 for the exact conditions).
 
 ## 6. Important technical risks
 

@@ -29,7 +29,7 @@ Prior-session memory (`dave-academy-payment-ledger-cutover`) stated: "legacy gri
 
 ## 5. Known issues
 
-- `PaymentEngineTest.jsx` exists in `src/pages/` — likely a dev/diagnostic page; its production status (kept intentionally vs. leftover) was not resolved this pass. Flagged in `ADMIN-SYSTEM.md`.
+- `PaymentEngineTest.jsx` (hidden `/dev/payment-engine-test` diagnostic page, created for the `0054`-`0060` ledger migration verification) removed 2026-08-17 — purpose was complete, and it was an unnecessary secondary path capable of creating real `payment_transactions` records via `recordPayment()`. Normal Payments UI/Payment Engine unaffected.
 - Whether reminder sends are truly automatic (scheduled) vs. admin-triggered-only was not fully resolved this pass — see §3.
 - No independent audit of `payment_transactions` RLS/reversal mechanics was performed this pass (out of scope — payments were not part of any prior dedicated audit doc found in `docs/`); treat payment-ledger integrity as **unverified-assumption** relative to the point-transaction ledger's own well-audited RLS (see `DATABASE.md` §3), which it structurally resembles but was not independently re-checked.
 
@@ -41,4 +41,4 @@ Prior-session memory (`dave-academy-payment-ledger-cutover`) stated: "legacy gri
 | Reports.jsx reading the ledger, not a boolean | confirmed-current (resolves a stale prior-session note) |
 | Telegram reminder candidate list + test-send | confirmed-current |
 | Automatic/scheduled reminder sending | unverified-assumption |
-| `PaymentEngineTest.jsx` purpose/removal | open question, not investigated |
+| `PaymentEngineTest.jsx` purpose/removal | removed 2026-08-17 |
