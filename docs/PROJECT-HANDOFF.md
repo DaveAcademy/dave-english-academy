@@ -1,6 +1,36 @@
 # Dave English Academy — Project Handoff
 
-**Purpose of this file:** the single entry point for a new session. Read this first, then the topic doc you need (`ARCHITECTURE.md`, `DATABASE.md`, `CURRICULUM.md`, `GAMING-SYSTEM.md`, `RANKING-SYSTEM.md`, `ADMIN-SYSTEM.md`, `PAYMENTS.md`, `DEPLOYMENT.md`, `ROADMAP.md`). These ten files supersede the 26+ dated audit/spec docs that preceded them — those older files are **not deleted** and remain useful as historical detail/evidence, but this set is the canonical reference going forward.
+**This file is the primary entry point for every new AI session on this project.** Read it first, before touching code or any other doc. It routes you to the right topic doc and states the standard session workflow; it deliberately does not duplicate the detail that lives in the topic docs themselves.
+
+Then read the topic doc(s) you need: `PROJECT-STATUS.md`, `ARCHITECTURE.md`, `DATABASE.md`, `CURRICULUM.md`, `GAMING-SYSTEM.md`, `RANKING-SYSTEM.md`, `ADMIN-SYSTEM.md`, `PAYMENTS.md`, `DEPLOYMENT.md`, `ROADMAP.md`. These eleven files supersede the 26+ dated audit/spec docs that preceded them — those older files are **not deleted** and remain useful as historical detail/evidence, but this set is the canonical reference going forward.
+
+## 0. Task type → read
+
+| If the task is about... | Read |
+|---|---|
+| "What's the current state of the project / what's done / what's next" | `PROJECT-STATUS.md` |
+| Stack, RLS/RPC patterns, frontend↔backend boundary, data flows | `ARCHITECTURE.md` |
+| Schema, migrations, RLS detail, RPC inventory, DB production rules | `DATABASE.md` |
+| Lessons, curriculum numbering, four-skill progression, vocabulary | `CURRICULUM.md` |
+| Any of the 9 games, level progression, content banks, records/leaderboards | `GAMING-SYSTEM.md` |
+| Class points, ledger, Rankings.jsx, class-session, recognition/tie-break | `RANKING-SYSTEM.md` |
+| Admin pages, students/groups/attendance/reports | `ADMIN-SYSTEM.md` |
+| Payments ledger, Telegram reminders | `PAYMENTS.md` |
+| Shipping to production, deploy script, past outage causes | `DEPLOYMENT.md` |
+| Prioritization, what's next, what's deferred/planned | `ROADMAP.md` |
+
+## Standard workflow for a new session
+
+1. Read this file (`PROJECT-HANDOFF.md`), then the one or two topic docs the task actually touches — not the whole set.
+2. If Graphify (or an equivalent architecture/dependency-navigation tool) is available, use it to trace RPC/table/component relationships instead of a manual file sweep.
+3. Inspect only the code relevant to the task — this doc set exists so you don't need to re-read the whole repo to get oriented.
+4. Do one focused task. Flag adjacent issues instead of fixing them inline (see rule 7 below).
+5. Runtime-test when the change is deploy/production-facing — static code/SQL review does not count as verification (see rule 4 below).
+6. Commit.
+7. Update the relevant doc(s) if the change altered status, added a known issue, or closed one — small, targeted edits, not rewrites.
+8. Close the session with a clear statement of what shipped and what's still open.
+
+**Historical session transcripts (~90 dated dev sessions) are archival-only.** Ordinary development should rely on the repo, `git log`, and this canonical doc set — not on reconstructing old conversations. If something important would be lost by never reading those transcripts again, it belongs in this doc set instead; that is the standard this documentation is held to.
 
 Status labels used throughout this doc set: **confirmed-current** (repo-verified), **planned**, **historical-only**, **known-issue-open**, **known-issue-fixed**, **unverified-assumption**.
 
@@ -44,7 +74,7 @@ Repo: `C:\Dave Academy`. Production branch: `release/dashboard-redesign` (HEAD a
 3. **Never rewrite an already-applied migration.** If prod schema needs correction, write a new corrective migration (see the `PROD_RECONCILED_*` convention in `DATABASE.md`) — don't edit history.
 4. **Runtime verification required before claiming production behavior correct.** Static code/SQL review is not sufficient to mark a deploy/verify task PASS — confirmed standing rule after two bugs in the gaming/leaderboard work were caught only by live testing (see `GAMING-SYSTEM.md` known-issues).
 5. **Migration ledger discipline.** Do not run `supabase db push` without first confirming ledger/production parity for the affected range — historical divergence has happened more than once (see `DATABASE.md` §Migration conventions).
-6. **Reference `.claude/skills/` if it exists instead of duplicating process rules.** Checked this pass: **no `.claude/skills/` directory exists in this repo** (`unverified-assumption` in prior memory about a "12-skill suite" — not found in the current repo state; if it exists elsewhere it is not part of this codebase).
+6. **Reference `.claude/skills/` before duplicating process rules.** Correction to a prior pass of this doc: the directory **does exist** — `.claude/skills/` contains 12 skills (`architecture-token-health-monitor`, `business-rules-guardian`, `code-cleanup-assistant`, `database-safety-auditor`, `dave-academy-development-standards`, `feature-completion-checker`, `performance-watcher`, `project-memory-guardian`, `release-checklist`, `security-auditor`, `translation-auditor`, `ui-consistency-auditor`). Confirmed present via directory listing on 2026-08-17. Check it before adding new process/standards rules anywhere in this doc set.
 7. **Keep sessions focused and token-efficient.** One job per session where possible; audit-before-modify for anything touching production data or shipped behavior; flag adjacent issues instead of fixing them inline.
 
 ## 5. Current status
