@@ -95,7 +95,7 @@ The sections above remain the authoritative deploy process description; this add
 ### Confirmed current state
 
 - Production branch: `release/dashboard-redesign`, HEAD `15e17ae` at doc time.
-- Deploy command: `npm run deploy:production` → `scripts/deploy-production.sh` (confirmed present in `package.json` scripts). **Note:** this repo has an uncommitted local modification to `scripts/deploy-production.sh` at doc time (pre-existing, not made by this documentation pass) — do not assume the script's exact current behavior matches what's committed until that diff is reviewed and either committed or discarded by whoever owns it.
+- Deploy command: `npm run deploy:production` → `scripts/deploy-production.sh` (confirmed present in `package.json` scripts). The script previously showed as locally modified in `git status`; investigated 2026-08-17 and confirmed it was a `core.autocrlf`-driven line-ending artifact only (`git diff` empty, content byte-identical to HEAD once staged) — no actual behavior change, nothing to commit.
 - Hosting: Vercel project `dave-english-academy` (`prj_FLDdh0LHWW2J1YRfhNFOPtLDOeaY`), team `student-management-system2`, confirmed via `vercel.json` (SPA rewrite) plus the root-cause section above.
 - Migration deploys go through the Supabase CLI/MCP separately from the Vercel frontend deploy — **not** part of `deploy-production.sh`. Always confirm migration-ledger/production parity (`supabase migration list --linked`) before any `supabase db push`; see `DATABASE.md` §1 and §5 for why this has bitten the project more than once historically.
 
