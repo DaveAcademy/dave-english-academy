@@ -64,6 +64,6 @@ Historical (pre-V2) manual point rows are **never** backfilled with a `class_ses
 | `rank()`-based tie handling in SQL | confirmed-current, correct everywhere |
 | UI rank-display consistency | mixed — several historical bugs fixed, at least one (Rankings.jsx top table) flagged open at last audit, verify before assuming fixed |
 | Class Session architecture | implemented, deployed, Week/Month display deliberately paused pending adoption |
-| Recognition tie-break | known-issue-fixed (`0153`, applied to prod 2026-08-17; SQL-logic + DB-deployment verified, RPC/UI not verified — see §4) |
+| Recognition tie-break | known-issue-fixed (`0153`, applied to prod 2026-08-17; SQL-logic verified twice — synthetic data, and read-only against a real unfinalized 3-way tie in prod (level B, week 2026-07-27–2026-08-02, students 14/34/19 all 67pts/1 active day/100% attendance, rank 1). RPC execution (`finalize_recognition_winner`) and UI still not runtime-verified — production writes to `point_transactions`/`students` remain blocked at the tool layer, confirmed again 2026-08-17 (rolled-back test transaction denied). Not attempted via Supabase branch — deferred pending cost approval. See §4. |
 | Level-snapshot gap | known-issue-open, explicitly deferred |
 | Reversal/undo | partially implemented (session-local only) |
