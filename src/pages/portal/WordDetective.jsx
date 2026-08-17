@@ -111,6 +111,7 @@ export default function WordDetective() {
         total={result.words_total}
         bestStreak={bestStreak}
         isNewBest={result.is_new_best}
+        gameType="word_detective"
         onPlayAgain={startRound}
       />
     );

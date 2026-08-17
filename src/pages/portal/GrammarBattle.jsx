@@ -252,6 +252,7 @@ export default function GrammarBattle() {
         total={result.words_total}
         bestStreak={bestStreak}
         isNewBest={result.is_new_best}
+        gameType="grammar_battle"
         extra={accuracyExtra}
         onPlayAgain={startGame}
       />

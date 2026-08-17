@@ -2,15 +2,18 @@
 // Practice / Game Center: the student's entry point into every game, as
 // attractive cards rather than dropping them straight into one game.
 // Adding a game means adding one entry to GAME_CENTER_ITEMS - the card,
-// route, and best-score lookup are all shared (GameCard.jsx,
-// listMyGameSessions in storageBridge.js).
+// route, and best-score/record lookup are all shared (GameCard.jsx,
+// get_game_best_records RPC via storageBridge.js). Best scores and group
+// records come from one batched call (0147) rather than one
+// listMyGameSessions query per game (the old N+1 pattern this replaced).
 
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Gamepad2 } from 'lucide-react';
 import { useAcademy } from '../../lib/AcademyDataContext';
 import GameCard from '../../components/GameCard';
-import { listMyGameSessions } from '../../lib/storageBridge';
+import { getGameBestRecords } from '../../lib/storageBridge';
+import { formatStudentDisplayName } from '../../lib/gameRecordFormat';
 
 const GAME_CENTER_ITEMS = [
   {
@@ -101,17 +104,27 @@ export default function GameCenter() {
   const { students } = useAcademy();
   const me = students[0];
   const [bestScores, setBestScores] = useState({});
+  const [records, setRecords] = useState({});
 
   useEffect(() => {
     if (!me) return;
     let cancelled = false;
-    Promise.all(
-      GAME_CENTER_ITEMS.filter((g) => !g.disabled).map((g) =>
-        listMyGameSessions(me.id, g.key).then((rows) => [g.key, rows.reduce((max, r) => Math.max(max, r.score), 0)])
-      )
-    ).then((pairs) => {
+    getGameBestRecords().then((rows) => {
       if (cancelled) return;
-      setBestScores(Object.fromEntries(pairs.filter(([, score]) => score > 0)));
+      const scores = {};
+      const byGame = {};
+      for (const r of rows) {
+        if (r.student_id === me.id) scores[r.game_type] = Number(r.best_score);
+        if (r.rank === 1 && !byGame[r.game_type]) {
+          byGame[r.game_type] = {
+            name: formatStudentDisplayName(r.real_name, r.english_name),
+            score: Number(r.best_score),
+            isMe: r.student_id === me.id,
+          };
+        }
+      }
+      setBestScores(scores);
+      setRecords(byGame);
     });
     return () => {
       cancelled = true;
@@ -140,6 +153,7 @@ export default function GameCenter() {
             to={g.to}
             disabled={g.disabled}
             bestScore={bestScores[g.key]}
+            record={records[g.key]}
           />
         ))}
       </div>

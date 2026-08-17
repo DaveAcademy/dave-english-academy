@@ -132,6 +132,7 @@ export default function SentenceScramble() {
         total={result.words_total}
         bestStreak={bestStreak}
         isNewBest={result.is_new_best}
+        gameType="sentence_scramble"
         onPlayAgain={startRound}
       />
     );

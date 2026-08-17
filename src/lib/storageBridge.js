@@ -1247,6 +1247,15 @@ export async function submitGameRound(gameType, roundId, answers) {
   return data;
 }
 
+// Leaderboard / Best Records (migration 0147): one batched call returns
+// every active student's best score per game, ranked, scoped to the
+// caller's own level server-side - no game_type/level params needed.
+export async function getGameBestRecords() {
+  const { data, error } = await supabase.rpc('get_game_best_records');
+  if (error) throw error;
+  return data;
+}
+
 // A student's own recent rounds for a game (best score / history) -
 // game_sessions RLS already scopes this to is_own_student, no RPC needed.
 export async function listMyGameSessions(studentId, gameType) {

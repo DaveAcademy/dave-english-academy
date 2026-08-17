@@ -9,9 +9,9 @@
 
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Play, Lock, Star } from 'lucide-react';
+import { Play, Lock, Star, Trophy } from 'lucide-react';
 
-export default function GameCard({ icon, name, description, gradient, iconBg, to, bestScore, disabled }) {
+export default function GameCard({ icon, name, description, gradient, iconBg, to, bestScore, record, disabled }) {
   const { t } = useTranslation('game');
   return (
     <div
@@ -33,6 +33,13 @@ export default function GameCard({ icon, name, description, gradient, iconBg, to
 
       <h3 className="mt-3 font-display text-lg font-bold text-ink">{name}</h3>
       <p className="mt-1 min-h-[2.5rem] text-sm leading-snug text-ink/60">{description}</p>
+
+      {record && (
+        <p className="mt-1 flex items-center gap-1 truncate text-xs font-semibold text-ink/50">
+          <Trophy size={12} className="flex-shrink-0 text-amber-500" aria-hidden="true" />
+          {record.isMe ? t('youHoldRecord') : `${record.name} · ${record.score}`}
+        </p>
+      )}
 
       {disabled ? (
         <span className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-white/70 px-3 py-1.5 text-xs font-bold text-ink/50">

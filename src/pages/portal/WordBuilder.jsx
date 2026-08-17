@@ -152,6 +152,7 @@ export default function WordBuilder() {
         total={result.words_total}
         bestStreak={bestStreak}
         isNewBest={result.is_new_best}
+        gameType="word_builder"
         onPlayAgain={startRound}
       />
     );
