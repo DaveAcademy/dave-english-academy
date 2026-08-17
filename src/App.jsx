@@ -51,14 +51,34 @@ const ListeningChallenge = lazy(() => import('./pages/portal/ListeningChallenge'
 const WordDetective = lazy(() => import('./pages/portal/WordDetective'));
 const GrammarBattle = lazy(() => import('./pages/portal/GrammarBattle'));
 const GameCenter = lazy(() => import('./pages/portal/GameCenter'));
+const Install = lazy(() => import('./pages/Install'));
 
 export default function App() {
   return (
-    <AuthProvider>
-      <AuthGate>
-        <AppShell />
-      </AuthGate>
-    </AuthProvider>
+    <BrowserRouter>
+      <Routes>
+        {/* Public: reachable before login, so students can install the PWA
+            straight from a shared link without an account in hand yet. */}
+        <Route
+          path="/install"
+          element={
+            <Suspense fallback={<PageLoading />}>
+              <Install />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/*"
+          element={
+            <AuthProvider>
+              <AuthGate>
+                <AppShell />
+              </AuthGate>
+            </AuthProvider>
+          }
+        />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
@@ -75,18 +95,16 @@ function AppShell() {
 
   return (
     <AcademyDataProvider key={session.user.id}>
-      <BrowserRouter>
-        <div className="flex min-h-screen bg-paper">
-          {isStudent ? <PortalSidebar /> : <Sidebar />}
-          <div className="flex-1">
-            <MobileHeader />
-            <main className="mx-auto max-w-6xl px-4 pb-24 pt-4 sm:px-6 sm:pt-6 md:pb-8">
-              <RoutedContent isStudent={isStudent} />
-            </main>
-          </div>
-          {isStudent ? <PortalBottomNav /> : <BottomNav />}
+      <div className="flex min-h-screen bg-paper">
+        {isStudent ? <PortalSidebar /> : <Sidebar />}
+        <div className="flex-1">
+          <MobileHeader />
+          <main className="mx-auto max-w-6xl px-4 pb-24 pt-4 sm:px-6 sm:pt-6 md:pb-8">
+            <RoutedContent isStudent={isStudent} />
+          </main>
         </div>
-      </BrowserRouter>
+        {isStudent ? <PortalBottomNav /> : <BottomNav />}
+      </div>
     </AcademyDataProvider>
   );
 }
