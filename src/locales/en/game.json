@@ -2,7 +2,7 @@
   "levelLabel": "Level {{level}}",
   "levelCompleteTitle": "Level {{level}} Complete!",
   "levelUnlockedBody": "Level {{next}} unlocked",
-  "levelRetryBody": "70% needed to advance - try again!",
+  "levelRetryBody": "Not quite - try again to advance!",
   "gameCenterEyebrow": "Practice Zone",
   "gameCenterTitle": "Practice",
   "gameCenterSubtitle": "Pick a game to practice what you've learned.",
