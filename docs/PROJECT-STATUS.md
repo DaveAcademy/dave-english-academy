@@ -69,7 +69,7 @@ Points-pause (achievement→points bridge); server-side streak persistence; Clas
 ## 9. Recommended next development sessions
 
 0. ~~Apply `0156_curriculum_progress_teacher_level_scope.sql` to production~~ — **DONE 2026-08-17**, confirmed live via `pg_policies` on `curriculum_progress`.
-0b. Apply `0157_function_search_path_hardening.sql` to production (see `DATABASE.md` §7) — written and committed 2026-08-17, blocked on production-write tool permission this session, no code/behavior risk.
+0b. ~~Apply `0157_function_search_path_hardening.sql` to production~~ — **DONE 2026-08-17**, confirmed live via `pg_proc.proconfig` on all 8 functions (see `DATABASE.md` §7).
 1. If further Level Progression breadth is wanted: push one Family V and one Family C game past Level 2 the same way Grammar Battle was (this pass) — Grammar Battle's mechanism (pass/fail/multi-level/gating/anti-skip) is now settled and doesn't need re-verification.
 2. Badge system consolidation — but only after Dave decides the approach (§5.4).
 3. ~~"Highest level reached" additive leaderboard view (Q9 fix)~~ — **SHIPPED 2026-08-17**. Recommended follow-up: verify the "level leader" chip renders correctly in a real logged-in student session (blocked this session on missing test credentials).
