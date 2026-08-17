@@ -18,7 +18,7 @@ Status labels: **COMPLETE**, **COMPLETE+VERIFIED** (runtime-tested in production
 | Game ranking (Top 5, personal records, ties) | COMPLETE+VERIFIED | `GAMING-SYSTEM.md` §9; two display bugs found and fixed, then verified live | "Highest level reached" additive leaderboard view not built (Q9 ranking-conflict fix) |
 | Game Points (separate currency from Class Points) | COMPLETE+VERIFIED | `GAMING-SYSTEM.md` §12; migration `0152`, formula verified server-side (RPC) and frontend (live UI play), Class Points/ranking confirmed untouched | Badge integration and monthly view deliberately deferred (approved v1 scope) |
 | Badges / achievements | IN PROGRESS | Two disconnected systems confirmed: DB-backed `achievement_definitions`/`student_achievements` vs. frontend-only `computeBadges()` in `src/utils/badges.js`; achievement→points bridge deliberately paused | Schema reconciliation into a numbered migration; badge consolidation; both blocked on Dave's decisions |
-| Class ranking (points ledger) | COMPLETE | `RANKING-SYSTEM.md`; ledger model, RLS, `rank()`-based ties all confirmed-current | One known-open UI rank-display spot (Rankings.jsx top table) to re-verify; Recognition tie-break wired to the wrong function |
+| Class ranking (points ledger) | COMPLETE | `RANKING-SYSTEM.md`; ledger model, RLS, `rank()`-based ties all confirmed-current | One known-open UI rank-display spot (Rankings.jsx top table) to re-verify; Recognition tie-break fixed (`0153`, applied to prod) but not RPC/UI-verified |
 | Deployment (release branch + gated script) | COMPLETE | `DEPLOYMENT.md`; root-cause of past incidents documented, gated `deploy:production` script in place | `scripts/deploy-production.sh` has an uncommitted local diff at doc time — review/commit or discard before trusting exact current behavior |
 
 ## 2. Completed systems
@@ -34,7 +34,7 @@ Core admin system; points ledger + class ranking (Ranking V2 core); payments led
 - Two disconnected badge/achievement systems (`GAMING-SYSTEM.md`, `DATABASE.md`).
 - "Day streak" label collision between attendance streak and lesson-completion streak — unfixed.
 - No admin UI for achievement-rule configuration or bulk point-transaction reversal.
-- Recognition (Student of the Week/Month) tie-break: correct function (`finalize_recognition()`) exists but is dead code; the page calls `finalize_recognition_winner()`, which has no tie-break.
+~~Recognition (Student of the Week/Month) tie-break~~ — **FIXED 2026-08-17**: `0153_fix_recognition_tie_break.sql` applied to production; `finalize_recognition_winner()` (the function actually wired to Recognition.jsx) now detects genuine rank-1 ties and recognizes all tied students as co-winners, in place, without touching its interface/certificate behavior. SQL-logic verified (synthetic data) + confirmed live in prod; RPC end-to-end and UI not verified (environment blocked all test writes to `students`/`point_transactions` across two sessions) — recommend a runtime check next time Recognition is actually used for a tied period.
 - `get_leaderboard()` (0008) is dead, unscoped, still granted — low severity, flagged for removal, not yet dropped.
 - No CHECK constraint on `point_transactions.points` magnitude.
 - Achievement-engine schema (`achievement_definitions`/`student_achievements`/`student_metric_snapshots`) has no numbered local migration, only an untracked `PROD_RECONCILED_*` reconstruction.

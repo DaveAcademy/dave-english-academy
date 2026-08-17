@@ -29,7 +29,7 @@ Only path: `Rankings.jsx` → `awardPoints()`/`bulkAwardPoints()` in `storageBri
   - Rankings.jsx Level Leaderboard, class-by-class grid, PortalHome hero — always correct (`row.rank`).
   - Rankings.jsx main "top" table (pooled-all-levels, array-index rank) — **known-issue-open at audit time**, Ranking V2 plan calls for deleting this table entirely in favor of the Level Leaderboard; verify current code before assuming still open.
   - MyRanking.jsx medal color — **known-issue-fixed** (Ranking V2 plan item: `medal(i)` → `medal(row.rank - 1)`); Game Center's equivalent bug (`d5ca5a2`) is **known-issue-fixed** separately.
-- Recognition (Student of the Week/Month) tie-break: the function that implements the approved co-winner tie chain (`finalize_recognition()`) is **dead code** — the Recognition page actually calls `finalize_recognition_winner()`, which has no tie-break and forces `is_co_winner = false`. **known-issue-open.**
+- Recognition (Student of the Week/Month) tie-break: **known-issue-fixed** (`0153_fix_recognition_tie_break.sql`, applied to production 2026-08-17). `finalize_recognition()` (0023) has the correct tie chain but was never swap-compatible with the Recognition page's admin-choose-a-candidate workflow — it has no `student_id` parameter, issues no certificate, and returns a different shape. Rather than reroute the page to it, `finalize_recognition_winner()` (the function actually wired to `Recognition.jsx`) was extended in place: it keeps its exact interface, admin-selection semantics, and certificate issuance, and adds the same rank()-based tie detection (points desc, active_days desc, attendance rate desc) as `finalize_recognition()`. When the admin's chosen student is genuinely tied for rank 1, every tied student is recognized as a co-winner (own award row + own certificate); otherwise behavior is unchanged from before. Verification: the added tie-detection SQL was checked against literal synthetic data for clear-winner/2-way/3-way/lower-rank-tie cases (all correct) and the deployed function body was confirmed live in production (`prosrc` contains the new logic). Full RPC end-to-end and UI verification were **not** performed — the environment blocked all test writes to `students`/`point_transactions`, even inside rolled-back transactions, in two separate sessions.
 
 ## 5. Rank calculation — key RPCs
 
@@ -64,6 +64,6 @@ Historical (pre-V2) manual point rows are **never** backfilled with a `class_ses
 | `rank()`-based tie handling in SQL | confirmed-current, correct everywhere |
 | UI rank-display consistency | mixed — several historical bugs fixed, at least one (Rankings.jsx top table) flagged open at last audit, verify before assuming fixed |
 | Class Session architecture | implemented, deployed, Week/Month display deliberately paused pending adoption |
-| Recognition tie-break | known-issue-open (correct function exists, wrong function is called) |
+| Recognition tie-break | known-issue-fixed (`0153`, applied to prod 2026-08-17; SQL-logic + DB-deployment verified, RPC/UI not verified — see §4) |
 | Level-snapshot gap | known-issue-open, explicitly deferred |
 | Reversal/undo | partially implemented (session-local only) |
