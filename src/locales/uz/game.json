@@ -2,6 +2,8 @@
   "levelLabel": "{{level}}-daraja",
   "levelCompleteTitle": "{{level}}-daraja tugallandi!",
   "levelUnlockedBody": "{{next}}-daraja ochildi",
+  "gamePointsEarned": "+{{points}} O'yin ochkosi{{perfect}}",
+  "gamePointsPerfectSuffix": " (Mukammal!)",
   "levelRetryBody": "Hali emas - o'tish uchun qayta urinib ko'ring!",
   "gameCenterEyebrow": "Mashq maydoni",
   "gameCenterTitle": "Mashq",

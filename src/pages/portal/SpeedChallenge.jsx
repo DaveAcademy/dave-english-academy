@@ -176,7 +176,13 @@ export default function SpeedChallenge() {
             <p className="mt-3 inline-block rounded-full bg-amber-400 px-3 py-1 text-xs font-bold text-amber-950">{t('newBest')}</p>
           )}
 
-          <GameLevelStatus level={result.level} pass={result.pass} leveledUp={result.leveled_up} />
+          <GameLevelStatus
+            level={result.level}
+            pass={result.pass}
+            leveledUp={result.leveled_up}
+            gamePointsAwarded={result.game_points_awarded}
+            gamePointsIsPerfect={result.game_points_is_perfect}
+          />
 
           <GameLeaderboardBlock record={record} isNewBest={result.is_new_best} />
 

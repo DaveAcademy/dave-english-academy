@@ -14,7 +14,7 @@ import useGameRecord from '../hooks/useGameRecord';
 import GameLeaderboardBlock from './GameLeaderboardBlock';
 import GameLevelStatus from './GameLevelStatus';
 
-export default function GameResults({ gradientClass = 'from-brand-50 to-sky-100', score, correct, total, bestStreak, isNewBest, gameType, level, pass, leveledUp, extra, onPlayAgain }) {
+export default function GameResults({ gradientClass = 'from-brand-50 to-sky-100', score, correct, total, bestStreak, isNewBest, gameType, level, pass, leveledUp, gamePointsAwarded, gamePointsIsPerfect, extra, onPlayAgain }) {
   const { t } = useTranslation('game');
   const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
   const { record } = useGameRecord(gameType);
@@ -40,7 +40,13 @@ export default function GameResults({ gradientClass = 'from-brand-50 to-sky-100'
           <p className="mt-3 inline-block rounded-full bg-amber-400 px-3 py-1 text-xs font-bold text-amber-950">{t('newBest')}</p>
         )}
 
-        <GameLevelStatus level={level} pass={pass} leveledUp={leveledUp} />
+        <GameLevelStatus
+          level={level}
+          pass={pass}
+          leveledUp={leveledUp}
+          gamePointsAwarded={gamePointsAwarded}
+          gamePointsIsPerfect={gamePointsIsPerfect}
+        />
 
         <GameLeaderboardBlock record={record} isNewBest={isNewBest} />
 

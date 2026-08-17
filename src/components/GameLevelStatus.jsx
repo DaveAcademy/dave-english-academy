@@ -18,7 +18,7 @@ export function LevelBadge({ level }) {
   );
 }
 
-export default function GameLevelStatus({ level, pass, leveledUp }) {
+export default function GameLevelStatus({ level, pass, leveledUp, gamePointsAwarded, gamePointsIsPerfect }) {
   const { t } = useTranslation('game');
   if (level == null) return null;
 
@@ -30,6 +30,14 @@ export default function GameLevelStatus({ level, pass, leveledUp }) {
           {t('levelCompleteTitle', { level })}
         </p>
         {leveledUp && <p className="mt-1 text-xs font-semibold text-emerald-600">{t('levelUnlockedBody', { next: level + 1 })}</p>}
+        {leveledUp && gamePointsAwarded > 0 && (
+          <p className="mt-1 text-xs font-semibold text-amber-600">
+            {t('gamePointsEarned', {
+              points: gamePointsAwarded,
+              perfect: gamePointsIsPerfect ? t('gamePointsPerfectSuffix') : '',
+            })}
+          </p>
+        )}
       </div>
     );
   }

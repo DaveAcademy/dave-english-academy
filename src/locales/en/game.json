@@ -2,6 +2,8 @@
   "levelLabel": "Level {{level}}",
   "levelCompleteTitle": "Level {{level}} Complete!",
   "levelUnlockedBody": "Level {{next}} unlocked",
+  "gamePointsEarned": "+{{points}} Game Points{{perfect}}",
+  "gamePointsPerfectSuffix": " (Perfect!)",
   "levelRetryBody": "Not quite - try again to advance!",
   "gameCenterEyebrow": "Practice Zone",
   "gameCenterTitle": "Practice",

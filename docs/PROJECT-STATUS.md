@@ -16,7 +16,7 @@ Status labels: **COMPLETE**, **COMPLETE+VERIFIED** (runtime-tested in production
 | Gaming — 9 games, server-authoritative | COMPLETE+VERIFIED | `GAMING-SYSTEM.md`; replay protection, curriculum gating, no P0s across 2 audits | Ongoing content/balance tuning |
 | Game Level Progression (0149-0151) | IMPLEMENTED+VERIFIED (server mechanism) | 2026-08-17: Grammar Battle verified across two levels via direct RPC call (impersonating test student) — pass/leveled-up/persist/UI-resume confirmed for 1→2 and 2→3; fail-path confirmed non-advancing; curriculum gating spot-checked at Level 3 (content ceiling held under unlocked-lesson limit); anti-skip enforcement confirmed by code audit (no `p_level` param exists on any `get_*_round()`); academy-level/game-level decoupling confirmed by code audit (no `students.level` reference in 0149/0150) | Full human-paced UI playthrough of the 8s timer still not verified (method limitation, documented); Family V/Family C games only verified for the initial 1→2 hop (prior session), not multi-level continuation like Grammar Battle got this pass |
 | Game ranking (Top 5, personal records, ties) | COMPLETE+VERIFIED | `GAMING-SYSTEM.md` §9; two display bugs found and fixed, then verified live | "Highest level reached" additive leaderboard view not built (Q9 ranking-conflict fix) |
-| Game Points (separate currency from Class Points) | PLANNED | No `game_points` column/table/reference found anywhere in repo | Full product decision required before any schema work — see §5 |
+| Game Points (separate currency from Class Points) | COMPLETE+VERIFIED | `GAMING-SYSTEM.md` §12; migration `0152`, formula verified server-side (RPC) and frontend (live UI play), Class Points/ranking confirmed untouched | Badge integration and monthly view deliberately deferred (approved v1 scope) |
 | Badges / achievements | IN PROGRESS | Two disconnected systems confirmed: DB-backed `achievement_definitions`/`student_achievements` vs. frontend-only `computeBadges()` in `src/utils/badges.js`; achievement→points bridge deliberately paused | Schema reconciliation into a numbered migration; badge consolidation; both blocked on Dave's decisions |
 | Class ranking (points ledger) | COMPLETE | `RANKING-SYSTEM.md`; ledger model, RLS, `rank()`-based ties all confirmed-current | One known-open UI rank-display spot (Rankings.jsx top table) to re-verify; Recognition tie-break wired to the wrong function |
 | Deployment (release branch + gated script) | COMPLETE | `DEPLOYMENT.md`; root-cause of past incidents documented, gated `deploy:production` script in place | `scripts/deploy-production.sh` has an uncommitted local diff at doc time — review/commit or discard before trusting exact current behavior |
@@ -44,7 +44,7 @@ Core admin system; points ledger + class ranking (Ranking V2 core); payments led
 ## 5. Decisions still required from Dave
 
 1. Level Progression pass thresholds, tier-band cutoffs (Family C), and length-cap/distractor bands (Family V) — see `docs/level-progression-specification-2026-08-17.md` §"Decisions Requiring Dave's Approval" (10 items, none yet approved for exact cutoffs beyond the already-shipped defaults in 0149-0151).
-2. Whether/how a separate "Game Points" currency should exist, and whether it ever bridges into `point_transactions` (recommendation: never write directly into the existing ledger).
+2. ~~Whether/how a separate "Game Points" currency should exist~~ — **DECIDED 2026-08-17**: implemented as a separate `game_points_transactions` ledger, never bridging into `point_transactions`. See `GAMING-SYSTEM.md` §12.
 3. Whether the achievement→points bridge (paused 2026-08-15) stays paused permanently or resumes.
 4. Badge consolidation approach — retire `computeBadges()` in favor of the DB-backed engine, or keep both with a defined split of responsibility.
 5. 100-lesson curriculum expansion — approve or reject `docs/curriculum-plan-lessons-21-120-proposed.md` before any `curriculum_lessons` insert.
@@ -60,7 +60,7 @@ Core admin system; points ledger + class ranking (Ranking V2 core); payments led
 
 ## 7. Planned work (not built, roadmap order)
 
-See `ROADMAP.md` for the full breakdown and reasoning. In order: (1) broaden Level Progression runtime verification across more games, (2) additive "highest level reached" leaderboard view, (3) achievement schema reconciliation, (4) badge consolidation, (5) Game Points design decision, (6) badge→Game Points integration (only after #5), (7) ongoing game balance/content work.
+See `ROADMAP.md` for the full breakdown and reasoning. In order: (1) additive "highest level reached" leaderboard view, (2) achievement schema reconciliation, (3) badge consolidation, (4) badge→Game Points integration (Game Points itself now shipped, `GAMING-SYSTEM.md` §12), (5) ongoing game balance/content work.
 
 ## 8. Deferred work (explicit decision, not oversight)
 

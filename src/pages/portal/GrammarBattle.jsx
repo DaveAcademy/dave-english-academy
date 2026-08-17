@@ -259,6 +259,8 @@ export default function GrammarBattle() {
         level={result.level}
         pass={result.pass}
         leveledUp={result.leveled_up}
+        gamePointsAwarded={result.game_points_awarded}
+        gamePointsIsPerfect={result.game_points_is_perfect}
         extra={accuracyExtra}
         onPlayAgain={startGame}
       />
