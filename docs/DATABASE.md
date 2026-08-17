@@ -5,7 +5,7 @@ Supabase/Postgres. See `ARCHITECTURE.md` for how RLS/RPCs fit the overall system
 ## 1. Migration numbering & conventions (confirmed-current)
 
 - Sequential numbered files: `0001_schema.sql` ... `0151_game_level_leaderboard.sql` — **151 numbered files, current head**.
-- **`PROD_RECONCILED_*` files** are a separate, deliberate category: corrective/reconciliation migrations documenting schema that was applied directly to production (via MCP `apply_migration`, not `supabase db push`) in an earlier session and never captured as a numbered local file. They are `create table if not exists` / `create or replace function` guarded so re-applying is a no-op. Six such files exist at doc time, including `PROD_RECONCILED_achievement_engine_schema.sql` (documents `achievement_definitions`, `student_achievements`, `student_metric_snapshots` — schema that predates any local capture; **untracked in git as of this doc pass**, left untouched per standing instruction). See `docs/migration-reconciliation-2026-08-15.md` for the methodology.
+- **`PROD_RECONCILED_*` files** are a separate, deliberate category: corrective/reconciliation migrations documenting schema that was applied directly to production (via MCP `apply_migration`, not `supabase db push`) in an earlier session and never captured as a numbered local file. They are `create table if not exists` / `create or replace function` guarded so re-applying is a no-op. Six such files exist at doc time. `PROD_RECONCILED_achievement_engine_schema.sql` (an untracked, superseded duplicate of the same tables) is one of them, but the achievement-engine schema itself is now captured properly as numbered migrations `0105_achievement_engine_schema.sql`–`0110` (committed `4fe705b`, applied to the prod ledger as `20260810055447_0105_achievement_core_schema` onward) — see §7. See `docs/migration-reconciliation-2026-08-15.md` for the methodology.
 - **Never rewrite an already-applied migration file.** If prod needs a schema correction, write a new numbered (or `PROD_RECONCILED_`) migration — do not edit history in place. This rule exists because of at least one documented incident where an unrecorded-ledger migration would have been silently re-run and regressed a live function (`docs/migration-ledger-and-rls-repair-plan.md` §2, "the `db push` footgun").
 - **Ledger/production parity has diverged more than once historically** (documented repair passes: 2026-07-25 for 0024-0028, 2026-08-15 for the payment/ranking/gaming range). **known-issue-open (latent, not currently blocking):** local migration files 0029+ have at points been untracked in the prod ledger per prior-session notes; do not run `supabase db push` in a fresh session without first re-confirming ledger/production parity for the affected range using `supabase migration list --linked`.
 
@@ -73,7 +73,7 @@ Supabase/Postgres. See `ARCHITECTURE.md` for how RLS/RPCs fit the overall system
 
 ## 7. Known DB issues
 
-- Achievement-engine schema (`achievement_definitions`, `student_achievements`, `student_metric_snapshots`) has no numbered local migration — only the `PROD_RECONCILED_achievement_engine_schema.sql` reconstruction, itself still untracked in git at doc time. **known-issue-open.**
+- ~~Achievement-engine schema had no numbered local migration~~ — **resolved**: `0105_achievement_engine_schema.sql`–`0110` (committed `4fe705b`) reconstruct `achievement_definitions`/`student_achievements`/`student_metric_snapshots` plus `bump_student_metric`/`evaluate_achievements`, and are confirmed applied in the prod migration ledger (`20260810055447` onward). The untracked `PROD_RECONCILED_achievement_engine_schema.sql` is now a redundant (harmless, idempotent) duplicate of a subset of 0105 and can be deleted whenever convenient — not required.
 - `get_leaderboard()` (from `0008`) remains defined and `GRANT`ed in the database, dead in the frontend, unscoped across levels — **known-issue-open**, low severity (no caller), flagged for removal in `ranking-audit.md` but not yet dropped.
 - No CHECK constraint on `point_transactions.points` magnitude (a typo of `500` instead of `5` is accepted and cannot be deleted, only offset) — **known-issue-open**.
 - Reversal mechanism (`is_reversal`/`reversed_transaction_id` on `point_transactions`) exists in schema but is only exercised via the session-local undo added in Ranking V2 Phase 2 — bulk/admin-side reversal UI is still **planned**, not built.
@@ -81,7 +81,6 @@ Supabase/Postgres. See `ARCHITECTURE.md` for how RLS/RPCs fit the overall system
 
 ## 8. Deferred DB work
 
-- Reconcile achievement-engine schema into a proper numbered migration (Phase 0 of the gamification roadmap — see `ROADMAP.md`).
 - Level-scoped RLS extension to remaining role-only-gated tables (`files`, `curriculum_progress`) — low urgency, latent risk only.
 - A CHECK constraint / bounds validation on point-award magnitude.
 - Backfilling `class_session_id` onto historical `point_transactions` rows — explicitly ruled out as unsafe (no reliable historical group identity); pre-V2 manual rows keep `class_session_id NULL` permanently by design.
