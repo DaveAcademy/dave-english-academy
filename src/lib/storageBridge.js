@@ -1269,6 +1269,16 @@ export async function listMyGameLevels(studentId) {
   return data;
 }
 
+// "Highest level reached" leaderboard (migration 0151): a second, separate
+// leaderboard dimension alongside getGameBestRecords() - ranks by
+// best_level_reached per game_type instead of score, so progression depth
+// has its own record independent of the flat per-correct score.
+export async function getGameLevelLeaderboard() {
+  const { data, error } = await supabase.rpc('get_game_level_leaderboard');
+  if (error) throw error;
+  return data;
+}
+
 // A student's own recent rounds for a game (best score / history) -
 // game_sessions RLS already scopes this to is_own_student, no RPC needed.
 export async function listMyGameSessions(studentId, gameType) {

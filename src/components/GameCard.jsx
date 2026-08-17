@@ -9,9 +9,9 @@
 
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Play, Lock, Star, Trophy } from 'lucide-react';
+import { Play, Lock, Star, Trophy, Crown } from 'lucide-react';
 
-export default function GameCard({ icon, name, description, gradient, iconBg, to, bestScore, record, level, disabled }) {
+export default function GameCard({ icon, name, description, gradient, iconBg, to, bestScore, record, level, levelLeader, disabled }) {
   const { t } = useTranslation('game');
   return (
     <div
@@ -43,6 +43,13 @@ export default function GameCard({ icon, name, description, gradient, iconBg, to
         <p className="mt-1 flex items-center gap-1 truncate text-xs font-semibold text-ink/50">
           <Trophy size={12} className="flex-shrink-0 text-amber-500" aria-hidden="true" />
           {record.isMe ? t('youHoldRecord') : `${record.name} · ${record.score}`}
+        </p>
+      )}
+
+      {levelLeader && (
+        <p className="mt-1 flex items-center gap-1 truncate text-xs font-semibold text-ink/50">
+          <Crown size={12} className="flex-shrink-0 text-violet-500" aria-hidden="true" />
+          {levelLeader.isMe ? t('youAreLevelLeader') : t('levelLeaderLine', { name: levelLeader.name, level: levelLeader.level })}
         </p>
       )}
 

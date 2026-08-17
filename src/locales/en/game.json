@@ -46,6 +46,8 @@
   "bestStreakLine": "Best streak: {{streak}}",
   "newRecord": "New record!",
   "youHoldRecord": "You hold the record",
+  "youAreLevelLeader": "You're the level leader",
+  "levelLeaderLine": "{{name}} leads · Lv {{level}}",
   "youAreNumberOne": "You're #1!",
   "yourBest": "Your best: {{score}}",
   "topPlayers": "Top Players",

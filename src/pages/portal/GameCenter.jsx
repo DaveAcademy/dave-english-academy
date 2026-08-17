@@ -12,7 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { Gamepad2 } from 'lucide-react';
 import { useAcademy } from '../../lib/AcademyDataContext';
 import GameCard from '../../components/GameCard';
-import { getGameBestRecords, listMyGameLevels } from '../../lib/storageBridge';
+import { getGameBestRecords, getGameLevelLeaderboard, listMyGameLevels } from '../../lib/storageBridge';
 import { formatStudentDisplayName } from '../../lib/gameRecordFormat';
 
 const GAME_CENTER_ITEMS = [
@@ -106,6 +106,7 @@ export default function GameCenter() {
   const [bestScores, setBestScores] = useState({});
   const [records, setRecords] = useState({});
   const [levels, setLevels] = useState({});
+  const [levelLeaders, setLevelLeaders] = useState({});
 
   useEffect(() => {
     if (!me) return;
@@ -141,6 +142,26 @@ export default function GameCenter() {
       // A student who has never played a game simply has no row yet -
       // an empty/failed fetch just means no level chip, not an error state.
     });
+    getGameLevelLeaderboard().then((rows) => {
+      if (cancelled) return;
+      const byGame = {};
+      for (const r of rows) {
+        if (r.rank !== 1) continue;
+        // Same tie-preference as the score record: if the caller is any of
+        // the tied #1s, show "you're the level leader" over the first row.
+        if (!byGame[r.game_type] || r.student_id === me.id) {
+          byGame[r.game_type] = {
+            name: formatStudentDisplayName(r.real_name, r.english_name),
+            level: r.best_level_reached,
+            isMe: r.student_id === me.id,
+          };
+        }
+      }
+      setLevelLeaders(byGame);
+    }).catch(() => {
+      // Supplementary, same as the score leaderboard - a failed fetch just
+      // means no level-leader chip.
+    });
     return () => {
       cancelled = true;
     };
@@ -170,6 +191,7 @@ export default function GameCenter() {
             bestScore={bestScores[g.key]}
             record={records[g.key]}
             level={levels[g.key]}
+            levelLeader={levelLeaders[g.key]}
           />
         ))}
       </div>

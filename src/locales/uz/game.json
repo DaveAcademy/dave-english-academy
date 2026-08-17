@@ -46,6 +46,8 @@
   "bestStreakLine": "Eng yaxshi ketma-ketlik: {{streak}}",
   "newRecord": "Yangi rekord!",
   "youHoldRecord": "Siz rekord egasisiz",
+  "youAreLevelLeader": "Siz daraja bo'yicha yetakchisiz",
+  "levelLeaderLine": "{{name}} yetakchi · {{level}}-daraja",
   "youAreNumberOne": "Siz #1siz!",
   "yourBest": "Sizning natijangiz: {{score}}",
   "topPlayers": "Eng yaxshilar",
