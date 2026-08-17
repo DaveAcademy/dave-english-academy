@@ -870,7 +870,7 @@ export default function Rankings() {
                     <th className="px-3 py-2 font-semibold text-ink/70">Rank</th>
                     <th className="px-3 py-2 font-semibold text-ink/70">Name</th>
                     <th className="px-3 py-2 font-semibold text-ink/70">Points</th>
-                    <th className="px-3 py-2 font-semibold text-ink/70">Change</th>
+                    {boardPeriod !== 'all_time' && <th className="px-3 py-2 font-semibold text-ink/70">Change</th>}
                     <th className="px-3 py-2 font-semibold text-ink/70">Attendance</th>
                   </tr>
                 </thead>
@@ -886,16 +886,18 @@ export default function Rankings() {
                       </td>
                       <td className="px-3 py-2 font-medium text-ink">{row.real_name}</td>
                       <td className="px-3 py-2 font-bold text-brand-600">{row.points}</td>
-                      <td className="px-3 py-2">
-                        {row.rank_change == null || row.rank_change === 0 ? (
-                          <span className="text-ink/30">—</span>
-                        ) : (
-                          <span className={`flex items-center gap-0.5 font-semibold ${row.rank_change > 0 ? 'text-active' : 'text-inactive'}`}>
-                            {row.rank_change > 0 ? <ArrowUp size={13} /> : <ArrowDown size={13} />}
-                            {Math.abs(row.rank_change)}
-                          </span>
-                        )}
-                      </td>
+                      {boardPeriod !== 'all_time' && (
+                        <td className="px-3 py-2">
+                          {row.rank_change == null || row.rank_change === 0 ? (
+                            <span className="text-ink/30">—</span>
+                          ) : (
+                            <span className={`flex items-center gap-0.5 font-semibold ${row.rank_change > 0 ? 'text-active' : 'text-inactive'}`}>
+                              {row.rank_change > 0 ? <ArrowUp size={13} /> : <ArrowDown size={13} />}
+                              {Math.abs(row.rank_change)}
+                            </span>
+                          )}
+                        </td>
+                      )}
                       <td className="px-3 py-2 text-ink/60">{row.attendance_rate != null ? `${row.attendance_rate}%` : '—'}</td>
                     </tr>
                   ))}
