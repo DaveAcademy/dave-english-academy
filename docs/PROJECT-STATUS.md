@@ -9,7 +9,7 @@ Status labels: **COMPLETE**, **COMPLETE+VERIFIED** (runtime-tested in production
 | Area | Status | Evidence | Remaining work |
 |---|---|---|---|
 | Architecture (React/Vite + Supabase RPC/RLS) | COMPLETE | `ARCHITECTURE.md`, confirmed against `package.json`/repo structure | None known |
-| Database / migrations (156 numbered + 6 `PROD_RECONCILED_*`) | COMPLETE | `DATABASE.md`; migration-ledger reconciliation passes done; achievement-engine schema reconciled into `0105`–`0110` (`4fe705b`), confirmed applied in prod ledger | `curriculum_progress` teacher-level RLS scoping written (`0156`, 2026-08-17) but **not yet applied to production** — blocked at the tool layer this session, needs the established deploy process; `files` RLS gap remains, deferred pending product decision (no level column exists on that table) |
+| Database / migrations (156 numbered + 6 `PROD_RECONCILED_*`) | COMPLETE | `DATABASE.md`; migration-ledger reconciliation passes done; achievement-engine schema reconciled into `0105`–`0110` (`4fe705b`), confirmed applied in prod ledger | `curriculum_progress` teacher-level RLS scoping (`0156`, 2026-08-17) applied to production and read-only verified via `pg_policies`; real teacher write untested (no safe test path). `files` RLS gap remains, deferred pending product decision (no level column exists on that table) |
 | Curriculum (12 lessons live of a 100-lesson target) | IN PROGRESS | `CURRICULUM.md`; 12/100 lesson teaching instances built | 100-lesson expansion is a written proposal only, not inserted; needs Dave's approval |
 | Admin system (students/groups/attendance/exams/homework/reports/certificates) | COMPLETE | `ADMIN-SYSTEM.md`; all pages exist and routed | No reversal UI beyond session-local undo |
 | Payments (ledger + Telegram reminders) | COMPLETE | `PAYMENTS.md`; ledger confirmed, reminder candidate flow confirmed | Whether reminder sends are truly scheduled vs. admin-triggered-only not fully resolved |
@@ -66,7 +66,7 @@ Points-pause (achievement→points bridge); server-side streak persistence; Clas
 
 ## 9. Recommended next development sessions
 
-0. Apply `0156_curriculum_progress_teacher_level_scope.sql` to production through the established gated deploy process (this session's fresh-assessment pick — no Dave decision needed, migration is written and reviewed, just not pushed), then confirm live via `pg_policies` on `curriculum_progress`.
+0. ~~Apply `0156_curriculum_progress_teacher_level_scope.sql` to production~~ — **DONE 2026-08-17**, confirmed live via `pg_policies` on `curriculum_progress`.
 1. If further Level Progression breadth is wanted: push one Family V and one Family C game past Level 2 the same way Grammar Battle was (this pass) — Grammar Battle's mechanism (pass/fail/multi-level/gating/anti-skip) is now settled and doesn't need re-verification.
 2. Badge system consolidation — but only after Dave decides the approach (§5.4).
 3. "Highest level reached" additive leaderboard view (Q9 fix) — explicitly additive, don't touch the existing verified score-ranking RPC.
