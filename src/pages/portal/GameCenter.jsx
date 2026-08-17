@@ -129,6 +129,9 @@ export default function GameCenter() {
       }
       setBestScores(scores);
       setRecords(byGame);
+    }).catch(() => {
+      // Leaderboard is supplementary here - a failed fetch should leave
+      // the game tiles playable with no score chips, not break the page.
     });
     return () => {
       cancelled = true;
