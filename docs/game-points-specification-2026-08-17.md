@@ -1,6 +1,6 @@
-# Game Points Specification (DRAFT — awaiting Dave's approval)
+# Game Points Specification (APPROVED — awaiting implementation session)
 
-Status: **specification only, nothing implemented**. No migration, RPC, or frontend change has been made. This document exists to get design decisions approved before any code is written.
+Status: **all §18 business decisions approved by Dave, 2026-08-17. Still nothing implemented** — no migration, RPC, or frontend change has been made. This document is now the locked reference for the implementation session; do not re-litigate the decisions in §18 without a new explicit reason.
 
 ## 1. Purpose
 
@@ -183,26 +183,24 @@ Dave flagged this as something to actually argue, not wave through. Answering ea
 
 ## 17. Open decisions
 
-1. Exact tier-bonus values (0/2/5/8/12) and perfect-bonus value (5) — provisional, needs approval.
-2. Whether score improvement (`is_new_best`) on an already-passed level should earn any Game Points (proposal: no).
-3. Whether Family V games need their own 5-tier mapping instead of reusing the 3-band length-cap structure.
-4. Whether a monthly gaming-activity view is wanted as a future, separate feature (not blocking this spec).
-5. Timing of badge integration — now (with zero live effect today) vs. deferred to the badge-reconciliation session (recommended: deferred).
+All items previously listed here were resolved in §18 (2026-08-17): point values accepted as proposed, no personal-record bonus, badge integration deferred, monthly view deferred as future/separate scope. One item remains genuinely open, deliberately not blocking approval:
 
-## 18. Explicit approval checklist
+1. Whether Family V games need their own native 5-tier mapping instead of reusing the 3-band length-cap structure as an inferred equivalent (§6/§16) — an implementation-detail question the implementation session can resolve by direct inspection of `game_level_to_length_cap()`, not a business-rule decision requiring Dave's sign-off.
 
-Dave must approve or amend each of the following before any implementation begins:
+## 18. Explicit approval checklist — DECIDED 2026-08-17
 
-- [ ] **Game Point formula**: flat base (10) + tier bonus (0/2/5/8/12) + perfect bonus (5), awarded only on `leveled_up = true`.
-- [ ] **Difficulty weighting**: 5-tier bonus band, reusing `game_level_to_tier()` for Family C and an inferred equivalent for Family V.
-- [ ] **Level weighting**: tier-based only, not a direct per-level multiplier.
-- [ ] **Replay rewards**: none — replays of the current level that fail earn 0; already-passed levels cannot be re-requested through normal flow, so no replay-of-old-level policy is actually needed.
-- [ ] **Personal-record bonus**: none proposed (open question, §9/§17.2).
-- [ ] **Badge rewards**: deferred to a future session, not built now (§11/§17.5).
-- [ ] **Ranking rewards**: none — Game Points never feeds `get_game_best_records()` or any ranking RPC.
-- [ ] **Monthly vs. lifetime**: lifetime-only for v1; monthly activity view is future/separate scope.
-- [ ] **Anti-farming policy**: structural (via level-progression enforcement), no additional rate-limiting.
-- [ ] **One formula vs. per-game weighting**: one common formula for all 9 games (tier-bonus already absorbs the difficulty-family difference); no per-game special-casing beyond the tier-equivalence mapping.
-- [ ] **Proposed database architecture**: new `game_points_transactions` immutable ledger table (mirroring `point_transactions`'s pattern, physically separate from it), computed inline in `submit_game_round()`, totals derived via a read RPC rather than a mutable balance column.
+All items below reviewed and approved by Dave, 2026-08-17. Locked for the implementation session; changing any of these later requires a new explicit decision, not a code-time judgment call.
 
-**No migration, RPC, or frontend work begins until this checklist is explicitly approved or revised by Dave.**
+- [x] **Game Point formula**: flat base (10) + tier bonus (0/2/5/8/12) + perfect bonus (5), awarded only on `leveled_up = true`. **Approved as proposed, no numeric changes.**
+- [x] **Difficulty weighting**: 5-tier bonus band, reusing `game_level_to_tier()` for Family C and an inferred equivalent for Family V. **Approved.**
+- [x] **Level weighting**: tier-based only, not a direct per-level multiplier. **Approved.**
+- [x] **Replay rewards**: none — replays of the current level that fail earn 0; already-passed levels cannot be re-requested through normal flow. **Approved, confirms the "reward progression, not clicking" principle Dave stated explicitly.**
+- [x] **Personal-record bonus**: **none.** Beating a personal best on an already-passed level earns zero Game Points — keeps the anti-farming property airtight per Dave's explicit preference.
+- [x] **Badge rewards**: **deferred.** No badge→Game Points wiring in the implementation session; revisit only when the badge-reconciliation session consolidates the two disconnected badge systems (no live effect today regardless).
+- [x] **Ranking rewards**: none — Game Points never feeds `get_game_best_records()` or any ranking RPC. **Approved, consistent with "do not redesign ranking."**
+- [x] **Monthly vs. lifetime**: **lifetime-only for v1.** Ledger's `created_at` column supports a monthly view later as a pure read-query addition (§13/§15a) — no schema work now.
+- [x] **Anti-farming policy**: structural (via level-progression enforcement, §12), no additional rate-limiting. **Approved.**
+- [x] **One formula vs. per-game weighting**: one common formula for all 9 games. **Approved, no per-game special-casing.**
+- [x] **Proposed database architecture**: new `game_points_transactions` immutable ledger table (physically separate from `point_transactions`, mirroring its pattern per §15a), computed inline in `submit_game_round()`'s existing transaction, totals derived via a read RPC (`get_student_game_points()`) rather than a mutable balance column. **Approved** — §15a's justification (duplicate-award prevention via same-transaction guarantee, partial-write safety, auditability, monthly-readiness) accepted without further challenge.
+
+**All decisions locked. The implementation session should treat this checklist as final scope — build exactly this, not a reinterpretation of it. No migration, RPC, or frontend work has been done yet; that begins in a dedicated, narrowly-scoped implementation session.**
