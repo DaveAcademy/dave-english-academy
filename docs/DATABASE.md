@@ -75,12 +75,11 @@ Supabase/Postgres. See `ARCHITECTURE.md` for how RLS/RPCs fit the overall system
 
 - ~~Achievement-engine schema had no numbered local migration~~ — **resolved**: `0105_achievement_engine_schema.sql`–`0110` (committed `4fe705b`) reconstruct `achievement_definitions`/`student_achievements`/`student_metric_snapshots` plus `bump_student_metric`/`evaluate_achievements`, and are confirmed applied in the prod migration ledger (`20260810055447` onward). The untracked `PROD_RECONCILED_achievement_engine_schema.sql` is now a redundant (harmless, idempotent) duplicate of a subset of 0105 and can be deleted whenever convenient — not required.
 - `get_leaderboard()` (from `0008`) remains defined and `GRANT`ed in the database, dead in the frontend, unscoped across levels — **known-issue-open**, low severity (no caller), flagged for removal in `ranking-audit.md` but not yet dropped.
-- No CHECK constraint on `point_transactions.points` magnitude (a typo of `500` instead of `5` is accepted and cannot be deleted, only offset) — **known-issue-open**.
+- ~~No CHECK constraint on `point_transactions.points` magnitude~~ — **FIXED 2026-08-17**: `0154_point_transactions_magnitude_check.sql` added `CHECK (points BETWEEN -1000 AND 1000)`, applied to production. Range covers full observed history (non-baseline rows -211..236, one-time `baseline_migration` rows 105..608) with headroom; 0 of 1539 existing rows violated it. Constraint existence and existing-data validity verified live; insert/rejection behavior not runtime-tested (blocked by the no-points-writes rule in §5.1) — a typo like `500` for `5` is still not caught unless it also breaches ±1000.
 - Reversal mechanism (`is_reversal`/`reversed_transaction_id` on `point_transactions`) exists in schema but is only exercised via the session-local undo added in Ranking V2 Phase 2 — bulk/admin-side reversal UI is still **planned**, not built.
 - `finalize_recognition()` (the tie-break-correct recognition function) is dead code — the page calls `finalize_recognition_winner()` instead, which has no tie-break and forces `is_co_winner = false`. **known-issue-open.**
 
 ## 8. Deferred DB work
 
 - Level-scoped RLS extension to remaining role-only-gated tables (`files`, `curriculum_progress`) — low urgency, latent risk only.
-- A CHECK constraint / bounds validation on point-award magnitude.
 - Backfilling `class_session_id` onto historical `point_transactions` rows — explicitly ruled out as unsafe (no reliable historical group identity); pre-V2 manual rows keep `class_session_id NULL` permanently by design.
