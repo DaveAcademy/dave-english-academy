@@ -27,7 +27,10 @@ export default function GameLeaderboardBlock({ record, isNewBest }) {
             className={`flex items-center justify-between text-xs ${row.isMe ? 'font-bold text-brand-700' : 'font-medium text-ink/70'}`}
           >
             <span className="truncate">
-              {MEDALS[i] ?? `${i + 1}.`} {row.name}
+              {/* MEDALS/number keyed by row.rank, not array position i - a
+                  5-way tie for #1 (real production data: vocabulary_quiz,
+                  word_match) must show 🥇 five times, never 🥇🥈🥉4️⃣5️⃣. */}
+              {MEDALS[row.rank - 1] ?? `${row.rank}.`} {row.name}
             </span>
             <span className="flex-shrink-0 pl-2">{row.score}</span>
           </li>
