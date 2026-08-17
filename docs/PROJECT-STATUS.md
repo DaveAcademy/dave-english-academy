@@ -14,7 +14,7 @@ Status labels: **COMPLETE**, **COMPLETE+VERIFIED** (runtime-tested in production
 | Admin system (students/groups/attendance/exams/homework/reports/certificates) | COMPLETE | `ADMIN-SYSTEM.md`; all pages exist and routed | `PaymentEngineTest.jsx` production-status unresolved; no reversal UI beyond session-local undo |
 | Payments (ledger + Telegram reminders) | COMPLETE | `PAYMENTS.md`; ledger confirmed, reminder candidate flow confirmed | Whether reminder sends are truly scheduled vs. admin-triggered-only not fully resolved |
 | Gaming — 9 games, server-authoritative | COMPLETE+VERIFIED | `GAMING-SYSTEM.md`; replay protection, curriculum gating, no P0s across 2 audits | Ongoing content/balance tuning |
-| Game Level Progression (0149-0151) | IMPLEMENTED+PARTIALLY VERIFIED | Grammar Battle Level 1→2 pass path runtime-verified 2026-08-17 via direct RPC call (server path + persistence + UI-resume confirmed); full human-paced UI playthrough of the timer not verified; anti-skip server enforcement (0150) not line-by-line audited | Runtime-verify at least one Family V and one Family C game the same way; audit 0150's enforcement logic directly |
+| Game Level Progression (0149-0151) | IMPLEMENTED+VERIFIED (server mechanism) | 2026-08-17: Grammar Battle verified across two levels via direct RPC call (impersonating test student) — pass/leveled-up/persist/UI-resume confirmed for 1→2 and 2→3; fail-path confirmed non-advancing; curriculum gating spot-checked at Level 3 (content ceiling held under unlocked-lesson limit); anti-skip enforcement confirmed by code audit (no `p_level` param exists on any `get_*_round()`); academy-level/game-level decoupling confirmed by code audit (no `students.level` reference in 0149/0150) | Full human-paced UI playthrough of the 8s timer still not verified (method limitation, documented); Family V/Family C games only verified for the initial 1→2 hop (prior session), not multi-level continuation like Grammar Battle got this pass |
 | Game ranking (Top 5, personal records, ties) | COMPLETE+VERIFIED | `GAMING-SYSTEM.md` §9; two display bugs found and fixed, then verified live | "Highest level reached" additive leaderboard view not built (Q9 ranking-conflict fix) |
 | Game Points (separate currency from Class Points) | PLANNED | No `game_points` column/table/reference found anywhere in repo | Full product decision required before any schema work — see §5 |
 | Badges / achievements | IN PROGRESS | Two disconnected systems confirmed: DB-backed `achievement_definitions`/`student_achievements` vs. frontend-only `computeBadges()` in `src/utils/badges.js`; achievement→points bridge deliberately paused | Schema reconciliation into a numbered migration; badge consolidation; both blocked on Dave's decisions |
@@ -27,8 +27,7 @@ Core admin system; points ledger + class ranking (Ranking V2 core); payments led
 
 ## 3. Implemented but partially verified
 
-- **Game Level Progression** — see table above. This is the one active area where "implemented" and "fully verified" are deliberately not the same claim; do not round this up to COMPLETE+VERIFIED without a broader runtime pass across more games.
-- Level Progression's server-side anti-skip enforcement (0150) — exists per spec, not independently re-audited line-by-line.
+- **Game Level Progression** — core mechanism (pass/fail/persist/resume/gating/anti-skip) now verified for Grammar Battle across two consecutive levels, plus code-audited for all 9 games (round-generator RPCs are structurally identical). Remaining gap is breadth, not depth: only Grammar Battle has been pushed past Level 2; Family V/Family C games are verified for the 1→2 hop only.
 
 ## 4. Current known issues (see topic docs for full detail)
 
@@ -69,7 +68,7 @@ Points-pause (achievement→points bridge); academy-level snapshot gap on `game_
 
 ## 9. Recommended next development sessions
 
-1. Broaden Level Progression runtime verification (one Family V game, one more Family C game, logged-in UI where feasible) — do not re-verify Grammar Battle again, that's settled.
+1. If further Level Progression breadth is wanted: push one Family V and one Family C game past Level 2 the same way Grammar Battle was (this pass) — Grammar Battle's mechanism (pass/fail/multi-level/gating/anti-skip) is now settled and doesn't need re-verification.
 2. Achievement schema reconciliation — commit `PROD_RECONCILED_achievement_engine_schema.sql` as a proper numbered migration, or confirm it's sufficient as-is.
 3. Badge system consolidation — but only after Dave decides the approach (§5.4).
 4. "Highest level reached" additive leaderboard view (Q9 fix) — explicitly additive, don't touch the existing verified score-ranking RPC.
