@@ -13,11 +13,12 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { RefreshCw, ArrowLeft, CheckCircle2, PartyPopper, Trophy } from 'lucide-react';
+import { RefreshCw, ArrowLeft, CheckCircle2, PartyPopper } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import GameProgress from '../../components/GameProgress';
 import { getWordMatchRound, submitGameRound } from '../../lib/storageBridge';
 import useGameRecord from '../../hooks/useGameRecord';
+import GameLeaderboardBlock from '../../components/GameLeaderboardBlock';
 
 function shuffle(list) {
   const copy = [...list];
@@ -145,20 +146,7 @@ export default function WordMatch() {
             <p className="mt-3 inline-block rounded-full bg-amber-400 px-3 py-1 text-xs font-bold text-amber-950">{t('newBest')}</p>
           )}
 
-          {record?.holder && (
-            <div className="mt-4 rounded-xl bg-white/70 p-3 text-left">
-              <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-ink/50">
-                <Trophy size={13} className="text-amber-500" aria-hidden="true" />
-                {record.isRecordHolder && result.is_new_best ? t('newRecord') : record.isRecordHolder ? t('youHoldRecord') : t('bestRecord')}
-              </p>
-              {!record.isRecordHolder && (
-                <p className="mt-1 text-sm font-semibold text-ink">{record.holder.name} &middot; {record.holder.score}</p>
-              )}
-              <p className="mt-1 text-xs font-medium text-ink/60">
-                {record.isRecordHolder ? t('yourBest', { score: record.myBest }) : t('pointsToRecord', { gap: record.gap })}
-              </p>
-            </div>
-          )}
+          <GameLeaderboardBlock record={record} isNewBest={result.is_new_best} />
 
           <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
             <button

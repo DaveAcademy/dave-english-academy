@@ -115,12 +115,16 @@ export default function GameCenter() {
       const byGame = {};
       for (const r of rows) {
         if (r.student_id === me.id) scores[r.game_type] = Number(r.best_score);
-        if (r.rank === 1 && !byGame[r.game_type]) {
-          byGame[r.game_type] = {
-            name: formatStudentDisplayName(r.real_name, r.english_name),
-            score: Number(r.best_score),
-            isMe: r.student_id === me.id,
-          };
+        if (r.rank === 1) {
+          // On a tie, prefer showing "you hold the record" if the caller
+          // is any of the tied #1s, rather than always the first row.
+          if (!byGame[r.game_type] || r.student_id === me.id) {
+            byGame[r.game_type] = {
+              name: formatStudentDisplayName(r.real_name, r.english_name),
+              score: Number(r.best_score),
+              isMe: r.student_id === me.id,
+            };
+          }
         }
       }
       setBestScores(scores);

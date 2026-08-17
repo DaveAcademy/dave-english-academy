@@ -7,10 +7,11 @@
 // replace the 4 existing games' inline result screens - not required by
 // this task and out of scope to touch their internals.
 
-import { RefreshCw, ArrowLeft, PartyPopper, Flame, Trophy } from 'lucide-react';
+import { RefreshCw, ArrowLeft, PartyPopper, Flame } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import useGameRecord from '../hooks/useGameRecord';
+import GameLeaderboardBlock from './GameLeaderboardBlock';
 
 export default function GameResults({ gradientClass = 'from-brand-50 to-sky-100', score, correct, total, bestStreak, isNewBest, gameType, extra, onPlayAgain }) {
   const { t } = useTranslation('game');
@@ -38,20 +39,7 @@ export default function GameResults({ gradientClass = 'from-brand-50 to-sky-100'
           <p className="mt-3 inline-block rounded-full bg-amber-400 px-3 py-1 text-xs font-bold text-amber-950">{t('newBest')}</p>
         )}
 
-        {record?.holder && (
-          <div className="mt-4 rounded-xl bg-white/70 p-3 text-left">
-            <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-ink/50">
-              <Trophy size={13} className="text-amber-500" aria-hidden="true" />
-              {record.isRecordHolder && isNewBest ? t('newRecord') : record.isRecordHolder ? t('youHoldRecord') : t('bestRecord')}
-            </p>
-            {!record.isRecordHolder && (
-              <p className="mt-1 text-sm font-semibold text-ink">{record.holder.name} &middot; {record.holder.score}</p>
-            )}
-            <p className="mt-1 text-xs font-medium text-ink/60">
-              {record.isRecordHolder ? t('yourBest', { score: record.myBest }) : t('pointsToRecord', { gap: record.gap })}
-            </p>
-          </div>
-        )}
+        <GameLeaderboardBlock record={record} isNewBest={isNewBest} />
 
         <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
           <button
