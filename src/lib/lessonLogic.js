@@ -1,19 +1,23 @@
 // lessonLogic.js
 // Shared, pure helpers for Lesson Hub V2's progress model. Kept in one place
 // so MyLessons.jsx, LessonHub.jsx and the portal home all derive the same
-// unlock/status from the same rules - see migrations 0093/0094 for the SQL side.
+// unlock/status from the same rules - see migrations 0093/0094/0160 for the
+// SQL side.
 //
-// Unlock rule (mirrors can_read_lesson_pdf):
+// Unlock rule (mirrors can_read_lesson_pdf, migration 0160):
 //   * legacy lessons (no curriculum link) are always unlocked (level check
 //     is the only gate, enforced server-side),
 //   * curriculum lesson 1 is always unlocked,
-//   * a lesson is unlocked once the teacher's per-level pace has reached
-//     it (current_lesson_number), or
-//   * the student has completed the immediately previous lesson.
-// A per-level hard ceiling (max_available_lesson, migration 0095) overrides
-// all of the above - a student can never open lessons past their level's cap
-// (A: 20, B: 40, C: 50). Locked is a UI state only - the storage RLS policy
-// is the real boundary.
+//   * a lesson is unlocked once the teacher's per-level pace/schedule has
+//     reached it (current_lesson_number) - this is the group's actual
+//     class schedule signal (see 0160's migration comment for why).
+// Completing a lesson no longer unlocks the next one by itself (fixed in
+// migration 0160 - it previously did, which let a student who finished
+// lesson N open lesson N+1 before the class actually got there). A
+// per-level hard ceiling (max_available_lesson, migration 0095) overrides
+// all of the above - a student can never open lessons past their level's
+// cap regardless of schedule pace. Locked is a UI state only - the
+// storage RLS policy (can_read_lesson_pdf) is the real boundary.
 
 export const LESSON_STATUS = {
   NOT_STARTED: 'not_started',
@@ -67,8 +71,20 @@ export function isLessonUnlocked(lesson, pace, progressByNum, cap = 100000) {
   if (n == null) return true; // legacy
   if (n > cap) return false; // per-level ceiling
   if (n <= 1) return true; // lesson 1 always unlocked
-  if (n <= pace) return true; // teacher's class coverage
-  return progressByNum[n - 1]?.status === LESSON_STATUS.COMPLETED; // completed prev unlocks next
+  return n <= pace; // teacher's class schedule/pace - completing a lesson does not by itself unlock the next one (0160)
+}
+
+// Why a locked lesson is locked, for the UI to explain instead of just
+// hiding it: 'beyond_level' (past the level's hard ceiling, never opens
+// no matter the schedule) vs 'not_scheduled' (within the level, just not
+// reached by the class yet - opens once the teacher advances the pace).
+// Returns null when the lesson isn't locked.
+export function lockReasonFor(lesson, pace, cap = 100000) {
+  const n = lesson?.curriculum_lessons?.lesson_number;
+  if (n == null) return null;
+  if (n > cap) return 'beyond_level';
+  if (n > pace) return 'not_scheduled';
+  return null;
 }
 
 // UI status for a lesson: 'locked' overrides everything, otherwise it's the

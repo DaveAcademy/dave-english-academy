@@ -28,7 +28,7 @@ import {
   StickyNote, Trash2, Upload, X,
 } from 'lucide-react';
 import {
-  LESSON_STATUS, teacherPaceFor, lessonCapFor, progressByLessonNumber, lessonStatusFor,
+  LESSON_STATUS, teacherPaceFor, lessonCapFor, progressByLessonNumber, lessonStatusFor, lockReasonFor,
 } from '../lib/lessonLogic';
 import { useAuth } from '../lib/AuthContext';
 import { useAcademy } from '../lib/AcademyDataContext';
@@ -99,15 +99,17 @@ export default function LessonHub() {
   const backHref = isStudent ? '/my-lessons' : '/lessons';
 
   // Unlock/status shared with MyLessons (lessonLogic.js) - mirrors
-  // can_read_lesson_pdf server-side: teacher pace floor, lesson 1 always
-  // open, and a completed previous lesson unlocks the next. The storage
-  // RLS policy is the real boundary; this just explains a locked lesson
-  // instead of a silently-failing PDF fetch.
+  // can_read_lesson_pdf server-side (migration 0160): teacher's class
+  // schedule/pace and lesson 1 always open; completing a lesson no longer
+  // unlocks the next one by itself. The storage RLS policy is the real
+  // boundary; this just explains a locked lesson instead of a
+  // silently-failing PDF fetch.
   const pace = teacherPaceFor(curriculumProgress, me?.level);
   const cap = lessonCapFor(curriculumProgress, me?.level);
   const progressByNum = useMemo(() => progressByLessonNumber(lessonProgress, lessons), [lessonProgress, lessons]);
   const lessonStatus = isStudent && me && lesson ? lessonStatusFor(lesson, pace, progressByNum, cap) : null;
   const isLockedForMe = lessonStatus === 'locked';
+  const lockReason = isLockedForMe ? lockReasonFor(lesson, pace, cap) : null;
   const lessonNumber = lesson?.curriculum_lessons?.lesson_number;
 
   // --- In-lesson navigation (prev / next / jump) ------------------------
@@ -576,7 +578,7 @@ export default function LessonHub() {
     return (
       <div className="rounded-xl bg-white p-10 text-center shadow-card">
         <p className="font-display text-lg font-semibold text-ink">🔒 {t('hubLockedTitle')}</p>
-        <p className="mt-1 text-sm text-ink/50">{t('hubLockedSub')}</p>
+        <p className="mt-1 text-sm text-ink/50">{t(lockReason === 'beyond_level' ? 'hubLockedSubLevel' : 'hubLockedSubSchedule')}</p>
         <Link to={backHref} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:underline">
           <ArrowLeft size={14} /> {t('hubBackToLessons')}
         </Link>
