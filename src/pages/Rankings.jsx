@@ -8,17 +8,12 @@
 // students.points update) - the trigger-maintained cache is what makes
 // the rank list (and the student portal's leaderboard) reflect it.
 //
-// Two workflows, same ledger underneath:
-//   - Add Points (primary, open by default): student + custom points +
-//     free-text reason, one confirm. No category picker - category is
-//     inferred from the sign of the points (positive -> bonus, negative
-//     -> penalty), same rule bulkAwardPoints() below already uses, so this
-//     stays a plain 3-field note (who / how many / why) instead of a form.
-//   - Award Class Points (collapsed by default): the same ledger insert,
-//     batched as one request for every student in a level/group at once.
-// Both ultimately call awardStudentPoints()/bulkAwardStudentPoints(), which
-// is a plain point_transactions insert - RLS and the level-match trigger
-// enforce the real security boundary identically for both.
+// Add Points (primary, open by default): student + custom points +
+// free-text reason, one confirm. No category picker - category is
+// inferred from the sign of the points (positive -> bonus, negative
+// -> penalty). Ultimately calls awardStudentPoints(), a plain
+// point_transactions insert - RLS and the level-match trigger enforce the
+// real security boundary.
 //
 // The Level Leaderboard below is read-only: no award controls in its rows.
 // Four tabs: Class / Week / Month / All Time. All Time renders the
@@ -31,7 +26,7 @@
 // an assumed Tue/Thu/Sat schedule that turned out not to hold.
 
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { Tag, Users, ChevronDown, ChevronUp, ArrowUp, ArrowDown } from 'lucide-react';
+import { Tag, ChevronDown, ChevronUp, ArrowUp, ArrowDown } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { useAuth } from '../lib/AuthContext';
 import {
@@ -61,7 +56,7 @@ export default function Rankings() {
 
   const [categories, setCategories] = useState([]);
   const [teacherLevels, setTeacherLevels] = useState(null);
-  // Bumped after any successful award (Add Points / bulk) so the Level
+  // Bumped after any successful award so the Level
   // Leaderboard and class-by-class breakdown refetch immediately instead
   // of requiring a level/period tab toggle to notice new data.
   const [refreshKey, setRefreshKey] = useState(0);
@@ -200,7 +195,6 @@ export default function Rankings() {
   // success or a client-side error) and reject an identical resubmit within
   // a short window, so a retry can never double-write the same row.
   const [lastAwardSignature, setLastAwardSignature] = useState(null);
-  const [lastBulkSignature, setLastBulkSignature] = useState(null);
   const DUP_WINDOW_MS = 2 * 60 * 1000;
 
   // Save opens a confirm step instead of awarding immediately - the actual
@@ -256,111 +250,19 @@ export default function Rankings() {
     }
   };
 
-  // ---------- Award Class Points (secondary, collapsed) ----------
-  // One bulkAwardStudentPoints() call inserts every non-zero row in a
-  // single request (see bulkAwardPoints() in storageBridge.js) - same RLS
-  // and level-match trigger as every other award path, just batched.
-  const [bulkOpen, setBulkOpen] = useState(false);
-  const [bulkLevel, setBulkLevel] = useState('A');
-  const [bulkGroup, setBulkGroup] = useState('');
-  const [bulkValues, setBulkValues] = useState({});
-  const [bulkFillValue, setBulkFillValue] = useState('');
-  const [bulkPending, setBulkPending] = useState(false);
-  const [bulkMessage, setBulkMessage] = useState('');
-  const bulkLevelInitialized = useRef(false);
-
-  useEffect(() => {
-    if (isTeacher && teacherLevels && teacherLevels.length > 0 && !bulkLevelInitialized.current) {
-      setBulkLevel(teacherLevels[0]);
-      bulkLevelInitialized.current = true;
-    }
-  }, [isTeacher, teacherLevels]);
-
-  const bulkGroups = useMemo(() => {
-    const set = new Set();
-    for (const s of awardableStudents) {
-      if (s.level === bulkLevel && s.group_name) set.add(s.group_name);
-    }
-    return [...set].sort();
-  }, [awardableStudents, bulkLevel]);
-
-  const bulkStudents = useMemo(
-    () => awardableStudents.filter((s) => s.level === bulkLevel && (!bulkGroup || s.group_name === bulkGroup)),
-    [awardableStudents, bulkLevel, bulkGroup]
-  );
-
-  const setBulkValue = (studentId, value) => setBulkValues((prev) => ({ ...prev, [studentId]: value }));
-
-  const applyFillToAll = () => {
-    if (bulkFillValue === '') return;
-    const next = { ...bulkValues };
-    for (const s of bulkStudents) next[s.id] = bulkFillValue;
-    setBulkValues(next);
-  };
-
-  const bulkPendingCount = bulkStudents.filter((s) => {
-    const v = Number(bulkValues[s.id]);
-    return Number.isFinite(v) && v !== 0;
-  }).length;
-
-  const submitBulk = async () => {
-    const entries = bulkStudents
-      .map((s) => ({ student: s, points: Number(bulkValues[s.id]) }))
-      .filter((r) => Number.isFinite(r.points) && r.points !== 0);
-    if (entries.length === 0) return;
-    // Same non-idempotency guard as submitAward, but for the whole batch:
-    // signature = sorted student:points of every non-zero row, so an exact
-    // repeat submission (double-click, or client-error retry) is rejected
-    // instead of writing the same rows a second time.
-    const batchKey = entries
-      .map(({ student, points }) => `${student.id}:${points}`)
-      .sort()
-      .join('|');
-    if (lastBulkSignature?.sig === batchKey && Date.now() - lastBulkSignature.at < DUP_WINDOW_MS) {
-      setBulkMessage('That exact batch was just submitted. Check the leaderboard before resubmitting.');
-      return;
-    }
-    setLastBulkSignature({ sig: batchKey, at: Date.now() });
-    setBulkPending(true);
-    setBulkMessage('');
-    try {
-      const bulkSessionId = openSession && sessionLevel === bulkLevel ? openSession.id : null;
-      await bulkAwardStudentPoints(
-        entries.map(({ student, points }) => ({
-          studentId: student.id,
-          level: student.level,
-          categoryId: categoryByKey[points > 0 ? 'bonus' : 'penalty']?.id ?? null,
-          categoryKey: points > 0 ? 'bonus' : 'penalty',
-          points,
-          reason: 'Bulk class points via Rankings',
-          awardedBy: session.user.id,
-          classSessionId: bulkSessionId,
-        }))
-      );
-      setBulkMessage(`Awarded points to ${entries.length} student${entries.length === 1 ? '' : 's'}.`);
-      setBulkValues({});
-      setBulkFillValue('');
-      bumpRefresh();
-    } catch {
-      setBulkMessage('Could not award bulk points. Please try again.');
-    } finally {
-      setBulkPending(false);
-    }
-  };
-
   // ---------- Class Score (Ranking Model V3 primary workflow) ----------
   // One final Class Score per student per open class_session - the
   // teacher's single number already reflects homework/PDF prep/vocab/
   // games/participation/bonuses/penalties for that lesson, so there is no
   // category picker here (always categoryKey 'class_score') and no
-  // per-activity breakdown. Requires an open session: unlike Add Points/
-  // Award Class Points below (which still work session-less, for ad-hoc
-  // awards), a Class Score with nothing to attach to isn't a valid score
-  // under this model, so submission is disabled until one is open.
+  // per-activity breakdown. Requires an open session: unlike Add Points
+  // (which still works session-less, for ad-hoc awards), a Class Score
+  // with nothing to attach to isn't a valid score under this model, so
+  // submission is disabled until one is open.
   // Duplicate/accidental-resubmit protection is two-layered: the same
-  // batch-signature + time-window guard Award Class Points already uses,
-  // backed by a real DB-level UNIQUE(student_id, class_session_id) partial
-  // index (migration 0164) that rejects a second score for the same
+  // batch-signature + time-window guard Add Points already uses, backed
+  // by a real DB-level UNIQUE(student_id, class_session_id) partial index
+  // (migration 0164) that rejects a second score for the same
   // student+session outright, even across reloads/devices/tabs.
   const [classScoreValues, setClassScoreValues] = useState({});
   const [classScorePending, setClassScorePending] = useState(false);
@@ -678,7 +580,7 @@ export default function Rankings() {
         <h1 className="font-display text-2xl font-bold text-ink">Rankings</h1>
         <p className="mt-1 text-sm text-ink/50">
           {isAdmin
-            ? 'Use Add Points below to record points for a student, or Award Class Points for a whole level/group at once.'
+            ? 'Use Add Points below to record points for a student.'
             : isTeacher
               ? teacherLevels === null
                 ? 'Loading your assigned levels...'
@@ -908,104 +810,6 @@ export default function Rankings() {
                 </div>
               )}
               {awardMessage && <p className="mt-2 text-sm text-ink/60">{awardMessage}</p>}
-            </div>
-          )}
-        </section>
-      )}
-
-      {canAwardAtAll && awardableLevels.length > 0 && (
-        <section className="mb-4 rounded-xl bg-white shadow-card">
-          <button type="button" onClick={() => setBulkOpen((o) => !o)} className="flex w-full items-center justify-between gap-2 p-4 text-left">
-            <span className="flex items-center gap-2">
-              <Users size={16} className="text-brand-500" />
-              <h2 className="font-display text-sm font-bold text-ink">Award Class Points</h2>
-            </span>
-            {bulkOpen ? <ChevronUp size={16} className="text-ink/40" /> : <ChevronDown size={16} className="text-ink/40" />}
-          </button>
-          {bulkOpen && (
-            <div className="border-t border-ink/5 p-4 pt-3">
-              <p className="mb-3 text-xs text-ink/50">
-                Set a points value per student and submit them together as one batch - each still records its own ledger entry.
-              </p>
-              <div className="mb-3 flex flex-wrap items-center gap-2">
-                <div className="flex gap-1">
-                  {awardableLevels.map((lvl) => (
-                    <button
-                      key={lvl}
-                      type="button"
-                      onClick={() => {
-                        setBulkLevel(lvl);
-                        setBulkGroup('');
-                      }}
-                      className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
-                        bulkLevel === lvl ? 'bg-brand-600 text-white' : 'bg-ink/5 text-ink/60 hover:text-ink'
-                      }`}
-                    >
-                      Level {lvl}
-                    </button>
-                  ))}
-                </div>
-                {bulkGroups.length > 0 && (
-                  <select value={bulkGroup} onChange={(e) => setBulkGroup(e.target.value)} className="input w-auto text-xs">
-                    <option value="">All groups</option>
-                    {bulkGroups.map((g) => (
-                      <option key={g} value={g}>
-                        {g}
-                      </option>
-                    ))}
-                  </select>
-                )}
-                <div className="ml-auto flex items-center gap-1.5">
-                  <input
-                    type="number"
-                    step="1"
-                    value={bulkFillValue}
-                    onChange={(e) => setBulkFillValue(e.target.value)}
-                    placeholder="Fill value"
-                    className="input w-24 text-xs"
-                  />
-                  <button
-                    type="button"
-                    onClick={applyFillToAll}
-                    className="rounded-lg bg-ink/5 px-3 py-1.5 text-xs font-semibold text-ink/70 hover:bg-ink/10"
-                  >
-                    Apply to all shown
-                  </button>
-                </div>
-              </div>
-
-              {bulkStudents.length === 0 ? (
-                <p className="py-4 text-center text-sm text-ink/50">No active students in this level/group.</p>
-              ) : (
-                <div className="max-h-80 overflow-y-auto rounded-lg border border-ink/10">
-                  {bulkStudents.map((s, i) => (
-                    <div
-                      key={s.id}
-                      className={`flex items-center gap-3 px-3 py-2 ${i > 0 ? 'border-t border-ink/5' : ''}`}
-                    >
-                      <p className="flex-1 truncate text-sm font-medium text-ink">{s.real_name}</p>
-                      <input
-                        type="number"
-                        step="1"
-                        value={bulkValues[s.id] ?? ''}
-                        onChange={(e) => setBulkValue(s.id, e.target.value)}
-                        placeholder="0"
-                        className="w-20 rounded-lg border border-ink/10 px-2 py-1 text-center text-sm font-bold text-brand-600"
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <button
-                type="button"
-                onClick={submitBulk}
-                disabled={bulkPending || bulkPendingCount === 0}
-                className="mt-3 w-full rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
-              >
-                {bulkPending ? 'Awarding...' : `Award to ${bulkPendingCount} student${bulkPendingCount === 1 ? '' : 's'}`}
-              </button>
-              {bulkMessage && <p className="mt-2 text-sm text-ink/60">{bulkMessage}</p>}
             </div>
           )}
         </section>
