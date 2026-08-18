@@ -47,7 +47,7 @@ import {
   listClassScores,
 } from '../lib/db';
 import { LEVELS } from '../lib/levels';
-import { addDaysISO, addMonthsISO, todayISO, formatMonthDay } from '../utils/date';
+import { addDaysISO, addMonthsISO, todayISO, todayTashkentISO, formatMonthDay } from '../utils/date';
 
 const PERIODS = ['class', 'week', 'month', 'all_time'];
 const PERIOD_LABEL = { class: 'Class', week: 'This Week', month: 'This Month', all_time: 'All Time' };
@@ -104,28 +104,22 @@ export default function Rankings() {
 
   const awardableStudents = useMemo(() => ranked.filter((s) => canAwardLevel(s.level)), [ranked, isAdmin, isTeacher, teacherLevels]);
 
-  // ---------- Class Session (open/select today's session) ----------
-  // A point award never implies a class happened - a session must be
-  // explicitly opened first (docs/ranking-v2-class-session-design.md
-  // §4). This section is the explicit-open step; Add Points/Award Class
-  // Points below only attach class_session_id when the session's level
-  // matches the award's level, and only if a session has been opened.
-  // Not opening one is fine - the award still records, just without a
-  // session attached, same as before this feature existed.
-  const todayLocalISO = () => {
-    const d = new Date();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${d.getFullYear()}-${m}-${day}`;
-  };
+  // ---------- Class Session (auto-found/created, never teacher-managed) ----------
+  // Ranking Model V3: the teacher never opens a session, picks a date, or
+  // manages class_session_id - they only enter Class Scores below. This
+  // section resolves today's session for the selected level/group purely
+  // for read purposes (so already-recorded scores show up); the session
+  // row itself is created lazily, on first submit, by submitClassScores()
+  // via getOrCreateTodaySession() - see that function. sessionDate is
+  // always "today" per the academy's own timezone (Asia/Tashkent, matching
+  // week_bounds()/month_bounds() and the leaderboard RPCs), never a
+  // teacher-editable field.
+  const sessionDate = todayTashkentISO();
 
   const [sessionLevel, setSessionLevel] = useState('');
   const [sessionClassGroups, setSessionClassGroups] = useState(null);
   const [sessionGroupId, setSessionGroupId] = useState('');
-  const [sessionDate, setSessionDate] = useState(todayLocalISO);
   const [openSession, setOpenSession] = useState(null); // { id, class_group_id, session_date } | null
-  const [sessionPending, setSessionPending] = useState(false);
-  const [sessionMessage, setSessionMessage] = useState('');
   const sessionLevelInitialized = useRef(false);
 
   useEffect(() => {
@@ -172,19 +166,16 @@ export default function Rankings() {
     };
   }, [sessionGroupId, sessionDate]);
 
-  const handleOpenSession = async () => {
-    if (!sessionGroupId || !sessionDate) return;
-    setSessionPending(true);
-    setSessionMessage('');
-    try {
-      const row = await openClassSession({ classGroupId: sessionGroupId, sessionDate, openedBy: session.user.id });
-      setOpenSession(row);
-      setSessionMessage('Session ready.');
-    } catch {
-      setSessionMessage('Could not open session. Please try again.');
-    } finally {
-      setSessionPending(false);
-    }
+  // Lazily finds-or-creates today's session for a class group - the one
+  // place a session gets created now (Ranking Model V3). openClassSession()
+  // is already idempotent (insert-then-fetch-on-23505, see storageBridge.js),
+  // so calling this from every Class Score submit is safe even if two
+  // submits race or a session already exists from an earlier submit today.
+  const getOrCreateTodaySession = async (classGroupId) => {
+    if (openSession && String(openSession.class_group_id) === String(classGroupId)) return openSession;
+    const row = await openClassSession({ classGroupId, sessionDate, openedBy: session.user.id });
+    setOpenSession(row);
+    return row;
   };
 
   // ---------- Add Points (primary workflow, open by default) ----------
@@ -413,9 +404,11 @@ export default function Rankings() {
   const classScoreStudents = useMemo(
     () =>
       awardableStudents.filter(
-        (s) => s.level === sessionLevel && (!openSessionGroupName || s.group_name === openSessionGroupName)
+        (s) =>
+          s.level === sessionLevel &&
+          (!sessionClassGroups || sessionClassGroups.length <= 1 || s.group_name === openSessionGroupName)
       ),
-    [awardableStudents, sessionLevel, openSessionGroupName]
+    [awardableStudents, sessionLevel, openSessionGroupName, sessionClassGroups]
   );
 
   // Split by whether this session already has a Class Score for the
@@ -441,10 +434,10 @@ export default function Rankings() {
   const classScorePendingCount = classScoreEntries().length;
 
   const submitClassScores = async () => {
-    if (!openSession) return;
+    if (!sessionGroupId) return;
     const entries = classScoreEntries();
     if (entries.length === 0) return;
-    const batchKey = `${openSession.id}|${entries.map(({ student, points }) => `${student.id}:${points}`).sort().join('|')}`;
+    const batchKey = `${sessionGroupId}|${sessionDate}|${entries.map(({ student, points }) => `${student.id}:${points}`).sort().join('|')}`;
     if (lastClassScoreSignature?.sig === batchKey && Date.now() - lastClassScoreSignature.at < DUP_WINDOW_MS) {
       setClassScoreMessage('That exact set of scores was just submitted. Check the Class tab before resubmitting.');
       return;
@@ -453,6 +446,7 @@ export default function Rankings() {
     setClassScorePending(true);
     setClassScoreMessage('');
     try {
+      const activeSession = await getOrCreateTodaySession(sessionGroupId);
       await bulkAwardStudentPoints(
         entries.map(({ student, points }) => ({
           studentId: student.id,
@@ -462,7 +456,7 @@ export default function Rankings() {
           points,
           reason: 'Class Score',
           awardedBy: session.user.id,
-          classSessionId: openSession.id,
+          classSessionId: activeSession.id,
         }))
       );
       setClassScoreMessage(`Recorded the Class Score for ${entries.length} student${entries.length === 1 ? '' : 's'}.`);
@@ -705,12 +699,14 @@ export default function Rankings() {
 
       {canAwardAtAll && awardableLevels.length > 0 && (
         <section className="mb-4 rounded-xl bg-white p-4 shadow-card">
-          <h2 className="mb-1 font-display text-sm font-bold text-ink">Class Session</h2>
+          <h2 className="mb-1 font-display text-sm font-bold text-ink">Class Score</h2>
           <p className="mb-3 text-xs text-ink/50">
-            Open today's class before adding points, so they're tied to this session. Skipping this still records
-            points - they just won't show up in the per-class breakdown once that's built.
+            One final score per student for this class - your complete evaluation of the lesson (homework, prep,
+            vocabulary, participation, games, everything). No separate categories. Select the level (and group, if
+            it has more than one), enter each student's score, and submit - today's class session is found or
+            created automatically.
           </p>
-          <div className="flex flex-wrap items-end gap-2">
+          <div className="mb-3 flex flex-wrap items-end gap-2">
             <div className="flex gap-1">
               {awardableLevels.map((lvl) => (
                 <button
@@ -735,49 +731,15 @@ export default function Rankings() {
                 ))}
               </select>
             )}
-            <input
-              type="date"
-              value={sessionDate}
-              onChange={(e) => setSessionDate(e.target.value)}
-              className="input w-auto text-xs"
-            />
-            <button
-              type="button"
-              onClick={handleOpenSession}
-              disabled={sessionPending || !sessionGroupId || !!openSession}
-              className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
-            >
-              {sessionPending ? 'Opening...' : openSession ? 'Session Open' : 'Open Session'}
-            </button>
           </div>
-          {openSession && (
-            <p className="mt-2 text-xs font-medium text-active">
-              Session open for Level {sessionLevel} on {sessionDate}. New points below will attach to it automatically for this level.
-            </p>
+          {classScoreStudents.length === 0 && (
+            <p className="rounded-lg bg-ink/5 p-3 text-xs text-ink/60">No students found for this level/group.</p>
           )}
-          {sessionMessage && !openSession && <p className="mt-2 text-xs text-ink/60">{sessionMessage}</p>}
-        </section>
-      )}
-
-      {canAwardAtAll && (
-        <section className="mb-4 rounded-xl bg-white p-4 shadow-card">
-          <h2 className="mb-1 font-display text-sm font-bold text-ink">Class Score</h2>
-          <p className="mb-3 text-xs text-ink/50">
-            One final score per student for this class - your complete evaluation of the lesson (homework, prep,
-            vocabulary, participation, games, everything). No separate categories.
-          </p>
-          {!openSession && (
-            <p className="rounded-lg bg-ink/5 p-3 text-xs text-ink/60">
-              Open a Class Session above first - Class Scores must be attached to a session.
-            </p>
-          )}
-          {openSession && classScoreStudents.length === 0 && (
-            <p className="rounded-lg bg-ink/5 p-3 text-xs text-ink/60">No students found for this session's level/group.</p>
-          )}
-          {openSession && classScoreStudents.length > 0 && (
+          {classScoreStudents.length > 0 && (
             <>
               <p className="mb-2 text-xs font-medium text-active">
-                Session open for Level {sessionLevel}{openSessionGroupName ? ` (${openSessionGroupName})` : ''} on {sessionDate}.
+                Level {sessionLevel}
+                {openSessionGroupName ? ` (${openSessionGroupName})` : ''} - {sessionDate}.
                 {classScoreDoneStudents.length > 0 &&
                   ` ${classScoreDoneStudents.length} of ${classScoreStudents.length} already recorded.`}
               </p>

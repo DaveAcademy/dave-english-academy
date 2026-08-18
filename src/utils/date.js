@@ -6,6 +6,15 @@ export function todayISO() {
   return new Date().toISOString().slice(0, 10);
 }
 
+// Today's date in the academy's own timezone (Asia/Tashkent), not the
+// browser's - matches week_bounds()/month_bounds() and the class_session
+// leaderboard RPCs (migration 0139), which all resolve "today" server-side
+// via `now() at time zone 'Asia/Tashkent'`. A teacher's device clock/locale
+// must not decide which day a class session belongs to.
+export function todayTashkentISO() {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tashkent' }).format(new Date());
+}
+
 // Pure calendar-component arithmetic on a "YYYY-MM-DD" string via
 // Date.UTC, deliberately never touching the browser's local timezone -
 // unlike `new Date(iso)` + local getters, this can't shift the result by
