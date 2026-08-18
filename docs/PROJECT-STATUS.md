@@ -53,6 +53,7 @@ Core admin system; points ledger + class ranking (Ranking V2 core); payments led
 4. Badge consolidation approach — retire `computeBadges()` in favor of the DB-backed engine, or keep both with a defined split of responsibility.
 5. 100-lesson curriculum expansion — approve or reject `docs/curriculum-plan-lessons-21-120-proposed.md` before any `curriculum_lessons` insert.
 6. Whether/when Class Session (Ranking V2 Phase 4) Week/Month views re-enable — gated on real adoption evidence, not a date (see `RANKING-SYSTEM.md` §6 for the exact conditions).
+7. **New 2026-08-18:** whether to reverse student 9's three identical `-1` "penalty"/"Bulk class points via Rankings" rows on 2026-08-12 (08:18:27/08:18:49/08:21:01 UTC, first two 22s apart) — found during ranking-integrity reconciliation, matches the `0097` duplicate-submission signature but was never reversed; intent can't be determined from the ledger alone. See `RANKING-SYSTEM.md` §7.
 
 ## 6. Important technical risks
 
@@ -79,3 +80,4 @@ Points-pause (achievement→points bridge); server-side streak persistence; Clas
 2. Badge system consolidation — but only after Dave decides the approach (§5.4).
 3. ~~"Highest level reached" additive leaderboard view (Q9 fix)~~ — **SHIPPED 2026-08-17**. Recommended follow-up: verify the "level leader" chip renders correctly in a real logged-in student session (blocked this session on missing test credentials).
 5. ~~Resolve the `scripts/deploy-production.sh` uncommitted diff~~ — **stale, checked 2026-08-17**: no diff exists.
+0d. ~~Apply `0162_point_transactions_duplicate_award_guard.sql` to production~~ — **DONE 2026-08-18**, confirmed live via `pg_get_functiondef`/`information_schema.triggers`; ledger reconciled (0 `students.points` vs. ledger-sum mismatches). See `RANKING-SYSTEM.md` §2. Follow-up: Dave decision needed on the student-9 near-duplicate found during this reconciliation (§5.7).

@@ -12,6 +12,8 @@ Class ranking (points-based, academy-wide feature) vs. game ranking (Game Center
 
 Only path: `Rankings.jsx` → `awardPoints()`/`bulkAwardPoints()` in `storageBridge.js` → INSERT into `point_transactions`. Three workflows: Quick Points (increment buttons), Detailed/Advanced Award (category + free-text reason), Bulk Award (per-group). Attendance, homework, and exams **do not** feed the ledger — this was deliberately removed (`0008`) because the old automatic formula produced flat zeros for most students; those pages still function independently.
 
+**Duplicate-award protection (`0162`, applied to prod 2026-08-18):** the manual award path (`category_key in ('bonus','penalty')`) previously had only a client-side, per-tab, non-persistent dedupe check (`Rankings.jsx` `DUP_WINDOW_MS`) — not a theoretical gap: `0097` reversed a real production double-submission incident. A `BEFORE INSERT` trigger (`prevent_duplicate_point_transaction`) now rejects an insert when an identical, non-reversal, non-baseline row (same student/category_key/points/reason/awarded_by) was written in the last 120 seconds — the same window the client already enforces, so no UX change for legitimate use. Homework/exam/achievement/game/lesson-work awards use different `category_key` values and are untouched; games and lesson-work already have their own idempotency (`0141` round tokens; `points_awarded IS NULL` claim guard).
+
 ## 3. Class ranking vs. game ranking — explicit distinction
 
 | | Class ranking | Game ranking |
@@ -55,6 +57,7 @@ Historical (pre-V2) manual point rows are **never** backfilled with a `class_ses
 - **Recognition/leaderboard inconsistency for promoted students:** `finalize_recognition_winner` filters by level while the general leaderboard doesn't cleanly handle cross-level history the same way — flagged, not reconciled.
 - **No bounds check on award magnitude** — see `DATABASE.md` §7.
 - **No admin-facing reversal/undo UI beyond a session-local, own-last-award-only undo** — bulk/historical correction still requires manual re-entry.
+- **Possible unreversed historical duplicate (open, unconfirmed):** the 2026-08-18 reconciliation read-only scan (post-`0162`) found student id 9 with three identical `-1` "penalty"/"Bulk class points via Rankings" rows on 2026-08-12, at 08:18:27, 08:18:49, and 08:21:01 UTC (first two 22s apart) — the same signature as the confirmed `0097` incident, but never reversed. Not corrected here: no reversal transaction was written, per the standing no-points-writes rule and because intent (three genuine penalties vs. a resubmitted bulk batch) cannot be determined from the ledger alone. Needs Dave's decision.
 
 ## 8. Status summary
 
@@ -67,3 +70,5 @@ Historical (pre-V2) manual point rows are **never** backfilled with a `class_ses
 | Recognition tie-break | known-issue-fixed (`0153`, applied to prod 2026-08-17; SQL-logic verified twice — synthetic data, and read-only against a real unfinalized 3-way tie in prod (level B, week 2026-07-27–2026-08-02, students 14/34/19 all 67pts/1 active day/100% attendance, rank 1). RPC execution (`finalize_recognition_winner`) and UI still not runtime-verified — production writes to `point_transactions`/`students` remain blocked at the tool layer, confirmed again 2026-08-17 (rolled-back test transaction denied). Not attempted via Supabase branch — deferred pending cost approval. See §4. |
 | Level-snapshot gap | known-issue-open, explicitly deferred |
 | Reversal/undo | partially implemented (session-local only) |
+| Duplicate-award guard | shipped and verified live (`0162`, 2026-08-18) — see §2 |
+| Possible unreversed 2026-08-12 duplicate (student 9) | found during post-fix reconciliation, **not corrected**, pending Dave's decision — see §7 |
