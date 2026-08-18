@@ -42,6 +42,8 @@ import {
   getClassSession,
   openClassSession,
   getClassLeaderboard,
+  getWeeklyClassLeaderboard,
+  getMonthlyClassLeaderboard,
   listClassScores,
 } from '../lib/db';
 import { LEVELS } from '../lib/levels';
@@ -485,32 +487,35 @@ export default function Rankings() {
   // ---------- Level Leaderboard (read-only, level + period scoped) ----------
   // Four tabs: Class / Week / Month / All Time.
   //
-  // Week/Month/All Time all come straight from get_group_leaderboard() -
-  // the authoritative point_transactions ledger - exactly like All Time
-  // always has. They previously (2026-08-15, briefly) came from the new
-  // class_session-backed RPCs added in 0139 instead, but that shipped
-  // ahead of any real adoption: class_session_id is null on every
-  // historical point_transactions row (no session-opening workflow was
-  // actually in use yet), so those RPCs had nothing to sum and Week/Month
-  // silently showed 0 for every student - a real students-see-wrong-points
-  // incident, not a data problem (the ledger itself was always intact).
-  // Reverted to the ledger pending actual adoption of the session
-  // workflow; see the Points & Ranking incident writeup, 2026-08-15.
+  // All Time still comes straight from get_group_leaderboard() - the
+  // authoritative point_transactions ledger, unchanged.
   //
-  // Class stays on the new session-backed path (get_class_session() +
-  // get_class_leaderboard()) - it's the one view that's meaningless
-  // without a real opened session (a single class's points), so there's
-  // no ledger-based fallback to revert it to, and it doesn't feed any
-  // ranking total students see. class_session/class_group and their RPCs
-  // are untouched - this is a display-routing fix only, not a rollback of
-  // that schema.
+  // Class/Week/Month all render the class_session-backed matrix now
+  // (get_class_leaderboard()/get_weekly_class_leaderboard()/
+  // get_monthly_class_leaderboard(), migration 0139) - real
+  // class_session.session_date columns, one Class Score per student per
+  // session, never lesson-number or day-of-week inference. Week/Month
+  // were briefly wired to these RPCs once before (2026-08-15) and
+  // reverted because every historical row had class_session_id = null,
+  // so the RPCs silently showed 0 for every student - a real
+  // students-see-wrong-points incident. Re-enabling here (Phase 7) is
+  // safe against a repeat of that same failure mode because of one added
+  // check: the RPCs themselves coalesce an unscored session to 0 (there's
+  // no way to tell "scored 0" from "not recorded yet" from their output
+  // alone), so the weekMonthBoard loader below cross-checks each
+  // session's real class_score rows via the existing listClassScores()
+  // and only renders a number for a cell that actually has one -
+  // everything else renders as "not recorded" instead of a fabricated
+  // zero. week_total/month_total/rank are still read straight off the
+  // RPC, never recomputed client-side.
   const [boardLevel, setBoardLevel] = useState('A');
   const [boardPeriod, setBoardPeriod] = useState('month');
   const [board, setBoard] = useState(null); // all_time only
   const [boardGroups, setBoardGroups] = useState(null);
   const [boardGroupId, setBoardGroupId] = useState('');
   const [boardReferenceDate, setBoardReferenceDate] = useState(todayISO);
-  const [sessionBoard, setSessionBoard] = useState(null); // class/week/month: { sessions, rows } | []
+  const [sessionBoard, setSessionBoard] = useState(null); // class tab raw RPC rows
+  const [weekMonthBoard, setWeekMonthBoard] = useState(null); // week/month: { sessions, rows } | null while loading
   const boardLevelInitialized = useRef(false);
 
   useEffect(() => {
@@ -521,10 +526,10 @@ export default function Rankings() {
   }, [isTeacher, teacherLevels]);
 
   useEffect(() => {
-    if (boardPeriod === 'class') return;
+    if (boardPeriod !== 'all_time') return;
     let cancelled = false;
     setBoard(null);
-    getGroupLeaderboard(boardLevel, boardPeriod, boardPeriod === 'all_time' ? null : boardReferenceDate)
+    getGroupLeaderboard(boardLevel, boardPeriod, null)
       .then((rows) => {
         if (!cancelled) setBoard(rows || []);
       })
@@ -534,7 +539,7 @@ export default function Rankings() {
     return () => {
       cancelled = true;
     };
-  }, [boardLevel, boardPeriod, boardReferenceDate, refreshKey]);
+  }, [boardLevel, boardPeriod, refreshKey]);
 
   // Resolve the class_group(s) for the selected level - same lookup the
   // Class Session panel above already uses. Auto-selects the sole group
@@ -578,9 +583,70 @@ export default function Rankings() {
     };
   }, [boardPeriod, boardGroupId, boardReferenceDate, refreshKey]);
 
-  // Class tab only now (Week/Month reverted to the ledger-based `board`
-  // above) - a single real class_session's points, one row per student,
-  // no columns to pivot.
+  // Week/Month: pivot the long-form RPC rows (one row per student per
+  // session) into a student x session matrix. Real recorded-ness per cell
+  // comes from listClassScores(sessionId) - see the big comment above for
+  // why that check exists (the RPC's own coalesce-to-0 can't distinguish
+  // "recorded a 0" from "nothing recorded yet").
+  useEffect(() => {
+    if (boardPeriod !== 'week' && boardPeriod !== 'month') return;
+    if (!boardGroupId) return;
+    let cancelled = false;
+    setWeekMonthBoard(null);
+    const load = async () => {
+      const rows =
+        boardPeriod === 'week'
+          ? await getWeeklyClassLeaderboard(boardGroupId, boardReferenceDate)
+          : await getMonthlyClassLeaderboard(boardGroupId, boardReferenceDate);
+      if (!rows || rows.length === 0) return { sessions: [], rows: [] };
+
+      const sessionDates = new Map();
+      rows.forEach((r) => {
+        if (!sessionDates.has(r.session_id)) sessionDates.set(r.session_id, r.session_date);
+      });
+      const sessions = [...sessionDates.entries()]
+        .sort((a, b) => a[1].localeCompare(b[1]))
+        .map(([id, date]) => ({ id, date }));
+
+      const recordedLists = await Promise.all(sessions.map((s) => listClassScores(s.id)));
+      const recordedBySession = new Map(
+        sessions.map((s, i) => [s.id, new Set((recordedLists[i] || []).map((row) => row.student_id))])
+      );
+
+      const totalKey = boardPeriod === 'week' ? 'week_total' : 'month_total';
+      const rankKey = boardPeriod === 'week' ? 'week_rank' : 'month_rank';
+      const byStudent = new Map();
+      rows.forEach((r) => {
+        if (!byStudent.has(r.student_id)) {
+          byStudent.set(r.student_id, {
+            studentId: r.student_id,
+            realName: r.real_name,
+            perSession: {},
+            total: Number(r[totalKey]),
+            rank: r[rankKey],
+          });
+        }
+        const wasRecorded = recordedBySession.get(r.session_id)?.has(r.student_id);
+        byStudent.get(r.student_id).perSession[r.session_id] = wasRecorded ? Number(r.session_points) : null;
+      });
+
+      const outRows = [...byStudent.values()].sort((a, b) => a.rank - b.rank || a.realName.localeCompare(b.realName));
+      return { sessions, rows: outRows };
+    };
+    load()
+      .then((result) => {
+        if (!cancelled) setWeekMonthBoard(result);
+      })
+      .catch(() => {
+        if (!cancelled) setWeekMonthBoard({ sessions: [], rows: [] });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [boardPeriod, boardGroupId, boardReferenceDate, refreshKey]);
+
+  // Class tab only - a single real class_session's points, one row per
+  // student, no columns to pivot.
   const sessionView = useMemo(() => {
     if (!sessionBoard) return null;
     return {
@@ -590,6 +656,12 @@ export default function Rankings() {
         .map((r) => ({ studentId: r.student_id, realName: r.real_name, perSession: {}, total: Number(r.points), rank: r.rank })),
     };
   }, [sessionBoard]);
+
+  // Which matrix backs the current tab, plus whether any cell in it has a
+  // real recorded score - drives the "not recorded yet" empty state below.
+  const matrixView = boardPeriod === 'class' ? sessionView : boardPeriod !== 'all_time' ? weekMonthBoard : null;
+  const matrixAnyRecorded =
+    matrixView?.rows.some((row) => Object.values(row.perSession).some((v) => v != null)) ?? false;
 
   // Month navigation anchors to the 1st of the currently-viewed month
   // before stepping, so addMonthsISO never lands on a day that doesn't
@@ -1014,7 +1086,7 @@ export default function Rankings() {
 
         {boardPeriod !== 'all_time' && (
           <div className="mb-3 flex flex-wrap items-center gap-2">
-            {boardPeriod === 'class' && boardGroups && boardGroups.length > 1 && (
+            {boardPeriod !== 'all_time' && boardGroups && boardGroups.length > 1 && (
               <select value={boardGroupId} onChange={(e) => setBoardGroupId(e.target.value)} className="input w-auto text-xs">
                 <option value="">Select group...</option>
                 {boardGroups.map((g) => (
@@ -1057,7 +1129,7 @@ export default function Rankings() {
           </div>
         )}
 
-        {boardPeriod !== 'class' ? (
+        {boardPeriod === 'all_time' ? (
           board === null ? (
             <p className="py-6 text-center text-sm text-ink/50">Loading...</p>
           ) : board.length === 0 ? (
@@ -1109,26 +1181,34 @@ export default function Rankings() {
           <p className="py-6 text-center text-sm text-ink/50">
             {boardGroups === null ? 'Loading...' : 'Select a group to see its leaderboard.'}
           </p>
-        ) : sessionView === null ? (
+        ) : matrixView === null ? (
           <p className="py-6 text-center text-sm text-ink/50">Loading...</p>
-        ) : sessionView.rows.length === 0 ? (
+        ) : boardPeriod === 'class' && matrixView.rows.length === 0 ? (
           <p className="py-6 text-center text-sm text-ink/50">No session opened for this date.</p>
+        ) : boardPeriod !== 'class' && matrixView.sessions.length === 0 ? (
+          <p className="py-6 text-center text-sm text-ink/50">
+            No classes were held {boardPeriod === 'week' ? 'this week' : 'this month'} yet.
+          </p>
+        ) : boardPeriod !== 'class' && !matrixAnyRecorded ? (
+          <p className="py-6 text-center text-sm text-ink/50">No Class Scores have been recorded yet.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-ink/10">
                   <th className="sticky left-0 z-10 whitespace-nowrap bg-white px-3 py-2 font-semibold text-ink/70">Student</th>
-                  {sessionView.sessions.map((s) => (
+                  {matrixView.sessions.map((s) => (
                     <th key={s.id} className="whitespace-nowrap px-3 py-2 text-center font-semibold text-ink/70">
                       {formatMonthDay(new Date(`${s.date}T00:00:00Z`))}
                     </th>
                   ))}
-                  <th className="whitespace-nowrap px-3 py-2 text-center font-bold text-ink">Points</th>
+                  <th className="whitespace-nowrap px-3 py-2 text-center font-bold text-ink">
+                    {boardPeriod === 'week' ? 'Weekly Total' : boardPeriod === 'month' ? 'Monthly Total' : 'Points'}
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {sessionView.rows.map((row) => (
+                {matrixView.rows.map((row) => (
                   <tr key={row.studentId} className="border-b border-ink/5 last:border-0">
                     <td className="sticky left-0 z-10 whitespace-nowrap bg-white px-3 py-2">
                       <div className="flex items-center gap-2">
@@ -1140,9 +1220,9 @@ export default function Rankings() {
                         <span className="font-medium text-ink">{row.realName}</span>
                       </div>
                     </td>
-                    {sessionView.sessions.map((s) => (
+                    {matrixView.sessions.map((s) => (
                       <td key={s.id} className="px-3 py-2 text-center text-ink/70">
-                        {row.perSession[s.id] ?? 0}
+                        {row.perSession[s.id] == null ? <span className="text-ink/30">—</span> : row.perSession[s.id]}
                       </td>
                     ))}
                     <td className="px-3 py-2 text-center text-base font-bold text-brand-600">{row.total}</td>
