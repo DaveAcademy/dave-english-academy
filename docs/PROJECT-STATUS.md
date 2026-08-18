@@ -71,8 +71,7 @@ Points-pause (achievement→points bridge); server-side streak persistence; Clas
 
 ## 9. Recommended next development sessions
 
--1. Dave decision needed: whether to change `curriculum_progress.max_available_lesson` to match the newer stated boundaries (A=1-10, A1=1-5) or keep production's current A=20/A1=10 (B=40/C=50 already match). See `CURRICULUM.md` §5 "Known discrepancy."
--1b. If Dave approves lowering A/A1 caps: first check whether any active student's completed/available progress would regress past the new cap (Level A pace was already at 14 at doc time) before applying.
+-1. ~~Dave decision needed on `curriculum_progress.max_available_lesson` vs. stated boundaries~~ — **RESOLVED 2026-08-18**: Dave set final targets A=15/A1=10/B=40/C=50. Safety-checked per level and applied via `0161_level_a_permanent_cap_15` (only Level A actually changed, 20→15; A1/B/C already matched). See `CURRICULUM.md` §5.
 0. ~~Apply `0156_curriculum_progress_teacher_level_scope.sql` to production~~ — **DONE 2026-08-17**, confirmed live via `pg_policies` on `curriculum_progress`.
 0b. ~~Apply `0157_function_search_path_hardening.sql` to production~~ — **DONE 2026-08-17**, confirmed live via `pg_proc.proconfig` on all 8 functions (see `DATABASE.md` §7).
 0c. ~~Apply `0159_drop_duplicate_indexes.sql` to production~~ — **DONE 2026-08-17**, confirmed live via `pg_indexes`/`pg_constraint` (see `DATABASE.md` §7).
