@@ -53,7 +53,7 @@ Core admin system; points ledger + class ranking (Ranking V2 core); payments led
 4. Badge consolidation approach — retire `computeBadges()` in favor of the DB-backed engine, or keep both with a defined split of responsibility.
 5. 100-lesson curriculum expansion — approve or reject `docs/curriculum-plan-lessons-21-120-proposed.md` before any `curriculum_lessons` insert.
 6. Whether/when Class Session (Ranking V2 Phase 4) Week/Month views re-enable — gated on real adoption evidence, not a date (see `RANKING-SYSTEM.md` §6 for the exact conditions).
-7. **New 2026-08-18:** whether to reverse student 9's three identical `-1` "penalty"/"Bulk class points via Rankings" rows on 2026-08-12 (08:18:27/08:18:49/08:21:01 UTC, first two 22s apart) — found during ranking-integrity reconciliation, matches the `0097` duplicate-submission signature but was never reversed; intent can't be determined from the ledger alone. See `RANKING-SYSTEM.md` §7.
+7. **Investigated 2026-08-18:** whether to reverse any of student 9's four `-1` penalty rows on 2026-08-12 (08:18:27/08:18:49/08:21:01/08:21:33 UTC). Deeper investigation found this does **not** match the `0097` duplicate-submission signature — each row differs in batch composition or award path (one 5-student mixed batch, two single-student-9-only bulk batches, one quick-award with no reason) rather than an identical batch resubmitted — so the evidence leans toward separate deliberate actions by the same teacher, not an accidental resubmission. Ledger alone still can't prove classroom intent with certainty. No reversal written; awaiting Dave's decision. See `RANKING-SYSTEM.md` §7.
 
 ## 6. Important technical risks
 
