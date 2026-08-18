@@ -253,6 +253,190 @@ schema migration to introduce.
 Each of the three items is independently migratable/deployable; do not bundle them into
 one migration.
 
+## 12. Implementation — PDF Preparation + Homework (2026-08-18, this session)
+
+Items 1 and 2 from §11's recommendation are now live. See `docs/RANKING-SYSTEM.md` §2b/§2c
+for the full mechanism writeup; summary here for the workstream record.
+
+**Files/migrations changed:**
+- `supabase/migrations/0163_ranking_v3_homework_prep_categories.sql` (applied to prod)
+- `src/pages/Rankings.jsx` — new "PDF Preparation" section (state + form + submit handler)
+- `src/lib/storageBridge.js` — `getOpenSessionForLevel()`, `awardHomeworkPoints()`
+- `src/lib/useAcademyData.js` — `setHomeworkStatusForStudent()` now calls
+  `awardHomeworkPoints()` as a best-effort second step after a grade is saved
+
+**What migration 0163 did, beyond the planned "add a category" work:** live schema
+inspection before writing any code found production already carried remnants of an
+earlier, untracked-locally attempt (`0121_homework_submission_points`, 2026-08-12) — a
+*disabled* trigger that auto-awarded a flat 10 `homework` points on submission (wrong
+event, wrong scale) and 4 real historical `homework`-category ledger rows it created.
+The trigger was dropped (data integrity risk if ever re-enabled: same category_key and
+same `points_transaction_id` column as the new mechanism, no `points_awarded` check of
+its own — would have silently double-awarded). The 4 historical ledger rows were left
+untouched (no-delete-history rule); their source `homework_status` rows no longer exist
+in prod (see below), so the "backfill points_awarded for already-awarded rows" step in
+0163 correctly matched 0 rows.
+
+**Open finding — flagged, not resolved:** `homework`/`homework_status` are currently
+**empty** in production (0 rows). The parallel "Submit Work" domain
+(`lesson_work_submissions`) has 192 real rows. The task specified wiring the
+`homework_status`/`HomeworkGradingRoster` grading flow specifically, which is what was
+built and is live — but it may see zero real usage until/unless Dave confirms which
+domain teachers actually use. Not redirected to the other domain without an explicit
+decision (would be scope creep on this session's instructions).
+
+**Verification performed:**
+- `npm run build` — clean.
+- Live schema/function inspection (Supabase MCP, read-only + the one gated
+  `apply_migration` call): confirmed `point_categories` has `prep`/`homework` rows, the
+  duplicate-guard trigger function now includes `'prep'`, `homework_status.points_awarded`
+  exists, the stale trigger is gone, `get_class_leaderboard`/`get_weekly_class_leaderboard`/
+  `get_monthly_class_leaderboard` sum `point_transactions` with no `category_key` filter
+  (so the new categories need no RPC change), and the 4 historical `homework` rows are
+  untouched (no reversals added).
+- **Not performed (blocked, not fabricated):** no real teacher/student browser session
+  was available to click through Add PDF Prep Points or grade a homework item end-to-end;
+  no fake student/homework rows were created to force a runtime test, per the standing
+  rule. Both flows are logically verified (build + live schema/RLS/trigger inspection)
+  but not click-tested.
+
+**Games:** untouched, as instructed — still blocked on Dave's explicit re-scope of the
+approved (unbuilt) Game Points anti-self-award design.
+
+**Workstream status: OPEN** — PDF prep and Homework are code-complete and live in
+production, but (a) the empty-Homework-domain finding needs a decision from Dave, and
+(b) neither new path has been runtime/browser-verified with a real session. Weekly/Monthly
+re-adoption (§11 item 4) and Games (§11 item 3) remain future, separately-scoped work.
+
+### Next Session Prompt (paste into a fresh session)
+
+> Continue Dave English Academy Ranking Model V3. Read
+> `docs/ranking-model-v3-investigation-2026-08-18.md` §11-§12 first — PDF Preparation and
+> Homework are implemented and live in prod (migration `0163`, `Rankings.jsx`,
+> `storageBridge.js`, `useAcademyData.js`). Do not rebuild them.
+> Two things need Dave's input before more code:
+> 1. **Homework domain choice**: production's `homework`/`homework_status` tables are
+>    empty (0 rows); the separate `lesson_work_submissions` ("Submit Work") domain has
+>    192 real rows. Confirm with Dave whether teachers actually use the Homework page at
+>    all, or whether the Class Score homework hook should move to the Submit Work domain
+>    instead (`awardLessonWorkPoints()` already exists there for a different category —
+>    would need a parallel `homework`-category wiring, analogous to what was just built).
+> 2. **Runtime verification**: neither PDF Prep nor Homework points have been exercised
+>    through a real logged-in teacher/student browser session yet (blocked this session -
+>    no session was available, and fabricating test students/homework was correctly
+>    avoided). Do this first, before further ranking work, ideally with Dave present or a
+>    real low-stakes classroom moment.
+> Only after both are resolved: Games (blocked on Dave's anti-self-award re-scope, see
+> §11 item 3) and re-pointing Rankings.jsx Week/Month to the session RPCs (§11 item 4,
+> needs real adoption data first). Do not touch `src/utils/badges.js`. Apply any further
+> migrations one at a time through the gated Supabase mechanism, with live schema
+> verification after each.
+
+---
+
+## 13. Phase 1/3/4/5 verification (2026-08-18, follow-up session)
+
+No code or schema changes this session — investigation and verification only.
+
+### Homework domain resolution (Phase 1)
+
+Confirmed live in production: `homework`/`homework_status` = 0 rows,
+`lesson_work_submissions` = 192 rows, all `status='submitted'`, **0 rows ever
+reviewed/graded** (the teacher review UI for it, `LessonWorkReviewRoster.jsx` in
+`LessonHub.jsx`, exists and is wired to `awardLessonWorkPoints()`, but has never been
+used in practice either).
+
+`lesson_work_submissions` is **not** a "homework prepared before class" concept — it is
+per-lesson practice-photo uploads, and migration `0103`'s header states the separation is
+**deliberate**: *"intentionally separate from the existing Homework domain... nothing here
+modifies any homework table or policy."* `LessonHub.jsx` (line ~513) reinforces this at the
+call site: `categoryKey: 'other'` is used "rather than 'homework': lesson practice is
+deliberately not part of the Homework domain." It also has no 0–10 grading concept (teacher
+enters an uncapped point value) and does not attach `classSessionId`.
+
+**Recommendation: keep the `homework_status` wiring as built, do not redirect to
+`lesson_work_submissions`.** The built implementation matches the originally specified
+domain exactly (title/due date, `HomeworkGradingRoster`, 0–10 clamp, session-attached,
+claim-guarded) — it is correct, just unadopted. Redirecting "homework points" onto
+`lesson_work_submissions` would silently override a second deliberate design boundary in
+this codebase (same category of risk as the Games anti-self-award mitigation) and was not
+done. **This is the one open decision for Dave**: either start using the Homework page
+operationally, or explicitly approve collapsing the two domains (real scope, own session).
+
+### Class Score model (Phase 2)
+
+No redesign performed, per instructions — verified the existing `class_session` →
+`get_class_leaderboard`/`get_weekly_class_leaderboard`/`get_monthly_class_leaderboard`
+architecture (already live from `0137`–`0139`) sums `point_transactions` with **no
+`category_key` filter**, confirmed live via `pg_get_functiondef`. Homework + PDF prep +
+performance + bonus/penalty therefore compose into one Class Score per session exactly as
+specified, once a session is open and each write attaches `class_session_id` — which the
+prep and homework code paths already do (matching student level to the open session).
+Lessons 11/12 (exams) already write to a fully separate `exams`/`exam_scores` schema, never
+`point_transactions` — already correctly isolated.
+
+### PDF Preparation verification (Phase 3)
+
+All confirmed live and correct, read-only:
+- 0–10 enforced client-side (`Rankings.jsx` blocks submit if `points > 10`); `homework`
+  clamps server-adjacent via `Math.max(0, Math.min(10, ...))` in `useAcademyData.js`.
+- Both attach `class_session_id` only when `openSession` exists **and** its level matches
+  the student's level — never cross-level.
+- Both insert through the one existing `point_transactions` ledger path (`awardPoints`/
+  `awardStudentPoints`), no parallel table.
+- Duplicate protection confirmed live: `point_transactions_prevent_duplicate` trigger
+  (enabled) covers `bonus`/`penalty`/`prep` (120s identical-award window); `homework` uses
+  the stronger unconditional `points_awarded IS NULL` claim guard instead — by design, not
+  an oversight (see `0163`'s own comment).
+- `point_transactions` RLS: only `pt_admin_insert` (`is_admin()`) and `pt_teacher_insert`
+  (`is_teacher()` + matching `teacher_group_assignments` row) can insert — confirmed no
+  student-insert policy exists. Students cannot self-award prep, homework, or any other
+  category.
+- Performance/Bonus/Penalty paths untouched by `0163` (only added the `prep` category seed
+  row, the `homework_status` claim-guard columns, and one line to the duplicate-check
+  trigger's category list).
+
+**One nuance, not a defect — flag only:** "does not create points without an open class
+session" is not strictly true for prep or homework, **by existing design**: exactly like
+Performance/Bonus/Penalty already did before this work, an award with no matching open
+session still inserts with `class_session_id = NULL` (counts toward lifetime/Overall and
+Weekly/Monthly-via-`get_group_leaderboard` totals, just invisible to the dormant
+session-scoped views). Consistent with all other categories; changing it would be a new,
+separately-scoped behavior change.
+
+### Runtime verification (Phase 4)
+
+`npm run build` — clean, no errors/warnings beyond the pre-existing chunk-size notice.
+Production schema/function/trigger/RLS verification performed above via live SQL
+(read-only). **No logged-in teacher/student browser session was available this session —
+UI click-through verification is blocked, not fabricated.** No test students, homework
+rows, or point transactions were created.
+
+### Games — smallest safe future architecture (Phase 5, investigation only)
+
+Not implemented. Trade-offs for how a game result becomes a verified Class Score points
+row without student self-award:
+
+| Mechanism | How it works | Pros | Cons |
+|---|---|---|---|
+| Teacher manually re-enters points after seeing result | Teacher looks at student's score (in-app or verbally) and awards points via the existing session-award UI, `category_key='game'` | Zero new schema; reuses everything already shipped and audited above | Pure manual re-entry, no link between the actual game session row and the award — same trust model as a teacher just deciding a number, defeats the point of having verified `game_sessions` data |
+| Teacher-confirmation on a specific `game_sessions` row | New "pending confirmation" queue: completed `game_sessions` rows surface to the teacher, one click inserts a capped `point_transactions` row referencing that specific session (idempotent, one award per `game_sessions.id`) | Directly traceable to the actual result; still requires a human in the loop (no auto-feed); natural idempotency key already exists (`game_sessions.id`) | New UI (teacher review queue) and a new unique constraint/claim-guard column, similar shape to `lesson_work_submissions`/`homework_status`'s claim pattern — real but small, scoped work |
+| Fully server-verified auto-award | Grading function server-side re-derives the score from stored round data (not the client-submitted score) and auto-inserts a capped row, respecting the existing `0141` replay guard | No teacher workload; fastest path to "games count" | Requires each game's scoring logic to be fully re-computable server-side from stored inputs (not all 9 games necessarily store enough raw data for that today — unverified this session); reintroduces the exact automatic-feed shape that was already tried once for homework/exams and reversed for producing bad results — highest risk of quietly reintroducing a self-award or drift bug |
+| Rate-limited/capped auto-award (no re-verification) | Auto-insert on completion, but capped per day/session and duplicate-guarded like `prep` | Cheapest to build (`0141` guard + duplicate trigger already exist) | Does not actually verify correctness of the score, only rate-limits abuse — weakest mitigation of the four, closest to what the approved Game Points spec already explicitly rejected for Class Points |
+
+No mechanism was chosen. This table is the deliverable for Phase 5; implementation
+remains blocked on Dave's explicit re-scope of the approved (unbuilt) Game Points
+anti-self-award design, as instructed.
+
+### Workstream status
+
+**OPEN.** PDF Preparation and Homework: implementation confirmed correct and complete,
+verified live in production (schema + build + code path), blocked only on browser
+click-through (no session available) and on Dave's homework-domain-adoption decision
+above. Class Score model: confirmed already correctly implemented, dormant pending real
+session-opening adoption (pre-existing, unchanged finding). Games: investigation-only
+deliverable (trade-off table above) complete; no implementation started, per instructions.
+
 ## Next Session Prompt (paste into a fresh session)
 
 > Continue Dave English Academy Ranking Model V3, branch `release/dashboard-redesign`.
