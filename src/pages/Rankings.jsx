@@ -354,6 +354,89 @@ export default function Rankings() {
     }
   };
 
+  // ---------- Class Score (Ranking Model V3 primary workflow) ----------
+  // One final Class Score per student per open class_session - the
+  // teacher's single number already reflects homework/PDF prep/vocab/
+  // games/participation/bonuses/penalties for that lesson, so there is no
+  // category picker here (always categoryKey 'class_score') and no
+  // per-activity breakdown. Requires an open session: unlike Add Points/
+  // Award Class Points below (which still work session-less, for ad-hoc
+  // awards), a Class Score with nothing to attach to isn't a valid score
+  // under this model, so submission is disabled until one is open.
+  // Duplicate/accidental-resubmit protection is two-layered: the same
+  // batch-signature + time-window guard Award Class Points already uses,
+  // backed by a real DB-level UNIQUE(student_id, class_session_id) partial
+  // index (migration 0164) that rejects a second score for the same
+  // student+session outright, even across reloads/devices/tabs.
+  const [classScoreValues, setClassScoreValues] = useState({});
+  const [classScorePending, setClassScorePending] = useState(false);
+  const [classScoreMessage, setClassScoreMessage] = useState('');
+  const [lastClassScoreSignature, setLastClassScoreSignature] = useState(null);
+
+  const openSessionGroupName = useMemo(
+    () => sessionClassGroups?.find((g) => String(g.id) === String(sessionGroupId))?.name,
+    [sessionClassGroups, sessionGroupId]
+  );
+
+  // Scoped to the open session's actual roster (level + group), not just
+  // level, so a teacher scoring one group's session doesn't see students
+  // from a different group at the same level mixed into the list.
+  const classScoreStudents = useMemo(
+    () =>
+      awardableStudents.filter(
+        (s) => s.level === sessionLevel && (!openSessionGroupName || s.group_name === openSessionGroupName)
+      ),
+    [awardableStudents, sessionLevel, openSessionGroupName]
+  );
+
+  const setClassScoreValue = (studentId, value) => setClassScoreValues((prev) => ({ ...prev, [studentId]: value }));
+
+  const classScoreEntries = () =>
+    classScoreStudents
+      .map((s) => ({ student: s, points: Number(classScoreValues[s.id]) }))
+      .filter((r) => classScoreValues[r.student.id] !== undefined && classScoreValues[r.student.id] !== '' && Number.isFinite(r.points) && r.points >= 0);
+
+  const classScorePendingCount = classScoreEntries().length;
+
+  const submitClassScores = async () => {
+    if (!openSession) return;
+    const entries = classScoreEntries();
+    if (entries.length === 0) return;
+    const batchKey = `${openSession.id}|${entries.map(({ student, points }) => `${student.id}:${points}`).sort().join('|')}`;
+    if (lastClassScoreSignature?.sig === batchKey && Date.now() - lastClassScoreSignature.at < DUP_WINDOW_MS) {
+      setClassScoreMessage('That exact set of scores was just submitted. Check the Class tab before resubmitting.');
+      return;
+    }
+    setLastClassScoreSignature({ sig: batchKey, at: Date.now() });
+    setClassScorePending(true);
+    setClassScoreMessage('');
+    try {
+      await bulkAwardStudentPoints(
+        entries.map(({ student, points }) => ({
+          studentId: student.id,
+          level: student.level,
+          categoryId: categoryByKey.class_score?.id ?? null,
+          categoryKey: 'class_score',
+          points,
+          reason: 'Class Score',
+          awardedBy: session.user.id,
+          classSessionId: openSession.id,
+        }))
+      );
+      setClassScoreMessage(`Recorded the Class Score for ${entries.length} student${entries.length === 1 ? '' : 's'}.`);
+      setClassScoreValues({});
+      bumpRefresh();
+    } catch (err) {
+      setClassScoreMessage(
+        err?.code === '23505'
+          ? 'One or more of these students already has a Class Score recorded for this session.'
+          : 'Could not record Class Scores. Please try again.'
+      );
+    } finally {
+      setClassScorePending(false);
+    }
+  };
+
   // ---------- Level Leaderboard (read-only, level + period scoped) ----------
   // Four tabs: Class / Week / Month / All Time.
   //
@@ -556,6 +639,59 @@ export default function Rankings() {
             </p>
           )}
           {sessionMessage && !openSession && <p className="mt-2 text-xs text-ink/60">{sessionMessage}</p>}
+        </section>
+      )}
+
+      {canAwardAtAll && (
+        <section className="mb-4 rounded-xl bg-white p-4 shadow-card">
+          <h2 className="mb-1 font-display text-sm font-bold text-ink">Class Score</h2>
+          <p className="mb-3 text-xs text-ink/50">
+            One final score per student for this class - your complete evaluation of the lesson (homework, prep,
+            vocabulary, participation, games, everything). No separate categories.
+          </p>
+          {!openSession && (
+            <p className="rounded-lg bg-ink/5 p-3 text-xs text-ink/60">
+              Open a Class Session above first - Class Scores must be attached to a session.
+            </p>
+          )}
+          {openSession && classScoreStudents.length === 0 && (
+            <p className="rounded-lg bg-ink/5 p-3 text-xs text-ink/60">No students found for this session's level/group.</p>
+          )}
+          {openSession && classScoreStudents.length > 0 && (
+            <>
+              <p className="mb-2 text-xs font-medium text-active">
+                Session open for Level {sessionLevel}{openSessionGroupName ? ` (${openSessionGroupName})` : ''} on {sessionDate}.
+              </p>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {classScoreStudents.map((s) => (
+                  <div key={s.id} className="flex items-center justify-between gap-2 rounded-lg bg-ink/5 px-3 py-2">
+                    <span className="text-sm text-ink">{s.real_name}</span>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="1"
+                      value={classScoreValues[s.id] ?? ''}
+                      onChange={(e) => setClassScoreValue(s.id, e.target.value)}
+                      placeholder="Score"
+                      className="input w-20 text-right text-sm"
+                    />
+                  </div>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={submitClassScores}
+                disabled={classScorePending || classScorePendingCount === 0}
+                className="mt-3 w-full rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
+              >
+                {classScorePending
+                  ? 'Saving...'
+                  : `Record Class Score${classScorePendingCount === 1 ? '' : 's'}${classScorePendingCount > 0 ? ` (${classScorePendingCount})` : ''}`}
+              </button>
+            </>
+          )}
+          {classScoreMessage && <p className="mt-2 text-xs text-ink/60">{classScoreMessage}</p>}
         </section>
       )}
 
