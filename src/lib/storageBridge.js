@@ -1012,6 +1012,23 @@ export async function getMonthlyClassLeaderboard(classGroupId, monthStart = null
 // per distinct lesson_date - there's no separate class-schedule concept
 // in the schema, so the ledger's own lesson_date values are the only
 // source of truth for "which dates had a class."
+// Which students already have a Class Score recorded for this session -
+// same RLS-scoped raw select as listClassPointTransactions() above, just
+// filtered to one session + category_key instead of a level/date range.
+// Lets the Class Score UI show already-recorded scores instead of blank
+// inputs when a teacher reopens a session, without a new RPC or relying
+// on the DB unique constraint (migration 0164/0166) to surface as a 23505
+// after the fact.
+export async function listClassScores(classSessionId) {
+  const { data, error } = await supabase
+    .from('point_transactions')
+    .select('student_id, points')
+    .eq('class_session_id', classSessionId)
+    .eq('category_key', 'class_score');
+  if (error) throw error;
+  return data;
+}
+
 export async function listClassPointTransactions(level, startDate, endDate) {
   const { data, error } = await supabase
     .from('point_transactions')

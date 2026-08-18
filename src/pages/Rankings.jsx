@@ -42,6 +42,7 @@ import {
   getClassSession,
   openClassSession,
   getClassLeaderboard,
+  listClassScores,
 } from '../lib/db';
 import { LEVELS } from '../lib/levels';
 import { addDaysISO, addMonthsISO, todayISO, formatMonthDay } from '../utils/date';
@@ -372,6 +373,32 @@ export default function Rankings() {
   const [classScorePending, setClassScorePending] = useState(false);
   const [classScoreMessage, setClassScoreMessage] = useState('');
   const [lastClassScoreSignature, setLastClassScoreSignature] = useState(null);
+  const [recordedClassScores, setRecordedClassScores] = useState({}); // { [studentId]: points } for the open session
+
+  // Load already-recorded scores whenever the open session changes, so
+  // reopening a session shows what's already saved instead of blank
+  // inputs - the teacher shouldn't have to guess, or find out via a
+  // 23505 error on resubmit.
+  useEffect(() => {
+    if (!openSession) {
+      setRecordedClassScores({});
+      return;
+    }
+    let cancelled = false;
+    listClassScores(openSession.id)
+      .then((rows) => {
+        if (cancelled) return;
+        const map = {};
+        for (const row of rows || []) map[row.student_id] = row.points;
+        setRecordedClassScores(map);
+      })
+      .catch(() => {
+        if (!cancelled) setRecordedClassScores({});
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [openSession]);
 
   const openSessionGroupName = useMemo(
     () => sessionClassGroups?.find((g) => String(g.id) === String(sessionGroupId))?.name,
@@ -389,10 +416,23 @@ export default function Rankings() {
     [awardableStudents, sessionLevel, openSessionGroupName]
   );
 
+  // Split by whether this session already has a Class Score for the
+  // student - already-scored students are shown read-only (their saved
+  // value), never re-offered an input, so a resubmit can't attempt a
+  // duplicate insert the DB constraint would just reject anyway.
+  const classScorePendingStudents = useMemo(
+    () => classScoreStudents.filter((s) => recordedClassScores[s.id] === undefined),
+    [classScoreStudents, recordedClassScores]
+  );
+  const classScoreDoneStudents = useMemo(
+    () => classScoreStudents.filter((s) => recordedClassScores[s.id] !== undefined),
+    [classScoreStudents, recordedClassScores]
+  );
+
   const setClassScoreValue = (studentId, value) => setClassScoreValues((prev) => ({ ...prev, [studentId]: value }));
 
   const classScoreEntries = () =>
-    classScoreStudents
+    classScorePendingStudents
       .map((s) => ({ student: s, points: Number(classScoreValues[s.id]) }))
       .filter((r) => classScoreValues[r.student.id] !== undefined && classScoreValues[r.student.id] !== '' && Number.isFinite(r.points) && r.points >= 0);
 
@@ -424,6 +464,11 @@ export default function Rankings() {
         }))
       );
       setClassScoreMessage(`Recorded the Class Score for ${entries.length} student${entries.length === 1 ? '' : 's'}.`);
+      setRecordedClassScores((prev) => {
+        const next = { ...prev };
+        for (const { student, points } of entries) next[student.id] = points;
+        return next;
+      });
       setClassScoreValues({});
       bumpRefresh();
     } catch (err) {
@@ -661,34 +706,53 @@ export default function Rankings() {
             <>
               <p className="mb-2 text-xs font-medium text-active">
                 Session open for Level {sessionLevel}{openSessionGroupName ? ` (${openSessionGroupName})` : ''} on {sessionDate}.
+                {classScoreDoneStudents.length > 0 &&
+                  ` ${classScoreDoneStudents.length} of ${classScoreStudents.length} already recorded.`}
               </p>
-              <div className="grid gap-2 sm:grid-cols-2">
-                {classScoreStudents.map((s) => (
-                  <div key={s.id} className="flex items-center justify-between gap-2 rounded-lg bg-ink/5 px-3 py-2">
-                    <span className="text-sm text-ink">{s.real_name}</span>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      step="1"
-                      value={classScoreValues[s.id] ?? ''}
-                      onChange={(e) => setClassScoreValue(s.id, e.target.value)}
-                      placeholder="Score"
-                      className="input w-20 text-right text-sm"
-                    />
-                  </div>
-                ))}
-              </div>
-              <button
-                type="button"
-                onClick={submitClassScores}
-                disabled={classScorePending || classScorePendingCount === 0}
-                className="mt-3 w-full rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
-              >
-                {classScorePending
-                  ? 'Saving...'
-                  : `Record Class Score${classScorePendingCount === 1 ? '' : 's'}${classScorePendingCount > 0 ? ` (${classScorePendingCount})` : ''}`}
-              </button>
+              {classScorePendingStudents.length > 0 && (
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {classScorePendingStudents.map((s) => (
+                    <div key={s.id} className="flex items-center justify-between gap-2 rounded-lg bg-ink/5 px-3 py-2">
+                      <span className="text-sm text-ink">{s.real_name}</span>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="1"
+                        value={classScoreValues[s.id] ?? ''}
+                        onChange={(e) => setClassScoreValue(s.id, e.target.value)}
+                        placeholder="Score"
+                        className="input w-20 text-right text-sm"
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+              {classScoreDoneStudents.length > 0 && (
+                <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                  {classScoreDoneStudents.map((s) => (
+                    <div key={s.id} className="flex items-center justify-between gap-2 rounded-lg bg-active/10 px-3 py-2">
+                      <span className="text-sm text-ink">{s.real_name}</span>
+                      <span className="text-sm font-semibold text-active">{recordedClassScores[s.id]} ✓</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {classScorePendingStudents.length > 0 && (
+                <button
+                  type="button"
+                  onClick={submitClassScores}
+                  disabled={classScorePending || classScorePendingCount === 0}
+                  className="mt-3 w-full rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
+                >
+                  {classScorePending
+                    ? 'Saving...'
+                    : `Record Class Score${classScorePendingCount === 1 ? '' : 's'}${classScorePendingCount > 0 ? ` (${classScorePendingCount})` : ''}`}
+                </button>
+              )}
+              {classScorePendingStudents.length === 0 && (
+                <p className="mt-3 text-xs font-medium text-active">All students in this session have a Class Score recorded.</p>
+              )}
             </>
           )}
           {classScoreMessage && <p className="mt-2 text-xs text-ink/60">{classScoreMessage}</p>}
