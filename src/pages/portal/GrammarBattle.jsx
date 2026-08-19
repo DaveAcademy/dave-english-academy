@@ -25,7 +25,16 @@ const START_LIVES = 3;
 const TIME_LIMIT_MS = 8000;
 const ESCALATE_AFTER = 3;
 const OPTION_LETTERS = ['A', 'B', 'C', 'D'];
-const TIER_ORDER = ['easy', 'medium', 'hard'];
+// Must cover every difficulty game_level_to_tier() (0149) can hand back,
+// not just the 3 mid tiers - a round at level <=20 or >85 (very_easy/
+// very_hard) mixes those into the pool alongside easy/medium/hard, and
+// pickNextQuestion() can only ever pick a difficulty listed here. Missing
+// very_easy/very_hard meant those items were unreachable padding: the
+// round always exhausted its reachable pool ~9 questions short of
+// v_round_size, submit_game_round()'s grammar_battle pass check
+// (words_total >= round_size) could never pass, and no student has ever
+// leveled up or earned Game Points on this game (bug found 2026-08-19).
+const TIER_ORDER = ['very_easy', 'easy', 'medium', 'hard', 'very_hard'];
 
 function pickNextQuestion(pool, used, tier) {
   const tierIndex = TIER_ORDER.indexOf(tier);
