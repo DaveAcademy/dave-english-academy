@@ -520,6 +520,11 @@ export default function Rankings() {
             perSession: {},
             total: Number(r[totalKey]),
             rank: r[rankKey],
+            // month tab only (migration 0168): historical August 2026 class
+            // points already folded into month_total/month_rank above -
+            // kept here only to drive a small "includes historical points"
+            // transparency indicator, never added again client-side.
+            legacyPoints: boardPeriod === 'month' ? Number(r.legacy_points || 0) : 0,
           });
         }
         const wasRecorded = recordedBySession.get(r.session_id)?.has(r.student_id);
@@ -558,6 +563,8 @@ export default function Rankings() {
   const matrixView = boardPeriod === 'class' ? sessionView : boardPeriod !== 'all_time' ? weekMonthBoard : null;
   const matrixAnyRecorded =
     matrixView?.rows.some((row) => Object.values(row.perSession).some((v) => v != null)) ?? false;
+  const hasLegacyPoints =
+    boardPeriod === 'month' && (weekMonthBoard?.rows.some((row) => row.legacyPoints !== 0) ?? false);
 
   // Month navigation anchors to the 1st of the currently-viewed month
   // before stepping, so addMonthsISO never lands on a day that doesn't
@@ -959,6 +966,9 @@ export default function Rankings() {
           <p className="py-6 text-center text-sm text-ink/50">No Class Scores have been recorded yet.</p>
         ) : (
           <div className="overflow-x-auto">
+            {hasLegacyPoints && (
+              <p className="mb-2 text-xs text-ink/50">Includes historical August class points.</p>
+            )}
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-ink/10">
@@ -991,7 +1001,17 @@ export default function Rankings() {
                         {row.perSession[s.id] == null ? <span className="text-ink/30">—</span> : row.perSession[s.id]}
                       </td>
                     ))}
-                    <td className="px-3 py-2 text-center text-base font-bold text-brand-600">{row.total}</td>
+                    <td className="px-3 py-2 text-center text-base font-bold text-brand-600">
+                      {row.total}
+                      {row.legacyPoints !== 0 && (
+                        <span
+                          className="ml-1 align-top text-xs font-normal text-amber-700"
+                          title="Includes historical August class points"
+                        >
+                          *
+                        </span>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
