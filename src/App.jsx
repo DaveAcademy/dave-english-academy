@@ -33,6 +33,7 @@ const Reports = lazy(() => import('./pages/Reports'));
 const Settings = lazy(() => import('./pages/Settings'));
 const Chat = lazy(() => import('./pages/Chat'));
 const FileManager = lazy(() => import('./pages/FileManager'));
+const AiAssistant = lazy(() => import('./pages/AiAssistant'));
 const PortalHomeV3 = lazy(() => import('./pages/portal/PortalHomeV3'));
 const MyProgress = lazy(() => import('./pages/portal/MyProgress'));
 const MyExams = lazy(() => import('./pages/portal/MyExams'));
@@ -157,6 +158,7 @@ function RoutedContent({ isStudent }) {
             <Route path="/picture-quiz" element={<PictureQuiz />} />
             <Route path="/my-certificates" element={<MyCertificates />} />
             <Route path="/my-ranking" element={<MyRanking />} />
+            <Route path="/ai-assistant" element={<AiAssistant />} />
             <Route path="/chat" element={<Chat />} />
             <Route path="/settings" element={<Settings />} />
           </Routes>
@@ -177,6 +179,7 @@ function RoutedContent({ isStudent }) {
             <Route path="/rankings/manual-entry" element={<ManualClassScoreEntry />} />
             <Route path="/recognition" element={<Recognition />} />
             <Route path="/reports" element={<Reports />} />
+            <Route path="/ai-assistant" element={<AiAssistant />} />
             <Route path="/chat" element={<Chat />} />
             <Route path="/files" element={<FileManager />} />
             <Route path="/settings" element={<Settings />} />

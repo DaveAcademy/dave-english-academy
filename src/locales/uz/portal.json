@@ -66,5 +66,16 @@
   "issuedOn": "Berilgan sana: {{date}}",
   "print": "Chop etish",
   "discussCertificateAria": "Ushbu sertifikatni muhokama qilish",
-  "certificateUnavailable": "Bu sertifikat hali yuklab olish uchun tayyor emas. Iltimos, o'qituvchi yoki administrator bilan bog'laning."
+  "certificateUnavailable": "Bu sertifikat hali yuklab olish uchun tayyor emas. Iltimos, o'qituvchi yoki administrator bilan bog'laning.",
+  "aiAssistantTitle": "AI Yordamchi",
+  "aiAssistantGreeting": "Salom, {{name}} 👋",
+  "aiAssistantSubtitle": "Grammatika, so'zlar, darslar yoki uy vazifasi haqida so'rang.",
+  "aiAssistantPlaceholder": "Nimadir so'rang...",
+  "aiAssistantSend": "Yuborish",
+  "aiAssistantThinking": "O'ylayapman...",
+  "aiAssistantQuickGrammar": "Grammatika",
+  "aiAssistantQuickVocabulary": "So'zlar",
+  "aiAssistantQuickQuiz": "Test bering",
+  "aiAssistantQuickLesson": "Mening darsim",
+  "aiAssistantError": "Xatolik yuz berdi. Qaytadan urinib ko'ring."
 }

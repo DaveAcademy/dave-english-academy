@@ -6,7 +6,7 @@
 
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { LayoutDashboard, TrendingUp, FileCheck2, BookOpen, Library, Award, Trophy, Settings, MessageSquare, Languages, Gamepad2 } from 'lucide-react';
+import { LayoutDashboard, TrendingUp, FileCheck2, BookOpen, Library, Award, Trophy, Settings, MessageSquare, Languages, Gamepad2, Sparkles } from 'lucide-react';
 import { useAuth } from '../lib/AuthContext';
 import { useAcademy } from '../lib/AcademyDataContext';
 
@@ -33,6 +33,7 @@ const PORTAL_NAV_ITEMS = [
   { to: '/games', label: 'gameCenterFull', shortLabel: 'gameCenterShort', Icon: Gamepad2 },
   { to: '/my-certificates', label: 'certificates', shortLabel: 'certificatesShort', Icon: Award },
   { to: '/my-ranking', label: 'ranking', shortLabel: 'rankingsShort', Icon: Trophy },
+  { to: '/ai-assistant', label: 'aiAssistant', shortLabel: 'aiAssistantShort', Icon: Sparkles },
   { to: '/chat', label: 'messages', shortLabel: 'messagesShort', Icon: MessageSquare },
   { to: '/settings', label: 'settings', shortLabel: 'settingsShort', Icon: Settings },
 ];

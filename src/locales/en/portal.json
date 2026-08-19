@@ -66,5 +66,16 @@
   "issuedOn": "Issued {{date}}",
   "print": "Print",
   "discussCertificateAria": "Discuss this certificate",
-  "certificateUnavailable": "This certificate isn't ready for download yet. Please check with your teacher or admin."
+  "certificateUnavailable": "This certificate isn't ready for download yet. Please check with your teacher or admin.",
+  "aiAssistantTitle": "AI Assistant",
+  "aiAssistantGreeting": "Hello, {{name}} 👋",
+  "aiAssistantSubtitle": "Ask me about grammar, vocabulary, your lessons, or homework.",
+  "aiAssistantPlaceholder": "Ask me anything...",
+  "aiAssistantSend": "Send",
+  "aiAssistantThinking": "Thinking...",
+  "aiAssistantQuickGrammar": "Grammar",
+  "aiAssistantQuickVocabulary": "Vocabulary",
+  "aiAssistantQuickQuiz": "Quiz me",
+  "aiAssistantQuickLesson": "My lesson",
+  "aiAssistantError": "Something went wrong. Please try again."
 }
