@@ -962,7 +962,7 @@ export default function Rankings() {
           <p className="py-6 text-center text-sm text-ink/50">
             No classes were held {boardPeriod === 'week' ? 'this week' : 'this month'} yet.
           </p>
-        ) : boardPeriod !== 'class' && !matrixAnyRecorded ? (
+        ) : boardPeriod !== 'class' && !matrixAnyRecorded && !hasLegacyPoints ? (
           <p className="py-6 text-center text-sm text-ink/50">No Class Scores have been recorded yet.</p>
         ) : (
           <div className="overflow-x-auto">
