@@ -51,7 +51,16 @@ function speak(text, { onStart, onEnd, onError } = {}) {
       if (voice) utterance.voice = voice;
       if (onStart) utterance.onstart = onStart;
       if (onEnd) utterance.onend = onEnd;
-      if (onError) utterance.onerror = onError;
+      if (onError) {
+        utterance.onerror = (event) => {
+          // 'canceled'/'interrupted' fire on the PREVIOUS utterance every
+          // time a new speak() calls cancel() to replace it (next word,
+          // rapid replay taps) - that's expected traffic, not a real
+          // failure, and must not be reported as one.
+          if (event.error === 'canceled' || event.error === 'interrupted') return;
+          onError(event);
+        };
+      }
       window.speechSynthesis.speak(utterance);
     }, 0);
   };
