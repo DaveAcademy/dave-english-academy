@@ -34,7 +34,8 @@ const NAV_ITEMS = [
   { to: '/', label: 'home', shortLabel: 'homeShort', Icon: LayoutDashboard, end: true },
   { to: '/students', label: 'students', shortLabel: 'studentsShort', Icon: Users },
   { to: '/payments', label: 'payments', shortLabel: 'paymentsShort', Icon: Wallet, adminOnly: true },
-  { to: '/reminders', label: 'reminders', shortLabel: 'remindersShort', Icon: BellRing, adminOnly: true },
+  // Reminders temporarily hidden from nav (2026-08-19) - feature kept intact, just not exposed.
+  // { to: '/reminders', label: 'reminders', shortLabel: 'remindersShort', Icon: BellRing, adminOnly: true },
   { to: '/attendance', label: 'attendance', shortLabel: 'attendanceShort', Icon: CalendarCheck },
   { to: '/lessons', label: 'lessons', shortLabel: 'lessonsShort', Icon: CalendarClock },
   { to: '/vocabulary', label: 'vocabulary', shortLabel: 'vocabularyShort', Icon: Languages },

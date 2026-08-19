@@ -672,6 +672,7 @@ function AdminDashboard() {
                   <span className="font-semibold text-levelA">{stats.dueWithin7Students.length}</span>
                 </Link>
               </div>
+              {/* Reminders CTA temporarily hidden (2026-08-19) - /reminders route disabled, feature kept intact.
               <Link
                 to="/reminders"
                 className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-600 transition-colors hover:bg-brand-100"
@@ -679,6 +680,7 @@ function AdminDashboard() {
                 <Bell size={13} aria-hidden="true" />
                 {t('sendRemindersCta')}
               </Link>
+              */}
             </Panel>
 
             <Panel title={t('attendanceAlertsTitle')} icon={CalendarCheck}>
