@@ -51,6 +51,8 @@
   "youAreNumberOne": "Siz #1siz!",
   "yourBest": "Sizning natijangiz: {{score}}",
   "topPlayers": "Eng yaxshilar",
+  "showAllPlayers": "Barcha {{count}} o'quvchini ko'rsatish",
+  "hideAllPlayers": "Ro'yxatni yopish",
   "yourRank": "Sizning o'ringiz: #{{rank}} · {{score}}",
   "nextTarget": "Keyingi nishon: {{name}} — {{score}} ({{gap}} ball qoldi)",
   "reset": "Qayta boshlash",

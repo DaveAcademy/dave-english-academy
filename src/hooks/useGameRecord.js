@@ -19,7 +19,7 @@ import { useAcademy } from '../lib/AcademyDataContext';
 import { getGameBestRecords } from '../lib/storageBridge';
 import { formatStudentDisplayName } from '../lib/gameRecordFormat';
 
-const TOP_N = 5;
+const TOP_N = 10;
 
 export default function useGameRecord(gameType, enabled = true) {
   const { me } = useAcademy();
@@ -58,6 +58,7 @@ export default function useGameRecord(gameType, enabled = true) {
 
         setRecord({
           top: gameRows.slice(0, TOP_N),
+          rest: gameRows.slice(TOP_N),
           myBest: myRow ? myRow.score : null,
           myRank: myRow ? myRow.rank : null,
           isRecordHolder: myRow ? myRow.rank === 1 : false,

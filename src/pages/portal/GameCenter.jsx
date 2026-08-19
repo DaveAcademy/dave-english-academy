@@ -3,9 +3,9 @@
 // attractive cards rather than dropping them straight into one game.
 // Adding a game means adding one entry to GAME_CENTER_ITEMS - the card,
 // route, and best-score/record lookup are all shared (GameCard.jsx,
-// get_game_best_records RPC via storageBridge.js). Best scores and group
-// records come from one batched call (0147) rather than one
-// listMyGameSessions query per game (the old N+1 pattern this replaced).
+// get_game_best_records RPC via storageBridge.js). Best scores and
+// academy-wide records come from one batched call (0147/0174) rather than
+// one listMyGameSessions query per game (the old N+1 pattern this replaced).
 
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';

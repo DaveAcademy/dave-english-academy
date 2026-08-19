@@ -51,6 +51,8 @@
   "youAreNumberOne": "You're #1!",
   "yourBest": "Your best: {{score}}",
   "topPlayers": "Top Players",
+  "showAllPlayers": "Show all {{count}} players",
+  "hideAllPlayers": "Hide full list",
   "yourRank": "Your rank: #{{rank}} · {{score}}",
   "nextTarget": "Next target: {{name}} — {{score}} ({{gap}} to go)",
   "reset": "Reset",
