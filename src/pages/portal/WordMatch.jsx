@@ -46,6 +46,7 @@ export default function WordMatch() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const wrongTimeout = useRef(null);
+  const lastAnswersRef = useRef(null);
   const { record } = useGameRecord('word_match', !!result);
 
   const startRound = useCallback(async () => {
@@ -57,6 +58,7 @@ export default function WordMatch() {
     setSelectedUzbekTile(null);
     setWrongPair(null);
     setError(null);
+    lastAnswersRef.current = null;
     try {
       const { roundId: rid, level: lvl, words } = await getWordMatchRound();
       setRoundId(rid);
@@ -78,10 +80,14 @@ export default function WordMatch() {
 
   const submitRound = useCallback(
     async (finalAnswers) => {
+      lastAnswersRef.current = finalAnswers;
       setSubmitting(true);
+      setError(null);
       try {
         const res = await submitGameRound('word_match', roundId, finalAnswers);
         setResult(res);
+      } catch (err) {
+        setError(err.message || String(err));
       } finally {
         setSubmitting(false);
       }
@@ -179,9 +185,17 @@ export default function WordMatch() {
   }
 
   if (error) {
+    const isSubmitError = !!lastAnswersRef.current;
     return (
       <div className="rounded-2xl bg-white p-10 text-center shadow-card">
-        <p className="font-display text-lg font-semibold text-rose-600">{t('loadError')}</p>
+        <p className="font-display text-lg font-semibold text-rose-600">{isSubmitError ? t('submitError') : t('loadError')}</p>
+        <button
+          onClick={() => (isSubmitError ? submitRound(lastAnswersRef.current) : startRound())}
+          disabled={submitting}
+          className="mt-4 rounded-full bg-brand-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-transform active:scale-95 disabled:opacity-50"
+        >
+          {t('retryButton')}
+        </button>
       </div>
     );
   }

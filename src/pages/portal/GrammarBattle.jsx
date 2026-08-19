@@ -62,6 +62,7 @@ export default function GrammarBattle() {
   const { streak, bestStreak, recordCorrect, recordIncorrect, reset: resetStreak } = useGameStreak();
   const tickRef = useRef(null);
   const advanceRef = useRef(null);
+  const lastAnswersRef = useRef(null);
 
   const startGame = useCallback(async () => {
     setLoading(true);
@@ -74,6 +75,7 @@ export default function GrammarBattle() {
     setChosen(null);
     setTier('easy');
     setError(null);
+    lastAnswersRef.current = null;
     resetStreak();
     try {
       const { roundId: rid, level: lvl, words } = await getGrammarBattleRound();
@@ -103,11 +105,15 @@ export default function GrammarBattle() {
 
   const finishGame = useCallback(
     async (finalAnswers) => {
+      lastAnswersRef.current = finalAnswers;
       setSubmitting(true);
       setGameOver(true);
+      setError(null);
       try {
         const res = await submitGameRound('grammar_battle', roundId, finalAnswers);
         setResult(res);
+      } catch (err) {
+        setError(err.message || String(err));
       } finally {
         setSubmitting(false);
       }
@@ -234,9 +240,17 @@ export default function GrammarBattle() {
   }
 
   if (error) {
+    const isSubmitError = !!lastAnswersRef.current;
     return (
       <div className="rounded-2xl bg-white p-10 text-center shadow-card">
-        <p className="font-display text-lg font-semibold text-rose-600">{t('loadError')}</p>
+        <p className="font-display text-lg font-semibold text-rose-600">{isSubmitError ? t('submitError') : t('loadError')}</p>
+        <button
+          onClick={() => (isSubmitError ? finishGame(lastAnswersRef.current) : startGame())}
+          disabled={submitting}
+          className="mt-4 rounded-full bg-brand-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-transform active:scale-95 disabled:opacity-50"
+        >
+          {t('retryButton')}
+        </button>
       </div>
     );
   }

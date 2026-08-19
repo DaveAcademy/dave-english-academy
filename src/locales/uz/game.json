@@ -28,6 +28,8 @@
   "loading": "Yuklanmoqda...",
   "noWords": "Hozircha o'yin uchun lug'at mavjud emas.",
   "loadError": "O'yinni hozir yuklab bo'lmadi. Birozdan so'ng qayta urinib ko'ring.",
+  "submitError": "Natijangizni saqlab bo'lmadi. Internetni tekshirib, qayta urinib ko'ring.",
+  "retryButton": "Qayta urinish",
   "inputPlaceholder": "So'zni kiriting...",
   "check": "Tekshirish",
   "hint": "Maslahat",

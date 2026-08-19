@@ -66,6 +66,7 @@ export default function SpeedChallenge() {
   const questionStart = useRef(0);
   const tickRef = useRef(null);
   const advanceRef = useRef(null);
+  const lastAnswersRef = useRef(null);
 
   const startRound = useCallback(async () => {
     setLoading(true);
@@ -74,6 +75,7 @@ export default function SpeedChallenge() {
     setIndex(0);
     setChosen(null);
     setError(null);
+    lastAnswersRef.current = null;
     try {
       const { roundId: rid, level: lvl, words } = await getSpeedChallengeRound();
       setRoundId(rid);
@@ -99,10 +101,14 @@ export default function SpeedChallenge() {
 
   const finishRound = useCallback(
     async (finalAnswers) => {
+      lastAnswersRef.current = finalAnswers;
       setSubmitting(true);
+      setError(null);
       try {
         const res = await submitGameRound('speed_challenge', roundId, finalAnswers);
         setResult(res);
+      } catch (err) {
+        setError(err.message || String(err));
       } finally {
         setSubmitting(false);
       }
@@ -206,9 +212,17 @@ export default function SpeedChallenge() {
   }
 
   if (error) {
+    const isSubmitError = !!lastAnswersRef.current;
     return (
       <div className="rounded-2xl bg-white p-10 text-center shadow-card">
-        <p className="font-display text-lg font-semibold text-rose-600">{t('loadError')}</p>
+        <p className="font-display text-lg font-semibold text-rose-600">{isSubmitError ? t('submitError') : t('loadError')}</p>
+        <button
+          onClick={() => (isSubmitError ? finishRound(lastAnswersRef.current) : startRound())}
+          disabled={submitting}
+          className="mt-4 rounded-full bg-brand-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-transform active:scale-95 disabled:opacity-50"
+        >
+          {t('retryButton')}
+        </button>
       </div>
     );
   }

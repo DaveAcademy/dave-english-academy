@@ -28,6 +28,8 @@
   "loading": "Loading...",
   "noWords": "No vocabulary available for a round right now.",
   "loadError": "Couldn't load this game right now. Please try again shortly.",
+  "submitError": "Couldn't save your result. Check your connection and try again.",
+  "retryButton": "Try Again",
   "inputPlaceholder": "Type the word...",
   "check": "Check",
   "hint": "Hint",
