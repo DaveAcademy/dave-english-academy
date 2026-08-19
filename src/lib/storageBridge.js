@@ -1259,6 +1259,12 @@ export async function getWordScrambleRound() {
   return splitRoundId(data);
 }
 
+export async function getHangmanRound() {
+  const { data, error } = await supabase.rpc('get_hangman_round');
+  if (error) throw error;
+  return splitRoundId(data);
+}
+
 export async function getVocabularyQuizRound() {
   const { data, error } = await supabase.rpc('get_vocabulary_quiz_round');
   if (error) throw error;

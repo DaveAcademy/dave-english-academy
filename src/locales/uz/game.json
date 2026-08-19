@@ -73,6 +73,8 @@
   "sentenceType_negative": "Inkor gap",
   "listeningChallengeTitle": "Tinglash o'yini",
   "listeningChallengeSubtitle": "Tinglang va to'g'ri ma'noni tanlang.",
+  "hangmanTitle": "Osilgan odam",
+  "hangmanSubtitle": "So'zni harflab toping.",
   "listenPrompt": "Bu so'z nimani anglatadi?",
   "replay": "Qayta tinglash",
   "ttsUnsupported": "Bu qurilmada audio qo'llab-quvvatlanmaydi.",

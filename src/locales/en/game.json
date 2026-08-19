@@ -73,6 +73,8 @@
   "sentenceType_negative": "Negative",
   "listeningChallengeTitle": "Listening Challenge",
   "listeningChallengeSubtitle": "Listen and choose the correct meaning.",
+  "hangmanTitle": "Hangman",
+  "hangmanSubtitle": "Guess the word one letter at a time.",
   "listenPrompt": "What does the word mean?",
   "replay": "Replay",
   "ttsUnsupported": "Audio isn't supported on this device.",

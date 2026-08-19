@@ -49,6 +49,7 @@ const SpeedChallenge = lazy(() => import('./pages/portal/SpeedChallenge'));
 const WordBuilder = lazy(() => import('./pages/portal/WordBuilder'));
 const SentenceScramble = lazy(() => import('./pages/portal/SentenceScramble'));
 const ListeningChallenge = lazy(() => import('./pages/portal/ListeningChallenge'));
+const Hangman = lazy(() => import('./pages/portal/Hangman'));
 const WordDetective = lazy(() => import('./pages/portal/WordDetective'));
 const GrammarBattle = lazy(() => import('./pages/portal/GrammarBattle'));
 const PictureQuiz = lazy(() => import('./pages/portal/PictureQuiz'));
@@ -150,6 +151,7 @@ function RoutedContent({ isStudent }) {
             <Route path="/word-builder" element={<WordBuilder />} />
             <Route path="/sentence-scramble" element={<SentenceScramble />} />
             <Route path="/listening-challenge" element={<ListeningChallenge />} />
+            <Route path="/hangman" element={<Hangman />} />
             <Route path="/word-detective" element={<WordDetective />} />
             <Route path="/grammar-battle" element={<GrammarBattle />} />
             <Route path="/picture-quiz" element={<PictureQuiz />} />

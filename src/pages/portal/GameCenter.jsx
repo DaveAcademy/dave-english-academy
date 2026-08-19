@@ -53,14 +53,22 @@ const GAME_CENTER_ITEMS = [
     gradient: 'bg-gradient-to-br from-violet-50 to-purple-100',
     iconBg: 'bg-violet-200',
   },
+  // listening_challenge deliberately removed from this list, 2026-08-19:
+  // relies on the phone's on-device text-to-speech, which fails silently
+  // (no error, no sound) on Android devices with no English TTS voice
+  // installed - not fixable client-side, confirmed after two rounds of
+  // JS fixes. Route/page/RPC/migrations are untouched, so it can come
+  // back instantly if replaced with real audio files later - just add
+  // its entry back here. Replaced with Hangman: text/tap only, can't
+  // hit the same device-dependency problem.
   {
-    key: 'listening_challenge',
-    icon: '🎧',
-    nameKey: 'listeningChallengeTitle',
-    descriptionKey: 'listeningChallengeSubtitle',
-    to: '/listening-challenge',
-    gradient: 'bg-gradient-to-br from-cyan-50 to-blue-100',
-    iconBg: 'bg-cyan-200',
+    key: 'hangman',
+    icon: '🪢',
+    nameKey: 'hangmanTitle',
+    descriptionKey: 'hangmanSubtitle',
+    to: '/hangman',
+    gradient: 'bg-gradient-to-br from-fuchsia-50 to-purple-100',
+    iconBg: 'bg-fuchsia-200',
   },
   {
     key: 'word_builder',
