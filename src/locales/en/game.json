@@ -73,6 +73,7 @@
   "listenPrompt": "What does the word mean?",
   "replay": "Replay",
   "ttsUnsupported": "Audio isn't supported on this device.",
+  "ttsNoVoice": "No sound? Your phone may need an English voice installed for text-to-speech.",
   "wordDetectiveTitle": "Word Detective",
   "wordDetectiveSubtitle": "Find the wrong word and fix it.",
   "detectivePrompt": "One word in this sentence is wrong. Tap it.",

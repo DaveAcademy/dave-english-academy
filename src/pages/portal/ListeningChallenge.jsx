@@ -25,13 +25,53 @@ import { getListeningChallengeRound, submitGameRound } from '../../lib/storageBr
 
 const OPTION_LETTERS = ['A', 'B', 'C', 'D'];
 
-function speak(text) {
+// Mobile TTS is flaky in two specific, well-documented ways this app was
+// hitting:
+// 1. Voices load asynchronously (voiceschanged) - speak() called before
+//    that fires can silently produce no audio at all on Android/iOS, even
+//    though it works instantly on desktop (voices are preloaded there).
+// 2. speak() called immediately after cancel() in the same tick is a known
+//    Chromium/WebView bug that drops the utterance silently - a 0ms
+//    setTimeout between them is the standard workaround.
+// Neither throws an error, so without this the failure is invisible.
+function pickEnglishVoice() {
+  const voices = window.speechSynthesis.getVoices();
+  return voices.find((v) => v.lang === 'en-US') || voices.find((v) => v.lang?.startsWith('en')) || null;
+}
+
+function speak(text, { onStart, onEnd, onError } = {}) {
   if (typeof window === 'undefined' || !window.speechSynthesis) return false;
-  window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = 'en-US';
-  utterance.rate = 0.9;
-  window.speechSynthesis.speak(utterance);
+  const doSpeak = () => {
+    window.speechSynthesis.cancel();
+    setTimeout(() => {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-US';
+      utterance.rate = 0.9;
+      const voice = pickEnglishVoice();
+      if (voice) utterance.voice = voice;
+      if (onStart) utterance.onstart = onStart;
+      if (onEnd) utterance.onend = onEnd;
+      if (onError) utterance.onerror = onError;
+      window.speechSynthesis.speak(utterance);
+    }, 0);
+  };
+  // getVoices() is synchronous but returns [] until the browser has loaded
+  // its voice list at least once - wait for that one time per page.
+  if (window.speechSynthesis.getVoices().length === 0) {
+    let fired = false;
+    const fireOnce = () => {
+      if (fired) return;
+      fired = true;
+      window.speechSynthesis.onvoiceschanged = null;
+      doSpeak();
+    };
+    window.speechSynthesis.onvoiceschanged = fireOnce;
+    // Some mobile WebViews never fire voiceschanged - don't leave the
+    // student stuck with permanent silence if it doesn't.
+    setTimeout(fireOnce, 600);
+  } else {
+    doSpeak();
+  }
   return true;
 }
 
@@ -47,6 +87,7 @@ export default function ListeningChallenge() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [ttsSupported, setTtsSupported] = useState(true);
+  const [ttsFailed, setTtsFailed] = useState(false);
   const { bestStreak, recordCorrect, recordIncorrect, reset: resetStreak } = useGameStreak();
   const hasPlayedRef = useRef(false);
 
@@ -86,14 +127,22 @@ export default function ListeningChallenge() {
   useEffect(() => {
     if (!current || chosen) return;
     hasPlayedRef.current = false;
-    const played = speak(current.english);
+    setTtsFailed(false);
+    const played = speak(current.english, {
+      onStart: () => setTtsFailed(false),
+      onError: () => setTtsFailed(true),
+    });
     if (played) hasPlayedRef.current = true;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index, round]);
 
   const handleReplay = () => {
     if (!current) return;
-    speak(current.english);
+    setTtsFailed(false);
+    speak(current.english, {
+      onStart: () => setTtsFailed(false),
+      onError: () => setTtsFailed(true),
+    });
   };
 
   // The round never exposes which option is correct (server-graded only),
@@ -192,6 +241,7 @@ export default function ListeningChallenge() {
           </button>
           <p className="mt-2 text-xs font-bold text-white/90">{t('replay')}</p>
           {!ttsSupported && <p className="mt-1 text-xs font-semibold text-white">{t('ttsUnsupported')}</p>}
+          {ttsSupported && ttsFailed && <p className="mt-1 text-xs font-semibold text-white">{t('ttsNoVoice')}</p>}
         </div>
 
         <p className="mt-4 text-center text-sm font-semibold text-white/90">{t('listenPrompt')}</p>
