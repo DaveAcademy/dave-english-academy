@@ -1354,6 +1354,24 @@ export async function getGameLevelLeaderboard() {
   return data;
 }
 
+// Lifetime Game Points leaderboard, per game (migration 0177) - unbounded,
+// replaces getGameBestRecords()'s per-round score (capped at round_size * 10,
+// which was ceilinging many students at the same tied score) as the primary
+// per-game ranking.
+export async function getGamePointsLeaderboard() {
+  const { data, error } = await supabase.rpc('get_game_points_leaderboard');
+  if (error) throw error;
+  return data;
+}
+
+// Combined Game Points leaderboard across every game (migration 0177) -
+// one overall ranking alongside each game's own board.
+export async function getGameOverallPointsLeaderboard() {
+  const { data, error } = await supabase.rpc('get_game_points_overall_leaderboard');
+  if (error) throw error;
+  return data;
+}
+
 // A student's own recent rounds for a game (best score / history) -
 // game_sessions RLS already scopes this to is_own_student, no RPC needed.
 export async function listMyGameSessions(studentId, gameType) {

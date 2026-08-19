@@ -2,18 +2,23 @@
 // Practice / Game Center: the student's entry point into every game, as
 // attractive cards rather than dropping them straight into one game.
 // Adding a game means adding one entry to GAME_CENTER_ITEMS - the card,
-// route, and best-score/record lookup are all shared (GameCard.jsx,
-// get_game_best_records RPC via storageBridge.js). Best scores and
-// academy-wide records come from one batched call (0147/0174) rather than
-// one listMyGameSessions query per game (the old N+1 pattern this replaced).
+// route, and points/record lookup are all shared (GameCard.jsx,
+// get_game_points_leaderboard RPC via storageBridge.js). Per-game points and
+// academy-wide records come from one batched call (0177) rather than one
+// listMyGameSessions query per game (the old N+1 pattern this replaced).
+// get_game_points_overall_leaderboard (0177) adds one combined ranking
+// across every game, shown above the per-game tiles.
 
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Gamepad2 } from 'lucide-react';
 import { useAcademy } from '../../lib/AcademyDataContext';
 import GameCard from '../../components/GameCard';
-import { getGameBestRecords, getGameLevelLeaderboard, listMyGameLevels } from '../../lib/storageBridge';
+import GameLeaderboardBlock from '../../components/GameLeaderboardBlock';
+import { getGamePointsLeaderboard, getGameLevelLeaderboard, getGameOverallPointsLeaderboard, listMyGameLevels } from '../../lib/storageBridge';
 import { formatStudentDisplayName } from '../../lib/gameRecordFormat';
+
+const OVERALL_TOP_N = 10;
 
 // Ordered easiest to hardest (Dave's request, 2026-08-19). Family V
 // (vocabulary, docs/GAMING-SYSTEM.md) is untimed recognition -> untimed
@@ -121,23 +126,24 @@ export default function GameCenter() {
   const [records, setRecords] = useState({});
   const [levels, setLevels] = useState({});
   const [levelLeaders, setLevelLeaders] = useState({});
+  const [overall, setOverall] = useState(null);
 
   useEffect(() => {
     if (!me) return;
     let cancelled = false;
-    getGameBestRecords().then((rows) => {
+    getGamePointsLeaderboard().then((rows) => {
       if (cancelled) return;
       const scores = {};
       const byGame = {};
       for (const r of rows) {
-        if (r.student_id === me.id) scores[r.game_type] = Number(r.best_score);
+        if (r.student_id === me.id) scores[r.game_type] = Number(r.total_points);
         if (r.rank === 1) {
           // On a tie, prefer showing "you hold the record" if the caller
           // is any of the tied #1s, rather than always the first row.
           if (!byGame[r.game_type] || r.student_id === me.id) {
             byGame[r.game_type] = {
               name: formatStudentDisplayName(r.real_name, r.english_name),
-              score: Number(r.best_score),
+              score: Number(r.total_points),
               isMe: r.student_id === me.id,
             };
           }
@@ -148,6 +154,34 @@ export default function GameCenter() {
     }).catch(() => {
       // Leaderboard is supplementary here - a failed fetch should leave
       // the game tiles playable with no score chips, not break the page.
+    });
+    getGameOverallPointsLeaderboard().then((rows) => {
+      if (cancelled) return;
+      const overallRows = rows.map((r) => ({
+        studentId: r.student_id,
+        rank: r.rank,
+        name: formatStudentDisplayName(r.real_name, r.english_name),
+        score: Number(r.total_points),
+        isMe: r.student_id === me.id,
+      }));
+      const myIndex = overallRows.findIndex((r) => r.isMe);
+      const myRow = myIndex >= 0 ? overallRows[myIndex] : null;
+      let nextTarget = null;
+      if (myRow) {
+        let i = myIndex - 1;
+        while (i >= 0 && overallRows[i].score === myRow.score) i--;
+        if (i >= 0) nextTarget = overallRows[i];
+      }
+      setOverall({
+        top: overallRows.slice(0, OVERALL_TOP_N),
+        rest: overallRows.slice(OVERALL_TOP_N),
+        myBest: myRow ? myRow.score : null,
+        myRank: myRow ? myRow.rank : null,
+        isRecordHolder: myRow ? myRow.rank === 1 : false,
+        nextTarget: nextTarget ? { name: nextTarget.name, score: nextTarget.score, rank: nextTarget.rank, gap: nextTarget.score - myRow.score } : null,
+      });
+    }).catch(() => {
+      // Supplementary, same as the per-game leaderboard.
     });
     listMyGameLevels(me.id).then((rows) => {
       if (cancelled) return;
@@ -190,6 +224,13 @@ export default function GameCenter() {
         <h1 className="mt-3 font-display text-2xl font-bold sm:text-3xl">{t('gameCenterTitle')}</h1>
         <p className="mt-1.5 max-w-sm text-sm text-white/80">{t('gameCenterSubtitle')}</p>
       </header>
+
+      {overall && overall.top.length > 0 && (
+        <div className="mb-6">
+          <h2 className="mb-2 font-display text-lg font-bold text-ink">{t('overallRankingTitle')}</h2>
+          <GameLeaderboardBlock record={overall} isNewBest={false} />
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
         {GAME_CENTER_ITEMS.map((g) => (
