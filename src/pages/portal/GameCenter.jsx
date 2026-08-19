@@ -15,16 +15,12 @@ import GameCard from '../../components/GameCard';
 import { getGameBestRecords, getGameLevelLeaderboard, listMyGameLevels } from '../../lib/storageBridge';
 import { formatStudentDisplayName } from '../../lib/gameRecordFormat';
 
+// Ordered easiest to hardest (Dave's request, 2026-08-19). Family V
+// (vocabulary, docs/GAMING-SYSTEM.md) is untimed recognition -> untimed
+// production, then the one timed vocabulary game; Family C (grammar,
+// same doc) is inherently harder content, ending in Grammar Battle
+// (timed + lives + escalating tiers - the hardest game in the set).
 const GAME_CENTER_ITEMS = [
-  {
-    key: 'word_scramble',
-    icon: '🔤',
-    nameKey: 'wordScrambleTitle',
-    descriptionKey: 'wordScrambleSubtitle',
-    to: '/word-scramble',
-    gradient: 'bg-gradient-to-br from-amber-50 to-orange-100',
-    iconBg: 'bg-amber-200',
-  },
   {
     key: 'vocabulary_quiz',
     icon: '🧠',
@@ -44,13 +40,13 @@ const GAME_CENTER_ITEMS = [
     iconBg: 'bg-violet-200',
   },
   {
-    key: 'speed_challenge',
-    icon: '⚡',
-    nameKey: 'speedChallengeTitle',
-    descriptionKey: 'speedChallengeSubtitle',
-    to: '/speed-challenge',
-    gradient: 'bg-gradient-to-br from-rose-50 to-orange-100',
-    iconBg: 'bg-rose-200',
+    key: 'listening_challenge',
+    icon: '🎧',
+    nameKey: 'listeningChallengeTitle',
+    descriptionKey: 'listeningChallengeSubtitle',
+    to: '/listening-challenge',
+    gradient: 'bg-gradient-to-br from-cyan-50 to-blue-100',
+    iconBg: 'bg-cyan-200',
   },
   {
     key: 'word_builder',
@@ -62,6 +58,24 @@ const GAME_CENTER_ITEMS = [
     iconBg: 'bg-teal-200',
   },
   {
+    key: 'word_scramble',
+    icon: '🔤',
+    nameKey: 'wordScrambleTitle',
+    descriptionKey: 'wordScrambleSubtitle',
+    to: '/word-scramble',
+    gradient: 'bg-gradient-to-br from-amber-50 to-orange-100',
+    iconBg: 'bg-amber-200',
+  },
+  {
+    key: 'speed_challenge',
+    icon: '⚡',
+    nameKey: 'speedChallengeTitle',
+    descriptionKey: 'speedChallengeSubtitle',
+    to: '/speed-challenge',
+    gradient: 'bg-gradient-to-br from-rose-50 to-orange-100',
+    iconBg: 'bg-rose-200',
+  },
+  {
     key: 'sentence_scramble',
     icon: '🧩',
     nameKey: 'sentenceScrambleTitle',
@@ -69,15 +83,6 @@ const GAME_CENTER_ITEMS = [
     to: '/sentence-scramble',
     gradient: 'bg-gradient-to-br from-indigo-50 to-violet-100',
     iconBg: 'bg-indigo-200',
-  },
-  {
-    key: 'listening_challenge',
-    icon: '🎧',
-    nameKey: 'listeningChallengeTitle',
-    descriptionKey: 'listeningChallengeSubtitle',
-    to: '/listening-challenge',
-    gradient: 'bg-gradient-to-br from-cyan-50 to-blue-100',
-    iconBg: 'bg-cyan-200',
   },
   {
     key: 'word_detective',
