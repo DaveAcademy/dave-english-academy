@@ -591,12 +591,12 @@ export default function Rankings() {
         <h1 className="font-display text-2xl font-bold text-ink">Rankings</h1>
         <p className="mt-1 text-sm text-ink/50">
           {isAdmin
-            ? 'Use Add Points below to record points for a student.'
+            ? 'Ranked by points.'
             : isTeacher
               ? teacherLevels === null
                 ? 'Loading your assigned levels...'
                 : teacherLevels.length > 0
-                  ? `You can add points for your assigned level(s): ${teacherLevels.join(', ')}.`
+                  ? `Showing your assigned level(s): ${teacherLevels.join(', ')}.`
                   : "You haven't been assigned to any levels yet - ask your administrator."
               : 'Ranked by points.'}
         </p>
@@ -610,232 +610,7 @@ export default function Rankings() {
         </div>
       )}
 
-      {canAwardAtAll && awardableLevels.length > 0 && (
-        <section className="mb-4 rounded-xl bg-white p-4 shadow-card">
-          <div className="mb-1 flex items-center justify-between gap-2">
-            <h2 className="font-display text-sm font-bold text-ink">Class Score</h2>
-            <Link to="/rankings/manual-entry" className="text-xs font-medium text-brand-600 hover:text-brand-700">
-              Enter a past date &rarr;
-            </Link>
-          </div>
-          <p className="mb-3 text-xs text-ink/50">
-            One final score per student for this class - your complete evaluation of the lesson (homework, prep,
-            vocabulary, participation, games, everything). No separate categories. Select the level (and group, if
-            it has more than one), enter each student's score, and submit - today's class session is found or
-            created automatically. Need to backfill a missed or past class? Use{' '}
-            <Link to="/rankings/manual-entry" className="font-medium text-brand-600 hover:underline">
-              Manual Class Score Entry
-            </Link>{' '}
-            instead.
-          </p>
-          <div className="mb-3 flex flex-wrap items-end gap-2">
-            <div className="flex gap-1">
-              {awardableLevels.map((lvl) => (
-                <button
-                  key={lvl}
-                  type="button"
-                  onClick={() => setSessionLevel(lvl)}
-                  className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
-                    sessionLevel === lvl ? 'bg-brand-600 text-white' : 'bg-ink/5 text-ink/60 hover:text-ink'
-                  }`}
-                >
-                  Level {lvl}
-                </button>
-              ))}
-            </div>
-            {sessionClassGroups && sessionClassGroups.length > 1 && (
-              <select value={sessionGroupId} onChange={(e) => setSessionGroupId(e.target.value)} className="input w-auto text-xs">
-                <option value="">Select group...</option>
-                {sessionClassGroups.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    {g.name}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
-          {classScoreStudents.length === 0 && (
-            <p className="rounded-lg bg-ink/5 p-3 text-xs text-ink/60">No students found for this level/group.</p>
-          )}
-          {classScoreStudents.length > 0 && (
-            <>
-              <p className="mb-2 text-xs font-medium text-active">
-                Level {sessionLevel}
-                {openSessionGroupName ? ` (${openSessionGroupName})` : ''} - {sessionDate}.
-                {classScoreDoneStudents.length > 0 &&
-                  ` ${classScoreDoneStudents.length} of ${classScoreStudents.length} already recorded.`}
-              </p>
-              {classScorePendingStudents.length > 0 && (
-                <div className="grid gap-2 sm:grid-cols-2">
-                  {classScorePendingStudents.map((s) => (
-                    <div key={s.id} className="flex items-center justify-between gap-2 rounded-lg bg-ink/5 px-3 py-2">
-                      <span className="text-sm text-ink">{s.real_name}</span>
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="1"
-                        value={classScoreValues[s.id] ?? ''}
-                        onChange={(e) => setClassScoreValue(s.id, e.target.value)}
-                        placeholder="Score"
-                        className="input w-20 text-right text-sm"
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
-              {classScoreDoneStudents.length > 0 && (
-                <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                  {classScoreDoneStudents.map((s) => (
-                    <div key={s.id} className="flex items-center justify-between gap-2 rounded-lg bg-active/10 px-3 py-2">
-                      <span className="text-sm text-ink">{s.real_name}</span>
-                      <span className="text-sm font-semibold text-active">{recordedClassScores[s.id]} ✓</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-              {classScorePendingStudents.length > 0 && (
-                <button
-                  type="button"
-                  onClick={submitClassScores}
-                  disabled={classScorePending || classScorePendingCount === 0}
-                  className="mt-3 w-full rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
-                >
-                  {classScorePending
-                    ? 'Saving...'
-                    : `Record Class Score${classScorePendingCount === 1 ? '' : 's'}${classScorePendingCount > 0 ? ` (${classScorePendingCount})` : ''}`}
-                </button>
-              )}
-              {classScorePendingStudents.length === 0 && (
-                <p className="mt-3 text-xs font-medium text-active">All students in this session have a Class Score recorded.</p>
-              )}
-            </>
-          )}
-          {classScoreMessage && <p className="mt-2 text-xs text-ink/60">{classScoreMessage}</p>}
-        </section>
-      )}
-
-      {canAwardAtAll && awardableStudents.length > 0 && (
-        <section className="mb-4 rounded-xl bg-white shadow-card">
-          <button
-            type="button"
-            onClick={() => setDetailedOpen((o) => !o)}
-            className="flex w-full items-center justify-between gap-2 p-4 text-left"
-          >
-            <span className="flex items-center gap-2">
-              <Tag size={16} className="text-brand-500" />
-              <h2 className="font-display text-sm font-bold text-ink">Add Points</h2>
-            </span>
-            {detailedOpen ? <ChevronUp size={16} className="text-ink/40" /> : <ChevronDown size={16} className="text-ink/40" />}
-          </button>
-          {detailedOpen && (
-            <div className="border-t border-ink/5 p-4 pt-3">
-              <p className="mb-3 text-xs text-ink/50">
-                Pick a student, type the points (use a minus sign to deduct - the badge confirms ADD or DEDUCT), and write why. Reason is required.
-              </p>
-              <form onSubmit={requestAward} className="grid gap-2 sm:grid-cols-3">
-                <select
-                  value={awardStudentId}
-                  onChange={(e) => setAwardStudentId(e.target.value)}
-                  className="input sm:col-span-1"
-                  required
-                >
-                  <option value="">Select student...</option>
-                  {awardableStudents.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.real_name}
-                    </option>
-                  ))}
-                </select>
-                <div className="relative sm:col-span-1">
-                  <input
-                    type="number"
-                    step="1"
-                    value={awardPointsValue}
-                    onChange={(e) => setAwardPointsValue(e.target.value)}
-                    placeholder="Points (e.g. 5 or -2)"
-                    className="input w-full pr-20"
-                    required
-                  />
-                  {awardPointsValue !== '' && Number.isFinite(Number(awardPointsValue)) && Number(awardPointsValue) !== 0 && (
-                    <span
-                      className={`pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 rounded-full px-2 py-0.5 text-xs font-bold ${
-                        Number(awardPointsValue) > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                      }`}
-                    >
-                      {Number(awardPointsValue) > 0 ? 'ADD' : 'DEDUCT'}
-                    </span>
-                  )}
-                </div>
-                <input
-                  type="text"
-                  value={awardReason}
-                  onChange={(e) => setAwardReason(e.target.value)}
-                  placeholder="Reason (required)"
-                  className="input sm:col-span-1"
-                  required
-                />
-                <button
-                  type="submit"
-                  disabled={awardPending}
-                  className="rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50 sm:col-span-3"
-                >
-                  {awardPending ? 'Saving...' : 'Save'}
-                </button>
-              </form>
-              {awardConfirming && (
-                <div className="mt-3 rounded-lg border border-ink/10 bg-ink/[0.02] p-3">
-                  <p className="mb-2 text-sm font-semibold text-ink">Confirm this adjustment</p>
-                  <dl className="grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 text-sm">
-                    <dt className="text-ink/50">Student</dt>
-                    <dd className="font-medium text-ink">{awardConfirming.student.real_name}</dd>
-                    <dt className="text-ink/50">Direction</dt>
-                    <dd>
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-xs font-bold ${
-                          awardConfirming.points > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                        }`}
-                      >
-                        {awardConfirming.points > 0 ? 'ADD' : 'DEDUCT'}
-                      </span>
-                    </dd>
-                    <dt className="text-ink/50">Points</dt>
-                    <dd className="font-medium text-ink">
-                      {awardConfirming.points > 0 ? '+' : ''}
-                      {awardConfirming.points}
-                    </dd>
-                    <dt className="text-ink/50">Reason</dt>
-                    <dd className="text-ink">{awardConfirming.reason}</dd>
-                  </dl>
-                  <div className="mt-3 flex gap-2">
-                    <button
-                      type="button"
-                      onClick={confirmAward}
-                      disabled={awardPending}
-                      className={`flex-1 rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 ${
-                        awardConfirming.points > 0 ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
-                      }`}
-                    >
-                      {awardPending ? 'Saving...' : `Confirm ${awardConfirming.points > 0 ? 'ADD' : 'DEDUCT'}`}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={cancelAwardConfirm}
-                      disabled={awardPending}
-                      className="rounded-lg border border-ink/15 px-4 py-2 text-sm font-semibold text-ink/60 hover:bg-ink/5 disabled:opacity-50"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              )}
-              {awardMessage && <p className="mt-2 text-sm text-ink/60">{awardMessage}</p>}
-            </div>
-          )}
-        </section>
-      )}
-
-      <section className="rounded-xl bg-white p-4 shadow-card">
+      <section className="mb-4 rounded-xl bg-white p-4 shadow-card">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <h2 className="font-display text-sm font-bold text-ink">Level Leaderboard</h2>
           <div className="flex flex-wrap gap-1.5">
@@ -1032,6 +807,235 @@ export default function Rankings() {
           </div>
         )}
       </section>
+
+      {canAwardAtAll && awardableLevels.length > 0 && (
+        <section className="mb-4 rounded-xl bg-white p-4 shadow-card">
+          <div className="mb-1 flex items-center justify-between gap-2">
+            <h2 className="font-display text-sm font-bold text-ink">Class Score</h2>
+            <Link to="/rankings/manual-entry" className="text-xs font-medium text-brand-600 hover:text-brand-700">
+              Enter a past date &rarr;
+            </Link>
+          </div>
+          <p className="mb-3 text-xs text-ink/50">
+            One final score per student for this class - your complete evaluation of the lesson (homework, prep,
+            vocabulary, participation, games, everything). No separate categories. Select the level (and group, if
+            it has more than one), enter each student's score, and submit - today's class session is found or
+            created automatically. Need to backfill a missed or past class? Use{' '}
+            <Link to="/rankings/manual-entry" className="font-medium text-brand-600 hover:underline">
+              Manual Class Score Entry
+            </Link>{' '}
+            instead.
+          </p>
+          <div className="mb-3 flex flex-wrap items-end gap-2">
+            <div className="flex gap-1">
+              {awardableLevels.map((lvl) => (
+                <button
+                  key={lvl}
+                  type="button"
+                  onClick={() => setSessionLevel(lvl)}
+                  className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+                    sessionLevel === lvl ? 'bg-brand-600 text-white' : 'bg-ink/5 text-ink/60 hover:text-ink'
+                  }`}
+                >
+                  Level {lvl}
+                </button>
+              ))}
+            </div>
+            {sessionClassGroups && sessionClassGroups.length > 1 && (
+              <select value={sessionGroupId} onChange={(e) => setSessionGroupId(e.target.value)} className="input w-auto text-xs">
+                <option value="">Select group...</option>
+                {sessionClassGroups.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+          {classScoreStudents.length === 0 && (
+            <p className="rounded-lg bg-ink/5 p-3 text-xs text-ink/60">No students found for this level/group.</p>
+          )}
+          {classScoreStudents.length > 0 && (
+            <>
+              <p className="mb-2 text-xs font-medium text-active">
+                Level {sessionLevel}
+                {openSessionGroupName ? ` (${openSessionGroupName})` : ''} - {sessionDate}.
+                {classScoreDoneStudents.length > 0 &&
+                  ` ${classScoreDoneStudents.length} of ${classScoreStudents.length} already recorded.`}
+              </p>
+              {classScorePendingStudents.length > 0 && (
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {classScorePendingStudents.map((s) => (
+                    <div key={s.id} className="flex items-center justify-between gap-2 rounded-lg bg-ink/5 px-3 py-2">
+                      <span className="text-sm text-ink">{s.real_name}</span>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="1"
+                        value={classScoreValues[s.id] ?? ''}
+                        onChange={(e) => setClassScoreValue(s.id, e.target.value)}
+                        placeholder="Score"
+                        className="input w-20 text-right text-sm"
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+              {classScoreDoneStudents.length > 0 && (
+                <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                  {classScoreDoneStudents.map((s) => (
+                    <div key={s.id} className="flex items-center justify-between gap-2 rounded-lg bg-active/10 px-3 py-2">
+                      <span className="text-sm text-ink">{s.real_name}</span>
+                      <span className="text-sm font-semibold text-active">{recordedClassScores[s.id]} ✓</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {classScorePendingStudents.length > 0 && (
+                <button
+                  type="button"
+                  onClick={submitClassScores}
+                  disabled={classScorePending || classScorePendingCount === 0}
+                  className="mt-3 w-full rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
+                >
+                  {classScorePending
+                    ? 'Saving...'
+                    : `Record Class Score${classScorePendingCount === 1 ? '' : 's'}${classScorePendingCount > 0 ? ` (${classScorePendingCount})` : ''}`}
+                </button>
+              )}
+              {classScorePendingStudents.length === 0 && (
+                <p className="mt-3 text-xs font-medium text-active">All students in this session have a Class Score recorded.</p>
+              )}
+            </>
+          )}
+          {classScoreMessage && <p className="mt-2 text-xs text-ink/60">{classScoreMessage}</p>}
+        </section>
+      )}
+
+      {/* Add Points hidden 2026-08-19 at Dave's request - only affects All-Time,
+          not Week/Month, and he grades by class now via Class Score. Logic/state
+          below is untouched; flip this back to `canAwardAtAll && awardableStudents.length > 0`
+          to restore. */}
+      {false && canAwardAtAll && awardableStudents.length > 0 && (
+        <section className="mb-4 rounded-xl bg-white shadow-card">
+          <button
+            type="button"
+            onClick={() => setDetailedOpen((o) => !o)}
+            className="flex w-full items-center justify-between gap-2 p-4 text-left"
+          >
+            <span className="flex items-center gap-2">
+              <Tag size={16} className="text-brand-500" />
+              <h2 className="font-display text-sm font-bold text-ink">Add Points</h2>
+            </span>
+            {detailedOpen ? <ChevronUp size={16} className="text-ink/40" /> : <ChevronDown size={16} className="text-ink/40" />}
+          </button>
+          {detailedOpen && (
+            <div className="border-t border-ink/5 p-4 pt-3">
+              <p className="mb-3 text-xs text-ink/50">
+                Pick a student, type the points (use a minus sign to deduct - the badge confirms ADD or DEDUCT), and write why. Reason is required.
+              </p>
+              <form onSubmit={requestAward} className="grid gap-2 sm:grid-cols-3">
+                <select
+                  value={awardStudentId}
+                  onChange={(e) => setAwardStudentId(e.target.value)}
+                  className="input sm:col-span-1"
+                  required
+                >
+                  <option value="">Select student...</option>
+                  {awardableStudents.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.real_name}
+                    </option>
+                  ))}
+                </select>
+                <div className="relative sm:col-span-1">
+                  <input
+                    type="number"
+                    step="1"
+                    value={awardPointsValue}
+                    onChange={(e) => setAwardPointsValue(e.target.value)}
+                    placeholder="Points (e.g. 5 or -2)"
+                    className="input w-full pr-20"
+                    required
+                  />
+                  {awardPointsValue !== '' && Number.isFinite(Number(awardPointsValue)) && Number(awardPointsValue) !== 0 && (
+                    <span
+                      className={`pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 rounded-full px-2 py-0.5 text-xs font-bold ${
+                        Number(awardPointsValue) > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                      }`}
+                    >
+                      {Number(awardPointsValue) > 0 ? 'ADD' : 'DEDUCT'}
+                    </span>
+                  )}
+                </div>
+                <input
+                  type="text"
+                  value={awardReason}
+                  onChange={(e) => setAwardReason(e.target.value)}
+                  placeholder="Reason (required)"
+                  className="input sm:col-span-1"
+                  required
+                />
+                <button
+                  type="submit"
+                  disabled={awardPending}
+                  className="rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50 sm:col-span-3"
+                >
+                  {awardPending ? 'Saving...' : 'Save'}
+                </button>
+              </form>
+              {awardConfirming && (
+                <div className="mt-3 rounded-lg border border-ink/10 bg-ink/[0.02] p-3">
+                  <p className="mb-2 text-sm font-semibold text-ink">Confirm this adjustment</p>
+                  <dl className="grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 text-sm">
+                    <dt className="text-ink/50">Student</dt>
+                    <dd className="font-medium text-ink">{awardConfirming.student.real_name}</dd>
+                    <dt className="text-ink/50">Direction</dt>
+                    <dd>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-xs font-bold ${
+                          awardConfirming.points > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                        }`}
+                      >
+                        {awardConfirming.points > 0 ? 'ADD' : 'DEDUCT'}
+                      </span>
+                    </dd>
+                    <dt className="text-ink/50">Points</dt>
+                    <dd className="font-medium text-ink">
+                      {awardConfirming.points > 0 ? '+' : ''}
+                      {awardConfirming.points}
+                    </dd>
+                    <dt className="text-ink/50">Reason</dt>
+                    <dd className="text-ink">{awardConfirming.reason}</dd>
+                  </dl>
+                  <div className="mt-3 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={confirmAward}
+                      disabled={awardPending}
+                      className={`flex-1 rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 ${
+                        awardConfirming.points > 0 ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
+                      }`}
+                    >
+                      {awardPending ? 'Saving...' : `Confirm ${awardConfirming.points > 0 ? 'ADD' : 'DEDUCT'}`}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={cancelAwardConfirm}
+                      disabled={awardPending}
+                      className="rounded-lg border border-ink/15 px-4 py-2 text-sm font-semibold text-ink/60 hover:bg-ink/5 disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+              {awardMessage && <p className="mt-2 text-sm text-ink/60">{awardMessage}</p>}
+            </div>
+          )}
+        </section>
+      )}
     </div>
   );
 }
