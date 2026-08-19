@@ -51,6 +51,7 @@ const SentenceScramble = lazy(() => import('./pages/portal/SentenceScramble'));
 const ListeningChallenge = lazy(() => import('./pages/portal/ListeningChallenge'));
 const WordDetective = lazy(() => import('./pages/portal/WordDetective'));
 const GrammarBattle = lazy(() => import('./pages/portal/GrammarBattle'));
+const PictureQuiz = lazy(() => import('./pages/portal/PictureQuiz'));
 const GameCenter = lazy(() => import('./pages/portal/GameCenter'));
 const Install = lazy(() => import('./pages/Install'));
 
@@ -151,6 +152,7 @@ function RoutedContent({ isStudent }) {
             <Route path="/listening-challenge" element={<ListeningChallenge />} />
             <Route path="/word-detective" element={<WordDetective />} />
             <Route path="/grammar-battle" element={<GrammarBattle />} />
+            <Route path="/picture-quiz" element={<PictureQuiz />} />
             <Route path="/my-certificates" element={<MyCertificates />} />
             <Route path="/my-ranking" element={<MyRanking />} />
             <Route path="/chat" element={<Chat />} />

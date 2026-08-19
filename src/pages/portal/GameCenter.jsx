@@ -22,6 +22,15 @@ import { formatStudentDisplayName } from '../../lib/gameRecordFormat';
 // (timed + lives + escalating tiers - the hardest game in the set).
 const GAME_CENTER_ITEMS = [
   {
+    key: 'picture_quiz',
+    icon: '🖼️',
+    nameKey: 'pictureQuizTitle',
+    descriptionKey: 'pictureQuizSubtitle',
+    to: '/picture-quiz',
+    gradient: 'bg-gradient-to-br from-lime-50 to-green-100',
+    iconBg: 'bg-lime-200',
+  },
+  {
     key: 'vocabulary_quiz',
     icon: '🧠',
     nameKey: 'vocabularyQuizTitle',

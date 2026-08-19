@@ -1301,6 +1301,12 @@ export async function getWordDetectiveRound() {
   return splitRoundId(data);
 }
 
+export async function getPictureQuizRound() {
+  const { data, error } = await supabase.rpc('get_picture_quiz_round');
+  if (error) throw error;
+  return splitRoundId(data);
+}
+
 export async function getGrammarBattleRound() {
   const { data, error } = await supabase.rpc('get_grammar_battle_round');
   if (error) throw error;
