@@ -26,6 +26,7 @@
 // an assumed Tue/Thu/Sat schedule that turned out not to hold.
 
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { Tag, ChevronDown, ChevronUp, ArrowUp, ArrowDown } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { useAuth } from '../lib/AuthContext';
@@ -283,8 +284,11 @@ export default function Rankings() {
     listClassScores(openSession.id)
       .then((rows) => {
         if (cancelled) return;
+        // Sum, not overwrite: a corrected score (see Manual Class Score
+        // Entry, migration 0172) is a second class_score row for the same
+        // session - the net total is what "already recorded" must show.
         const map = {};
-        for (const row of rows || []) map[row.student_id] = row.points;
+        for (const row of rows || []) map[row.student_id] = (map[row.student_id] ?? 0) + Number(row.points);
         setRecordedClassScores(map);
       })
       .catch(() => {
@@ -608,12 +612,21 @@ export default function Rankings() {
 
       {canAwardAtAll && awardableLevels.length > 0 && (
         <section className="mb-4 rounded-xl bg-white p-4 shadow-card">
-          <h2 className="mb-1 font-display text-sm font-bold text-ink">Class Score</h2>
+          <div className="mb-1 flex items-center justify-between gap-2">
+            <h2 className="font-display text-sm font-bold text-ink">Class Score</h2>
+            <Link to="/rankings/manual-entry" className="text-xs font-medium text-brand-600 hover:text-brand-700">
+              Enter a past date &rarr;
+            </Link>
+          </div>
           <p className="mb-3 text-xs text-ink/50">
             One final score per student for this class - your complete evaluation of the lesson (homework, prep,
             vocabulary, participation, games, everything). No separate categories. Select the level (and group, if
             it has more than one), enter each student's score, and submit - today's class session is found or
-            created automatically.
+            created automatically. Need to backfill a missed or past class? Use{' '}
+            <Link to="/rankings/manual-entry" className="font-medium text-brand-600 hover:underline">
+              Manual Class Score Entry
+            </Link>{' '}
+            instead.
           </p>
           <div className="mb-3 flex flex-wrap items-end gap-2">
             <div className="flex gap-1">

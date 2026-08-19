@@ -124,16 +124,31 @@ export async function awardPoints({
 export async function bulkAwardPoints(entries) {
   if (!entries.length) return;
   const { error } = await supabase.from('point_transactions').insert(
-    entries.map(({ studentId, level, categoryId, categoryKey, points, reason, awardedBy, classSessionId }) => ({
-      student_id: studentId,
-      level,
-      category_id: categoryId ?? null,
-      category_key: categoryKey,
-      points,
-      reason,
-      awarded_by: awardedBy,
-      class_session_id: classSessionId ?? null,
-    }))
+    entries.map(
+      ({
+        studentId,
+        level,
+        categoryId,
+        categoryKey,
+        points,
+        reason,
+        awardedBy,
+        classSessionId,
+        isReversal = false,
+        reversedTransactionId = null,
+      }) => ({
+        student_id: studentId,
+        level,
+        category_id: categoryId ?? null,
+        category_key: categoryKey,
+        points,
+        reason,
+        awarded_by: awardedBy,
+        class_session_id: classSessionId ?? null,
+        is_reversal: isReversal,
+        reversed_transaction_id: reversedTransactionId,
+      })
+    )
   );
   if (error) throw error;
 }
@@ -1019,12 +1034,49 @@ export async function getMonthlyClassLeaderboard(classGroupId, monthStart = null
 // inputs when a teacher reopens a session, without a new RPC or relying
 // on the DB unique constraint (migration 0164/0166) to surface as a 23505
 // after the fact.
+// id/is_reversal/reversed_transaction_id added alongside student_id/points
+// (additive, existing callers that only read student_id/points are
+// unaffected) so the Manual Class Score Entry correction flow can compute
+// each student's net score (a correction is a second row, not an update -
+// see migration 0172) and reference the row it corrects.
 export async function listClassScores(classSessionId) {
   const { data, error } = await supabase
     .from('point_transactions')
-    .select('student_id, points')
+    .select('id, student_id, points, is_reversal, reversed_transaction_id')
     .eq('class_session_id', classSessionId)
+    .eq('category_key', 'class_score')
+    .order('id');
+  if (error) throw error;
+  return data;
+}
+
+// Bulk variant of listClassScores for the monthly schedule view - one
+// query for every session in the visible month instead of one per
+// session per group. Same table/filter, just parameterized over multiple
+// session ids.
+export async function listClassScoresForSessions(classSessionIds) {
+  if (!classSessionIds.length) return [];
+  const { data, error } = await supabase
+    .from('point_transactions')
+    .select('student_id, class_session_id, points, is_reversal')
+    .in('class_session_id', classSessionIds)
     .eq('category_key', 'class_score');
+  if (error) throw error;
+  return data;
+}
+
+// Every class_session for a set of groups within a date range - powers
+// the monthly schedule view's per-date status without one getClassSession()
+// call per date per group. Same class_session table/RLS as getClassSession()
+// above, just a range query instead of a single (group, date) lookup.
+export async function listClassSessionsInRange(classGroupIds, startDate, endDate) {
+  if (!classGroupIds.length) return [];
+  const { data, error } = await supabase
+    .from('class_session')
+    .select('id, class_group_id, session_date')
+    .in('class_group_id', classGroupIds)
+    .gte('session_date', startDate)
+    .lte('session_date', endDate);
   if (error) throw error;
   return data;
 }

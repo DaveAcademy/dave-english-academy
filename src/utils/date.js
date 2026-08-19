@@ -27,6 +27,44 @@ export function addDaysISO(iso, days) {
   return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
 }
 
+// The academy's fixed Tuesday/Thursday/Saturday class-day schedule for a
+// given month, grouped by calendar week (Mon-Sun, keyed by that week's
+// Monday) - pure calendar math via Date.UTC, same never-touch-the-
+// browser's-local-timezone convention as addDaysISO/addMonthsISO above.
+// There is no day-of-week concept anywhere in the schema (class_session
+// just stores whatever date a session was opened for) - Rankings.jsx once
+// inferred "which days are class days" from raw lesson_date history and
+// retired that approach on 2026-08-15 because the assumed schedule turned
+// out not to hold. This is deliberately the opposite: a pure generator of
+// what the fixed schedule SHOULD be for a month, used only to drive the
+// Manual Class Score Entry calendar view, never to infer or validate past
+// data.
+const CLASS_WEEKDAYS = [2, 4, 6]; // Date#getUTCDay(): Tue, Thu, Sat
+
+export function getMonthlyClassSchedule(year, month) {
+  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const dates = [];
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dt = new Date(Date.UTC(year, month - 1, d));
+    if (CLASS_WEEKDAYS.includes(dt.getUTCDay())) dates.push(dt.toISOString().slice(0, 10));
+  }
+  const mondayOf = (iso) => {
+    const [y, m, d] = iso.split('-').map(Number);
+    const dt = new Date(Date.UTC(y, m - 1, d));
+    dt.setUTCDate(dt.getUTCDate() - ((dt.getUTCDay() + 6) % 7));
+    return dt.toISOString().slice(0, 10);
+  };
+  const weeks = new Map();
+  for (const iso of dates) {
+    const key = mondayOf(iso);
+    if (!weeks.has(key)) weeks.set(key, []);
+    weeks.get(key).push(iso);
+  }
+  return [...weeks.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([weekStart, days], i) => ({ weekStart, label: `Week ${i + 1}`, dates: days }));
+}
+
 export function addMonthsISO(iso, months) {
   const [y, m, d] = iso.split('-').map(Number);
   return new Date(Date.UTC(y, m - 1 + months, d)).toISOString().slice(0, 10);
