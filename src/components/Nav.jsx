@@ -23,6 +23,7 @@ import {
   Languages,
   BellRing,
   Sparkles,
+  Gamepad2,
 } from 'lucide-react';
 import { useAuth } from '../lib/AuthContext';
 import { useAcademy } from '../lib/AcademyDataContext';
@@ -44,10 +45,13 @@ const NAV_ITEMS = [
   { to: '/certificates', label: 'certificates', shortLabel: 'certificatesShort', Icon: Award },
   { to: '/rankings', label: 'rankings', shortLabel: 'rankingsShort', Icon: Trophy },
   { to: '/recognition', label: 'recognition', shortLabel: 'recognitionShort', Icon: Medal, adminOnly: true },
-  { to: '/reports', label: 'reports', shortLabel: 'reportsShort', Icon: BarChart3, adminOnly: true },
+  { to: '/game-results', label: 'gameResults', shortLabel: 'gameResultsShort', Icon: Gamepad2 },
+  // Reports temporarily hidden from nav (2026-08-21) - feature kept intact, just not exposed.
+  // { to: '/reports', label: 'reports', shortLabel: 'reportsShort', Icon: BarChart3, adminOnly: true },
   { to: '/ai-assistant', label: 'aiAssistant', shortLabel: 'aiAssistantShort', Icon: Sparkles },
   { to: '/chat', label: 'messages', shortLabel: 'messagesShort', Icon: MessageSquare },
-  { to: '/files', label: 'files', shortLabel: 'filesShort', Icon: FolderOpen },
+  // Files temporarily hidden from nav (2026-08-21) - feature kept intact, just not exposed.
+  // { to: '/files', label: 'files', shortLabel: 'filesShort', Icon: FolderOpen },
   { to: '/settings', label: 'settings', shortLabel: 'settingsShort', Icon: Settings },
 ];
 
