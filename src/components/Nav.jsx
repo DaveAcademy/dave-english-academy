@@ -24,6 +24,7 @@ import {
   BellRing,
   Sparkles,
   Gamepad2,
+  BookMarked,
 } from 'lucide-react';
 import { useAuth } from '../lib/AuthContext';
 import { useAcademy } from '../lib/AcademyDataContext';
@@ -39,13 +40,15 @@ const NAV_ITEMS = [
   // { to: '/reminders', label: 'reminders', shortLabel: 'remindersShort', Icon: BellRing, adminOnly: true },
   { to: '/attendance', label: 'attendance', shortLabel: 'attendanceShort', Icon: CalendarCheck },
   { to: '/lessons', label: 'lessons', shortLabel: 'lessonsShort', Icon: CalendarClock },
-  { to: '/vocabulary', label: 'vocabulary', shortLabel: 'vocabularyShort', Icon: Languages },
+  // Vocabulary temporarily hidden from staff nav (2026-08-22) - superseded by the Dictionary page; feature and /vocabulary route kept intact.
+  // { to: '/vocabulary', label: 'vocabulary', shortLabel: 'vocabularyShort', Icon: Languages },
   { to: '/exams', label: 'exams', shortLabel: 'examsShort', Icon: FileCheck2 },
   { to: '/homework', label: 'homework', shortLabel: 'homeworkShort', Icon: BookOpen },
   { to: '/certificates', label: 'certificates', shortLabel: 'certificatesShort', Icon: Award },
   { to: '/rankings', label: 'rankings', shortLabel: 'rankingsShort', Icon: Trophy },
   { to: '/recognition', label: 'recognition', shortLabel: 'recognitionShort', Icon: Medal, adminOnly: true },
   { to: '/game-results', label: 'gameResults', shortLabel: 'gameResultsShort', Icon: Gamepad2 },
+  { to: '/dictionary-admin', label: 'dictionaryAdmin', shortLabel: 'dictionaryAdminShort', Icon: BookMarked },
   // Reports temporarily hidden from nav (2026-08-21) - feature kept intact, just not exposed.
   // { to: '/reports', label: 'reports', shortLabel: 'reportsShort', Icon: BarChart3, adminOnly: true },
   { to: '/ai-assistant', label: 'aiAssistant', shortLabel: 'aiAssistantShort', Icon: Sparkles },

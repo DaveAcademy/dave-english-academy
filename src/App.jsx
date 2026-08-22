@@ -29,6 +29,7 @@ const Homework = lazy(() => import('./pages/Homework'));
 const Certificates = lazy(() => import('./pages/Certificates'));
 const Rankings = lazy(() => import('./pages/Rankings'));
 const GameResults = lazy(() => import('./pages/GameResults'));
+const DictionaryAdmin = lazy(() => import('./pages/DictionaryAdmin'));
 const ManualClassScoreEntry = lazy(() => import('./pages/ManualClassScoreEntry'));
 const Recognition = lazy(() => import('./pages/Recognition'));
 const Reports = lazy(() => import('./pages/Reports'));
@@ -180,6 +181,7 @@ function RoutedContent({ isStudent }) {
             <Route path="/rankings" element={<Rankings />} />
             <Route path="/rankings/manual-entry" element={<ManualClassScoreEntry />} />
             <Route path="/game-results" element={<GameResults />} />
+            <Route path="/dictionary-admin" element={<DictionaryAdmin />} />
             <Route path="/recognition" element={<Recognition />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/ai-assistant" element={<AiAssistant />} />
