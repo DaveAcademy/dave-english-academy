@@ -1,6 +1,7 @@
 // WordMatch.jsx
 // Word Match (Game & Practice System - see migration 0117). Round comes
-// from get_word_match_round(): 6 curriculum-scoped English/Uzbek pairs,
+// from get_word_match_round(): curriculum-scoped English/Uzbek pairs,
+// scaled by tier (6 at very_easy up to 10 at very_hard, migration 0195),
 // same server-side selection as every other game (pick_game_words()).
 // Tap an English word, then its Uzbek match - the local "is this the
 // right pair" check is client-side UX only (instant feedback, no
@@ -47,6 +48,10 @@ export default function WordMatch() {
   const [error, setError] = useState(null);
   const wrongTimeout = useRef(null);
   const lastAnswersRef = useRef(null);
+  // Mismatched tap attempts this round. Reported to the server so the +5
+  // perfect bonus only pays for flawless matching (0195); base scoring is
+  // unaffected.
+  const wrongAttemptsRef = useRef(0);
   const { record } = useGameRecord('word_match', !!result);
 
   const startRound = useCallback(async () => {
@@ -59,6 +64,7 @@ export default function WordMatch() {
     setWrongPair(null);
     setError(null);
     lastAnswersRef.current = null;
+    wrongAttemptsRef.current = 0;
     try {
       const { roundId: rid, level: lvl, words } = await getWordMatchRound();
       setRoundId(rid);
@@ -100,7 +106,7 @@ export default function WordMatch() {
     const isCorrect = tile.vocabularyId === englishId;
 
     if (isCorrect) {
-      const nextAnswers = [...answers, { vocabulary_id: englishId, answer: tile.text, used_hint: false, skipped: false }];
+      const nextAnswers = [...answers, { vocabulary_id: englishId, answer: tile.text, used_hint: false, skipped: false, wrong_attempts: wrongAttemptsRef.current }];
       const nextMatched = new Set(matchedIds);
       nextMatched.add(englishId);
       setAnswers(nextAnswers);
@@ -114,6 +120,7 @@ export default function WordMatch() {
     }
 
     setWrongPair({ englishId, uzbekTile: uzbekTileIndex });
+    wrongAttemptsRef.current += 1;
     wrongTimeout.current = setTimeout(() => {
       setWrongPair(null);
       setSelectedEnglishId(null);
