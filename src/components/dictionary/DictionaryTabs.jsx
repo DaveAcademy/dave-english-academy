@@ -19,7 +19,7 @@ import {
 } from '../../lib/dictionaryBridge';
 import { formatStudentDisplayName } from '../../lib/gameRecordFormat';
 import {
-  QUALITY, STATE_META, speak, showSpeechFallback,
+  QUALITY, STATE_META, playAudio, showSpeechFallback,
   Pill, EmptyState, ErrorBanner, SkeletonRows,
 } from './shared';
 
@@ -104,7 +104,7 @@ export function ChallengeTab({ me, t }) {
           <p className="text-xs uppercase tracking-wide text-ink/40">{t('chooseCorrectTranslation')}</p>
           <button
             type="button"
-            onClick={() => { if (!speak(q.english)) showSpeechFallback(); }}
+            onClick={() => { if (!playAudio(q.id, q.source_type || 'lesson_vocabulary', q.english)) showSpeechFallback(); }}
             aria-label={t('pronunciation')}
             title={t('pronunciation')}
             className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600 hover:bg-brand-100"
@@ -379,7 +379,7 @@ function SearchResultCard({ entry, t }) {
         {entry.lesson_number != null && <Pill text={`${t('lesson')} ${entry.lesson_number}`} color="slate" />}
         <button
           type="button"
-          onClick={() => { if (!speak(entry.english)) showSpeechFallback(); }}
+          onClick={() => { if (!playAudio(entry.id, entry.source_type, entry.english)) showSpeechFallback(); }}
           aria-label={t('pronunciation')}
           title={t('pronunciation')}
           className="ml-auto flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600 hover:bg-brand-100"

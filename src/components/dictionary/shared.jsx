@@ -14,23 +14,39 @@ export const STATE_META = {
   LAPSED:    { color: 'red',   labelKey: 'state_lapsed' },
 };
 
-// Browser TTS (Web Speech API), preferring an installed English voice so the
-// word is always spoken in English regardless of UI language (students use
-// the Uzbek portal; see original Dictionary.jsx note).
-//
-// Mobile reliability notes (why the naive version was silent on phones):
-//  * Chrome Android / iOS Safari silently DROP an utterance that is queued
-//    in the same tick as speechSynthesis.cancel(), so cancel-before-speak is
-//    only done when a different word is interrupting playback, never on the
-//    common first-tap path.
-//  * getVoices() is empty until voices load asynchronously (especially iOS
-//    Safari), so the list is cached and refreshed via the voiceschanged
-//    event instead of being re-read once per tap.
-//  * iOS Safari needs one successful speak() inside a user gesture before
-//    later speech is audible; a muted warm-up utterance on the first tap
-//    covers this without any extra UI.
+// Audio playback for dictionary pronunciation.
+// Primary: HTML5 Audio with MP3 from Supabase Storage (reliable on mobile).
+// Fallback: Web Speech API (speechSynthesis) for words without audio files.
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
+const AUDIO_BUCKET = 'dictionary-audio';
+
+let audioCache = new Map();
+let lastPlayedKey = null;
+let audioElement = null;
+
+function getAudioUrl(source, id) {
+  if (!SUPABASE_URL) return null;
+  return `${SUPABASE_URL}/storage/v1/object/public/${AUDIO_BUCKET}/${source}/${id}.mp3`;
+}
+
+function playAudioElement(url) {
+  return new Promise((resolve, reject) => {
+    if (audioElement) {
+      audioElement.pause();
+      audioElement.src = '';
+    }
+    audioElement = new Audio(url);
+    audioElement.onended = () => resolve(true);
+    audioElement.onerror = () => reject(new Error('Audio playback failed'));
+    audioElement.play().catch(reject);
+  });
+}
+
+export function supportsSpeech() {
+  return typeof window !== 'undefined' && !!window.speechSynthesis;
+}
+
 let cachedVoices = null;
-let lastSpokenText = null;
 let warmedUp = false;
 
 function loadEnglishVoice() {
@@ -47,52 +63,69 @@ if (typeof window !== 'undefined' && window.speechSynthesis?.addEventListener) {
   });
 }
 
-function speakNow(text) {
+function speakWithWebSpeech(text) {
+  if (!supportsSpeech() || !text) return false;
   const u = new SpeechSynthesisUtterance(text);
   u.lang = 'en-US';
   const voice = loadEnglishVoice();
   if (voice) u.voice = voice;
   window.speechSynthesis.speak(u);
+  return true;
 }
 
-export function supportsSpeech() {
-  return typeof window !== 'undefined' && !!window.speechSynthesis;
-}
+// Play pronunciation for a dictionary word.
+// Primary: HTML5 Audio from Supabase Storage.
+// Fallback: Web Speech API.
+// Returns true if playback started (or already playing), false if completely unavailable.
+export async function playAudio(wordId, source, text) {
+  if (!wordId || !source || !text) return false;
 
-// Speak an English dictionary word. Returns true when playback was started
-// (or already playing), false when the device offers no speech at all.
-export function speak(text) {
-  if (!supportsSpeech() || !text) return false;
+  const key = `${source}:${wordId}`;
 
-  // Debounce: ignore accidental re-taps of the same word while it plays.
-  if ((window.speechSynthesis.speaking || window.speechSynthesis.pending) && text === lastSpokenText) {
+  // Debounce: ignore rapid re-taps of the same word
+  if (audioElement && !audioElement.paused && key === lastPlayedKey) {
     return true;
   }
 
-  // First-ever tap: iOS Safari unlock via a muted warm-up utterance, spoken
-  // inside the same user gesture as the real word.
+  // Try HTML5 Audio first if we have a URL
+  const audioUrl = getAudioUrl(source, wordId);
+  if (audioUrl) {
+    try {
+      await playAudioElement(audioUrl);
+      lastPlayedKey = key;
+      return true;
+    } catch {
+      // Fall through to Web Speech
+    }
+  }
+
+  // Fallback: Web Speech API
   if (!warmedUp) {
     warmedUp = true;
     try {
       const mute = new SpeechSynthesisUtterance(' ');
       mute.volume = 0;
       window.speechSynthesis.speak(mute);
-    } catch { /* non-iOS engines may ignore; harmless */ }
+    } catch { /* ignore */ }
   }
 
   if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
-    // A different word is interrupting playback - stop it first. Same-tick
-    // queue after cancel() is avoided on the common path above.
     window.speechSynthesis.cancel();
   }
-  lastSpokenText = text;
+
   try {
-    speakNow(text);
+    return speakWithWebSpeech(text);
   } catch {
     showSpeechFallback();
     return false;
   }
-  return true;
+}
+
+// Backward compatibility: speak(text) now uses playAudio with text-only fallback
+export function speak(text) {
+  if (!text) return false;
+  // No wordId/source available - use Web Speech directly
+  return speakWithWebSpeech(text);
 }
 
 // Tiny self-dismissing hint for devices where speech genuinely cannot play,
