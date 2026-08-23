@@ -21,7 +21,7 @@ async function rpc(fn, args = {}) {
 
 // Words the student may add today (curriculum candidates they can access,
 // minus ones already started). Returns [] when the daily limit is reached.
-export function getNextWords(studentId, limit = 5) {
+export function getNextWords(studentId, limit = DAILY_LIMIT) {
   return rpc('get_next_dictionary_words', { p_student_id: studentId, p_limit: limit });
 }
 

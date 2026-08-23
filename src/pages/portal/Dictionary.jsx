@@ -13,7 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { Volume2, Check } from 'lucide-react';
 import { useAcademy } from '../../lib/AcademyDataContext';
 import {
-  getNextWords, startWords, getDueReviews, scheduleReview,
+  getNextWords, startWords, getDueReviews, scheduleReview, DAILY_LIMIT,
 } from '../../lib/dictionaryBridge';
 import {
   QUALITY, STATE_META, speak, showSpeechFallback,
@@ -78,7 +78,7 @@ function LearnTab({ me, t }) {
     setLoading(true);
     setError(false);
     try {
-      setCandidates((await getNextWords(me.id, 5)) || []);
+      setCandidates((await getNextWords(me.id, DAILY_LIMIT)) || []);
     } catch {
       setError(true);
     } finally {
