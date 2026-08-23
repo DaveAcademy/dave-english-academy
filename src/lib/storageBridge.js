@@ -1188,19 +1188,8 @@ export async function reorderLessonVocabulary(lessonId, orderedIds) {
 
 // ---------- General Dictionary (independent of lessons/level/curriculum -
 // see migration 0116). Read-only for students; RLS is the only gate,
-// nothing here checks role client-side.
-
-export async function searchDictionary(query) {
-  const q = `%${query.trim()}%`;
-  const { data, error } = await supabase
-    .from('dictionary_entries')
-    .select('*')
-    .or(`english.ilike.${q},uzbek.ilike.${q}`)
-    .order('english')
-    .limit(30);
-  if (error) throw error;
-  return data;
-}
+// nothing here checks role client-side. Search goes through the unified
+// RPC in dictionaryBridge.js (search_dictionary_unified, 0183).
 
 export async function listMyVocabularyFavorites(studentId) {
   const { data, error } = await supabase.from('student_vocabulary_favorites').select('*').eq('student_id', studentId);

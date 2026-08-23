@@ -262,8 +262,9 @@ function ReviewTab({ me, t }) {
           {t('showAnswer')}
         </button>
       ) : (
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           <GradeButton label={t('wrong')} quality={QUALITY.WRONG} cls="bg-red-50 text-red-700 hover:bg-red-100" onPick={answer} disabled={processing} t={t} />
+          <GradeButton label={t('hard')} quality={QUALITY.HARD} cls="bg-amber-50 text-amber-700 hover:bg-amber-100" onPick={answer} disabled={processing} t={t} />
           <GradeButton label={t('correct')} quality={QUALITY.CORRECT} cls="bg-emerald-50 text-emerald-700 hover:bg-emerald-100" onPick={answer} disabled={processing} t={t} />
           <GradeButton label={t('easy')} quality={QUALITY.EASY} cls="bg-brand-50 text-brand-700 hover:bg-brand-100" onPick={answer} disabled={processing} t={t} />
         </div>

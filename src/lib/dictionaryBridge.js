@@ -61,3 +61,11 @@ export function getAdminOverview() {
 export function getStudentDetail(studentId) {
   return rpc('get_dictionary_student_detail', { p_student_id: studentId });
 }
+
+// Unified search across curriculum lesson vocabulary and general dictionary
+// entries (search_dictionary_unified, migration 0183). Returns rows shaped
+// { id, english, uzbek, pronunciation, part_of_speech, example, source_type,
+// lesson_number } - lesson_number is null for general entries.
+export function searchUnified(query, limit = 20) {
+  return rpc('search_dictionary_unified', { p_query: query, p_limit: limit });
+}

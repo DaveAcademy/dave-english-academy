@@ -15,8 +15,8 @@ import {
 } from 'lucide-react';
 import {
   getDueReviews, scheduleReview, getMySummary, getLeaderboard,
+  searchUnified,
 } from '../../lib/dictionaryBridge';
-import { searchDictionary } from '../../lib/storageBridge';
 import { formatStudentDisplayName } from '../../lib/gameRecordFormat';
 import {
   QUALITY, STATE_META, speak, supportsSpeech,
@@ -290,7 +290,7 @@ function LevelChip({ active, onClick, label }) {
   );
 }
 
-// ===================== SEARCH (original 0116 lookup, preserved) =====================
+// ===================== SEARCH (unified RPC, migration 0183) =====================
 export function SearchTab({ t }) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
@@ -310,7 +310,7 @@ export function SearchTab({ t }) {
     setError(false);
     const handle = setTimeout(async () => {
       try {
-        setResults(await searchDictionary(q));
+        setResults(await searchUnified(q));
         setSearched(true);
       } catch {
         setError(true);
@@ -376,6 +376,7 @@ function SearchResultCard({ entry, t }) {
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
         <h3 className="break-words font-display text-lg font-bold text-ink">{entry.english}</h3>
         {entry.part_of_speech && <Pill text={entry.part_of_speech} />}
+        {entry.lesson_number != null && <Pill text={`${t('lesson')} ${entry.lesson_number}`} color="slate" />}
         {supportsSpeech() && (
           <button
             onClick={() => speak(entry.english)}
