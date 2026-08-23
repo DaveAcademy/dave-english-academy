@@ -16,7 +16,7 @@ import {
   getNextWords, startWords, getDueReviews, scheduleReview,
 } from '../../lib/dictionaryBridge';
 import {
-  QUALITY, STATE_META, speak, supportsSpeech,
+  QUALITY, STATE_META, speak, showSpeechFallback,
   Pill, EmptyState, ErrorBanner, SkeletonRows,
 } from '../../components/dictionary/shared';
 import {
@@ -148,15 +148,15 @@ function LearnWordCard({ word, t, showUzbek }) {
         <h3 className="break-words font-display text-lg font-bold text-ink">{word.english}</h3>
         {word.part_of_speech && <Pill text={word.part_of_speech} />}
         {word.lesson_number != null && <Pill text={`${t('lesson')} ${word.lesson_number}`} color="slate" />}
-        {supportsSpeech() && (
-          <button
-            onClick={() => speak(word.english)}
-            aria-label={t('pronunciation')}
-            className="ml-auto flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600 hover:bg-brand-100"
-          >
-            <Volume2 size={14} />
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() => { if (!speak(word.english)) showSpeechFallback(); }}
+          aria-label={t('pronunciation')}
+          title={t('pronunciation')}
+          className="ml-auto flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600 hover:bg-brand-100"
+        >
+          <Volume2 size={14} />
+        </button>
       </div>
       {word.pronunciation && <p className="mt-0.5 text-xs text-ink/40">/{word.pronunciation}/</p>}
       {showUzbek && <p className="mt-2 break-words text-base font-semibold text-brand-700">{word.uzbek}</p>}
@@ -236,15 +236,15 @@ function ReviewTab({ me, t }) {
       <div className="rounded-xl border border-ink/[0.06] bg-white p-5 shadow-card">
         <div className="flex items-start justify-between gap-2">
           <p className="text-xs uppercase tracking-wide text-ink/40">{t('translateToUzbek')}</p>
-          {supportsSpeech() && (
-            <button
-              onClick={() => speak(current.english)}
-              aria-label={t('pronunciation')}
-              className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600 hover:bg-brand-100"
-            >
-              <Volume2 size={15} />
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => { if (!speak(current.english)) showSpeechFallback(); }}
+            aria-label={t('pronunciation')}
+            title={t('pronunciation')}
+            className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600 hover:bg-brand-100"
+          >
+            <Volume2 size={15} />
+          </button>
         </div>
         <p className="mt-1 break-words font-display text-2xl font-bold text-ink">{current.english}</p>
         {current.pronunciation && <p className="text-xs text-ink/40">/{current.pronunciation}/</p>}

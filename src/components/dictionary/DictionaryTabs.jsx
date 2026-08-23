@@ -19,7 +19,7 @@ import {
 } from '../../lib/dictionaryBridge';
 import { formatStudentDisplayName } from '../../lib/gameRecordFormat';
 import {
-  QUALITY, STATE_META, speak, supportsSpeech,
+  QUALITY, STATE_META, speak, showSpeechFallback,
   Pill, EmptyState, ErrorBanner, SkeletonRows,
 } from './shared';
 
@@ -102,15 +102,15 @@ export function ChallengeTab({ me, t }) {
       <div className="rounded-xl border border-ink/[0.06] bg-white p-5 shadow-card">
         <div className="flex items-start justify-between gap-2">
           <p className="text-xs uppercase tracking-wide text-ink/40">{t('chooseCorrectTranslation')}</p>
-          {supportsSpeech() && (
-            <button
-              onClick={() => speak(q.english)}
-              aria-label={t('pronunciation')}
-              className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600 hover:bg-brand-100"
-            >
-              <Volume2 size={15} />
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => { if (!speak(q.english)) showSpeechFallback(); }}
+            aria-label={t('pronunciation')}
+            title={t('pronunciation')}
+            className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600 hover:bg-brand-100"
+          >
+            <Volume2 size={15} />
+          </button>
         </div>
         <p className="mt-1 break-words font-display text-2xl font-bold text-ink">{q.english}</p>
       </div>
@@ -377,15 +377,15 @@ function SearchResultCard({ entry, t }) {
         <h3 className="break-words font-display text-lg font-bold text-ink">{entry.english}</h3>
         {entry.part_of_speech && <Pill text={entry.part_of_speech} />}
         {entry.lesson_number != null && <Pill text={`${t('lesson')} ${entry.lesson_number}`} color="slate" />}
-        {supportsSpeech() && (
-          <button
-            onClick={() => speak(entry.english)}
-            aria-label={t('pronunciation')}
-            className="ml-auto flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600 hover:bg-brand-100"
-          >
-            <Volume2 size={15} />
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() => { if (!speak(entry.english)) showSpeechFallback(); }}
+          aria-label={t('pronunciation')}
+          title={t('pronunciation')}
+          className="ml-auto flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600 hover:bg-brand-100"
+        >
+          <Volume2 size={15} />
+        </button>
       </div>
       {entry.pronunciation && <p className="mt-0.5 text-sm text-ink/40">/{entry.pronunciation}/</p>}
       <p className="mt-2 break-words text-lg font-semibold text-brand-700">{entry.uzbek}</p>
