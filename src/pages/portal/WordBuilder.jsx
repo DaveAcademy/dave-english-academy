@@ -211,7 +211,7 @@ export default function WordBuilder() {
               key={tile.id}
               onClick={() => handleUnplace(tile)}
               disabled={!!feedback}
-              className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-teal-500 font-display text-xl font-bold text-white shadow-sm active:scale-95"
+              className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-teal-500 font-display text-xl font-bold text-white shadow-sm transition-all duration-200 animate-letter-reveal active:scale-95"
             >
               {tile.ch.toUpperCase()}
             </button>
@@ -227,7 +227,7 @@ export default function WordBuilder() {
               key={tile.id}
               onClick={() => handleTapTile(tile)}
               disabled={!!feedback}
-              className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl border-b-4 border-emerald-400 bg-emerald-100 font-display text-2xl font-bold text-emerald-800 shadow-sm transition-transform active:scale-95 sm:h-14 sm:w-14"
+              className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl border-b-4 border-emerald-400 bg-emerald-100 font-display text-2xl font-bold text-emerald-800 shadow-sm transition-all duration-200 hover:shadow active:scale-95 sm:h-14 sm:w-14"
             >
               {tile.ch.toUpperCase()}
             </button>
@@ -238,7 +238,7 @@ export default function WordBuilder() {
           <p
             role="status"
             className={`mt-3 flex items-center justify-center gap-1.5 text-center text-sm font-bold ${
-              feedback === 'correct' ? 'text-emerald-600' : 'text-rose-600'
+              feedback === 'correct' ? 'text-emerald-600 animate-correct' : 'text-rose-600 animate-incorrect'
             }`}
           >
             {feedback === 'correct' ? (
@@ -257,7 +257,7 @@ export default function WordBuilder() {
           {feedback ? (
             <button
               onClick={handleNext}
-              className="ml-auto flex items-center gap-1.5 rounded-full bg-ink px-6 py-3 text-sm font-bold text-white shadow-sm transition-transform active:scale-95"
+              className="ml-auto flex items-center gap-1.5 rounded-full bg-ink px-6 py-3 text-sm font-bold text-white shadow-sm transition-all duration-200 hover:shadow active:scale-95"
             >
               {t('next')}
             </button>

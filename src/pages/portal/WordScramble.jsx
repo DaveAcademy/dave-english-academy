@@ -174,14 +174,23 @@ export default function WordScramble() {
 
   if (result) {
     return (
-      <div className="mx-auto max-w-sm">
+      <div className="mx-auto max-w-sm animate-[fadeIn_0.3s_ease-out]">
         <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-amber-50 to-orange-100 p-6 text-center shadow-card sm:p-8">
-          <PartyPopper size={36} className="mx-auto text-amber-500" aria-hidden="true" />
+          <span className="animate-[bounceIn_0.4s_ease-out]"><PartyPopper size={36} className="mx-auto text-amber-500" aria-hidden="true" /></span>
           <h1 className="mt-2 font-display text-xl font-bold text-ink">{t('resultsTitle')}</h1>
-          <p className="mt-4 font-display text-5xl font-extrabold text-brand-600">{result.score}</p>
+          {result.game_points_awarded > 0 ? (
+            <div className="mt-4 animate-[scaleIn_0.3s_ease-out_0.15s_both]">
+              <p className="font-display text-5xl font-extrabold text-amber-500">+{result.game_points_awarded}</p>
+              <p className="mt-1 text-sm font-medium text-ink/60">{t('gamePoints', { defaultValue: 'Game Points' })}</p>
+            </div>
+          ) : (
+            <div className="mt-4 animate-[scaleIn_0.3s_ease-out_0.15s_both]">
+              <p className="font-display text-5xl font-extrabold text-brand-600">{result.score}</p>
+            </div>
+          )}
           <p className="mt-1 text-sm font-medium text-ink/60">{t('correctCount', { correct: result.words_correct, total: result.words_total })}</p>
           {result.is_new_best && (
-            <p className="mt-3 inline-block rounded-full bg-amber-400 px-3 py-1 text-xs font-bold text-amber-950">{t('newBest')}</p>
+            <p className="mt-3 inline-block rounded-full bg-amber-400 px-3 py-1 text-xs font-bold text-amber-950 animate-[pulse_1s_ease-in-out_infinite]">{t('newBest')}</p>
           )}
 
           <GameLevelStatus
@@ -197,13 +206,13 @@ export default function WordScramble() {
           <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
             <button
               onClick={startRound}
-              className="flex items-center justify-center gap-1.5 rounded-full bg-ink px-5 py-3 text-sm font-bold text-white shadow-sm transition-transform active:scale-95"
+              className="flex items-center justify-center gap-1.5 rounded-full bg-ink px-5 py-3 text-sm font-bold text-white shadow-sm transition-all duration-200 hover:bg-ink hover:shadow active:scale-95"
             >
               <RefreshCw size={16} aria-hidden="true" /> {t('playAgain')}
             </button>
             <Link
               to="/games"
-              className="flex items-center justify-center gap-1.5 rounded-full bg-white px-5 py-3 text-sm font-bold text-ink/70 shadow-sm transition-transform active:scale-95"
+              className="flex items-center justify-center gap-1.5 rounded-full bg-white px-5 py-3 text-sm font-bold text-ink/70 shadow-sm transition-all duration-200 hover:bg-white hover:shadow active:scale-95"
             >
               <ArrowLeft size={16} aria-hidden="true" /> {t('backToPortal')}
             </Link>
@@ -261,7 +270,7 @@ export default function WordScramble() {
         {feedback && (
           <p
             role="status"
-            className={`mt-3 flex items-center justify-center gap-1.5 text-center text-sm font-bold ${
+            className={`mt-3 flex items-center justify-center gap-1.5 text-center text-sm font-bold animate-[scaleIn_0.2s_ease-out] ${
               feedback === 'correct' ? 'text-emerald-600' : 'text-rose-600'
             }`}
           >

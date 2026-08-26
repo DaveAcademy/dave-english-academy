@@ -357,7 +357,7 @@ export default function GrammarBattle() {
                 onClick={() => handleChoose(option)}
                 disabled={!!chosen || submitting}
                 aria-pressed={isChosen}
-                className={`flex min-h-[3rem] items-center gap-2.5 rounded-xl px-4 py-3 text-left text-sm font-semibold shadow-sm transition-transform ${style}`}
+                className={`flex min-h-[3rem] items-center gap-2.5 rounded-xl px-4 py-3 text-left text-sm font-semibold shadow-sm transition-all duration-200 ${style}`}
               >
                 <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-ink/5 text-xs font-bold text-ink/50" aria-hidden="true">
                   {OPTION_LETTERS[i]}

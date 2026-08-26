@@ -1,7 +1,7 @@
 {
   "levelLabel": "Level {{level}}",
   "levelCompleteTitle": "Level {{level}} Complete!",
-  "levelUnlockedBody": "Level {{next}} unlocked",
+  "levelUnlockedBody": "Level {{next}} Unlocked!",
   "gamePointsEarned": "+{{points}} Game Points{{perfect}}",
   "gamePointsPerfectSuffix": " (Perfect!)",
   "levelRetryBody": "Not quite - try again to advance!",

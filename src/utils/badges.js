@@ -48,20 +48,128 @@ export function computeBadges({ attendanceRate, attendanceStreak, homeworkTotal,
     },
     {
       id: 'top-3',
-      emoji: '⭐',
+      emoji: '🏆',
       labelKey: 'badgeTop3Label',
       descriptionKey: 'badgeTop3Description',
       unlocked: rank != null && rank <= 3,
     },
     {
-      id: 'lesson-explorer',
-      emoji: '📖',
-      labelKey: 'badgeLessonExplorerLabel',
-      descriptionKey: 'badgeLessonExplorerDescription',
-      unlocked: lessonsCompleted >= 10,
+      id: 'lessons-complete',
+      emoji: '🎓',
+      labelKey: 'badgeLessonsCompleteLabel',
+      descriptionKey: 'badgeLessonsCompleteDescription',
+      unlocked: lessonsCompleted >= 20,
     },
-    { id: 'student-of-week', emoji: '👑', labelKey: 'badgeStudentOfWeekLabel', descriptionKey: 'badgeStudentOfWeekDescription', unavailable: true },
-    { id: 'student-of-month', emoji: '🏆', labelKey: 'badgeStudentOfMonthLabel', descriptionKey: 'badgeStudentOfMonthDescription', unavailable: true },
-    { id: 'rising-star', emoji: '🚀', labelKey: 'badgeRisingStarLabel', descriptionKey: 'badgeRisingStarDescription', unavailable: true },
+    {
+      id: 'rising-star',
+      emoji: '⭐',
+      labelKey: 'badgeRisingStarLabel',
+      descriptionKey: 'badgeRisingStarDescription',
+      unavailable: true,
+    },
+    {
+      id: 'student-of-week',
+      emoji: '👑',
+      labelKey: 'badgeStudentOfWeekLabel',
+      descriptionKey: 'badgeStudentOfWeekDescription',
+      unavailable: true,
+    },
+    {
+      id: 'student-of-month',
+      emoji: '🌟',
+      labelKey: 'badgeStudentOfMonthLabel',
+      descriptionKey: 'badgeStudentOfMonthDescription',
+      unavailable: true,
+    },
+  ];
+}
+
+// Compute game-specific badges from game data.
+export function computeGameBadges({ gameSessions, gamePoints, gameLevels }) {
+  if (!gameSessions && !gamePoints) return [];
+
+  const totalSessions = (gameSessions || []).length;
+  const totalPoints = (gamePoints || 0);
+  const levels = gameLevels || [];
+  const maxLevel = levels.reduce((max, l) => Math.max(max, l.best_level_reached || 1), 1);
+
+  return [
+    {
+      id: 'first-game',
+      emoji: '🎮',
+      labelKey: 'badgeFirstGameLabel',
+      descriptionKey: 'badgeFirstGameDescription',
+      unlocked: totalSessions >= 1,
+    },
+    {
+      id: 'first-perfect',
+      emoji: '💯',
+      labelKey: 'badgeFirstPerfectLabel',
+      descriptionKey: 'badgeFirstPerfectDescription',
+      unlocked: totalSessions > 0,
+    },
+    {
+      id: 'game-5-rounds',
+      emoji: '🎯',
+      labelKey: 'badgeGame5RoundsLabel',
+      descriptionKey: 'badgeGame5RoundsDescription',
+      unlocked: totalSessions >= 5,
+    },
+    {
+      id: 'game-25-rounds',
+      emoji: '🎪',
+      labelKey: 'badgeGame25RoundsLabel',
+      descriptionKey: 'badgeGame25RoundsDescription',
+      unlocked: totalSessions >= 25,
+    },
+    {
+      id: 'game-100-rounds',
+      emoji: '🏟️',
+      labelKey: 'badgeGame100RoundsLabel',
+      descriptionKey: 'badgeGame100RoundsDescription',
+      unlocked: totalSessions >= 100,
+    },
+    {
+      id: 'game-points-50',
+      emoji: '💰',
+      labelKey: 'badgeGamePoints50Label',
+      descriptionKey: 'badgeGamePoints50Description',
+      unlocked: totalPoints >= 50,
+    },
+    {
+      id: 'game-points-200',
+      emoji: '🏦',
+      labelKey: 'badgeGamePoints200Label',
+      descriptionKey: 'badgeGamePoints200Description',
+      unlocked: totalPoints >= 200,
+    },
+    {
+      id: 'game-points-500',
+      emoji: '👑',
+      labelKey: 'badgeGamePoints500Label',
+      descriptionKey: 'badgeGamePoints500Description',
+      unlocked: totalPoints >= 500,
+    },
+    {
+      id: 'level-5',
+      emoji: '🔓',
+      labelKey: 'badgeLevel5Label',
+      descriptionKey: 'badgeLevel5Description',
+      unlocked: maxLevel >= 5,
+    },
+    {
+      id: 'level-10',
+      emoji: '🔓',
+      labelKey: 'badgeLevel10Label',
+      descriptionKey: 'badgeLevel10Description',
+      unlocked: maxLevel >= 10,
+    },
+    {
+      id: 'level-25',
+      emoji: '🏅',
+      labelKey: 'badgeLevel25Label',
+      descriptionKey: 'badgeLevel25Description',
+      unlocked: maxLevel >= 25,
+    },
   ];
 }

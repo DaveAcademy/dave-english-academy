@@ -9,8 +9,8 @@ export default function GameProgress({ current, total }) {
       {Array.from({ length: total }).map((_, i) => (
         <span
           key={i}
-          className={`h-1.5 rounded-full transition-all ${
-            i < current ? 'w-5 bg-brand-500' : i === current ? 'w-5 bg-brand-200' : 'w-1.5 bg-ink/10'
+          className={`h-1.5 rounded-full transition-all duration-300 ease-out ${
+            i < current ? 'w-5 bg-brand-500' : i === current ? 'w-5 bg-brand-300 animate-[countdownPulse_1s_ease-in-out_infinite]' : 'w-1.5 bg-ink/10'
           }`}
         />
       ))}

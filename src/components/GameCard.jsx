@@ -15,56 +15,58 @@ export default function GameCard({ icon, name, description, gradient, iconBg, to
   const { t } = useTranslation('game');
   return (
     <div
-      className={`relative overflow-hidden rounded-2xl border border-ink/[0.06] p-5 shadow-card transition-transform duration-200 ${gradient} ${
-        disabled ? 'opacity-70' : 'hover:-translate-y-1 hover:shadow-lg'
+      className={`relative overflow-hidden rounded-2xl border border-ink/[0.06] p-5 shadow-card transition-all duration-200 ${gradient} ${
+        disabled ? 'opacity-70' : 'hover:-translate-y-1 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]'
       }`}
     >
       <div className="flex items-start justify-between gap-2">
-        <span className={`flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl text-3xl shadow-sm ${iconBg}`} aria-hidden="true">
+        <span className={`flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl text-3xl shadow-sm ${iconBg} transition-transform duration-200 group-hover:rotate-3`} aria-hidden="true">
           {icon}
         </span>
         <div className="flex flex-col items-end gap-1">
           {level != null && (
-            <span className="rounded-full bg-ink/90 px-2.5 py-1 text-xs font-bold text-white shadow-sm">{t('levelLabel', { level })}</span>
+            <span className="rounded-full bg-ink/90 px-2.5 py-1 text-xs font-bold text-white shadow-sm transition-all duration-200">{t('levelLabel', { level })}</span>
           )}
           {bestScore != null && (
             <span className="flex items-center gap-1 rounded-full bg-white/80 px-2.5 py-1 text-xs font-bold text-ink/70 shadow-sm">
-              <Star size={12} className="fill-amber-400 text-amber-400" aria-hidden="true" />
+              <Star size={12} className="text-amber-400" aria-hidden="true" />
               {bestScore}
+            </span>
+          )}
+          {record?.rank === 1 && (
+            <span className="flex items-center gap-0.5 rounded-full bg-amber-400/20 px-2 py-0.5 text-[10px] font-bold text-amber-700">
+              <Crown size={10} aria-hidden="true" />
+              #1
+            </span>
+          )}
+          {levelLeader && record?.rank !== 1 && (
+            <span className="flex items-center gap-0.5 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+              <Trophy size={10} aria-hidden="true" />
+              {t('levelLeader')}
             </span>
           )}
         </div>
       </div>
 
-      <h3 className="mt-3 font-display text-lg font-bold text-ink">{name}</h3>
-      <p className="mt-1 min-h-[2.5rem] text-sm leading-snug text-ink/60">{description}</p>
+      <h3 className="mt-3 font-display text-base font-bold text-ink">{name}</h3>
+      <p className="mt-0.5 text-xs leading-relaxed text-ink/50">{description}</p>
 
-      {record && (
-        <p className="mt-1 flex items-center gap-1 truncate text-xs font-semibold text-ink/50">
-          <Trophy size={12} className="flex-shrink-0 text-amber-500" aria-hidden="true" />
-          {record.isMe ? t('youHoldRecord') : `${record.name} · ${record.score}`}
-        </p>
-      )}
-
-      {levelLeader && (
-        <p className="mt-1 flex items-center gap-1 truncate text-xs font-semibold text-ink/50">
-          <Crown size={12} className="flex-shrink-0 text-violet-500" aria-hidden="true" />
-          {levelLeader.isMe ? t('youAreLevelLeader') : t('levelLeaderLine', { name: levelLeader.name, level: levelLeader.level })}
-        </p>
-      )}
-
-      {disabled ? (
-        <span className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-white/70 px-3 py-1.5 text-xs font-bold text-ink/50">
-          <Lock size={13} aria-hidden="true" /> {t('comingSoon')}
-        </span>
-      ) : (
-        <Link
-          to={to}
-          className="mt-4 flex w-fit items-center gap-1.5 rounded-full bg-ink px-4 py-2 text-sm font-bold text-white shadow-sm transition-transform active:scale-95"
-        >
-          <Play size={15} className="fill-white" aria-hidden="true" /> {t('play')}
-        </Link>
-      )}
+      <div className="mt-3">
+        {disabled ? (
+          <span className="inline-flex items-center gap-1.5 rounded-xl bg-ink/5 px-3 py-1.5 text-xs font-semibold text-ink/30">
+            <Lock size={12} />
+            {t('comingSoon')}
+          </span>
+        ) : (
+          <Link
+            to={to}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-ink/90 px-3 py-1.5 text-xs font-bold text-white shadow-sm transition-all duration-200 hover:bg-ink hover:shadow active:scale-95"
+          >
+            <Play size={12} fill="currentColor" />
+            {t('play')}
+          </Link>
+        )}
+      </div>
     </div>
   );
 }

@@ -119,14 +119,25 @@ export default function Hangman() {
 
   if (result) {
     return (
-      <div className="mx-auto max-w-sm">
+      <div className="mx-auto max-w-sm animate-[fadeIn_0.3s_ease-out]">
         <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-fuchsia-50 to-purple-100 p-6 text-center shadow-card sm:p-8">
-          <PartyPopper size={36} className="mx-auto text-fuchsia-500" aria-hidden="true" />
+          <div className="animate-[bounceIn_0.4s_ease-out]">
+            <PartyPopper size={36} className="mx-auto text-fuchsia-500" aria-hidden="true" />
+          </div>
           <h1 className="mt-2 font-display text-xl font-bold text-ink">{t('resultsTitle')}</h1>
-          <p className="mt-4 font-display text-5xl font-extrabold text-brand-600">{result.score}</p>
-          <p className="mt-1 text-sm font-medium text-ink/60">{t('correctCount', { correct: result.words_correct, total: result.words_total })}</p>
+          {result.game_points_awarded > 0 ? (
+            <div className="mt-4 animate-[scaleIn_0.3s_ease-out_0.15s_both]">
+              <p className="font-display text-5xl font-extrabold text-amber-500">+{result.game_points_awarded}</p>
+              <p className="mt-1 text-sm font-semibold text-amber-600">Game Points{result.game_points_is_perfect ? ' ⭐' : ''}</p>
+            </div>
+          ) : (
+            <p className="mt-4 font-display text-5xl font-extrabold text-brand-600">{result.score}</p>
+          )}
+          <div className="mt-2 flex items-center justify-center gap-3 text-sm font-medium text-ink/60">
+            <span>{t('correctCount', { correct: result.words_correct, total: result.words_total })}</span>
+          </div>
           {result.is_new_best && (
-            <p className="mt-3 inline-block rounded-full bg-amber-400 px-3 py-1 text-xs font-bold text-amber-950">{t('newBest')}</p>
+            <p className="mt-3 inline-block rounded-full bg-amber-400 px-3 py-1 text-xs font-bold text-amber-950 animate-[pulse_1s_ease-in-out_infinite]">{t('newBest')}</p>
           )}
 
           <GameLevelStatus
@@ -197,7 +208,7 @@ export default function Hangman() {
             <Heart
               key={i}
               size={18}
-              className={i < livesLeft ? 'fill-rose-500 text-rose-500' : 'text-ink/15'}
+              className={`transition-all duration-300 ${i < livesLeft ? 'fill-rose-500 text-rose-500 scale-100' : 'text-ink/15 scale-75 opacity-40'}`}
               aria-hidden="true"
             />
           ))}
@@ -206,20 +217,23 @@ export default function Hangman() {
         <p className="mt-3 text-center text-xs font-bold uppercase tracking-wide text-fuchsia-700/60">{current.uzbek}</p>
 
         <div className="mt-2 flex flex-wrap justify-center gap-1.5" aria-label={current.english}>
-          {current.english.split('').map((ch, i) => (
-            <span
-              key={i}
-              className="flex h-10 w-8 flex-shrink-0 items-center justify-center border-b-4 border-fuchsia-400 font-display text-xl font-bold text-fuchsia-900 sm:h-12 sm:w-9 sm:text-2xl"
-            >
-              {guessed.has(ch.toLowerCase()) || feedback ? ch.toUpperCase() : ''}
-            </span>
-          ))}
+          {current.english.split('').map((ch, i) => {
+            const revealed = guessed.has(ch.toLowerCase()) || feedback;
+            return (
+              <span
+                key={i}
+                className={`flex h-10 w-8 flex-shrink-0 items-center justify-center border-b-4 border-fuchsia-400 font-display text-xl font-bold text-fuchsia-900 sm:h-12 sm:w-9 sm:text-2xl transition-all duration-200 ${revealed ? 'animate-letter-reveal' : ''}`}
+              >
+                {revealed ? ch.toUpperCase() : ''}
+              </span>
+            );
+          })}
         </div>
 
         {feedback && (
           <p
             role="status"
-            className={`mt-3 flex items-center justify-center gap-1.5 text-center text-sm font-bold ${
+            className={`mt-3 flex items-center justify-center gap-1.5 text-center text-sm font-bold animate-[scaleIn_0.2s_ease-out] ${
               feedback === 'correct' ? 'text-emerald-600' : 'text-rose-600'
             }`}
           >
@@ -241,15 +255,15 @@ export default function Hangman() {
               {row.split('').map((letter) => {
                 const isGuessed = guessed.has(letter);
                 const isHit = isGuessed && current.english.toLowerCase().includes(letter);
-                let style = 'bg-white text-ink active:scale-95';
-                if (isGuessed) style = isHit ? 'bg-emerald-500 text-white' : 'bg-ink/10 text-ink/30';
+                let style = 'bg-white text-ink hover:bg-ink/5 active:scale-95 hover:shadow-md';
+                if (isGuessed) style = isHit ? 'bg-emerald-500 text-white animate-correct' : 'bg-ink/10 text-ink/30 animate-incorrect';
                 return (
                   <button
                     key={letter}
                     onClick={() => handleGuess(letter)}
                     disabled={!!feedback || isGuessed}
                     aria-label={letter}
-                    className={`flex h-9 w-7 flex-shrink-0 items-center justify-center rounded-md text-xs font-bold shadow-sm transition-transform sm:h-10 sm:w-8 sm:text-sm ${style}`}
+                    className={`flex h-9 w-7 flex-shrink-0 items-center justify-center rounded-md text-xs font-bold shadow-sm transition-all duration-200 sm:h-10 sm:w-8 sm:text-sm ${style}`}
                   >
                     {letter.toUpperCase()}
                   </button>

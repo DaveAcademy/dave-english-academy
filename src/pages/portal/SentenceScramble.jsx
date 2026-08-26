@@ -189,7 +189,7 @@ export default function SentenceScramble() {
               key={tile.id}
               onClick={() => handleUnplace(tile)}
               disabled={!!feedback}
-              className="rounded-lg bg-indigo-500 px-3 py-2 text-sm font-bold text-white shadow-sm active:scale-95"
+              className="rounded-lg bg-indigo-500 px-3 py-2 text-sm font-bold text-white shadow-sm transition-all duration-200 animate-letter-reveal active:scale-95"
             >
               {tile.word}
             </button>
@@ -202,7 +202,7 @@ export default function SentenceScramble() {
               key={tile.id}
               onClick={() => handleTapWord(tile)}
               disabled={!!feedback}
-              className="rounded-lg border-b-4 border-violet-300 bg-white px-3 py-2 text-sm font-bold text-ink shadow-sm transition-transform active:scale-95"
+              className="rounded-lg border-b-4 border-violet-300 bg-white px-3 py-2 text-sm font-bold text-ink shadow-sm transition-all duration-200 hover:shadow active:scale-95"
             >
               {tile.word}
             </button>
@@ -212,7 +212,7 @@ export default function SentenceScramble() {
         {feedback && (
           <p
             role="status"
-            className={`mt-3 text-center text-sm font-bold ${feedback === 'correct' ? 'text-emerald-600' : 'text-rose-600'}`}
+            className={`mt-3 text-center text-sm font-bold ${feedback === 'correct' ? 'text-emerald-600 animate-correct' : 'text-rose-600 animate-incorrect'}`}
           >
             {feedback === 'correct' ? (
               <span className="flex items-center justify-center gap-1.5">
@@ -233,7 +233,7 @@ export default function SentenceScramble() {
           {feedback ? (
             <button
               onClick={handleNext}
-              className="ml-auto flex items-center gap-1.5 rounded-full bg-ink px-6 py-3 text-sm font-bold text-white shadow-sm transition-transform active:scale-95"
+              className="ml-auto flex items-center gap-1.5 rounded-full bg-ink px-6 py-3 text-sm font-bold text-white shadow-sm transition-all duration-200 hover:shadow active:scale-95"
             >
               {t('next')}
             </button>

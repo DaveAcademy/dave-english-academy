@@ -169,7 +169,7 @@ export default function WordDetective() {
               key={i}
               onClick={() => handlePickWord(i)}
               disabled={stage !== 'pick'}
-              className={`rounded-md px-2 py-1 text-sm font-semibold transition-colors ${
+              className={`rounded-md px-2 py-1 text-sm font-semibold transition-all duration-200 ${
                 pickedIndex === i ? 'bg-slate-700 text-white' : 'text-ink hover:bg-slate-200'
               } disabled:hover:bg-transparent`}
             >
@@ -213,7 +213,7 @@ export default function WordDetective() {
 
         {stage === 'done' && (
           <div className="mt-4 text-center">
-            <p role="status" className="flex items-center justify-center gap-1.5 text-sm font-bold text-slate-700">
+            <p role="status" className="flex items-center justify-center gap-1.5 text-sm font-bold text-slate-700 animate-correct">
               <CheckCircle2 size={18} aria-hidden="true" /> {t('answerRecorded')}
             </p>
             <p className="mt-1 text-xs text-ink/50">{t('explanationRevealNote')}</p>
