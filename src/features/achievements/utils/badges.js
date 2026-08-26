@@ -106,7 +106,7 @@ export function computeGameBadges({ gameSessions, gamePoints, gameLevels }) {
       emoji: '💯',
       labelKey: 'badgeFirstPerfectLabel',
       descriptionKey: 'badgeFirstPerfectDescription',
-      unlocked: totalSessions > 0,
+      unlocked: (gameSessions || []).some(s => s.words_correct === s.words_total && s.words_total > 0),
     },
     {
       id: 'game-5-rounds',
