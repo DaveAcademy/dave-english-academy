@@ -7,7 +7,7 @@ import { Sidebar, BottomNav } from './components/Nav';
 import { PortalSidebar, PortalBottomNav } from './components/PortalNav';
 import { AcademyDataProvider, useAcademy } from './lib/AcademyDataContext';
 import { AuthProvider, useAuth } from './lib/AuthContext';
-import AuthGate from './components/auth/AuthGate';
+import AuthGate from './features/auth/components/AuthGate';
 import RouteErrorBoundary from './components/RouteErrorBoundary';
 import { syncLanguageForRole } from './i18n';
 
@@ -16,8 +16,8 @@ import { syncLanguageForRole } from './i18n';
 // matters most for Reports.jsx/Certificates.jsx, which pull in jsPDF (a
 // large dependency) that most sessions never touch.
 const Dashboard = lazy(() => import('./pages/Dashboard'));
-const Students = lazy(() => import('./pages/Students'));
-const Payments = lazy(() => import('./pages/Payments'));
+const Students = lazy(() => import('./features/students/pages/Students'));
+const Payments = lazy(() => import('./features/payments/pages/Payments'));
 // Reminders temporarily hidden (2026-08-19) - route disabled, feature kept intact.
 // const Reminders = lazy(() => import('./pages/Reminders'));
 const Attendance = lazy(() => import('./pages/Attendance'));
@@ -26,7 +26,7 @@ const LessonHub = lazy(() => import('./features/lessons/pages/LessonHub'));
 const Vocabulary = lazy(() => import('./pages/Vocabulary'));
 const Exams = lazy(() => import('./pages/Exams'));
 const Homework = lazy(() => import('./pages/Homework'));
-const Certificates = lazy(() => import('./pages/Certificates'));
+const Certificates = lazy(() => import('./features/certificates/pages/Certificates'));
 const Rankings = lazy(() => import('./features/rankings/pages/Rankings'));
 const GameResults = lazy(() => import('./features/games/pages/GameResults'));
 const DictionaryAdmin = lazy(() => import('./pages/DictionaryAdmin'));
@@ -44,7 +44,7 @@ const MyHomework = lazy(() => import('./pages/portal/MyHomework'));
 const MyLessons = lazy(() => import('./features/lessons/pages/MyLessons'));
 const MyVocabulary = lazy(() => import('./pages/portal/MyVocabulary'));
 const Dictionary = lazy(() => import('./pages/portal/Dictionary'));
-const MyCertificates = lazy(() => import('./pages/portal/MyCertificates'));
+const MyCertificates = lazy(() => import('./features/certificates/pages/MyCertificates'));
 const MyRanking = lazy(() => import('./features/rankings/pages/MyRanking'));
 const WordScramble = lazy(() => import('./features/games/pages/WordScramble'));
 const VocabularyQuiz = lazy(() => import('./features/games/pages/VocabularyQuiz'));

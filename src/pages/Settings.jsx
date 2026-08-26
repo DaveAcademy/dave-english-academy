@@ -10,8 +10,8 @@ import { signOut } from '../lib/auth';
 import { setLanguage } from '../i18n';
 import { isChatNotificationsEnabled, setChatNotificationsEnabled } from '../lib/notificationPrefs';
 import ChangePasswordForm from '../components/settings/ChangePasswordForm';
-import CreateUserForm from '../components/admin/CreateUserForm';
-import BulkCreateStudentAccounts from '../components/admin/BulkCreateStudentAccounts';
+import CreateUserForm from '../features/students/components/CreateUserForm';
+import BulkCreateStudentAccounts from '../features/students/components/BulkCreateStudentAccounts';
 import TeacherGroupAssignments from '../components/admin/TeacherGroupAssignments';
 
 export default function Settings() {
