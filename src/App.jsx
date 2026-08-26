@@ -3,61 +3,61 @@
 import { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Sidebar, BottomNav } from './components/Nav';
-import { PortalSidebar, PortalBottomNav } from './components/PortalNav';
+import { Sidebar, BottomNav } from './shared/components/Nav';
+import { PortalSidebar, PortalBottomNav } from './shared/components/PortalNav';
 import { AcademyDataProvider, useAcademy } from './lib/AcademyDataContext';
 import { AuthProvider, useAuth } from './lib/AuthContext';
 import AuthGate from './features/auth/components/AuthGate';
-import RouteErrorBoundary from './components/RouteErrorBoundary';
+import RouteErrorBoundary from './shared/components/RouteErrorBoundary';
 import { syncLanguageForRole } from './i18n';
 
 // Route-level code splitting - each page is its own chunk, loaded on
 // first visit rather than all bundled into one file up front. This
 // matters most for Reports.jsx/Certificates.jsx, which pull in jsPDF (a
 // large dependency) that most sessions never touch.
-const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Dashboard = lazy(() => import('./features/dashboard/pages/Dashboard'));
 const Students = lazy(() => import('./features/students/pages/Students'));
 const Payments = lazy(() => import('./features/payments/pages/Payments'));
 // Reminders temporarily hidden (2026-08-19) - route disabled, feature kept intact.
 // const Reminders = lazy(() => import('./pages/Reminders'));
-const Attendance = lazy(() => import('./pages/Attendance'));
+const Attendance = lazy(() => import('./features/attendance/pages/Attendance'));
 const Lessons = lazy(() => import('./features/lessons/pages/Lessons'));
 const LessonHub = lazy(() => import('./features/lessons/pages/LessonHub'));
-const Vocabulary = lazy(() => import('./pages/Vocabulary'));
-const Exams = lazy(() => import('./pages/Exams'));
-const Homework = lazy(() => import('./pages/Homework'));
+const Vocabulary = lazy(() => import('./features/dictionary/pages/Vocabulary'));
+const Exams = lazy(() => import('./features/exams/pages/Exams'));
+const Homework = lazy(() => import('./features/homework/pages/Homework'));
 const Certificates = lazy(() => import('./features/certificates/pages/Certificates'));
 const Rankings = lazy(() => import('./features/rankings/pages/Rankings'));
 const GameResults = lazy(() => import('./features/games/pages/GameResults'));
-const DictionaryAdmin = lazy(() => import('./pages/DictionaryAdmin'));
+const DictionaryAdmin = lazy(() => import('./features/dictionary/pages/DictionaryAdmin'));
 const ManualClassScoreEntry = lazy(() => import('./pages/ManualClassScoreEntry'));
-const Recognition = lazy(() => import('./pages/Recognition'));
-const Reports = lazy(() => import('./pages/Reports'));
-const Settings = lazy(() => import('./pages/Settings'));
+const Recognition = lazy(() => import('./features/rankings/pages/Recognition'));
+const Reports = lazy(() => import('./features/reports/pages/Reports'));
+const Settings = lazy(() => import('./features/settings/pages/Settings'));
 const Chat = lazy(() => import('./pages/Chat'));
 const FileManager = lazy(() => import('./pages/FileManager'));
 const AiAssistant = lazy(() => import('./pages/AiAssistant'));
 const PortalHomeV3 = lazy(() => import('./pages/portal/PortalHomeV3'));
 const MyProgress = lazy(() => import('./pages/portal/MyProgress'));
-const MyExams = lazy(() => import('./pages/portal/MyExams'));
-const MyHomework = lazy(() => import('./pages/portal/MyHomework'));
+const MyExams = lazy(() => import('./features/exams/pages/MyExams'));
+const MyHomework = lazy(() => import('./features/homework/pages/MyHomework'));
 const MyLessons = lazy(() => import('./features/lessons/pages/MyLessons'));
-const MyVocabulary = lazy(() => import('./pages/portal/MyVocabulary'));
-const Dictionary = lazy(() => import('./pages/portal/Dictionary'));
-const MyCertificates = lazy(() => import('./features/certificates/pages/MyCertificates'));
+const MyVocabulary = lazy(() => import('./features/dictionary/pages/MyVocabulary'));
+const Dictionary = lazy(() => import('./features/dictionary/pages/Dictionary'));
 const MyRanking = lazy(() => import('./features/rankings/pages/MyRanking'));
-const WordScramble = lazy(() => import('./features/games/pages/WordScramble'));
+const MyCertificates = lazy(() => import('./features/certificates/pages/MyCertificates'));
+const GameCenter = lazy(() => import('./features/games/pages/GameCenter'));
+const Hangman = lazy(() => import('./features/games/pages/Hangman'));
 const VocabularyQuiz = lazy(() => import('./features/games/pages/VocabularyQuiz'));
 const WordMatch = lazy(() => import('./features/games/pages/WordMatch'));
-const SpeedChallenge = lazy(() => import('./features/games/pages/SpeedChallenge'));
-const WordBuilder = lazy(() => import('./features/games/pages/WordBuilder'));
+const WordScramble = lazy(() => import('./features/games/pages/WordScramble'));
 const SentenceScramble = lazy(() => import('./features/games/pages/SentenceScramble'));
-const ListeningChallenge = lazy(() => import('./features/games/pages/ListeningChallenge'));
-const Hangman = lazy(() => import('./features/games/pages/Hangman'));
+const WordBuilder = lazy(() => import('./features/games/pages/WordBuilder'));
 const WordDetective = lazy(() => import('./features/games/pages/WordDetective'));
 const GrammarBattle = lazy(() => import('./features/games/pages/GrammarBattle'));
 const PictureQuiz = lazy(() => import('./features/games/pages/PictureQuiz'));
-const GameCenter = lazy(() => import('./features/games/pages/GameCenter'));
+const SpeedChallenge = lazy(() => import('./features/games/pages/SpeedChallenge'));
+const ListeningChallenge = lazy(() => import('./features/games/pages/ListeningChallenge'));
 const Install = lazy(() => import('./pages/Install'));
 
 export default function App() {
