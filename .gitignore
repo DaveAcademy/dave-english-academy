@@ -13,3 +13,5 @@ dist/
 graphify-out/
 supabase/.temp/
 supabase/.branches/
+
+.supabase_anon_key
