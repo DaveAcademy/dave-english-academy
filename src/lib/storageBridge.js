@@ -1367,6 +1367,16 @@ export async function getGameOverallPointsLeaderboard() {
   return data;
 }
 
+// Aggregate for the student's own game badges (computeGameBadges) - one
+// self-scoped server-side call (migration 20260829150000) instead of three
+// table pulls. Returns { total_points, total_sessions, perfect_sessions,
+// max_level, games_played } for the calling student only.
+export async function getStudentGameBadgesSummary() {
+  const { data, error } = await supabase.rpc('get_student_game_badges_summary');
+  if (error) throw error;
+  return data && data.length > 0 ? data[0] : null;
+}
+
 // A student's own recent rounds for a game (best score / history) -
 // game_sessions RLS already scopes this to is_own_student, no RPC needed.
 export async function listMyGameSessions(studentId, gameType) {

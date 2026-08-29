@@ -121,10 +121,16 @@ export default function Hangman() {
     return (
       <div className="mx-auto max-w-sm animate-[fadeIn_0.3s_ease-out]">
         <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-fuchsia-50 to-purple-100 p-6 text-center shadow-card sm:p-8">
-          <div className="animate-[bounceIn_0.4s_ease-out]">
-            <PartyPopper size={36} className="mx-auto text-fuchsia-500" aria-hidden="true" />
-          </div>
-          <h1 className="mt-2 font-display text-xl font-bold text-ink">{t('resultsTitle')}</h1>
+          {result.pass ? (
+            <>
+              <div className="animate-[bounceIn_0.4s_ease-out]">
+                <PartyPopper size={36} className="mx-auto text-fuchsia-500" aria-hidden="true" />
+              </div>
+              <h1 className="mt-2 font-display text-xl font-bold text-ink">{t('resultsTitle')}</h1>
+            </>
+          ) : (
+            <h1 className="mt-2 font-display text-xl font-bold text-ink">{t('gameOverTitle')}</h1>
+          )}
           {result.game_points_awarded > 0 ? (
             <div className="mt-4 animate-[scaleIn_0.3s_ease-out_0.15s_both]">
               <p className="font-display text-5xl font-extrabold text-amber-500">+{result.game_points_awarded}</p>

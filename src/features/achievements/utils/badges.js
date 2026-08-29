@@ -1,15 +1,15 @@
 // badges.js
 // Badge unlock rules computed from data already loaded on the student
-// dashboard - no new tables. Three requested badges (Student of the
-// Week/Month, Rising Star) need backend state that doesn't exist yet
-// (persisted weekly/monthly winners, historical point snapshots to diff
-// against) - marked unavailable rather than faked.
+// dashboard - no new tables. The three rank-based badges (Rising Star,
+// Student of the Week/Month) are driven by the same get_group_leaderboard
+// RPC the "My Rank" card uses, for the 'week'/'month' periods - so they
+// reflect real leaderboard positions, never client-side guesswork.
 //
 // Returns labelKey/descriptionKey (dashboard-namespace translation keys)
 // rather than literal text - this is a plain util with no access to
 // useTranslation(), so the caller (BadgeShelf) resolves the actual text.
 
-export function computeBadges({ attendanceRate, attendanceStreak, homeworkTotal, homeworkDoneRate, examAvg, lessonsCompleted, rank }) {
+export function computeBadges({ attendanceRate, attendanceStreak, homeworkTotal, homeworkDoneRate, examAvg, lessonsCompleted, rank, weekRank, monthRank }) {
   return [
     {
       id: 'perfect-attendance',
@@ -65,33 +65,31 @@ export function computeBadges({ attendanceRate, attendanceStreak, homeworkTotal,
       emoji: '⭐',
       labelKey: 'badgeRisingStarLabel',
       descriptionKey: 'badgeRisingStarDescription',
-      unavailable: true,
+      unlocked: weekRank != null && weekRank > 0 && weekRank <= 3,
     },
     {
       id: 'student-of-week',
       emoji: '👑',
       labelKey: 'badgeStudentOfWeekLabel',
       descriptionKey: 'badgeStudentOfWeekDescription',
-      unavailable: true,
+      unlocked: weekRank === 1,
     },
     {
       id: 'student-of-month',
       emoji: '🌟',
       labelKey: 'badgeStudentOfMonthLabel',
       descriptionKey: 'badgeStudentOfMonthDescription',
-      unavailable: true,
+      unlocked: monthRank === 1,
     },
   ];
 }
 
-// Compute game-specific badges from game data.
-export function computeGameBadges({ gameSessions, gamePoints, gameLevels }) {
-  if (!gameSessions && !gamePoints) return [];
-
-  const totalSessions = (gameSessions || []).length;
-  const totalPoints = (gamePoints || 0);
-  const levels = gameLevels || [];
-  const maxLevel = levels.reduce((max, l) => Math.max(max, l.best_level_reached || 1), 1);
+// Compute game-specific badges from the single server summary object returned
+// by get_student_game_badges_summary() (total_points, total_sessions,
+// perfect_sessions, max_level, games_played). No existing callers use the
+// old signature, so this is a clean replacement.
+export function computeGameBadges({ totalPoints, totalSessions, perfectSessions, maxLevel }) {
+  if (!totalSessions && !totalPoints) return [];
 
   return [
     {
@@ -106,7 +104,7 @@ export function computeGameBadges({ gameSessions, gamePoints, gameLevels }) {
       emoji: '💯',
       labelKey: 'badgeFirstPerfectLabel',
       descriptionKey: 'badgeFirstPerfectDescription',
-      unlocked: (gameSessions || []).some(s => s.words_correct === s.words_total && s.words_total > 0),
+      unlocked: perfectSessions >= 1,
     },
     {
       id: 'game-5-rounds',

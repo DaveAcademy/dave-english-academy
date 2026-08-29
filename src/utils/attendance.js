@@ -18,3 +18,18 @@ export function attendanceRate(records) {
   const score = records.reduce((sum, a) => sum + (a.status === 'Present' ? 1 : a.status === 'Late' ? 0.5 : 0), 0);
   return Math.round((score / records.length) * 100);
 }
+
+// Consecutive 'Present' records counting back from the most recent one.
+// Any non-'Present' record (Late counts as a break) ends the streak, so it
+// answers "how many classes in a row have I been on time for" - the same
+// rule PortalHomeV3's currentPresentStreak() uses, shared here so the
+// streak badges compute identically on every page.
+export function currentStreak(records) {
+  const sorted = [...records].sort((a, b) => new Date(b.date) - new Date(a.date));
+  let streak = 0;
+  for (const r of sorted) {
+    if (r.status === 'Present') streak += 1;
+    else break;
+  }
+  return streak;
+}

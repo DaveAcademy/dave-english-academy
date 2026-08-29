@@ -26,17 +26,18 @@ import {
   LESSON_STATUS, teacherPaceFor, lessonCapFor, progressByLessonNumber, lessonStatusFor, nextUnfinishedLesson, translatedLessonTitle,
 } from '../../lib/lessonLogic';
 import { useAcademy } from '../../lib/AcademyDataContext';
-import { getGroupLeaderboard } from '../../lib/db';
+import { getGroupLeaderboard, getStudentGameBadgesSummary } from '../../lib/db';
 import { getStudentAchievements, getStudentPaymentStatus } from '../../lib/storageBridge';
 import Panel from '../../components/Panel';
 import StatCard from '../../components/StatCard';
 import StatusPill from '../../components/StatusPill';
 import BadgeShelf from '../../components/BadgeShelf';
+import AchievementPet from '../../components/AchievementPet';
 import ProfileHeroCard from '../../components/ProfileHeroCard';
 import QuickActions from '../../components/QuickActions';
 import SectionLabel from '../../components/SectionLabel';
-import { computeBadges } from '../../utils/badges';
-import { attendanceRate, filterByYearMonth } from '../../utils/attendance';
+import { computeBadges, computeGameBadges } from '../../utils/badges';
+import { attendanceRate, filterByYearMonth, currentStreak } from '../../utils/attendance';
 import { currentAndPreviousMonth, trendFrom, formatDateOnly } from '../../utils/date';
 import { formatUZS } from '../../utils/format';
 
@@ -101,42 +102,65 @@ function nextStepFor(attendance, homework, exam) {
   return { icon: '⭐', to: '/my-ranking', titleKey: 'v3NextStepMomentumTitle', textKey: 'v3NextStepMomentumText' };
 }
 
-function currentPresentStreak(records) {
-  const sorted = [...records].sort((a, b) => new Date(b.date) - new Date(a.date));
-  let streak = 0;
-  for (const r of sorted) {
-    if (r.status === 'Present') streak += 1;
-    else break;
-  }
-  return streak;
-}
-
 export default function PortalHomeV3() {
   const { t, i18n } = useTranslation(['dashboard', 'nav']);
   const dateLocale = i18n.language === 'uz' ? 'uz' : 'en-US';
   const { lessons, attendance, homework, homeworkStatus, exams, examScores, certificates, curriculumProgress, lessonProgress, me } = useAcademy();
   const [leaderboard, setLeaderboard] = useState(null);
+  const [weekLeaderboard, setWeekLeaderboard] = useState(null);
+  const [monthLeaderboard, setMonthLeaderboard] = useState(null);
+  const [gameSummary, setGameSummary] = useState(null);
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [earnedAchievementKeys, setEarnedAchievementKeys] = useState(null);
   const { current, previous } = useMemo(() => currentAndPreviousMonth(), []);
 
-  // get_group_leaderboard(level, 'all_time') - same RPC/convention as the
+  // get_group_leaderboard(level, period) - same RPC/convention as the
   // corrected MyProgress.jsx and MyRanking.jsx, scoped to active students
   // in this student's own level. Ranks server-side with SQL RANK() over
-  // lifetime point_transactions totals, so ties share a rank and no
-  // sequential client-side rank math is needed. Previously this called the
+  // point transactions (or the week/month window), so ties share a rank and
+  // no sequential client-side rank math is needed. Previously this called the
   // academy-wide get_leaderboard() RPC, which is why My Rank could reflect
   // the entire academy population instead of just this student's level.
+  // all_time drives "My Rank" and the Top-3 badge; week/month drive Rising
+  // Star / Student of the Week / Student of the Month with real positions.
   useEffect(() => {
     if (!me?.level) return;
     let cancelled = false;
-    getGroupLeaderboard(me.level, 'all_time')
-      .then((rows) => !cancelled && setLeaderboard(rows || []))
-      .catch(() => !cancelled && setLeaderboard([]));
+    Promise.all([
+      getGroupLeaderboard(me.level, 'all_time'),
+      getGroupLeaderboard(me.level, 'week'),
+      getGroupLeaderboard(me.level, 'month'),
+    ])
+      .then(([all, week, month]) => {
+        if (cancelled) return;
+        setLeaderboard(all || []);
+        setWeekLeaderboard(week || []);
+        setMonthLeaderboard(month || []);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setLeaderboard([]);
+        setWeekLeaderboard([]);
+        setMonthLeaderboard([]);
+      });
     return () => {
       cancelled = true;
     };
   }, [me?.level]);
+
+  // One aggregate for the game badges (see computeGameBadges) - lifetime
+  // game points, rounds, perfects, and max level, all from a single
+  // self-scoped server call so the badge shelf needs no extra table pulls.
+  useEffect(() => {
+    if (!me) return;
+    let cancelled = false;
+    getStudentGameBadgesSummary()
+      .then((data) => !cancelled && setGameSummary(data))
+      .catch(() => !cancelled && setGameSummary({ total_points: 0, total_sessions: 0, perfect_sessions: 0, max_level: 0, games_played: 0 }));
+    return () => {
+      cancelled = true;
+    };
+  }, [me?.id]);
 
   useEffect(() => {
     if (!me) return;
@@ -171,6 +195,9 @@ export default function PortalHomeV3() {
     const row = leaderboard.find((r) => r.student_id === me.id);
     return { points: row?.points ?? 0, rank: row?.rank ?? null };
   }, [leaderboard, me]);
+
+  const weekRank = useMemo(() => weekLeaderboard?.find((r) => r.student_id === me?.id)?.rank ?? null, [weekLeaderboard, me?.id]);
+  const monthRank = useMemo(() => monthLeaderboard?.find((r) => r.student_id === me?.id)?.rank ?? null, [monthLeaderboard, me?.id]);
 
   // Lessons no longer carry a meaningful scheduled_at (it's set to
   // creation time and never edited - see Lessons.jsx and PortalHome.jsx's
@@ -223,7 +250,7 @@ export default function PortalHomeV3() {
     const lastMonthRecords = filterByYearMonth(attendance, 'date', previous.year, previous.month);
     const rate = attendanceRate(monthRecords);
     const lastRate = attendanceRate(lastMonthRecords);
-    const streak = currentPresentStreak(attendance);
+    const streak = currentStreak(attendance);
 
     // Normalized against each exam's own max_score (average of score/max → %)
     // - the same formula the Dashboard and MyProgress use, so the number shown
@@ -258,20 +285,27 @@ export default function PortalHomeV3() {
     };
   }, [attendance, exams, examScores, homework, homeworkStatus, lessonStats, me, current, previous]);
 
-  const badges = useMemo(
-    () =>
-      computeBadges({
-        attendanceRate: stats.attendanceRate,
-        attendanceStreak: stats.attendanceStreak,
-        homeworkTotal: stats.homeworkTotal,
-        homeworkDoneRate: stats.homeworkDoneRate,
-        examAvg: stats.examAvg,
-        lessonsCompleted: stats.lessonsCompleted,
-        rank,
-        dbLessonExplorerUnlocked: earnedAchievementKeys ? earnedAchievementKeys.has('ten_lessons') : undefined,
-      }),
-    [stats, rank, earnedAchievementKeys]
-  );
+  const badges = useMemo(() => {
+    const studentBadges = computeBadges({
+      attendanceRate: stats.attendanceRate,
+      attendanceStreak: stats.attendanceStreak,
+      homeworkTotal: stats.homeworkTotal,
+      homeworkDoneRate: stats.homeworkDoneRate,
+      examAvg: stats.examAvg,
+      lessonsCompleted: stats.lessonsCompleted,
+      rank,
+      weekRank,
+      monthRank,
+    });
+    const gameBadges = computeGameBadges({
+      totalPoints: gameSummary?.total_points ?? 0,
+      totalSessions: gameSummary?.total_sessions ?? 0,
+      perfectSessions: gameSummary?.perfect_sessions ?? 0,
+      maxLevel: gameSummary?.max_level ?? 0,
+    });
+    return [...studentBadges, ...gameBadges];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stats, rank, weekRank, monthRank, gameSummary]);
 
   const insights = useMemo(() => {
     const list = [];
@@ -499,6 +533,11 @@ export default function PortalHomeV3() {
       <div className="mb-6">
         <SectionLabel>{t('milestonesTitle')}</SectionLabel>
         <BadgeShelf badges={badges} />
+      </div>
+
+      <div className="mb-6">
+        <SectionLabel>{t('petTitle')}</SectionLabel>
+        <AchievementPet achievementsCount={earnedAchievementKeys?.size ?? 0} />
       </div>
 
       <div className="mb-6">
