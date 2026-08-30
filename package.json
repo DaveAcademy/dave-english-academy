@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "deploy:production": "bash scripts/deploy-production.sh"
+    "deploy:production": "node scripts/deploy-production.cjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.1",
