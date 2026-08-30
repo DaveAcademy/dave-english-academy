@@ -286,6 +286,8 @@
   "badgeTop3Description": "Finish in the Top 3 (all-time ranking)",
   "badgeLessonExplorerLabel": "Lesson Explorer",
   "badgeLessonExplorerDescription": "Finish 10 lessons",
+  "badgeLessonsCompleteLabel": "Lesson Achiever",
+  "badgeLessonsCompleteDescription": "Complete 20 lessons",
   "badgeStudentOfWeekLabel": "Student of the Week",
   "badgeStudentOfWeekDescription": "Weekly winner",
   "badgeStudentOfMonthLabel": "Student of the Month",

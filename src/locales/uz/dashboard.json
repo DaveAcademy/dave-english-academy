@@ -286,6 +286,8 @@
   "badgeTop3Description": "Barcha vaqt reytingida TOP 3 ga kirish",
   "badgeLessonExplorerLabel": "Darslar tadqiqotchisi",
   "badgeLessonExplorerDescription": "10 ta darsni tugatish",
+  "badgeLessonsCompleteLabel": "Darslar muvaffaqiyatli tugatuvchisi",
+  "badgeLessonsCompleteDescription": "20 ta darsni tugatish",
   "badgeStudentOfWeekLabel": "Haftaning o'quvchisi",
   "badgeStudentOfWeekDescription": "Haftalik g'olib",
   "badgeStudentOfMonthLabel": "Oyning o'quvchisi",
