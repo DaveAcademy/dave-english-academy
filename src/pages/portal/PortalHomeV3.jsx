@@ -21,7 +21,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowRight, CalendarClock, MessageSquare, Award, BookOpen, FileCheck2, CreditCard } from 'lucide-react';
+import { ArrowRight, CalendarClock, MessageSquare, Award, Trophy, BookOpen, FileCheck2, CreditCard } from 'lucide-react';
 import {
   LESSON_STATUS, teacherPaceFor, lessonCapFor, progressByLessonNumber, lessonStatusFor, nextUnfinishedLesson, translatedLessonTitle,
 } from '../../lib/lessonLogic';
@@ -173,7 +173,28 @@ export default function PortalHomeV3() {
     };
   }, [me]);
 
-  const { current, previous } = useMemo(() => currentAndPreviousMonth(), []);
+  // The DB-backed achievement engine is the canonical source for
+  // lesson-count milestones (evaluate_achievements(), 0127) - fetched
+  // here only to resolve the 'lesson-explorer' badge below against the
+  // real 'ten_lessons' award rather than re-deriving it client-side, so
+  // it can't drift from what's actually recorded for the student. Every
+  // other computeBadges() badge is untouched.
+  useEffect(() => {
+    if (!me) return;
+    let cancelled = false;
+    getStudentAchievements(me.id)
+      .then((rows) => !cancelled && setEarnedAchievementKeys(new Set((rows || []).map((r) => r.achievement?.key))))
+      .catch(() => !cancelled && setEarnedAchievementKeys(new Set()));
+    return () => {
+      cancelled = true;
+    };
+  }, [me]);
+
+  const { points, rank } = useMemo(() => {
+    if (!me || !leaderboard) return { points: 0, rank: null };
+    const row = leaderboard.find((r) => r.student_id === me.id);
+    return { points: row?.points ?? 0, rank: row?.rank ?? null };
+  }, [leaderboard, me]);
 
   const weekRank = useMemo(() => weekLeaderboard?.find((r) => r.student_id === me?.id)?.rank ?? null, [weekLeaderboard, me?.id]);
   const monthRank = useMemo(() => monthLeaderboard?.find((r) => r.student_id === me?.id)?.rank ?? null, [monthLeaderboard, me?.id]);
@@ -321,6 +342,7 @@ export default function PortalHomeV3() {
     { to: '/my-homework', label: t('nav:myHomeworkFull'), Icon: BookOpen },
     { to: '/my-exams', label: t('nav:myExamsFull'), Icon: FileCheck2 },
     { to: '/my-certificates', label: t('nav:certificates'), Icon: Award },
+    { to: '/my-ranking', label: t('leaderboard'), Icon: Trophy },
     { to: '/chat', label: t('nav:messages'), Icon: MessageSquare },
   ];
 
@@ -339,8 +361,12 @@ export default function PortalHomeV3() {
 
       <div className="mb-6">
         <ProfileHeroCard
+          studentId={me.id}
           name={me.real_name}
-          meta={t('v3ClassMeta', { level: me.level, group: me.group_name || t('v3NoGroup'), points: me.points || 0 })}
+          meta={t('v3ClassMeta', { level: me.level, group: me.group_name || t('v3NoGroup'), points })}
+          points={points}
+          rank={rank}
+          streak={stats.attendanceStreak}
         />
       </div>
 

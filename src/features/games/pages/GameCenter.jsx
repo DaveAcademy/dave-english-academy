@@ -11,12 +11,15 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Gamepad2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Gamepad2, PawPrint } from 'lucide-react';
 import { useAcademy } from '../../../lib/AcademyDataContext';
 import GameCard from '../components/GameCard';
 import GameLeaderboardBlock from '../components/GameLeaderboardBlock';
-import { getGamePointsLeaderboard, getGameLevelLeaderboard, getGameOverallPointsLeaderboard, listMyGameLevels } from '../../../lib/storageBridge';
+import BadgeShelf from '../../../components/BadgeShelf';
+import { getGamePointsLeaderboard, getGameLevelLeaderboard, getGameOverallPointsLeaderboard, listMyGameLevels, listAchievementDefinitions, getStudentAchievements } from '../../../lib/storageBridge';
 import { formatStudentDisplayName } from '../utils/gameRecordFormat';
+import SectionLabel from '../../../components/SectionLabel';
 
 const OVERALL_TOP_N = 10;
 
@@ -128,13 +131,13 @@ const GAME_CENTER_ITEMS = [
 
 export default function GameCenter() {
   const { t } = useTranslation('game');
-  const { students } = useAcademy();
-  const me = students[0];
+  const { me } = useAcademy();
   const [bestScores, setBestScores] = useState({});
   const [records, setRecords] = useState({});
   const [levels, setLevels] = useState({});
   const [levelLeaders, setLevelLeaders] = useState({});
   const [overall, setOverall] = useState(null);
+  const [badges, setBadges] = useState([]);
 
   useEffect(() => {
     if (!me) return;
@@ -218,6 +221,29 @@ export default function GameCenter() {
       // Supplementary, same as the score leaderboard - a failed fetch just
       // means no level-leader chip.
     });
+
+    // DB-backed achievements: merge full catalog with student's earned
+    // achievements into the format BadgeShelf expects (id, emoji, labelKey,
+    // descriptionKey, unlocked). Uses real achievement_definitions +
+    // student_achievements tables, not the deprecated computeBadges().
+    Promise.all([listAchievementDefinitions(), getStudentAchievements(me.id)])
+      .then(([definitions, earned]) => {
+        if (cancelled) return;
+        const earnedKeys = new Set((earned || []).map((r) => r.achievement?.key));
+        setBadges(
+          (definitions || []).map((d) => ({
+            id: d.key,
+            emoji: d.icon || '🏅',
+            labelKey: d.name || d.key,
+            descriptionKey: d.description || '',
+            unlocked: earnedKeys.has(d.key),
+          }))
+        );
+      })
+      .catch(() => {
+        // Achievements are supplementary — empty state is fine.
+      });
+
     return () => {
       cancelled = true;
     };
@@ -240,6 +266,21 @@ export default function GameCenter() {
         </div>
       )}
 
+      {/* Pet Collection — featured card above the game grid */}
+      <Link
+        to="/pet-collection"
+        className="mb-5 flex items-center gap-4 overflow-hidden rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 p-4 shadow-card transition-all hover:shadow-md hover:ring-2 hover:ring-amber-300 active:scale-[0.98]"
+      >
+        <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-3xl">
+          <PawPrint className="h-7 w-7 text-amber-600" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-display text-sm font-bold text-ink">{t('petCollectionTitle')}</p>
+          <p className="mt-0.5 text-xs text-ink/50 truncate">{t('petCollectionSubtitle')}</p>
+        </div>
+        <span className="text-xs font-bold text-amber-600">{t('petGoToCollection')} →</span>
+      </Link>
+
       <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
         {GAME_CENTER_ITEMS.map((g) => (
           <GameCard
@@ -258,6 +299,13 @@ export default function GameCenter() {
           />
         ))}
       </div>
+
+      {badges.length > 0 && (
+        <div className="mt-6">
+          <SectionLabel>{t('achievementsTitle')}</SectionLabel>
+          <BadgeShelf badges={badges} />
+        </div>
+      )}
     </div>
   );
 }

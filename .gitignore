@@ -15,3 +15,6 @@ supabase/.temp/
 supabase/.branches/
 
 .supabase_anon_key
+
+# Deploy worktree
+C:/Dave-Academy-Deploy/
