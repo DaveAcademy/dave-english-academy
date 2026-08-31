@@ -46,6 +46,7 @@ const MyVocabulary = lazy(() => import('./features/dictionary/pages/MyVocabulary
 const Dictionary = lazy(() => import('./features/dictionary/pages/Dictionary'));
 const MyRanking = lazy(() => import('./features/rankings/pages/MyRanking'));
 const MyCertificates = lazy(() => import('./features/certificates/pages/MyCertificates'));
+const PetCollection = lazy(() => import('./pages/portal/PetCollection'));
 const GameCenter = lazy(() => import('./features/games/pages/GameCenter'));
 const Hangman = lazy(() => import('./features/games/pages/Hangman'));
 const VocabularyQuiz = lazy(() => import('./features/games/pages/VocabularyQuiz'));
