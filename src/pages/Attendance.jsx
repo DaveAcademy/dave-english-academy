@@ -19,7 +19,7 @@ const LEVEL_TABS = [
 
 export default function Attendance() {
   const { t } = useTranslation(['attendance', 'common']);
-  const { students, attendance, setAttendanceStatus, error } = useAcademy();
+  const { students, attendance, setAttendanceStatus, pendingAttendance, error } = useAcademy();
   const [date, setDate] = useState(todayISO());
   const [level, setLevel] = useState('');
 
@@ -102,31 +102,35 @@ export default function Attendance() {
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {activeStudents.map((s) => {
             const current = statusOf(s.id);
+            const pending = pendingAttendance?.has(`${s.id}:${date}`);
             return (
               <div key={s.id} className="rounded-xl bg-white p-3 shadow-card">
                 <p className="mb-2 font-semibold text-ink">{s.real_name}</p>
                 <div className="grid grid-cols-3 gap-2">
                   <button
                     onClick={() => setAttendanceStatus(s.id, date, 'Present')}
-                    className={`flex items-center justify-center gap-1 rounded-lg py-1.5 text-xs font-semibold ${
+                    disabled={pending}
+                    className={`flex items-center justify-center gap-1 rounded-lg py-1.5 text-xs font-semibold transition-opacity ${
                       current === 'Present' ? 'bg-active text-white' : 'bg-ink/5 text-ink/50'
-                    }`}
+                    } ${pending ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     <CheckCircle2 size={14} /> {t('present')}
                   </button>
                   <button
                     onClick={() => setAttendanceStatus(s.id, date, 'Late')}
-                    className={`flex items-center justify-center gap-1 rounded-lg py-1.5 text-xs font-semibold ${
+                    disabled={pending}
+                    className={`flex items-center justify-center gap-1 rounded-lg py-1.5 text-xs font-semibold transition-opacity ${
                       current === 'Late' ? 'bg-levelB text-white' : 'bg-ink/5 text-ink/50'
-                    }`}
+                    } ${pending ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     <Clock size={14} /> {t('late')}
                   </button>
                   <button
                     onClick={() => setAttendanceStatus(s.id, date, 'Absent')}
-                    className={`flex items-center justify-center gap-1 rounded-lg py-1.5 text-xs font-semibold ${
+                    disabled={pending}
+                    className={`flex items-center justify-center gap-1 rounded-lg py-1.5 text-xs font-semibold transition-opacity ${
                       current === 'Absent' ? 'bg-inactive text-white' : 'bg-ink/5 text-ink/50'
-                    }`}
+                    } ${pending ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     <XCircle size={14} /> {t('absent')}
                   </button>

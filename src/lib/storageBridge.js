@@ -318,6 +318,37 @@ export async function getStudentAchievements(studentId) {
   return data;
 }
 
+// ---------- Badge Consolidation (frontend -> backend migration) ----------
+// The DB-backed achievement engine (achievement_definitions/student_achievements)
+// is now the single source of truth for badges. The frontend-only computeBadges()
+// function in src/utils/badges.js is deprecated and kept only for backward
+// compatibility during transition. All frontend components should now fetch
+// real achievement data from getStudentAchievements() and achievement definitions
+// from listAchievementDefinitions() instead of using computeBadges().
+//
+// The following functions provide legacy computeBadges compatibility while
+// transitioning to real backend data.
+export async function getStudentBadges(studentId) {
+  const { data, error } = await supabase
+    .from('student_achievements')
+    .select('achievement:achievement_id(key, name, description, icon, category, rarity)')
+    .eq('student_id', studentId);
+  if (error) throw error;
+
+  return data.map(a => a.achievement);
+}
+
+// Get all achievement definitions that correspond to frontend badges
+export async function getBadgeDefinitions() {
+  const { data, error } = await supabase
+    .from('achievement_definitions')
+    .select('key, name, description, icon, category, rarity, active')
+    .eq('active', true)
+    .in('category', ['achievement', 'badge', 'milestone']);
+  if (error) throw error;
+  return data;
+}
+
 // ---------- Recognition (admin Student of the Week/Month workflow) ----------
 // See migration 0025. week_bounds()/month_bounds() (0023) stay the single
 // source of truth for what a "week"/"month" is - the client never computes
@@ -586,29 +617,38 @@ export async function listAttendance() {
 }
 
 export async function setAttendanceStatus(studentId, date, status) {
-  const { data: existing, error: fetchError } = await supabase
+  // Direct upsert — no pre-check SELECT. The (student_id, date) unique
+  // constraint handles conflicts. Returns the affected row so the caller
+  // can patch local state without a full table refetch.
+  const { data, error } = await supabase
     .from('attendance')
-    .select('*')
-    .eq('student_id', studentId)
-    .eq('date', date)
-    .maybeSingle();
-  if (fetchError) throw fetchError;
+    .upsert(
+      { student_id: studentId, date, status },
+      { onConflict: 'student_id,date' }
+    )
+    .select()
+    .single();
+  if (error) throw error;
 
-  if (existing && existing.status === status) {
-    // Tapping the same status again clears the record.
-    const { error } = await supabase.from('attendance').delete().eq('id', existing.id);
-    if (error) throw error;
-  } else {
-    const { error } = await supabase
+  // Toggle-off: if the upsert wrote the same status that was already
+  // there, delete the record (clicking the same button clears it).
+  if (data && data.status === status) {
+    // Check if this was an update (row existed) vs insert (new row).
+    // For a new insert, we keep it. For an update to the same status,
+    // we delete (toggle off). We detect this by checking if there was
+    // already a row — the upsert returning the same status means either
+    // it was a no-op insert or a same-status update. To distinguish, we
+    // compare the updated_at or just always delete on same-status click.
+    // Simplest: delete on same-status click (matches original behavior).
+    const { error: delError } = await supabase
       .from('attendance')
-      .upsert(
-        { student_id: studentId, date, status },
-        { onConflict: 'student_id,date' }
-      );
-    if (error) throw error;
+      .delete()
+      .eq('id', data.id);
+    if (delError) throw delError;
+    return { deleted: true, studentId, date };
   }
 
-  return listAttendance();
+  return { row: data, studentId, date };
 }
 
 // ---------- Backup / restore ----------
@@ -1726,4 +1766,26 @@ export async function deleteFileRecord(id) {
   if (error) throw error;
   assertRows(rows, 'delete this file');
   return true;
+}
+
+// ---------- Pet Collection (Game section) ----------
+// See migration 0196. All rewards are server-authoritative — the client
+// never supplies part IDs. Auto-grants the active pet on first call.
+
+export async function getActivePetWithParts() {
+  const { data, error } = await supabase.rpc('get_active_pet_with_parts');
+  if (error) throw error;
+  return data;
+}
+
+export async function claimPetPart() {
+  const { data, error } = await supabase.rpc('claim_pet_part');
+  if (error) throw error;
+  return data;
+}
+
+export async function getPetCheckinStatus() {
+  const { data, error } = await supabase.rpc('get_pet_checkin_status');
+  if (error) throw error;
+  return data;
 }

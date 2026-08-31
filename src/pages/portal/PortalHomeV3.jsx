@@ -21,21 +21,18 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowRight, CalendarClock, MessageSquare, Award, Trophy, BookOpen, FileCheck2, CreditCard } from 'lucide-react';
+import { ArrowRight, CalendarClock, MessageSquare, Award, BookOpen, FileCheck2, CreditCard } from 'lucide-react';
 import {
   LESSON_STATUS, teacherPaceFor, lessonCapFor, progressByLessonNumber, lessonStatusFor, nextUnfinishedLesson, translatedLessonTitle,
 } from '../../lib/lessonLogic';
 import { useAcademy } from '../../lib/AcademyDataContext';
-import { getGroupLeaderboard } from '../../lib/db';
-import { getStudentAchievements, getStudentPaymentStatus } from '../../lib/storageBridge';
+import { getStudentPaymentStatus } from '../../lib/storageBridge';
 import Panel from '../../components/Panel';
 import StatCard from '../../components/StatCard';
 import StatusPill from '../../components/StatusPill';
-import BadgeShelf from '../../components/BadgeShelf';
 import ProfileHeroCard from '../../components/ProfileHeroCard';
 import QuickActions from '../../components/QuickActions';
 import SectionLabel from '../../components/SectionLabel';
-import { computeBadges } from '../../utils/badges';
 import { attendanceRate, filterByYearMonth } from '../../utils/attendance';
 import { currentAndPreviousMonth, trendFrom, formatDateOnly } from '../../utils/date';
 import { formatUZS } from '../../utils/format';
@@ -105,7 +102,8 @@ function currentPresentStreak(records) {
   const sorted = [...records].sort((a, b) => new Date(b.date) - new Date(a.date));
   let streak = 0;
   for (const r of sorted) {
-    if (r.status === 'Present') streak += 1;
+    // Late counts as present — a student who is late is still present.
+    if (r.status !== 'Absent') streak += 1;
     else break;
   }
   return streak;
@@ -115,28 +113,7 @@ export default function PortalHomeV3() {
   const { t, i18n } = useTranslation(['dashboard', 'nav']);
   const dateLocale = i18n.language === 'uz' ? 'uz' : 'en-US';
   const { lessons, attendance, homework, homeworkStatus, exams, examScores, certificates, curriculumProgress, lessonProgress, me } = useAcademy();
-  const [leaderboard, setLeaderboard] = useState(null);
   const [paymentStatus, setPaymentStatus] = useState(null);
-  const [earnedAchievementKeys, setEarnedAchievementKeys] = useState(null);
-  const { current, previous } = useMemo(() => currentAndPreviousMonth(), []);
-
-  // get_group_leaderboard(level, 'all_time') - same RPC/convention as the
-  // corrected MyProgress.jsx and MyRanking.jsx, scoped to active students
-  // in this student's own level. Ranks server-side with SQL RANK() over
-  // lifetime point_transactions totals, so ties share a rank and no
-  // sequential client-side rank math is needed. Previously this called the
-  // academy-wide get_leaderboard() RPC, which is why My Rank could reflect
-  // the entire academy population instead of just this student's level.
-  useEffect(() => {
-    if (!me?.level) return;
-    let cancelled = false;
-    getGroupLeaderboard(me.level, 'all_time')
-      .then((rows) => !cancelled && setLeaderboard(rows || []))
-      .catch(() => !cancelled && setLeaderboard([]));
-    return () => {
-      cancelled = true;
-    };
-  }, [me?.level]);
 
   useEffect(() => {
     if (!me) return;
@@ -149,28 +126,7 @@ export default function PortalHomeV3() {
     };
   }, [me]);
 
-  // The DB-backed achievement engine is the canonical source for
-  // lesson-count milestones (evaluate_achievements(), 0127) - fetched
-  // here only to resolve the 'lesson-explorer' badge below against the
-  // real 'ten_lessons' award rather than re-deriving it client-side, so
-  // it can't drift from what's actually recorded for the student. Every
-  // other computeBadges() badge is untouched.
-  useEffect(() => {
-    if (!me) return;
-    let cancelled = false;
-    getStudentAchievements(me.id)
-      .then((rows) => !cancelled && setEarnedAchievementKeys(new Set((rows || []).map((r) => r.achievement?.key))))
-      .catch(() => !cancelled && setEarnedAchievementKeys(new Set()));
-    return () => {
-      cancelled = true;
-    };
-  }, [me]);
-
-  const { points, rank } = useMemo(() => {
-    if (!me || !leaderboard) return { points: 0, rank: null };
-    const row = leaderboard.find((r) => r.student_id === me.id);
-    return { points: row?.points ?? 0, rank: row?.rank ?? null };
-  }, [leaderboard, me]);
+  const { current, previous } = useMemo(() => currentAndPreviousMonth(), []);
 
   // Lessons no longer carry a meaningful scheduled_at (it's set to
   // creation time and never edited - see Lessons.jsx and PortalHome.jsx's
@@ -258,21 +214,6 @@ export default function PortalHomeV3() {
     };
   }, [attendance, exams, examScores, homework, homeworkStatus, lessonStats, me, current, previous]);
 
-  const badges = useMemo(
-    () =>
-      computeBadges({
-        attendanceRate: stats.attendanceRate,
-        attendanceStreak: stats.attendanceStreak,
-        homeworkTotal: stats.homeworkTotal,
-        homeworkDoneRate: stats.homeworkDoneRate,
-        examAvg: stats.examAvg,
-        lessonsCompleted: stats.lessonsCompleted,
-        rank,
-        dbLessonExplorerUnlocked: earnedAchievementKeys ? earnedAchievementKeys.has('ten_lessons') : undefined,
-      }),
-    [stats, rank, earnedAchievementKeys]
-  );
-
   const insights = useMemo(() => {
     const list = [];
     if (stats.attendanceTrend) {
@@ -308,7 +249,6 @@ export default function PortalHomeV3() {
     { to: '/my-homework', label: t('nav:myHomeworkFull'), Icon: BookOpen },
     { to: '/my-exams', label: t('nav:myExamsFull'), Icon: FileCheck2 },
     { to: '/my-certificates', label: t('nav:certificates'), Icon: Award },
-    { to: '/my-ranking', label: t('leaderboard'), Icon: Trophy },
     { to: '/chat', label: t('nav:messages'), Icon: MessageSquare },
   ];
 
@@ -327,12 +267,8 @@ export default function PortalHomeV3() {
 
       <div className="mb-6">
         <ProfileHeroCard
-          studentId={me.id}
           name={me.real_name}
-          meta={t('v3ClassMeta', { level: me.level, group: me.group_name || t('v3NoGroup'), points })}
-          points={points}
-          rank={rank}
-          streak={stats.attendanceStreak}
+          meta={t('v3ClassMeta', { level: me.level, group: me.group_name || t('v3NoGroup'), points: me.points || 0 })}
         />
       </div>
 
@@ -494,11 +430,6 @@ export default function PortalHomeV3() {
       <div className="mb-6">
         <SectionLabel>{t('quickActionsLabel')}</SectionLabel>
         <QuickActions actions={quickActions} />
-      </div>
-
-      <div className="mb-6">
-        <SectionLabel>{t('milestonesTitle')}</SectionLabel>
-        <BadgeShelf badges={badges} />
       </div>
 
       <div className="mb-6">

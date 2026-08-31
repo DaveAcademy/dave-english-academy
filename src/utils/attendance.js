@@ -12,9 +12,10 @@ export function filterByYearMonth(records, dateField, year, month) {
     return y === year && m === month;
   });
 }
-
 export function attendanceRate(records) {
   if (records.length === 0) return null;
-  const score = records.reduce((sum, a) => sum + (a.status === 'Present' ? 1 : a.status === 'Late' ? 0.5 : 0), 0);
+  // Late counts as present — a student who is late is still present.
+  const score = records.reduce((sum, a) =>
+    sum + (a.status === 'Absent' ? 0 : 1), 0);
   return Math.round((score / records.length) * 100);
 }

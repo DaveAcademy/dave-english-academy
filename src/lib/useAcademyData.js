@@ -347,18 +347,74 @@ export function useAcademyData() {
     [touchBackup]
   );
 
+  const [pendingAttendance, setPendingAttendance] = useState(new Set());
+
   const setAttendanceStatus = useCallback(
     async (studentId, date, status) => {
+      // Deduplicate: prevent concurrent saves for the same student+date.
+      const key = `${studentId}:${date}`;
+      if (pendingAttendance.has(key)) return;
+      setPendingAttendance((prev) => new Set([...prev, key]));
+
+      // Optimistic update: immediately reflect the change in local state.
+      setAttendance((prev) => {
+        const existing = prev.find((a) => a.student_id === studentId && a.date === date);
+        if (existing) {
+          if (existing.status === status) {
+            // Toggle off: remove the record.
+            return prev.filter((a) => a.id !== existing.id);
+          }
+          // Update existing record.
+          return prev.map((a) => (a.id === existing.id ? { ...a, status } : a));
+        }
+        // Insert new record (optimistic — id may be placeholder).
+        return [...prev, { id: `opt-${key}`, student_id: studentId, date, status }];
+      });
+
       try {
-        const updated = await db.setAttendanceStatus(studentId, date, status);
-        setAttendance(updated);
+        const result = await db.setAttendanceStatus(studentId, date, status);
+        // Replace optimistic state with real data from the server.
+        setAttendance((prev) => {
+          // Remove the optimistic entry.
+          const withoutOptimistic = prev.filter(
+            (a) => !(a.id === `opt-${key}` && a.student_id === studentId && a.date === date)
+          );
+          if (result.deleted) {
+            // Server deleted the row — remove any matching record.
+            return withoutOptimistic.filter(
+              (a) => !(a.student_id === result.studentId && a.date === result.date)
+            );
+          }
+          // Server upserted — merge the real row.
+          const real = result.row;
+          const exists = withoutOptimistic.find((a) => a.student_id === real.student_id && a.date === real.date);
+          if (exists) {
+            return withoutOptimistic.map((a) => (a.id === real.id ? real : a));
+          }
+          return [...withoutOptimistic, real];
+        });
         touchBackup();
       } catch (e) {
+        // Rollback: revert the optimistic update using functional state
+        // to avoid stale closure issues.
+        setAttendance((prev) => {
+          // Remove the optimistic entry.
+          const reverted = prev.filter(
+            (a) => !(a.id === `opt-${key}` && a.student_id === studentId && a.date === date)
+          );
+          return reverted;
+        });
         setError('Could not update attendance. Please try again.');
         throw e;
+      } finally {
+        setPendingAttendance((prev) => {
+          const next = new Set(prev);
+          next.delete(key);
+          return next;
+        });
       }
     },
-    [touchBackup]
+    [touchBackup, pendingAttendance]
   );
 
   const addLesson = useCallback(async (data) => {
@@ -833,6 +889,7 @@ export function useAcademyData() {
     removeStudent,
     importStudents,
     setAttendanceStatus,
+    pendingAttendance,
     addLesson,
     editLesson,
     removeLesson,
