@@ -17,7 +17,7 @@ import { useAcademy } from '../../../lib/AcademyDataContext';
 import GameCard from '../components/GameCard';
 import GameLeaderboardBlock from '../components/GameLeaderboardBlock';
 import BadgeShelf from '../../../components/BadgeShelf';
-import { getGamePointsLeaderboard, getGameLevelLeaderboard, getGameOverallPointsLeaderboard, listMyGameLevels, listAchievementDefinitions, getStudentAchievements } from '../../../lib/storageBridge';
+import { getGamePointsLeaderboard, getGameLevelLeaderboard, getGamePeriodLeaderboard, listMyGameLevels, listAchievementDefinitions, getStudentAchievements } from '../../../lib/storageBridge';
 import { formatStudentDisplayName } from '../utils/gameRecordFormat';
 import SectionLabel from '../../../components/SectionLabel';
 
@@ -137,6 +137,8 @@ export default function GameCenter() {
   const [levels, setLevels] = useState({});
   const [levelLeaders, setLevelLeaders] = useState({});
   const [overall, setOverall] = useState(null);
+  const [loadingOverall, setLoadingOverall] = useState(true);
+  const [period, setPeriod] = useState('weekly');
   const [badges, setBadges] = useState([]);
 
   useEffect(() => {
@@ -165,34 +167,6 @@ export default function GameCenter() {
     }).catch(() => {
       // Leaderboard is supplementary here - a failed fetch should leave
       // the game tiles playable with no score chips, not break the page.
-    });
-    getGameOverallPointsLeaderboard().then((rows) => {
-      if (cancelled) return;
-      const overallRows = rows.map((r) => ({
-        studentId: r.student_id,
-        rank: r.rank,
-        name: formatStudentDisplayName(r.real_name, r.english_name),
-        score: Number(r.total_points),
-        isMe: r.student_id === me.id,
-      }));
-      const myIndex = overallRows.findIndex((r) => r.isMe);
-      const myRow = myIndex >= 0 ? overallRows[myIndex] : null;
-      let nextTarget = null;
-      if (myRow) {
-        let i = myIndex - 1;
-        while (i >= 0 && overallRows[i].score === myRow.score) i--;
-        if (i >= 0) nextTarget = overallRows[i];
-      }
-      setOverall({
-        top: overallRows.slice(0, OVERALL_TOP_N),
-        rest: overallRows.slice(OVERALL_TOP_N),
-        myBest: myRow ? myRow.score : null,
-        myRank: myRow ? myRow.rank : null,
-        isRecordHolder: myRow ? myRow.rank === 1 : false,
-        nextTarget: nextTarget ? { name: nextTarget.name, score: nextTarget.score, rank: nextTarget.rank, gap: nextTarget.score - myRow.score } : null,
-      });
-    }).catch(() => {
-      // Supplementary, same as the per-game leaderboard.
     });
     listMyGameLevels(me.id).then((rows) => {
       if (cancelled) return;
@@ -249,6 +223,47 @@ export default function GameCenter() {
     };
   }, [me]);
 
+  // Period-based overall leaderboard: re-fetches when period changes.
+  useEffect(() => {
+    if (!me) return;
+    let cancelled = false;
+    setLoadingOverall(true);
+    getGamePeriodLeaderboard(period)
+      .then((rows) => {
+        if (cancelled) return;
+        const overallRows = (rows || []).map((r) => ({
+          studentId: r.student_id,
+          rank: r.rank,
+          name: formatStudentDisplayName(r.real_name, r.english_name),
+          score: Number(r.total_points),
+          isMe: r.student_id === me.id,
+        }));
+        const myIndex = overallRows.findIndex((r) => r.isMe);
+        const myRow = myIndex >= 0 ? overallRows[myIndex] : null;
+        let nextTarget = null;
+        if (myRow) {
+          let i = myIndex - 1;
+          while (i >= 0 && overallRows[i].score === myRow.score) i--;
+          if (i >= 0) nextTarget = overallRows[i];
+        }
+        setOverall({
+          top: overallRows.slice(0, OVERALL_TOP_N),
+          rest: overallRows.slice(OVERALL_TOP_N),
+          myBest: myRow ? myRow.score : null,
+          myRank: myRow ? myRow.rank : null,
+          isRecordHolder: myRow ? myRow.rank === 1 : false,
+          nextTarget: nextTarget ? { name: nextTarget.name, score: nextTarget.score, rank: nextTarget.rank, gap: nextTarget.score - myRow.score } : null,
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setOverall(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingOverall(false);
+      });
+    return () => { cancelled = true; };
+  }, [me, period]);
+
   return (
     <div>
       <header className="mb-6 overflow-hidden rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 px-5 py-7 text-white shadow-card sm:px-8 sm:py-9">
@@ -259,12 +274,34 @@ export default function GameCenter() {
         <p className="mt-1.5 max-w-sm text-sm text-white/80">{t('gameCenterSubtitle')}</p>
       </header>
 
-      {overall && overall.top.length > 0 && (
-        <div className="mb-6">
-          <h2 className="mb-2 font-display text-lg font-bold text-ink">{t('overallRankingTitle')}</h2>
-          <GameLeaderboardBlock record={overall} isNewBest={false} />
+      <div className="mb-6">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h2 className="font-display text-lg font-bold text-ink">{t('overallRankingTitle')}</h2>
+          <div className="flex gap-1 overflow-x-auto">
+            {['daily', 'weekly', 'monthly', 'all_time'].map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => setPeriod(p)}
+                className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-bold transition-colors ${
+                  period === p
+                    ? 'bg-brand-600 text-white shadow-sm'
+                    : 'bg-ink/5 text-ink/60 hover:bg-ink/10'
+                }`}
+              >
+                {t(`period_${p}`)}
+              </button>
+            ))}
+          </div>
         </div>
-      )}
+        {loadingOverall ? (
+          <p className="py-4 text-center text-sm text-ink/40">{t('loading')}</p>
+        ) : overall && overall.top.length > 0 ? (
+          <GameLeaderboardBlock record={overall} isNewBest={false} />
+        ) : (
+          <p className="py-4 text-center text-sm text-ink/40">{t('noRankingData')}</p>
+        )}
+      </div>
 
       {/* Pet Collection — featured card above the game grid */}
       <Link

@@ -118,5 +118,10 @@
   "petClaimError": "Something went wrong. Please try again.",
   "petNoLinkedStudent": "Your account isn't linked to a student yet. Please ask your teacher for help.",
   "petGoToCollection": "My Pet",
-  "achievementsTitle": "Achievements"
+  "achievementsTitle": "Achievements",
+  "period_daily": "Daily",
+  "period_weekly": "Weekly",
+  "period_monthly": "Monthly",
+  "period_all_time": "All Time",
+  "noRankingData": "No rankings yet for this period. Play some games!"
 }

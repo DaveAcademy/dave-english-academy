@@ -1407,6 +1407,15 @@ export async function getGameOverallPointsLeaderboard() {
   return data;
 }
 
+// Period-filtered Game Points leaderboard across every game (migration 0198) -
+// one combined ranking with daily/weekly/monthly/all_time filtering. The
+// caller supplies a validated period string; the RPC rejects anything else.
+export async function getGamePeriodLeaderboard(period) {
+  const { data, error } = await supabase.rpc('get_game_points_period_leaderboard', { p_period: period });
+  if (error) throw error;
+  return data;
+}
+
 // Aggregate for the student's own game badges (computeGameBadges) - one
 // self-scoped server-side call (migration 20260829150000) instead of three
 // table pulls. Returns { total_points, total_sessions, perfect_sessions,

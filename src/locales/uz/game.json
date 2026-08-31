@@ -118,5 +118,10 @@
   "petClaimError": "Xatolik yuz berdi. Qaytadan urinib ko'ring.",
   "petNoLinkedStudent": "Hisobingiz hali talaba bilan bog'lanmagan. O'qituvchingizdan yordam so'rang.",
   "petGoToCollection": "Mening hayvonim",
-  "achievementsTitle": "Yutuqlar"
+  "achievementsTitle": "Yutuqlar",
+  "period_daily": "Kunlik",
+  "period_weekly": "Haftalik",
+  "period_monthly": "Oylik",
+  "period_all_time": "Umumiy",
+  "noRankingData": "Bu davr uchun hali reyting yo'q. O'ynab ko'ring!"
 }
