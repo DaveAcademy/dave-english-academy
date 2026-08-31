@@ -21,22 +21,18 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowRight, CalendarClock, MessageSquare, Award, Trophy, BookOpen, FileCheck2, CreditCard } from 'lucide-react';
+import { ArrowRight, CalendarClock, MessageSquare, Award, BookOpen, FileCheck2, CreditCard } from 'lucide-react';
 import {
   LESSON_STATUS, teacherPaceFor, lessonCapFor, progressByLessonNumber, lessonStatusFor, nextUnfinishedLesson, translatedLessonTitle,
 } from '../../lib/lessonLogic';
 import { useAcademy } from '../../lib/AcademyDataContext';
-import { getGroupLeaderboard, getStudentGameBadgesSummary } from '../../lib/db';
-import { getStudentAchievements, getStudentPaymentStatus } from '../../lib/storageBridge';
+import { getStudentPaymentStatus } from '../../lib/storageBridge';
 import Panel from '../../components/Panel';
 import StatCard from '../../components/StatCard';
 import StatusPill from '../../components/StatusPill';
-import BadgeShelf from '../../components/BadgeShelf';
-import AchievementPet from '../../components/AchievementPet';
 import ProfileHeroCard from '../../components/ProfileHeroCard';
 import QuickActions from '../../components/QuickActions';
 import SectionLabel from '../../components/SectionLabel';
-import { computeBadges, computeGameBadges } from '../../utils/badges';
 import { attendanceRate, filterByYearMonth, currentStreak } from '../../utils/attendance';
 import { currentAndPreviousMonth, trendFrom, formatDateOnly } from '../../utils/date';
 import { formatUZS } from '../../utils/format';
@@ -106,61 +102,8 @@ export default function PortalHomeV3() {
   const { t, i18n } = useTranslation(['dashboard', 'nav']);
   const dateLocale = i18n.language === 'uz' ? 'uz' : 'en-US';
   const { lessons, attendance, homework, homeworkStatus, exams, examScores, certificates, curriculumProgress, lessonProgress, me } = useAcademy();
-  const [leaderboard, setLeaderboard] = useState(null);
-  const [weekLeaderboard, setWeekLeaderboard] = useState(null);
-  const [monthLeaderboard, setMonthLeaderboard] = useState(null);
-  const [gameSummary, setGameSummary] = useState(null);
   const [paymentStatus, setPaymentStatus] = useState(null);
-  const [earnedAchievementKeys, setEarnedAchievementKeys] = useState(null);
   const { current, previous } = useMemo(() => currentAndPreviousMonth(), []);
-
-  // get_group_leaderboard(level, period) - same RPC/convention as the
-  // corrected MyProgress.jsx and MyRanking.jsx, scoped to active students
-  // in this student's own level. Ranks server-side with SQL RANK() over
-  // point transactions (or the week/month window), so ties share a rank and
-  // no sequential client-side rank math is needed. Previously this called the
-  // academy-wide get_leaderboard() RPC, which is why My Rank could reflect
-  // the entire academy population instead of just this student's level.
-  // all_time drives "My Rank" and the Top-3 badge; week/month drive Rising
-  // Star / Student of the Week / Student of the Month with real positions.
-  useEffect(() => {
-    if (!me?.level) return;
-    let cancelled = false;
-    Promise.all([
-      getGroupLeaderboard(me.level, 'all_time'),
-      getGroupLeaderboard(me.level, 'week'),
-      getGroupLeaderboard(me.level, 'month'),
-    ])
-      .then(([all, week, month]) => {
-        if (cancelled) return;
-        setLeaderboard(all || []);
-        setWeekLeaderboard(week || []);
-        setMonthLeaderboard(month || []);
-      })
-      .catch(() => {
-        if (cancelled) return;
-        setLeaderboard([]);
-        setWeekLeaderboard([]);
-        setMonthLeaderboard([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [me?.level]);
-
-  // One aggregate for the game badges (see computeGameBadges) - lifetime
-  // game points, rounds, perfects, and max level, all from a single
-  // self-scoped server call so the badge shelf needs no extra table pulls.
-  useEffect(() => {
-    if (!me) return;
-    let cancelled = false;
-    getStudentGameBadgesSummary()
-      .then((data) => !cancelled && setGameSummary(data))
-      .catch(() => !cancelled && setGameSummary({ total_points: 0, total_sessions: 0, perfect_sessions: 0, max_level: 0, games_played: 0 }));
-    return () => {
-      cancelled = true;
-    };
-  }, [me?.id]);
 
   useEffect(() => {
     if (!me) return;
@@ -172,32 +115,6 @@ export default function PortalHomeV3() {
       cancelled = true;
     };
   }, [me]);
-
-  // The DB-backed achievement engine is the canonical source for
-  // lesson-count milestones (evaluate_achievements(), 0127) - fetched
-  // here only to resolve the 'lesson-explorer' badge below against the
-  // real 'ten_lessons' award rather than re-deriving it client-side, so
-  // it can't drift from what's actually recorded for the student. Every
-  // other computeBadges() badge is untouched.
-  useEffect(() => {
-    if (!me) return;
-    let cancelled = false;
-    getStudentAchievements(me.id)
-      .then((rows) => !cancelled && setEarnedAchievementKeys(new Set((rows || []).map((r) => r.achievement?.key))))
-      .catch(() => !cancelled && setEarnedAchievementKeys(new Set()));
-    return () => {
-      cancelled = true;
-    };
-  }, [me]);
-
-  const { points, rank } = useMemo(() => {
-    if (!me || !leaderboard) return { points: 0, rank: null };
-    const row = leaderboard.find((r) => r.student_id === me.id);
-    return { points: row?.points ?? 0, rank: row?.rank ?? null };
-  }, [leaderboard, me]);
-
-  const weekRank = useMemo(() => weekLeaderboard?.find((r) => r.student_id === me?.id)?.rank ?? null, [weekLeaderboard, me?.id]);
-  const monthRank = useMemo(() => monthLeaderboard?.find((r) => r.student_id === me?.id)?.rank ?? null, [monthLeaderboard, me?.id]);
 
   // Lessons no longer carry a meaningful scheduled_at (it's set to
   // creation time and never edited - see Lessons.jsx and PortalHome.jsx's
@@ -285,28 +202,6 @@ export default function PortalHomeV3() {
     };
   }, [attendance, exams, examScores, homework, homeworkStatus, lessonStats, me, current, previous]);
 
-  const badges = useMemo(() => {
-    const studentBadges = computeBadges({
-      attendanceRate: stats.attendanceRate,
-      attendanceStreak: stats.attendanceStreak,
-      homeworkTotal: stats.homeworkTotal,
-      homeworkDoneRate: stats.homeworkDoneRate,
-      examAvg: stats.examAvg,
-      lessonsCompleted: stats.lessonsCompleted,
-      rank,
-      weekRank,
-      monthRank,
-    });
-    const gameBadges = computeGameBadges({
-      totalPoints: gameSummary?.total_points ?? 0,
-      totalSessions: gameSummary?.total_sessions ?? 0,
-      perfectSessions: gameSummary?.perfect_sessions ?? 0,
-      maxLevel: gameSummary?.max_level ?? 0,
-    });
-    return [...studentBadges, ...gameBadges];
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stats, rank, weekRank, monthRank, gameSummary]);
-
   const insights = useMemo(() => {
     const list = [];
     if (stats.attendanceTrend) {
@@ -342,7 +237,6 @@ export default function PortalHomeV3() {
     { to: '/my-homework', label: t('nav:myHomeworkFull'), Icon: BookOpen },
     { to: '/my-exams', label: t('nav:myExamsFull'), Icon: FileCheck2 },
     { to: '/my-certificates', label: t('nav:certificates'), Icon: Award },
-    { to: '/my-ranking', label: t('leaderboard'), Icon: Trophy },
     { to: '/chat', label: t('nav:messages'), Icon: MessageSquare },
   ];
 
@@ -363,9 +257,7 @@ export default function PortalHomeV3() {
         <ProfileHeroCard
           studentId={me.id}
           name={me.real_name}
-          meta={t('v3ClassMeta', { level: me.level, group: me.group_name || t('v3NoGroup'), points })}
-          points={points}
-          rank={rank}
+          meta={t('v3ClassMeta', { level: me.level, group: me.group_name || t('v3NoGroup') })}
           streak={stats.attendanceStreak}
         />
       </div>
@@ -528,16 +420,6 @@ export default function PortalHomeV3() {
       <div className="mb-6">
         <SectionLabel>{t('quickActionsLabel')}</SectionLabel>
         <QuickActions actions={quickActions} />
-      </div>
-
-      <div className="mb-6">
-        <SectionLabel>{t('milestonesTitle')}</SectionLabel>
-        <BadgeShelf badges={badges} />
-      </div>
-
-      <div className="mb-6">
-        <SectionLabel>{t('petTitle')}</SectionLabel>
-        <AchievementPet achievementsCount={earnedAchievementKeys?.size ?? 0} />
       </div>
 
       <div className="mb-6">

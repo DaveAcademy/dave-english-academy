@@ -115,6 +115,8 @@
   "petUnlocksDate": "{{date}} da ochiladi",
   "petNoPartsUnlocked": "Hali mavjud emas. 8-sentabrga qarang!",
   "petNoActivePet": "Hozir faol hayvon yo'q. Keyingi oyga qarang!",
+  "petClaimError": "Xatolik yuz berdi. Qaytadan urinib ko'ring.",
+  "petNoLinkedStudent": "Hisobingiz hali talaba bilan bog'lanmagan. O'qituvchingizdan yordam so'rang.",
   "petGoToCollection": "Mening hayvonim",
   "achievementsTitle": "Yutuqlar"
 }

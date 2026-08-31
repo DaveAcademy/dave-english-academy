@@ -115,6 +115,8 @@
   "petUnlocksDate": "Unlocks {{date}}",
   "petNoPartsUnlocked": "No parts available yet. Come back on Sep 8!",
   "petNoActivePet": "No active pet right now. Check back next month!",
+  "petClaimError": "Something went wrong. Please try again.",
+  "petNoLinkedStudent": "Your account isn't linked to a student yet. Please ask your teacher for help.",
   "petGoToCollection": "My Pet",
   "achievementsTitle": "Achievements"
 }

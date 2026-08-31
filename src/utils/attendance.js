@@ -1,7 +1,7 @@
 // attendance.js
 // Shared attendance-rate math so the Admin, Teacher, and Student
 // dashboards (and their month-over-month trends) compute it identically
-// instead of re-implementing the same Present=1/Late=0.5/Absent=0 formula
+// instead of re-implementing the same Present=1/Late=1/Absent=0 formula
 // in three places.
 
 export function filterByYearMonth(records, dateField, year, month) {

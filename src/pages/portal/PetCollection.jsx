@@ -42,11 +42,15 @@ export default function PetCollection() {
       setPetData(pet);
       setCheckinStatus(status);
     } catch (err) {
-      setError(err.message || String(err));
+      const msg = String(err.message || err);
+      if (/already claimed/i.test(msg)) setError(t('petAlreadyClaimed'));
+      else if (/no linked student/i.test(msg)) setError(t('petNoLinkedStudent'));
+      else if (/no parts available/i.test(msg) || /not yet unlocked/i.test(msg)) setError(t('petNoPartsUnlocked'));
+      else setError(t('petClaimError'));
     } finally {
       setLoading(false);
     }
-  }, [me]);
+  }, [me, t]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -66,7 +70,11 @@ export default function PetCollection() {
       setPetData(pet);
       setCheckinStatus(status);
     } catch (err) {
-      setError(err.message || String(err));
+      const msg = String(err.message || err);
+      if (/already claimed/i.test(msg)) setError(t('petAlreadyClaimed'));
+      else if (/no linked student/i.test(msg)) setError(t('petNoLinkedStudent'));
+      else if (/no parts available/i.test(msg) || /not yet unlocked/i.test(msg)) setError(t('petNoPartsUnlocked'));
+      else setError(t('petClaimError'));
     } finally {
       setClaiming(false);
     }
