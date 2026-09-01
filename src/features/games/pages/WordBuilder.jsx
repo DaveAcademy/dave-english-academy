@@ -137,6 +137,8 @@ export default function WordBuilder() {
     try {
       const res = await submitGameRound('word_builder', roundId, answers);
       setResult(res);
+    } catch (e) {
+      setError(e.message || String(e));
     } finally {
       setLoading(false);
     }

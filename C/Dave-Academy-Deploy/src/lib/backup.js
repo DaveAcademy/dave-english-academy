@@ -1,0 +1,88 @@
+// backup.js
+// Since this version has no server, "backup" means two things:
+//  1. A rolling automatic copy kept in the browser, so an accidental
+//     clear-of-one-key doesn't lose everything (best-effort, not a
+//     substitute for #2).
+//  2. A manual "Download backup" that saves a real .json file you can put
+//     in Google Drive, email to yourself, etc. - this is the one that
+//     actually survives losing the phone or clearing browser data.
+
+import { exportAllData, importAllData } from './db';
+import { supabase } from './supabaseClient';
+
+const AUTO_BACKUP_KEY = 'dea_autobackup';
+
+// Backup/restore is administrator-only (see Settings.jsx). Hiding the
+// buttons isn't a real guard on its own - these functions are the actual
+// action, callable directly (e.g. from devtools) regardless of what the
+// UI shows, so they check the caller's own role themselves rather than
+// trusting the component that happened to invoke them.
+async function assertIsAdmin() {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not signed in.');
+  const { data, error } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+  if (error || data?.role !== 'administrator') throw new Error('Only administrators can use backup/restore.');
+}
+
+// Takes the caller's already-in-memory state rather than re-fetching from
+// Supabase - this runs after every single mutation (add a student, toggle
+// one payment, ...), so re-fetching all three tables every time would mean
+// 3 extra full-table SELECTs per click for no benefit.
+export function writeAutoBackup({ students, payments, attendance }) {
+  try {
+    const data = { exported_at: new Date().toISOString(), students, payments, attendance };
+    localStorage.setItem(AUTO_BACKUP_KEY, JSON.stringify(data));
+    return true;
+  } catch (e) {
+    console.error('Auto-backup failed', e);
+    return false;
+  }
+}
+
+export function getAutoBackupTimestamp() {
+  try {
+    const raw = localStorage.getItem(AUTO_BACKUP_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw).exported_at || null;
+  } catch (e) {
+    return null;
+  }
+}
+
+export async function downloadBackup() {
+  await assertIsAdmin();
+  const data = await exportAllData();
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const dateStamp = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = `dave-academy-backup-${dateStamp}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+export function readBackupFile(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        resolve(JSON.parse(reader.result));
+      } catch (e) {
+        reject(new Error('That file is not a valid backup.'));
+      }
+    };
+    reader.onerror = () => reject(new Error('Could not read that file.'));
+    reader.readAsText(file);
+  });
+}
+
+export async function restoreFromFile(file) {
+  await assertIsAdmin();
+  const data = await readBackupFile(file);
+  await importAllData(data);
+}

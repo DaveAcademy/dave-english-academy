@@ -96,6 +96,8 @@ export default function WordDetective() {
       const res = await submitGameRound('word_detective', roundId, answers);
       setResult(res);
       (res.results || []).forEach((r) => (r.correct ? recordCorrect() : recordIncorrect()));
+    } catch (e) {
+      setError(e.message || String(e));
     } finally {
       setLoading(false);
     }

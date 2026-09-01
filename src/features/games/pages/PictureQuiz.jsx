@@ -74,6 +74,8 @@ export default function PictureQuiz() {
     try {
       const res = await submitGameRound('picture_quiz', roundId, answers);
       setResult(res);
+    } catch (e) {
+      setError(e.message || String(e));
     } finally {
       setLoading(false);
     }

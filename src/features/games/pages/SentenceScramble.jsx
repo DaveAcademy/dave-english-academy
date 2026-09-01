@@ -117,6 +117,8 @@ export default function SentenceScramble() {
     try {
       const res = await submitGameRound('sentence_scramble', roundId, answers);
       setResult(res);
+    } catch (e) {
+      setError(e.message || String(e));
     } finally {
       setLoading(false);
     }

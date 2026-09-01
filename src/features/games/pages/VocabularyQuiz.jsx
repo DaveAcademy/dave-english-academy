@@ -78,6 +78,8 @@ export default function VocabularyQuiz() {
     try {
       const res = await submitGameRound('vocabulary_quiz', roundId, answers);
       setResult(res);
+    } catch (e) {
+      setError(e.message || String(e));
     } finally {
       setLoading(false);
     }

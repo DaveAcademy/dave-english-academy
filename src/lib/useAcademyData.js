@@ -356,6 +356,10 @@ export function useAcademyData() {
       if (pendingAttendance.has(key)) return;
       setPendingAttendance((prev) => new Set([...prev, key]));
 
+      // Capture the original record before the optimistic update, so we can
+      // restore it exactly on failure.
+      const originalRecord = prev?.find((a) => a.student_id === studentId && a.date === date);
+
       // Optimistic update: immediately reflect the change in local state.
       setAttendance((prev) => {
         const existing = prev.find((a) => a.student_id === studentId && a.date === date);
@@ -364,7 +368,7 @@ export function useAcademyData() {
             // Toggle off: remove the record.
             return prev.filter((a) => a.id !== existing.id);
           }
-          // Update existing record.
+          // Update existing record — keep the real id, replace status optimistically.
           return prev.map((a) => (a.id === existing.id ? { ...a, status } : a));
         }
         // Insert new record (optimistic — id may be placeholder).
@@ -395,14 +399,21 @@ export function useAcademyData() {
         });
         touchBackup();
       } catch (e) {
-        // Rollback: revert the optimistic update using functional state
-        // to avoid stale closure issues.
+        // Rollback: restore the original record if one existed, otherwise remove
+        // the optimistic entry. This preserves the pre-update state exactly.
         setAttendance((prev) => {
-          // Remove the optimistic entry.
-          const reverted = prev.filter(
+          if (originalRecord) {
+            // An existing record was updated — restore its original status.
+            return prev.map((a) =>
+              a.student_id === studentId && a.date === date
+                ? { ...originalRecord, status: originalRecord.status }
+                : a
+            );
+          }
+          // No existing record was present — remove the optimistic entry.
+          return prev.filter(
             (a) => !(a.id === `opt-${key}` && a.student_id === studentId && a.date === date)
           );
-          return reverted;
         });
         setError('Could not update attendance. Please try again.');
         throw e;

@@ -163,6 +163,8 @@ export default function WordScramble() {
     try {
       const res = await submitGameRound('word_scramble', roundId, answers);
       setResult(res);
+    } catch (e) {
+      setError(e.message || String(e));
     } finally {
       setLoading(false);
     }

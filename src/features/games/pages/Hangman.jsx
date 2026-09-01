@@ -108,6 +108,8 @@ export default function Hangman() {
     try {
       const res = await submitGameRound('hangman', roundId, answers);
       setResult(res);
+    } catch (e) {
+      setError(e.message || String(e));
     } finally {
       setLoading(false);
     }

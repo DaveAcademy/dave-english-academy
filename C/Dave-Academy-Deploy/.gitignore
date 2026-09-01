@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.env
+.env.local
+.DS_Store
+*.log
+
+.vercel
+.env*
+.claude/scheduled_tasks.lock
+.claude/settings.local.json
+.claude/worktrees/
+graphify-out/
+supabase/.temp/
+supabase/.branches/

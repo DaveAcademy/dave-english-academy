@@ -1,0 +1,361 @@
+{"lessons":[
+{
+  "n":81,"title":"Technology","sub":"81-dars: Texnologiya","icon":"💻","accent":"42a5f5","band":"b1","type":"normal",
+  "goals":[["💻 Talk about technology you use","Foydalanadigan texnologiyalar haqida gapirish"],["🕰️ Introduce the Present Perfect (have + -ed)","Present Perfect bilan tanishtirish"],["🗣️ Talk about experiences: 'I have used...'","Tajribalar haqida gapirish"]],
+  "warmup":[["💻 Gadgets","What technology do you use every day? / Har kuni nima ishlatasiz?"],["📱 How much time?","How much time do you spend on your phone? / Telefonda qancha vaqt?"]],
+  "vocab":[
+    {"w":"technology","p":"/tek-NO-lo-ji/","u":"Texnologiya","i":"💻","x":["Technology makes life easier.","Texnologiya hayotni osonlashtiradi."]},
+    {"w":"device","p":"/di-VAYS/","u":"Qurilma","i":"📱","x":["My phone is my favourite device.","Telefon — sevimli qurilmam."]},
+    {"w":"screen","p":"/skriin/","u":"Ekran","i":"🖥️","x":["Don't look at the screen too long.","Ekrannga uzoq qaramang."]},
+    {"w":"download","p":"/daun-LOHD/","u":"Yuklab olmoq","i":"⬇️","x":["I downloaded a new app.","Yangi ilova yuklab oldim."]},
+    {"w":"upload","p":"/ap-LOHD/","u":"Yuklamoq (tarmoqqa)","i":"⬆️","x":["She uploaded her photos.","U suratlarini yukladi."]},
+    {"w":"search","p":"/serc/","u":"Qidirmoq","i":"🔍","x":["I searched for the answer online.","Javobni internetdan qidirdim."]},
+    {"w":"connect","p":"/ka-NEKT/","u":"Ulanish","i":"🔗","x":["The phone connects to the internet.","Telefon internetga ulanadi."]},
+    {"w":"battery","p":"/BA-te-ri/","u":"Batareya","i":"🔋","x":["My battery is low.","Batareyam kam."]},
+    {"w":"invention","p":"/in-VEN-shen/","u":"Ixtiro","i":"💡","x":["The internet is a great invention.","Internet — buyuk ixtiro."]},
+    {"w":"have used","p":"/hav yuzd/","u":"Ishlatganman (Present Perfect)","i":"✅","x":["I have used this app.","Bu ilovani ishlatganman."]}
+  ],
+  "grammar":{"rule":"Present Perfect: **have/has + past participle** for experiences (ever/never)","uz":"'have/has + fe'l' — tajriba haqida",
+    "ex":[["I **have downloaded** that app.","O'sha ilovani yuklab olganman."],["She **has never used** a drone.","U hech qachon dron ishlatmagan."],["**Have you ever** searched for a recipe online?","Internetdan retsept qidirganmisiz?"]],
+    "mistake":["Wrong: *I have download it.*","Right: *I have downloaded it.*","Present Perfect: have + -ed/3-shakl."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["I ___ used this app. (have/has)","She ___ downloaded the music. (have/has)","___ you ever played this game? (Have/Has)","He ___ never sent an email. (have/has)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Download","Yuklab olmoq"],["Upload","Yuklamoq"],["Search","Qidirmoq"],["Connect","Ulanish"],["Invention","Ixtiro"]]},
+    {"t":"circle","title":"Circle the Answer","items":["I have ___ this video before. → a) seen b) see c) seeing"]},
+    {"t":"order","title":"Build the Sentence","items":["have / app / downloaded / I / an / .","ever / you / a / drone / Have / used / ?"]}
+  ],
+  "reading":{"title":"My Phone and Me","passage":"My phone is my best friend — but sometimes it's a problem. I have used it for three years, and I have downloaded hundreds of apps. I have never lost it, thank goodness! I use it to search for information, chat with friends and take photos. But last week I looked at the screen for five hours! Now I have a new rule: no phone after nine o'clock. Technology is amazing, but I am the boss, not my phone.",
+    "qs":["How long has the writer used his phone?","What does he use it for?","What new rule did he make?","What does 'I am the boss' mean?"]},
+  "listening":{"title":"Two Friends on the Phone","qs":["What has the girl downloaded?","What has the boy done this week?","What does the girl advise?"],
+    "script":"Listen. Girl: 'I have downloaded a new language app. It's great!' Boy: 'Nice! I have watched five English videos this week.' Girl: 'Wow! I have never watched English videos.' Boy: 'You should try. Have you ever tried video calling?' Girl: 'Yes, I have. It's fun!'"},
+  "writing":{"title":"Technology in My Life","task":"Write a paragraph (5-7 sentences) using have/has: apps you have downloaded, things you have or haven't done.","uz":"Texnologiya haqida Present Perfect bilan yozing."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["What technology do you use daily?","My phone and my laptop."],["What apps have you downloaded?","I have downloaded games and a dictionary."],["Have you ever lost your phone?","Yes, but I found it!"]]},
+    {"t":"mission","title":"Real-life Mission","body":"Ask 3 people: 'Have you ever used...?' Report. / 3 kishidan so'rang."}
+  ],
+  "quiz":["Fill: 'I ___ used this app.' (have/has)","Fill: 'She ___ never sent an email.' (have/has)","Translate: 'Bu ilovani yuklab olganman.' → ______","Correct: 'I have download it.'"],
+  "homework":"Vocabulary: 10 technology words 3× · Grammar: 6 Present Perfect sentences · Reading: re-read 'My Phone and Me' · Speaking: discuss screen time with your family.",
+  "teacher":["Introduce Present Perfect gently — B1 first taste.","Use real apps students know.","Drill have/has + past participle.","Watch for 'have + base form'."]
+},
+{
+  "n":82,"title":"Social Media","sub":"82-dars: Ijtimoiy tarmoqlar","icon":"📱","accent":"ec407a","band":"b1","type":"normal",
+  "goals":[["📱 Talk about social media habits","Ijtimoiy tarmoq odatlari haqida gapirish"],["👍 Express likes and opinions online","Online fikr bildirish"],["🛡️ Discuss online safety","Online xavfsizlikni muhokama qilish"]],
+  "warmup":[["📱 Apps","Which social media apps do you know? / Qaysi ilovalarni bilasiz?"],["👍 Your habits","How often do you check social media? / Qanchalik tez-tez?"]],
+  "vocab":[
+    {"w":"post","p":"/pohst/","u":"Post, joylash","i":"📤","x":["She posted a new photo.","U yangi surat joyladi."]},
+    {"w":"like","p":"/layk/","u":"Yoqtirish (layk)","i":"👍","x":["My post got many likes.","Postim ko'p layk oldi."]},
+    {"w":"share","p":"/sheir/","u":"Bo'lishish","i":"🔗","x":["He shared the video.","U videoni ulashdi."]},
+    {"w":"comment","p":"/KO-ment/","u":"Izoh","i":"💬","x":["People left nice comments.","Odamlar yaxshi izoh qoldirdi."]},
+    {"w":"follower","p":"/FO-lo-ver/","u":"Obunachi","i":"👥","x":["She has many followers.","Uning ko'p obunachisi bor."]},
+    {"w":"profile","p":"/PRO-fayl/","u":"Profil","i":"👤","x":["Set your profile photo.","Profil suratingizni qo'ying."]},
+    {"w":"private","p":"/PRAY-vet/","u":"Maxfiy","i":"🔒","x":["Keep your account private.","Hisobingizni maxfiy tuting."]},
+    {"w":"password","p":"/PAS-werd/","u":"Parol","i":"🔑","x":["Never share your password.","Parolingizni hech kimga bermang."]},
+    {"w":"online","p":"/ON-layn/","u":"Onlayn","i":"🌐","x":["Don't talk to strangers online.","Onlayn notanishlar bilan gaplashmang."]},
+    {"w":"real life","p":"/RIEL layf/","u":"Haqiqiy hayot","i":"🌳","x":["Real life is more important than apps.","Haqiqiy hayot ilovalardan muhim."]}
+  ],
+  "grammar":{"rule":"Advice and rules: **should/shouldn't + verb** · **never + verb (imperative)**","uz":"Online maslahat: 'should/shouldn't'",
+    "ex":[["You **shouldn't share** your password.","Parolingizni bo'lishmasligingiz kerak."],["**Never post** your home address.","Uy manzilingizni hech qachon joylamang."],["You **should keep** your profile private.","Profilni maxfiy tutishingiz kerak."]],
+    "mistake":["Wrong: *You should to keep.*","Right: *You should keep.*","'should' dan keyin 'to' yo'q."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["You ___ share your password. (shouldn't/should)","___ post your home address. (Never/Always)","You should keep your profile ___. (private/privacy)","She ___ a new photo. (posted/post)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Post","Joylamoq"],["Share","Bo'lishish"],["Follower","Obunachi"],["Password","Parol"],["Private","Maxfiy"]]},
+    {"t":"circle","title":"Circle the Answer","items":["Online safety: → a) keep passwords secret b) share everything c) talk to strangers"]},
+    {"t":"order","title":"Build the Sentence","items":["shouldn't / You / password / share / your / .","private / keep / profile / your / ."]}
+  ],
+  "reading":{"title":"A Safe Account","passage":"Zarina loves social media. She posts photos of her paintings and reads the comments happily. But she is careful. Her account is private, so only her friends can see it. She never shares her password, not even with her best friend. She never posts her address or her school name. Last week, a stranger sent her a message. Zarina didn't reply — she blocked him and told her parents. 'Social media is fun,' she says, 'if you are smart.'",
+    "qs":["What does Zarina post?","Why is her account private?","What did the stranger send?","What did Zarina do?"]},
+  "listening":{"title":"Two Opinions","qs":["What does the girl like about social media?","What does the boy think?","What rule do they agree on?"],
+    "script":"Listen. Girl: 'I love social media! I see my friends' photos and learn new things.' Boy: 'Sometimes it's too much. People spend hours looking at screens.' Girl: 'That's true. But it's useful for school projects.' Boy: 'Let's agree: use it, but not too much.' Girl: 'Deal!'"},
+  "writing":{"title":"Social Media Rules","task":"Write a set of 5 safety rules for using social media, using should/shouldn't.","uz":"Ijtimoiy tarmoq xavfsizlik qoidalarini yozing."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["How much time do you spend online?","About two hours a day."],["What do you like about social media?","I see my friends' news."],["What are the dangers?","Strangers and too much time."]]},
+    {"t":"mission","title":"Real-life Mission","body":"Check your account privacy settings with your parents. / Profil sozlamalarini tekshiring."}
+  ],
+  "quiz":["Fill: 'You ___ share your password.' (shouldn't/should)","Fill: 'Keep your profile ___ .' (private/privacy)","Translate: 'Parolingizni hech kimga bermang.' → ______","Why is privacy important online?"],
+  "homework":"Vocabulary: 10 social media words 3× · Grammar: 5 safety rules · Reading: re-read 'A Safe Account' · Speaking: discuss online safety with your family.",
+  "teacher":["Real and relevant topic — students engage deeply.","Emphasize online safety seriously.","Drill should/shouldn't.","Link to L83-84: opinions."]
+},
+{
+  "n":83,"title":"Giving Opinions","sub":"83-dars: Fikr bildirish","icon":"💭","accent":"8d6e63","band":"b1","type":"normal",
+  "goals":[["💭 Give your opinion: 'I think... / In my opinion...'","Fikr bildirish"],["🤔 Ask for opinions: 'What do you think?'","Fikr so'rash"],["🗣️ Support opinions with reasons","Fikrni sabab bilan asoslash"]],
+  "warmup":[["💭 Opinions","Do you think English is important? Why? / Ingliz tili muhimmi?"],["🤔 Debate warm-up","Phone or computer — which is better? / Telefon yoki kompyuter?"]],
+  "vocab":[
+    {"w":"opinion","p":"/a-PIN-yen/","u":"Fikr","i":"💭","x":["What's your opinion?","Fikringiz qanday?"]},
+    {"w":"I think","p":"/ay think/","u":"Menimcha","i":"🤔","x":["I think it's a good idea.","Menimcha bu yaxshi g'oya."]},
+    {"w":"In my opinion","p":"/in may a-PIN-yen/","u":"Mening fikrimcha","i":"💡","x":["In my opinion, books are better than films.","Fikrimcha, kitoblar filmdan yaxshi."]},
+    {"w":"agree","p":"/a-GRI/","u":"Rozi bo'lmoq","i":"👍","x":["I agree with you.","Siz bilan roziman."]},
+    {"w":"disagree","p":"/dis-a-GRI/","u":"Rozi bo'lmaslik","i":"👎","x":["I disagree — I love films!","Rozimasman — filmni yaxshi ko'raman!"]},
+    {"w":"because","p":"/bi-KOZ/","u":"Chunki","i":"🔗","x":["I think so because it's cheaper.","Shunday deb o'ylayman, chunki arzonroq."]},
+    {"w":"really","p":"/RII-a-li/","u":"Haqiqatan","i":"🌟","x":["I really like this place.","Bu joy menga juda yoqadi."]},
+    {"w":"probably","p":"/PRO-ba-bli/","u":"Ehtimol","i":"🤷","x":["I will probably go home.","Ehtimol uyga boraman."]},
+    {"w":"certainly","p":"/SER-ten-li/","u":"Albatta","i":"✅","x":["It is certainly true.","Bu albatta to'g'ri."]},
+    {"w":"point","p":"/poynt/","u":"Fikr, jihat","i":"🎯","x":["That's a good point.","Bu yaxshi fikr."]}
+  ],
+  "grammar":{"rule":"Opinions: **I think / In my opinion / I agree / I disagree** + reason with because","uz":"Fikr: 'I think', sabab — 'because'",
+    "ex":[["**I think** English is important **because** it helps you travel.","Ingliz tili muhim, chunki sayohatda yordam beradi."],["**In my opinion**, sport is fun.","Fikrimcha, sport qiziqarli."],["**I agree with** you. / **I disagree —** I think it's expensive.","Roziman / Rozimasman."]],
+    "mistake":["Wrong: *I am agree with you.*","Right: *I agree with you.*","'agree' — fe'l, 'be' kerak emas."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["___ my opinion, it's good. (In/On)","I ___ with you. (agree/am agree)","I think so ___ it's cheap. (because/but)","That's a good ___. (point/opinion)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["I think","Menimcha"],["In my opinion","Fikrimcha"],["I agree","Roziman"],["I disagree","Rozimasman"],["Because","Chunki"]]},
+    {"t":"circle","title":"Circle the Answer","items":["You agree: → a) I agree with you b) I disagree c) I think not"]},
+    {"t":"order","title":"Build the Sentence","items":["think / English / I / is / important / .","with / agree / you / I / ."]}
+  ],
+  "reading":{"title":"Books or Films?","passage":"Yesterday my class discussed a question: books or films? 'I think books are better,' said Gulnora. 'When you read, you imagine everything yourself. Films show you one person's picture.' 'In my opinion, films win,' said Jasur. 'They are quicker — two hours, and the story is over. Also, the music makes it exciting.' 'That's a good point,' said Gulnora, 'but a book stays with you for weeks.' The teacher smiled: 'The best opinion is to enjoy both.'",
+    "qs":["Why does Gulnora prefer books?","Why does Jasur prefer films?","What did Gulnora say about books staying?","What did the teacher say?"]},
+  "listening":{"title":"Opinions About City Life","qs":["What does the first speaker think about city life?","What does the second speaker disagree with?","What do they agree on?"],
+    "script":"Listen. Speaker 1: 'In my opinion, city life is the best. There are cinemas, shops and many jobs.' Speaker 2: 'I disagree. Cities are too crowded and noisy. The village is calmer.' Speaker 1: 'But you must travel far for work.' Speaker 2: 'That's true. Both places have good points.'"},
+  "writing":{"title":"My Opinion","task":"Write your opinion (5-7 sentences) about a topic: 'Books or films?' or 'City or village?' Use opinion phrases.","uz":"Fikringizni yozing."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["What do you think about homework?","I think it's useful, but not too much."],["In your opinion, what's the best sport?","Football, because it's exciting."],["Do you agree with me?","Yes, I do. / Sorry, I disagree."]]},
+    {"t":"mission","title":"Real-life Mission","body":"Ask your family's opinion on a topic tonight. Report 2 opinions. / Oilangizdan fikr so'rang."}
+  ],
+  "quiz":["Fill: '___ my opinion, it's great.' (In/On)","Fill: 'I ___ with you.' (agree/am agree)","Translate: 'Rozimasman, chunki qimmat.' → ______","Correct: 'I am agree.'"],
+  "homework":"Vocabulary: 10 opinion words 3× · Grammar: 6 opinion sentences with reasons · Reading: re-read 'Books or Films?' · Speaking: share opinions with your family.",
+  "teacher":["Opinions are the core of B1 speaking.","Teach the phrases as chunks.","Watch for 'I am agree'.","This feeds L84 (agree/disagree) and L87 (debate)."]
+},
+{
+  "n":84,"title":"Agreeing and Disagreeing","sub":"84-dars: Rozi bo'lish va rozi bo'lmaslik","icon":"🤝","accent":"26a69a","band":"b1","type":"normal",
+  "goals":[["🤝 Agree politely: 'I agree / That's true'","Xushmuomala rozi bo'lish"],["👎 Disagree politely: 'I'm afraid I disagree'","Xushmuomala rozi bo'lmaslik"],["💬 Have a respectful discussion","Hurmatli muhokama"]],
+  "warmup":[["🤝 Agree or disagree?","'Pizza is the best food.' Do you agree? / Rozimisiz?"],["👎 Polite words","How do you disagree without fighting? / Qanday xushmuomala bo'lasiz?"]],
+  "vocab":[
+    {"w":"agree","p":"/a-GRI/","u":"Rozi bo'lmoq","i":"🤝","x":["I completely agree.","To'liq roziman."]},
+    {"w":"disagree","p":"/dis-a-GRI/","u":"Rozi bo'lmaslik","i":"🙅","x":["I'm afraid I disagree.","Afsuski, rozimasman."]},
+    {"w":"exactly","p":"/ig-ZAKT-li/","u":"Aynan","i":"🎯","x":["Exactly! That's what I meant.","Aynan! Men shuni aytgandim."]},
+    {"w":"perhaps","p":"/per-HAPS/","u":"Balki","i":"🤔","x":["Perhaps you are right.","Balki haqsiz."]},
+    {"w":"however","p":"/hau-E-ver/","u":"Biroq","i":"🔄","x":["That's true. However, I have a question.","To'g'ri. Biroq savolim bor."]},
+    {"w":"in fact","p":"/in fakt/","u":"Aslida","i":"📌","x":["In fact, it's very easy.","Aslida juda oson."]},
+    {"w":"point","p":"/poynt/","u":"Fikr","i":"🎯","x":["That's a good point.","Bu yaxshi fikr."]},
+    {"w":"opinion","p":"/a-PIN-yen/","u":"Fikr","i":"💭","x":["Everyone has an opinion.","Har kimning fikri bor."]},
+    {"w":"respect","p":"/ri-SPEKT/","u":"Hurmat","i":"🙏","x":["Respect other opinions.","Boshqalar fikrini hurmat qiling."]},
+    {"w":"discussion","p":"/dis-KA-shen/","u":"Muhokama","i":"🗣️","x":["We had a good discussion.","Yaxshi muhokama bo'ldi."]}
+  ],
+  "grammar":{"rule":"Agree: **I agree / Exactly / That's true** · Disagree: **I'm afraid I disagree / I see your point, but...**","uz":"Rozilik va rozi bo'lmaslik iboralari",
+    "ex":[["**I completely agree** with you.","Siz bilan to'liq roziman."],["**I'm afraid I disagree** — prices are going up.","Afsuski, rozimasman — narxlar oshmoqda."],["**I see your point, but** I think it's too expensive.","Fikringizni tushunaman, lekin bu qimmat."]],
+    "mistake":["Wrong: *You are wrong!* (too rude)","Right: *I'm afraid I disagree.*","Xushmuomala bo'ling."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["I completely ___ with you. (agree/disagree)","___ , that's what I meant! (Exactly/Perhaps)","That's true. ___ , I have a question. (However/In fact)","I'm afraid I ___ . (disagree/agree)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Exactly!","Aynan!"],["However","Biroq"],["In fact","Aslida"],["Perhaps","Balki"],["Respect","Hurmat"]]},
+    {"t":"circle","title":"Circle the Answer","items":["Polite disagreement: → a) I'm afraid I disagree b) You're wrong c) No!"]},
+    {"t":"order","title":"Build the Sentence","items":["completely / agree / I / with / you / .","afraid / disagree / I'm / I / ."]}
+  ],
+  "reading":{"title":"A School Discussion","passage":"Our class discussed school uniforms. 'I completely agree with uniforms,' said Madina. 'They make everyone equal.' 'That's true,' said Timur. 'However, I think students should choose their own style.' 'In fact, many countries don't have uniforms,' added Kamola. 'Perhaps we should try a year without them.' The teacher nodded. 'You all have good points. A respectful discussion is the best way to learn.' Everyone left with something to think about.",
+    "qs":["Why does Madina like uniforms?","What does Timur say however?","What does Kamola say about other countries?","What did the teacher say about the discussion?"]},
+  "listening":{"title":"The Debate","qs":["What does the first speaker agree with?","What does the second speaker disagree with?","How do they end the discussion?"],
+    "script":"Listen. Speaker 1: 'In my opinion, animals should not live in zoos.' Speaker 2: 'I see your point, but zoos protect animals from danger.' Speaker 1: 'Perhaps, but cages are too small.' Speaker 2: 'That's true. However, many zoos are improving.' Speaker 1: 'Let's agree to respect both views.' Speaker 2: 'Agreed!'"},
+  "writing":{"title":"Agree and Disagree","task":"Write 4 sentences: 2 agreements and 2 polite disagreements about a topic you choose.","uz":"Rozi bo'lish va rozi bo'lmaslik gaplari yozing."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["What do you think about homework?","I agree — it helps us practice."],["Is it good to have a pet?","I'm afraid I disagree — they need time."],["Do you like online school?","I see your point, but I prefer class."]]},
+    {"t":"mission","title":"Real-life Mission","body":"Have a discussion with your family and use 3 polite phrases. / Oilangiz bilan muhokama qiling."}
+  ],
+  "quiz":["Fill: 'I completely ___ .' (agree/disagree)","Fill: 'I'm afraid I ___ .' (disagree/agree)","Translate: 'Afsuski, rozimasman.' → ______","What is a polite way to disagree?"],
+  "homework":"Vocabulary: 10 discussion words 3× · Grammar: 4 agree/disagree sentences · Reading: re-read 'A School Discussion' · Speaking: discuss with your family politely.",
+  "teacher":["Teach the polite chunks — crucial for B1.","Role-play discussions on fun topics.","Watch for rude 'You are wrong!'.","This feeds L87 debate workshop."]
+},
+{
+  "n":85,"title":"Environment","sub":"85-dars: Atrof-muhit","icon":"🌍","accent":"4caf50","band":"b1","type":"normal",
+  "goals":[["🌍 Talk about the environment","Atrof-muhit haqida gapirish"],["♻️ Discuss problems and solutions","Muammo va yechimlarni muhokama qilish"],["🌱 Give suggestions with 'should'","'should' bilan taklif berish"]],
+  "warmup":[["🌍 Our planet","Why should we protect nature? / Tabiatni nima uchun asrash kerak?"],["♻️ Problems","What environmental problems do you know? / Qanday muammolar bor?"]],
+  "vocab":[
+    {"w":"environment","p":"/en-VAY-ren-ment/","u":"Atrof-muhit","i":"🌍","x":["We must protect the environment.","Atrof-muhitni asrashimiz kerak."]},
+    {"w":"pollution","p":"/pa-LU-shen/","u":"Ifloslanish","i":"🏭","x":["Air pollution is a big problem.","Havo ifloslanishi katta muammo."]},
+    {"w":"waste","p":"/weyst/","u":"Chiqindi","i":"🗑️","x":["Don't waste water.","Suvni isrof qilmang."]},
+    {"w":"recycle","p":"/ri-SAY-kel/","u":"Qayta ishlash","i":"♻️","x":["We should recycle plastic.","Plastikni qayta ishlashimiz kerak."]},
+    {"w":"rubbish","p":"/RA-bish/","u":"Axlat","i":"🗑️","x":["Please put the rubbish in the bin.","Axlatni axlat qutisiga tashlang."]},
+    {"w":"plastic","p":"/PLAS-tik/","u":"Plastik","i":"🧴","x":["Plastic bags harm nature.","Plastik paketlar tabiatga zarar."]},
+    {"w":"nature","p":"/NEY-cher/","u":"Tabiat","i":"🌿","x":["We love nature.","Biz tabiatni sevamiz."]},
+    {"w":"energy","p":"/EN-er-ji/","u":"Energiya","i":"⚡","x":["Save energy at home.","Uyda energiyani tejang."]},
+    {"w":"protect","p":"/pro-TEKT/","u":"Himoya qilmoq","i":"🛡️","x":["Protect the trees.","Daraxtlarni himoya qiling."]},
+    {"w":"solar","p":"/SOH-ler/","u":"Quyoshli, quyosh","i":"☀️","x":["Solar energy is clean.","Quyosh energiyasi toza."]}
+  ],
+  "grammar":{"rule":"Suggestions: **should + verb** · **We must + verb** for strong obligation · problem → solution","uz":"Taklif: 'should', qat'iy — 'must'",
+    "ex":[["We **should recycle** more.","Ko'proq qayta ishlashimiz kerak."],["People **must stop** throwing rubbish in the river.","Odamlar daryoga axlat tashlashni to'xtatishi kerak."],["**Don't waste** water.","Suvni isrof qilmang."]],
+    "mistake":["Wrong: *We should to recycle.*","Right: *We should recycle.*","'should' dan keyin 'to' yo'q."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["We should ___ plastic. (recycle/recycling)","You ___ throw rubbish in the river. (mustn't/must)","___ waste water. (Don't/Not)","Solar energy is ___. (clean/cleaning)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Environment","Atrof-muhit"],["Pollution","Ifloslanish"],["Recycle","Qayta ishlash"],["Rubbish","Axlat"],["Protect","Himoya qilish"]]},
+    {"t":"circle","title":"Circle the Answer","items":["To help the planet: → a) recycle plastic b) throw plastic in the river c) waste water"]},
+    {"t":"order","title":"Build the Sentence","items":["recycle / should / We / more / .","in / don't / river / the / throw / rubbish / ."]}
+  ],
+  "reading":{"title":"The River That Was Clean","passage":"Twenty years ago, the river near our town was clean. People swam in it and caught fish. Then factories came. They threw waste into the water, and pollution grew. The fish disappeared. Our class decided to help. We organized a cleaning day — students, teachers and parents collected rubbish from the banks. We also talked to the factory. Now it cleans its water. 'Small actions change big problems,' our teacher said. The river is slowly coming back.",
+    "qs":["What was the river like twenty years ago?","What happened when factories came?","What did the class organize?","What did they do about the factory?"]},
+  "listening":{"title":"Eco Tips","qs":["What should the family do with plastic bottles?","How should they save energy?","What advice about shopping?"],
+    "script":"Listen. Today's eco tips. First, you should recycle plastic bottles — don't throw them in the bin. Second, turn off the lights when you leave a room; it saves energy. Third, take a cloth bag to the market instead of plastic bags. And remember: don't waste water while brushing your teeth. Small steps, big change!"},
+  "writing":{"title":"My Eco Plan","task":"Write 5 things you can do to help the environment, using should/must.","uz":"Atrof-muhitga yordam rejangizni yozing."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["What's the biggest problem in your area?","Air pollution from cars."],["What should we do about it?","Use buses and bikes more."],["Do you recycle at home?","Not yet, but we should start."]]},
+    {"t":"mission","title":"Real-life Mission","body":"Do one eco action this week: recycle, save water or energy. Report. / Bitta ekologik ish qiling."}
+  ],
+  "quiz":["Fill: 'We should ___ plastic.' (recycle/recycling)","Fill: '___ waste water.' (Don't/Not)","Translate: 'Havo ifloslanishi katta muammo.' → ______","Name 3 ways to help the environment."],
+  "homework":"Vocabulary: 10 environment words 3× · Grammar: 5 eco suggestions · Reading: re-read 'The River That Was Clean' · Speaking: discuss ecology with your family.",
+  "teacher":["Connect to students' real environment.","Drill should/must.","Watch for 'should to'.","This feeds L86 (first conditional) and L87 (debate)."]
+},
+{
+  "n":86,"title":"First Conditional","sub":"86-dars: Birinchi shart gap","icon":"🔀","accent":"ffa726","band":"b1","type":"normal",
+  "goals":[["🔀 Form the first conditional (If + present, will)","Birinchi shart gapni yasash"],["🌧️ Make predictions: 'If it rains, I'll stay home'","Bashorat qilish"],["🧠 Use if/when in real situations","Real vaziyatlarda 'if'ni ishlatish"]],
+  "warmup":[["🔀 If... then...","'If I study, I will pass.' What about you? / Agar... bo'lsa...?"],["🌦️ Weather plans","What will you do if it rains today? / Yomg'ir yog'sa nima qilasiz?"]],
+  "vocab":[
+    {"w":"if","p":"/if/","u":"Agar","i":"🔀","x":["If I study, I will pass.","Agar o'qisam, o'taman."]},
+    {"w":"will","p":"/wil/","u":"(kelajak) -aman/-asan","i":"🔮","x":["I will help you.","Sizga yordam beraman."]},
+    {"w":"predict","p":"/pri-DIKT/","u":"Bashorat qilmoq","i":"🔮","x":["I predict it will rain.","Yomg'ir yog'ishini bashorat qilaman."]},
+    {"w":"probably","p":"/PRO-ba-bli/","u":"Ehtimol","i":"🤷","x":["I will probably stay home.","Ehtimol uyda qolaman."]},
+    {"w":"instead","p":"/in-STED/","u":"O'rniga","i":"🔄","x":["Stay home instead of going out.","Chiqish o'rniga uyda qoling."]},
+    {"w":"plan","p":"/plan/","u":"Reja","i":"🗓️","x":["What's your plan?","Rejangiz nima?"]},
+    {"w":"tomorrow","p":"/tu-MO-roh/","u":"Ertaga","i":"☀️","x":["If it's sunny tomorrow, we'll go.","Ertaga quyoshli bo'lsa, boramiz."]},
+    {"w":"pass","p":"/pas/","u":"O'tmoq (imtihon)","i":"✅","x":["If I pass, I'll be happy.","O'tsam, xursand bo'laman."]},
+    {"w":"fail","p":"/feyl/","u":"Yiqilmoq (imtihon)","i":"❌","x":["If I fail, I'll try again.","Yiqilsam, qayta urinaman."]},
+    {"w":"wake up","p":"/weyk ap/","u":"Uyg'onmoq","i":"⏰","x":["If I wake up late, I'll run to school.","Kech tursam, maktabga yuguraman."]}
+  ],
+  "grammar":{"rule":"First conditional: **If + present, will + verb** (real future possibility)","uz":"'If + hozirgi zamon, will + fe'l'",
+    "ex":[["**If it rains**, I **will stay** home.","Yomg'ir yog'sa, uyda qolaman."],["**If you study**, you **will pass** the test.","O'qisangiz, testdan o'tasiz."],["**If we hurry**, we **will catch** the bus.","Shoshilsak, avtobusga yetamiz."]],
+    "mistake":["Wrong: *If it will rain, I stay.*","Right: *If it rains, I will stay.*","'if' dan keyin 'will' ishlatilmaydi."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["If it ___ , we'll stay home. (rains/rain)","If you study, you ___ pass. (will/does)","If we hurry, we ___ catch the bus. (will/are)","If I ___ late, I'll run. (wake/wakes)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["If it rains","Uyda qolaman"],["If you study","O'tasiz"],["If we hurry","Yetamiz"],["If I fail","Qayta urinaman"]]},
+    {"t":"circle","title":"Circle the Answer","items":["If I feel tired, ___ → a) I will sleep b) I sleep c) I slept"]},
+    {"t":"order","title":"Build the Sentence","items":["if / stay / I'll / rains / home / it / .","you / will / study / if / pass / you / ."]}
+  ],
+  "reading":{"title":"The Weather Test","passage":"The school trip to the mountains was on Saturday. But the weather was uncertain. 'If it rains, we will cancel the trip,' said the teacher. 'If it is cloudy, we will still go, but we'll take umbrellas. If it is sunny, we'll have a picnic!' The students waited nervously. On Friday night, the forecast said: sunny! 'If we go, I'll take my camera,' said Anvar. 'If my camera works, I'll take a photo of everyone!' Everyone laughed. The trip was on.",
+    "qs":["What will happen if it rains?","What will they do if it is cloudy?","What will Anvar do if they go?","What did the forecast say?"]},
+  "listening":{"title":"If I Have Time","qs":["What will the girl do if she has time?","What will she do if her friend comes?","What will happen if the shop is closed?"],
+    "script":"Listen. Girl: 'If I have time after school, I'll go to the bookshop.' Friend: 'If I come with you, will you help me choose a book?' Girl: 'Of course! If the bookshop is closed, we'll go to the library instead.' Friend: 'Great. If we meet at 4, we'll have plenty of time.'"},
+  "writing":{"title":"My Plans with If","task":"Write 5 first conditional sentences about your plans this week.","uz":"'If' bilan 5 ta gap yozing."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["What will you do if it rains?","I'll read a book."],["What will you do if you get home early?","I'll help my mother."],["What happens if you wake up late?","I'll run to school!"]]},
+    {"t":"mission","title":"Real-life Mission","body":"Make 2 'if' predictions for tomorrow and check them. / Ertaga uchun 2 bashorat qiling."}
+  ],
+  "quiz":["Fill: 'If it ___, we'll go.' (is/isn't)","Fill: 'If you study, you ___ pass.' (will/does)","Translate: 'Yomg'ir yog'sa, uyda qolaman.' → ______","Correct: 'If it will rain, I stay.'"],
+  "homework":"Vocabulary: 10 conditional words 3× · Grammar: 6 first conditional sentences · Reading: re-read 'The Weather Test' · Speaking: make if-plans with your family.",
+  "teacher":["Teach the pattern as a formula: If+present, will+verb.","Watch for 'if it will'.","Practice with real life plans.","This is a key B1 grammar — used in L97 too."]
+},
+{
+  "n":87,"title":"Debate Workshop","sub":"87-dars: Munozara ustaxonasi","icon":"🎤","accent":"5c6bc0","band":"b1","type":"workshop",
+  "goals":[["🎤 Debate a topic in a team","Jamoada munozara qilish"],["🗣️ Use opinion and conditional language","Fikr va shart gaplarni qo'llash"],["👥 Listen and respond respectfully","Hurmat bilan tinglash va javob berish"]],
+  "warmup":[["🎤 Debate topics","Name 2 topics people argue about. / Nima haqida bahslashiladi?"],["🤔 One opinion","Say one strong opinion you have. / Bitta qat'iy fikr ayting."]],
+  "vocab":[
+    {"w":"debate","p":"/di-BEYT/","u":"Munozara","i":"🎤","x":["Let's have a debate!","Munozara qilaylik!"]},
+    {"w":"argue","p":"/AR-gyu/","u":"Bahslashmoq","i":"💥","x":["Don't argue, discuss.","Bahslashmang, muhokama qiling."]},
+    {"w":"for","p":"/for/","u":"Tarafdor","i":"👍","x":["I am for this idea.","Bu g'oya tarafdoriman."]},
+    {"w":"against","p":"/a-GENST/","u":"Qarshi","i":"👎","x":["I am against it.","Men bunga qarshiman."]},
+    {"w":"reason","p":"/RII-zon/","u":"Sabab, dalil","i":"🧠","x":["Give me a reason.","Dalil keltiring."]},
+    {"w":"support","p":"/sa-PORT/","u":"Qo'llab-quvvatlamoq","i":"🤝","x":["I support this idea.","Bu g'oyani qo'llayman."]},
+    {"w":"opposite","p":"/O-po-zit/","u":"Qarama-qarshi","i":"🔁","x":["I take the opposite side.","Qarama-qarshi tomondaman."]},
+    {"w":"finally","p":"/FAI-na-li/","u":"Nihoyat, va nihoyat","i":"🏁","x":["Finally, I want to say...","Nihoyat, aytmoqchiman..."]},
+    {"w":"conclusion","p":"/ken-KLU-zhen/","u":"Xulosa","i":"🎯","x":["My conclusion is simple.","Xulosam oddiy."]},
+    {"w":"judge","p":"/jaj/","u":"Hakam","i":"⚖️","x":["The judge will decide.","Hakam hal qiladi."]}
+  ],
+  "practice":[
+    {"t":"task","title":"The Debate Plan","items":["Choose a topic: 'Social media is good for students' or 'Homework should be smaller'. / Mavzu tanlang.","Split into two teams: For and Against. / Ikkiga bo'ling.","Each team writes 3 reasons with examples. / 3 ta dalil yozing.","Team 1 speaks (1 minute), Team 2 listens. / Jamoa 1 gapiradi.","Team 2 responds politely. Then Team 1 responds. / Javob bering.","Judges decide the winner. / Hakamlar hal qiladi."]},
+    {"t":"match","title":"Match the Pairs","pairs":[["For","Tarafdor"],["Against","Qarshi"],["Reason","Dalil"],["Support","Qo'llash"],["Conclusion","Xulosa"]]},
+    {"t":"circle","title":"Circle the Answer","items":["You disagree with a speaker: → a) I see your point, but... b) You're wrong! c) Silence"]}
+  ],
+  "speaking":[
+    {"t":"talk","title":"Your Argument","body":"Present your argument: opinion + 2 reasons + 1 conditional sentence. / Fikringizni asoslang."},
+    {"t":"partner","title":"The Cross-Examination","body":"Ask your opponent one question. Answer theirs politely. / Raqibingizga savol bering."},
+    {"t":"mission","title":"The Vote","body":"Judges give feedback and the class votes. / Hakamlar fikr beradi."}
+  ],
+  "quiz":["Fill: 'I am ___ this idea.' (for/against)","Fill: 'Give me a ___ .' (reason/reasons)","Translate: 'Men bunga qarshiman.' → ______","What is a good way to disagree?"],
+  "homework":"Write your final argument (6-8 sentences) for your side of the debate. / Yakuniy dalilingizni yozing.",
+  "teacher":["Workshop: debates are excellent B1 practice.","Keep teams small (3-4).","Emphasize respect and turn-taking.","Use 'I see your point, but' structures."]
+},
+{
+  "n":88,"title":"Speaking Circle: Opinions","sub":"88-dars: Suhbat doirasi — fikrlar","icon":"💬","accent":"ab47bc","band":"b1","type":"speaking",
+  "goals":[["💬 Express opinions fluently","Fikrlarni ravon bildirish"],["🤝 Agree and disagree politely","Xushmuomala rozilik/rozilik yo'q"],["🎯 Support ideas with reasons","Fikrni asoslash"]],
+  "warmup":[["💬 Opinion quick round","Finish: 'In my opinion, English is...' / Gapni tugating."],["🤝 Agree/Disagree","Say a sentence; your partner agrees or disagrees. / Bir gap ayting."]],
+  "vocab":[
+    {"w":"opinion","p":"/a-PIN-yen/","u":"Fikr","i":"💭","x":["In my opinion, it's great."]},
+    {"w":"agree","p":"/a-GRI/","u":"Rozilik","i":"🤝","x":["I agree completely."]},
+    {"w":"disagree","p":"/dis-a-GRI/","u":"Rozilik yo'q","i":"🙅","x":["I'm afraid I disagree."]},
+    {"w":"reason","p":"/RII-zon/","u":"Sabab","i":"🧠","x":["My reason is simple."]},
+    {"w":"respect","p":"/ri-SPEKT/","u":"Hurmat","i":"🙏","x":["Respect different views."]},
+    {"w":"conclusion","p":"/ken-KLU-zhen/","u":"Xulosa","i":"🎯","x":["My conclusion is clear."]}
+  ],
+  "practice":[
+    {"t":"task","title":"Opinion Cards","items":["Should students have phones at school? / Maktabda telefon bo'lishi kerakmi?","Is city life better than village life? / Shahar hayoti yaxshimi?","Should homework exist? / Uy vazifasi kerakmi?","Are pets good for children? / Uy hayvonlari foydalimi?","Is social media more good than bad? / Ijtimoiy tarmoq foydalimi?"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["In my opinion","Fikrimcha"],["I agree","Roziman"],["I disagree","Rozimasman"],["Because","Chunki"],["However","Biroq"]]}
+  ],
+  "speaking":[
+    {"t":"talk","title":"My Strong Opinion","body":"Speak for 2 minutes on one topic: opinion, 2 reasons, 1 example. / Kuchli fikringiz haqida gapiring."},
+    {"t":"partner","title":"The Panel","body":"Form a panel of 3. Present opinions, ask questions, vote on the best view. / Uch kishilik panel tuzing."},
+    {"t":"mission","title":"Active Listening","body":"Summarize one opinion you heard in 2 sentences. / Bitta fikrni xulosalang."}
+  ],
+  "quiz":["Translate: 'Fikrimcha, bu yaxshi g'oya.' → ______","Translate: 'Afsuski, rozimasman.' → ______","Fill: 'I ___ with you.' (agree/am agree)","Give one reason for your opinion."],
+  "homework":"Write your opinion on one topic (8-10 sentences) with reasons. Practice speaking it. / Fikringizni yozing.",
+  "teacher":["Speaking circle: fluency + respect.","Use panels for variety.","Echo-correct politely.","Builds confidence for B1 speaking exams."]
+},
+{
+  "n":89,"title":"City vs Countryside","sub":"89-dars: Shahar va qishloq","icon":"🌆","accent":"42a5f5","band":"b1","type":"normal",
+  "goals":[["🌆 Compare city and countryside life","Shahar va qishloq hayotini taqqoslash"],["⚖️ Use comparatives and opinions","Taqqoslash va fikr bildirish"],["🗣️ Discuss advantages and disadvantages","Afzallik va kamchiliklarni muhokama qilish"]],
+  "warmup":[["🌆 City life","What do you love about the city? / Shaharda nimani sevasiz?"],["🌾 Countryside life","What do you love about the countryside? / Qishloqda?"]],
+  "vocab":[
+    {"w":"countryside","p":"/KAN-tri-sayd/","u":"Qishloq joylari","i":"🌾","x":["The countryside is quiet.","Qishloq joylar tinch."]},
+    {"w":"peaceful","p":"/PIIS-ful/","u":"Tinch","i":"🕊️","x":["The village is peaceful.","Qishloq tinch."]},
+    {"w":"convenient","p":"/ken-VII-ni-ent/","u":"Qulay","i":"👍","x":["Public transport is convenient.","Jamoat transporti qulay."]},
+    {"w":"crowded","p":"/KRAU-ded/","u":"Gavjum","i":"🚶‍♂️","x":["The centre is crowded.","Markaz gavjum."]},
+    {"w":"noisy","p":"/NOY-zi/","u":"Shovqinli","i":"🔊","x":["Cities are noisy at night.","Shaharlar kechasi shovqinli."]},
+    {"w":"fresh air","p":"/fresh air/","u":"Toza havo","i":"🍃","x":["I love the fresh air.","Toza havoni yaxshi ko'raman."]},
+    {"w":"facilities","p":"/fa-SI-li-tiz/","u":"Imkoniyatlar, inshootlar","i":"🏫","x":["The city has many facilities.","Shaharda ko'p imkoniyat bor."]},
+    {"w":"opportunity","p":"/o-por-TU-ni-ti/","u":"Imkoniyat","i":"🎓","x":["More job opportunities in the city.","Shaharda ko'proq ish imkoniyati."]},
+    {"w":"advantage","p":"/ad-VAN-tij/","u":"Afzallik","i":"➕","x":["An advantage of the city is transport.","Shaharning afzalligi — transport."]},
+    {"w":"disadvantage","p":"/dis-ad-VAN-tij/","u":"Kamchilik","i":"➖","x":["A disadvantage is the traffic.","Kamchilik — tirbandlik."]}
+  ],
+  "grammar":{"rule":"Discuss pros and cons: **advantage/disadvantage + is** · **on the one hand / on the other hand**","uz":"Afzallik/kamchilik: 'on the one hand... on the other hand'",
+    "ex":[["**On the one hand**, cities have more jobs.","Bir tomondan, shaharda ko'proq ish bor."],["**On the other hand**, the countryside is peaceful.","Boshqa tomondan, qishloq tinch."],["**An advantage of** the village is fresh air.","Qishloqning afzalligi — toza havo."]],
+    "mistake":["Wrong: *The city has many advantagies.*","Right: *The city has many advantages.*","Plural: advantages."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["An ___ of the city is transport. (advantage/disadvantage)","___ the one hand, it's noisy. (On/In)","The countryside is ___. (peaceful/crowded)","Cities have many ___. (opportunities/opportunity)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Advantage","Afzallik"],["Disadvantage","Kamchilik"],["Peaceful","Tinch"],["Crowded","Gavjum"],["Fresh air","Toza havo"]]},
+    {"t":"circle","title":"Circle the Answer","items":["A disadvantage of the village: → a) far from shops b) clean air c) quiet"]},
+    {"t":"order","title":"Build the Sentence","items":["is / peaceful / countryside / the / .","many / city / has / The / opportunities / ."]}
+  ],
+  "reading":{"title":"Where Is Home?","passage":"My grandmother lives in a village, and I visit her every summer. On the one hand, the city has more facilities: big hospitals, modern schools and cinemas. On the other hand, the village gives me something the city cannot: fresh air, quiet nights and the smell of fresh bread. The city is convenient, but the countryside is peaceful. When I grow up, I want to work in the city but have a small house in the village. That would be perfect!",
+    "qs":["What facilities does the city have?","What does the village give the writer?","What does the writer want when he grows up?","What does 'perfect' mean to the writer?"]},
+  "listening":{"title":"The Decision","qs":["Where does the woman want to live?","What does the man prefer?","What do they agree about?"],
+    "script":"Listen. Woman: 'I want to move to the village. Life is calmer there.' Man: 'But we need the city for work and school.' Woman: 'That's true. However, we could live on the edge of the city.' Man: 'Good point — we get nature and facilities!' Woman: 'Exactly! The best of both worlds.'"},
+  "writing":{"title":"City or Countryside?","task":"Write a paragraph (6-8 sentences) comparing city and countryside: advantages and disadvantages, and your choice.","uz":"Shahar va qishloqni taqqoslab yozing."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["Where do you prefer to live?","I prefer the city."],["What's the best thing about your home area?","The people and the food."],["What's a disadvantage?","The traffic in the mornings."]]},
+    {"t":"mission","title":"Real-life Mission","body":"Ask 3 people if they prefer city or village. Report their reasons. / 3 kishidan so'rang."}
+  ],
+  "quiz":["Fill: 'An ___ of the village is fresh air.' (advantage/disadvantage)","Fill: '___ the other hand, it's quiet.' (On/In)","Translate: 'Shahar gavjum.' → ______","Name one advantage and one disadvantage of the city."],
+  "homework":"Vocabulary: 10 city/countryside words 3× · Grammar: 6 pros/cons sentences · Reading: re-read 'Where Is Home?' · Speaking: discuss with your family.",
+  "teacher":["Link to L65 (comparing cities).","Teach 'on the one hand / on the other hand' chunks.","Watch for 'advantagies'.","This is classic B1 exam material."]
+},
+{
+  "n":90,"title":"Global Cultures","sub":"90-dars: Jahon madaniyatlari","icon":"🌏","accent":"ef5350","band":"b1","type":"normal",
+  "goals":[["🌏 Learn about world cultures","Jahon madaniyatlari haqida o'rganish"],["🎎 Describe customs of different countries","Turli xalq urf-odatlarini tasvirlash"],["🌍 Respect cultural differences","Madaniy tafovutlarni hurmat qilish"]],
+  "warmup":[["🌏 World quiz","Name a country and one thing it is famous for. / Mamlakat va uning mashhur tomoni."],["🎎 Your culture","What is Uzbekistan famous for? / O'zbekiston nima bilan mashhur?"]],
+  "vocab":[
+    {"w":"culture","p":"/KUL-cher/","u":"Madaniyat","i":"🎭","x":["Every country has its culture.","Har mamlakatning madaniyati bor."]},
+    {"w":"custom","p":"/KAS-tem/","u":"Urf-odat","i":"📜","x":["Greeting customs are different everywhere.","Salomlashish odatlari har joyda har xil."]},
+    {"w":"greet","p":"/griit/","u":"Salomlashmoq","i":"👋","x":["They greet with a bow.","Ular ta'zim bilan salomlashadi."]},
+    {"w":"festival","p":"/FES-ti-val/","u":"Festival","i":"🎪","x":["There is a flower festival in spring.","Bahorda gul festivali bo'ladi."]},
+    {"w":"traditional","p":"/tra-DI-shen-al/","u":"An'anaviy","i":"🏺","x":["We wore traditional clothes.","An'anaviy kiyim kiyamiz."]},
+    {"w":"foreign","p":"/FO-ren/","u":"Chet ellik","i":"🌍","x":["Foreign tourists love our food.","Chet ellik sayyohlar taomimizni sevadi."]},
+    {"w":"exchange","p":"/iks-CHEYNJ/","u":"Almashmoq","i":"🔄","x":["We exchange gifts on this day.","Bu kuni sovg'a almashamiz."]},
+    {"w":"diverse","p":"/day-VERS/","u":"Turli-tuman","i":"🌈","x":["Our world is diverse and beautiful.","Dunyomiz xilma-xil va go'zal."]},
+    {"w":"respect","p":"/ri-SPEKT/","u":"Hurmat","i":"🙏","x":["Respect every culture.","Har bir madaniyatni hurmat qiling."]},
+    {"w":"global","p":"/GLOH-bal/","u":"Global, jahon","i":"🌐","x":["We live in a global world.","Biz global dunyoda yashaymiz."]}
+  ],
+  "grammar":{"rule":"Describe customs: **In + country, people + verb** · **It is a tradition to + verb**","uz":"'In + mamlakat, people + fe'l' — urf-odatlar",
+    "ex":[["**In Japan, people bow** when they meet.","Yaponiyada uchrashganda ta'zim qilinadi."],["**In Italy, people celebrate** with big family dinners.","Italiyada katta oilaviy kechki ovqatlar bilan nishonlanadi."],["**It is a tradition to** drink tea in Uzbekistan.","O'zbekistonda choy ichish an'ana."]],
+    "mistake":["Wrong: *In Japan people is bowing.*","Right: *In Japan people bow.*","Odat — hozirgi zamon."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["___ Japan, people bow. (In/At)","___ Italy, people celebrate with dinner. (In/On)","It is a ___ to drink tea. (tradition/traditional)","We ___ gifts. (exchange/exchanging)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Culture","Madaniyat"],["Custom","Urf-odat"],["Festival","Festival"],["Traditional","An'anaviy"],["Respect","Hurmat"]]},
+    {"t":"circle","title":"Circle the Answer","items":["In Japan, people ___ when they meet. → a) bow b) shake c) kiss"]},
+    {"t":"order","title":"Build the Sentence","items":["Japan / bow / In / people / .","tradition / tea / is / to / drink / it / a / ."]}
+  ],
+  "reading":{"title":"A Festival in My School","passage":"Our school held an international festival. Each class chose a country. My class chose Japan. We learned that in Japan, people bow when they greet, and they take off their shoes at home. We decorated our corner with paper flowers and taught everyone to write 'hello' in Japanese. The Korean class showed a traditional dance. The Turkish class served tea in small glasses. At the end, our teacher said: 'Look at us — different clothes, different food, but one happy school. That is what a global world should be.'",
+    "qs":["What did the writer's class choose?","What did they learn about Japan?","What did the Korean class show?","What did the teacher say at the end?"]},
+  "listening":{"title":"Customs Around the World","qs":["What do people do in Thailand?","What do people in Brazil love?","What did the speaker learn?"],
+    "script":"Listen. Today I learned about customs. In Thailand, people press their hands together to say hello. In Brazil, people love festivals and dancing — especially in February. In some places, it is rude to refuse food. Every custom is different, but all of them show respect. Learning about them makes the world friendlier."},
+  "writing":{"title":"A Custom in My Country","task":"Write a paragraph (5-7 sentences) about a custom in Uzbekistan, using 'In our country, people...'.","uz":"O'zbekiston urf-odati haqida yozing."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["What is your country famous for?","Our food and hospitality."],["What is a custom you love?","Greeting elders first."],["What customs surprised you?","In Japan, people take off their shoes."]]},
+    {"t":"mission","title":"Real-life Mission","body":"Tell your family one custom of another country. / Oilangizga boshqa xalq odatini ayting."}
+  ],
+  "quiz":["Fill: '___ Japan, people bow.' (In/At)","Fill: 'It is a ___ to drink tea.' (tradition/traditional)","Translate: 'Chet ellik sayyohlar taomimizni sevadi.' → ______","Name one custom of another country."],
+  "homework":"Vocabulary: 10 culture words 3× · Grammar: 6 sentences about customs · Reading: re-read 'A Festival in My School' · Speaking: share a custom with your family.",
+  "teacher":["Celebrate the diversity of the class.","Drill 'In + country, people + verb'.","Watch for present continuous for habits.","This leads to L91 (famous people) and L93 (documentary)."]
+}
+]}

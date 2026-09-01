@@ -1,0 +1,338 @@
+{"lessons":[
+{
+  "n":91,"title":"Famous People","sub":"91-dars: Mashhur shaxslar","icon":"⭐","accent":"f06292","band":"b1","type":"normal",
+  "goals":[["⭐ Talk about famous people","Mashhur shaxslar haqida gapirish"],["📜 Describe their lives and achievements","Hayoti va yutuqlarini tasvirlash"],["🗣️ Say why someone inspires you","Kimdir sizni nima uchun ilhomlantirishi"]],
+  "warmup":[["⭐ Famous people","Name 3 famous people you admire. / 3 ta mashhur shaxs."],["🏆 Achievements","What did they do that was special? / Ular nima qildi?"]],
+  "vocab":[
+    {"w":"famous","p":"/FAY-mes/","u":"Mashhur","i":"⭐","x":["She is famous all over the world.","U butun dunyoda mashhur."]},
+    {"w":"achievement","p":"/a-CHIIV-ment/","u":"Yutuq","i":"🏆","x":["Winning gold is a great achievement.","Oltin olish — katta yutuq."]},
+    {"w":"discover","p":"/dis-KA-ver/","u":"Kashf etmoq","i":"🔍","x":["Scientists discovered new stars.","Olimlar yangi yulduzlar kashf etdi."]},
+    {"w":"invent","p":"/in-VENT/","u":"Ixtiro qilmoq","i":"💡","x":["He invented a useful machine.","U foydali mashina ixtiro qildi."]},
+    {"w":"successful","p":"/sak-SES-ful/","u":"Muvaffaqiyatli","i":"📈","x":["She became a successful writer.","U muvaffaqiyatli yozuvchi bo'ldi."]},
+    {"w":"history","p":"/HIS-te-ri/","u":"Tarix","i":"📜","x":["He is famous in history.","U tarixda mashhur."]},
+    {"w":"inspire","p":"/in-SPAYer/","u":"Ilhomlantirmoq","i":"✨","x":["Her story inspires me.","Uning hikoyasi meni ilhomlantiradi."]},
+    {"w":"admire","p":"/ad-MAYer/","u":"Qoyil qolmoq","i":"🙌","x":["I admire his hard work.","Uning mehnatiga qoyil qolaman."]},
+    {"w":"medal","p":"/ME-dal/","u":"Medal","i":"🥇","x":["She won a gold medal.","U oltin medal oldi."]},
+    {"w":"legend","p":"/LE-jend/","u":"Afsona","i":"🐉","x":["He is a legend of football.","U futbol afsonasi."]}
+  ],
+  "grammar":{"rule":"Describe a person: **was born in / became / won / is famous for + -ing or noun**","uz":"Shaxsni tasvirlash: 'was born, became, is famous for'",
+    "ex":[["He **was born in** 1954 and **became** a writer.","U 1954 yilda tug'ilgan va yozuvchi bo'lgan."],["She **is famous for** winning gold medals.","U oltin medallar yutgani bilan mashhur."],["I **admire her because** she helps children.","U bolalarga yordam bergani uchun qoyil qolaman."]],
+    "mistake":["Wrong: *She famous for her work.*","Right: *She is famous for her work.*","'is' sharti kerak."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["He ___ born in 1980. (was/is)","She is ___ for her films. (famous/fame)","I ___ her hard work. (admire/admiring)","He ___ a gold medal. (won/wins)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Famous","Mashhur"],["Achievement","Yutuq"],["Discover","Kashf etish"],["Invent","Ixtiro qilish"],["Inspire","Ilhomlantirish"]]},
+    {"t":"circle","title":"Circle the Answer","items":["You admire someone. You say: → a) I admire her hard work b) She is boring c) Goodbye"]},
+    {"t":"order","title":"Build the Sentence","items":["in / born / He / 1954 / was / .","for / is / films / famous / She / her / ."]}
+  ],
+  "reading":{"title":"The Legend of Our School","passage":"Everyone at our school knows the name Bakhrom Xalilov. He was born in 1968 in a small village and walked four kilometres to school every day. He loved mathematics and worked hard. After school, he studied at university and became a famous engineer. He invented a cheap water pump for farmers — thousands of villages use it today. 'He is our school's legend,' our principal says. 'He shows us that a village boy can change the world.' I admire him because he never forgot where he came from.",
+    "qs":["How far did Bakhrom walk to school?","What did he study?","What did he invent?","Why does the writer admire him?"]},
+  "listening":{"title":"A Famous Athlete","qs":["What sport does the athlete do?","When did she win her first medal?","What does she say about training?"],
+    "script":"Listen. Our guest today is a famous swimmer. 'I was born in 2001 and started swimming at five. I won my first medal at twelve. My parents supported me always.' 'What is your secret?' 'Training every day, even when I don't want to. Dreams need work.'"},
+  "writing":{"title":"A Person I Admire","task":"Write a paragraph (5-7 sentences) about someone you admire: who, what they did, why you admire them.","uz":"Siz qoyil qoladigan shaxs haqida yozing."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["Who do you admire?","I admire Alisher Navoiy."],["What is he famous for?","His poems and wisdom."],["Why does he inspire you?","Because he created something eternal."]]},
+    {"t":"mission","title":"Real-life Mission","body":"Ask your parents who they admire and why. Report. / Ota-onangizdan so'rang."}
+  ],
+  "quiz":["Fill: 'He ___ born in 1980.' (was/is)","Fill: 'She is ___ for her films.' (famous/fame)","Translate: 'Uning hikoyasi meni ilhomlantiradi.' → ______","What makes someone a legend?"],
+  "homework":"Vocabulary: 10 famous-people words 3× · Grammar: 6 sentences about a famous person · Reading: re-read 'The Legend of Our School' · Speaking: describe your hero to your family.",
+  "teacher":["Let students choose heroes they know — local pride.","Drill 'was born / is famous for'.","Watch for missing 'is'.","This feeds L93 (documentary) and L100 (presentations)."]
+},
+{
+  "n":92,"title":"Telling a Story","sub":"92-dars: Hikoya aytish","icon":"📖","accent":"5c6bc0","band":"b1","type":"normal",
+  "goals":[["📖 Tell a story in the past","Hikoya aytib berish"],["🕰️ Use Past Continuous: was/were + -ing","Past Continuous ishlatish"],["🎬 Describe what was happening","Nima bo'layotganini tasvirlash"]],
+  "warmup":[["📖 Story time","Tell a short story about yesterday. / Kecha haqida kichik hikoya."],["🕰️ While...","'While I was eating, my phone rang.' What about you? / 'While' bilan gap tuzing."]],
+  "vocab":[
+    {"w":"while","p":"/wayl/","u":"Vaqtida (davomida)","i":"⏳","x":["While I was walking, it started to rain.","Yurganimda yomg'ir boshlandi."]},
+    {"w":"was doing","p":"/woz DU-ing/","u":"Qilayotgan edi","i":"🎬","x":["I was reading a book.","Men kitob o'qiyotgan edim."]},
+    {"w":"were doing","p":"/wer DU-ing/","u":"Qilishayotgan edi","i":"🎬","x":["They were playing football.","Ular futbol o'ynashayotgan edi."]},
+    {"w":"suddenly","p":"/SAD-den-li/","u":"To'satdan","i":"⚡","x":["Suddenly, the lights went out.","To'satdan chiroqlar o'chdi."]},
+    {"w":"at that moment","p":"/at that MOH-ment/","u":"O'sha paytda","i":"⏰","x":["At that moment, the door opened.","O'sha paytda eshik ochildi."]},
+    {"w":"happen","p":"/HA-pen/","u":"Bo'lmoq","i":"🌟","x":["What happened next?","Keyin nima bo'ldi?"]},
+    {"w":"arrive","p":"/a-RAYV/","u":"Yetib kelmoq","i":"🚶","x":["When I arrived, they were leaving.","Men yetib kelganimda, ular ketishayotgan edi."]},
+    {"w":"notice","p":"/NOH-tis/","u":"Payqamoq","i":"👀","x":["I noticed a strange sound.","G'alati tovushni payqadim."]},
+    {"w":"finally","p":"/FAI-na-li/","u":"Nihoyat","i":"🏁","x":["Finally, everything was quiet.","Nihoyat, hamma narsa tinchlandi."]},
+    {"w":"in the end","p":"/in the end/","u":"Oxir-oqibat","i":"🎯","x":["In the end, everyone laughed.","Oxir-oqibat hamma kuldi."]}
+  ],
+  "grammar":{"rule":"**Past Continuous: was/were + -ing** for background action · interrupted by **Past Simple**","uz":"'was/were + -ing' — davom etgan harakat, o'tgan zamon — uni bo'lgan hodisa",
+    "ex":[["I **was reading** when the phone **rang**.","Kitob o'qiyotgan edim, qo'ng'iroq jiringladi."],["While we **were walking**, it **started** to rain.","Yurib ketayotgan edik, yomg'ir boshlandi."],["He **was sleeping** at that moment.","U o'sha paytda uxlayotgan edi."]],
+    "mistake":["Wrong: *I was read a book.*","Right: *I was reading a book.*","Past Continuous: was + -ing."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["I was ___ (read) when it happened. (reading/read)","They were ___ (play) football. (playing/play)","She was ___ (sleep) at that moment. (sleeping/sleep)","While we ___ walking, it rained. (were/was)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["While","Vaqtida"],["Suddenly","To'satdan"],["Notice","Payqamoq"],["Finally","Nihoyat"],["In the end","Oxir-oqibat"]]},
+    {"t":"circle","title":"Circle the Answer","items":["I ___ TV when the door opened. → a) was watching b) watch c) watched"]},
+    {"t":"order","title":"Build the Sentence","items":["reading / was / I / phone / when / rang / the / .","playing / were / They / football / ."]}
+  ],
+  "reading":{"title":"The Missing Key","passage":"Last Friday, I was studying in my room when I heard my mother calling: 'Have you seen my keys?' I was helping her look when my little brother walked in. While he was eating a biscuit, he suddenly stopped. 'What's in my pocket?' he asked. We looked — it was the key! He was playing with it in the morning and forgot. In the end, everyone laughed, and my mother put the key on a hook. 'From now on,' she said, 'keys stay on this hook!'",
+    "qs":["What was the writer doing when mother called?","What was the little brother doing?","Where was the key?","What did mother do in the end?"]},
+  "listening":{"title":"The Story of the Storm","qs":["What was the family doing when the storm started?","What happened while they were watching?","What did they do in the end?"],
+    "script":"Listen. Last week, while we were having dinner, a storm started. Suddenly, the lights went out. We were sitting in the dark when my father found candles. While he was lighting them, my little sister started to cry. 'Don't worry,' my mother said. 'This is an adventure!' In the end, we told stories by candlelight. It was actually fun!"},
+  "writing":{"title":"A Story from My Life","task":"Write a short story (6-8 sentences) using Past Continuous: what you were doing, what happened.","uz":"Hayotingizdan hikoya yozing."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["What were you doing at 8 last night?","I was doing my homework."],["What happened suddenly?","The power went off!"],["What did you do in the end?","We lit candles and talked."]]},
+    {"t":"mission","title":"Real-life Mission","body":"Tell a true story to your family using was/were + -ing. / Haqiqiy hikoya ayting."}
+  ],
+  "quiz":["Fill: 'I was ___ when it rang.' (reading/read)","Fill: 'While we ___ walking, it rained.' (were/was)","Translate: 'Kitob o'qiyotgan edim.' → ______","Correct: 'I was read a book.'"],
+  "homework":"Vocabulary: 10 story words 3× · Grammar: 6 Past Continuous sentences · Reading: re-read 'The Missing Key' · Speaking: tell your story aloud.",
+  "teacher":["Storytelling is the heart of B1 speaking.","Teach was/were + -ing with picture prompts.","Watch for 'was + base verb'.","This feeds L94 (storytelling circle) and L100."]
+},
+{
+  "n":93,"title":"Mini Documentary Workshop","sub":"93-dars: Mini-dokumental ustaxonasi","icon":"🎥","accent":"8d6e63","band":"b1","type":"workshop",
+  "goals":[["🎥 Make a mini documentary script","Mini-dokumental ssenariysi yozish"],["🎬 Narrate a story with cameras and cuts","Sahnaga olishni rejalash"],["🎤 Present your documentary to the class","Dokumentalni taqdim etish"]],
+  "warmup":[["🎥 Documentaries","What documentaries have you seen? / Qanday dokumentallar ko'rgansiz?"],["🎬 A story","What story would make a good documentary? / Qaysi hikoya?"]],
+  "vocab":[
+    {"w":"documentary","p":"/do-kyu-MEN-te-ri/","u":"Dokumental film","i":"🎥","x":["We watched a documentary about space.","Koinot haqida dokumental ko'rdik."]},
+    {"w":"script","p":"/skript/","u":"Ssenariy","i":"📝","x":["We wrote a short script.","Qisqa ssenariy yozdik."]},
+    {"w":"scene","p":"/siin/","u":"Sahna","i":"🎬","x":["The first scene is at school.","Birinchi sahna maktabda."]},
+    {"w":"camera","p":"/KA-me-ra/","u":"Kamera","i":"📹","x":["The camera follows the story.","Kamera hikoyani kuzatadi."]},
+    {"w":"interview","p":"/IN-ter-viu/","u":"Intervyu","i":"🎤","x":["We will do a short interview.","Qisqa intervyu olamiz."]},
+    {"w":"narrator","p":"/na-REY-ter/","u":"Hikoyachi","i":"🗣️","x":["The narrator tells the story.","Hikoyachi voqeani aytadi."]},
+    {"w":"filming","p":"/FIL-ming/","u":"Sahnaga olish","i":"🎬","x":["We started filming on Friday.","Juma kuni suratga olishni boshladik."]},
+    {"w":"editing","p":"/E-di-ting/","u":"Montaj","i":"✂️","x":["Editing takes time.","Montaj vaqt oladi."]}
+  ],
+  "practice":[
+    {"t":"task","title":"Build Your Documentary","items":["Choose a topic: our school, a tradition, our town, a hobby. / Mavzu tanlang.","Write the script: intro, 3 scenes, ending. / Ssenariy yozing.","Choose roles: narrator, camera, actors, interviewer. / Rollar tanlang.","Write interview questions (3) in English. / 3 ta savol yozing.","Plan the scenes: what the camera shows. / Sahnani rejalang.","Present your plan to the class. / Rejani taqdim eting."]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Script","Ssenariy"],["Scene","Sahna"],["Interview","Intervyu"],["Narrator","Hikoyachi"],["Editing","Montaj"]]},
+    {"t":"order","title":"Build the Sentence","items":["wrote / a / We / script / short / .","narrator / tells / the / story / The / ."]}
+  ],
+  "speaking":[
+    {"t":"talk","title":"Pitch Your Idea","body":"Present your documentary plan: topic, 3 scenes, your role. (5-7 sentences) / Rejangizni taqdim eting."},
+    {"t":"partner","title":"Interview Practice","body":"Interview your partner as the narrator would. Swap. / Intervyu mashq qiling."},
+    {"t":"mission","title":"The Best Idea","body":"The class votes on the most interesting documentary idea. / Sinf ovoz bersin."}
+  ],
+  "quiz":["Fill: 'We wrote a short ___ .' (script/scene)","Fill: 'The ___ tells the story.' (narrator/camera)","Translate: 'Montaj vaqt oladi.' → ______","What is a documentary?"],
+  "homework":"Write the full script of your documentary (10 lines). / To'liq ssenariy yozing.",
+  "teacher":["Workshop: documentaries combine everything learned.","Encourage filming with phones at home.","Focus on clear English narration.","This leads to L100 final presentations."]
+},
+{
+  "n":94,"title":"Speaking Circle: Storytelling","sub":"94-dars: Suhbat doirasi — hikoya aytish","icon":"🗣️","accent":"66bb6a","band":"b1","type":"speaking",
+  "goals":[["🗣️ Tell an interesting story fluently","Hikoyani ravon aytib berish"],["🕰️ Use Past Simple and Past Continuous","O'tgan zamonlarni ishlatish"],["🎬 Keep listeners interested","Tinglovchini qiziqtirish"]],
+  "warmup":[["🗣️ Story starters","'Last summer... / One day... / Guess what happened!' — choose one. / Hikoya boshi."],["🎬 Story words","Name 5 story words from L92. / 5 ta so'z."]],
+  "vocab":[
+    {"w":"Once upon a time","p":"/wans a-pon a taym/","u":"Bir paytlar","i":"📜","x":["Once upon a time, there was a little fox.","Bir paytlar kichkina tulki bor edi."]},
+    {"w":"suddenly","p":"/SAD-den-li/","u":"To'satdan","i":"⚡","x":["Suddenly, it began to rain.","To'satdan yomg'ir boshlandi."]},
+    {"w":"in the end","p":"/in the end/","u":"Oxir-oqibat","i":"🎯","x":["In the end, they found it.","Oxir-oqibat uni topdilar."]},
+    {"w":"surprise","p":"/ser-PRAYZ/","u":"Ajablanarli","i":"😲","x":["The surprise was inside the box.","Ajablanarli narsa qutida edi."]},
+    {"w":"memory","p":"/ME-me-ri/","u":"Xotira","i":"🧠","x":["This is my favourite memory.","Bu sevimli xotiram."]},
+    {"w":"laugh","p":"/laf/","u":"Kulmoq","i":"😂","x":["Everyone started to laugh.","Hamma kula boshladi."]}
+  ],
+  "practice":[
+    {"t":"task","title":"Story Starters","items":["One day, while I was walking... / Kunlarning birida yurganimda...","Last summer, we were visiting... / O'tgan yoz biz...","Guess what happened on my way home! / Tasavvur qiling...","It was a quiet evening when... / Tinch oqshom edi...","The funniest thing that ever happened to me... / Eng kulgili voqea..."]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Suddenly","To'satdan"],["In the end","Oxir-oqibat"],["Memory","Xotira"],["Surprise","Ajablanarli"],["Laugh","Kulish"]]}
+  ],
+  "speaking":[
+    {"t":"talk","title":"My Story","body":"Tell a true story (2 minutes): start, what happened, the surprise, the end. / Haqiqiy hikoyangizni ayting."},
+    {"t":"partner","title":"Listener Questions","body":"Your partner asks 2 questions about your story. Answer them. / Juftingiz savol bersin."},
+    {"t":"mission","title":"The Best Story","body":"The class votes for the most interesting and funniest story. / Eng yaxshi hikoya."}
+  ],
+  "quiz":["Translate: 'To'satdan yomg'ir boshlandi.' → ______","Translate: 'Oxir-oqibat hamma kuldi.' → ______","Fill: 'I was ___ when it happened.' (walking/walk)","What makes a story interesting?"],
+  "homework":"Write your best story (10-12 sentences) and practice telling it without reading. / Hikoyangizni yozing va aytib mashq qiling.",
+  "teacher":["Speaking circle: storytelling is the key B1 skill.","Model a story first, then students tell theirs.","Praise vivid details.","This prepares L100 final presentations."]
+},
+{
+  "n":95,"title":"Job Applications","sub":"95-dars: Ish arizalari","icon":"📝","accent":"42a5f5","band":"b1","type":"normal",
+  "goals":[["📝 Write a simple job application","Oddiy ish arizasi yozish"],["📄 Use formal language politely","Rasmiy tilda yozish"],["💼 Include skills and experience","Mahorat va tajribani kiritish"]],
+  "warmup":[["📝 Formal vs informal","How is a letter to a boss different from a letter to a friend? / Farqi?"],["💼 Your skills","What skills would you write in an application? / Qanday mahorat?"]],
+  "vocab":[
+    {"w":"apply","p":"/a-PLAY/","u":"Ariza bermoq","i":"📝","x":["I want to apply for the job.","Ishga ariza bermoqchiman."]},
+    {"w":"application","p":"/a-pli-KAY-shen/","u":"Ariza","i":"📄","x":["Send your application by Friday.","Arizani juma kungacha yuboring."]},
+    {"w":"Dear Sir/Madam","p":"/dier ser/MA-dam/","u":"Hurmatli janob/xonim","i":"✉️","x":["Dear Sir or Madam, I am writing to apply...","Hurmatli janob/xonim..."]},
+    {"w":"skills","p":"/skilz/","u":"Mahoratlar","i":"🛠️","x":["My skills include computers and English.","Mahoratlarim: kompyuter va ingliz tili."]},
+    {"w":"experience","p":"/ik-SPIER-i-ens/","u":"Tajriba","i":"📜","x":["I have two years of experience.","Ikki yillik tajribam bor."]},
+    {"w":"qualification","p":"/kwo-li-fi-KAY-shen/","u":"Malaka","i":"🎓","x":["My qualification is in accounting.","Malakam — buxgalteriya."]},
+    {"w":"responsible","p":"/ri-SPON-si-bel/","u":"Mas'uliyatli","i":"🤝","x":["I am a responsible worker.","Men mas'uliyatli xodimman."]},
+    {"w":"reference","p":"/RE-fe-rens/","u":"Tavsiya (referens)","i":"📇","x":["I can give a reference.","Tavsiya bera olaman."]},
+    {"w":"contact","p":"/KON-takt/","u":"Bog'lanish","i":"📞","x":["Contact me at this number.","Menga shu raqamdan bog'laning."]},
+    {"w":"sincerely","p":"/sin-SIER-li/","u":"Chin dildan","i":"🙏","x":["Yours sincerely, Dilnoza.","Hurmat bilan, Dilnoza."]}
+  ],
+  "grammar":{"rule":"Formal application: **Dear... → I am writing to apply for → my skills include → I am available → Yours sincerely**","uz":"Rasmiy ariza tuzilishi",
+    "ex":[["**I am writing to apply for** the position of assistant.","Yordamchi lavozimiga ariza yozyapman."],["**My skills include** English, computers and teamwork.","Mahoratlarim: ingliz tili, kompyuter, jamoada ishlash."],["**I am available** for an interview any day.","Suhbatga istalgan kun tayyorman."]],
+    "mistake":["Wrong: *I want the job. Give it to me.* (too rude)","Right: *I would be happy to work with you.*","Rasmiy va xushmuomala bo'ling."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["Dear ___ , (Sir/Madam)","I am writing ___ apply for the job. (to/for)","My skills ___ English. (include/includes)","Yours ___ , (sincerely/sincere)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Apply","Ariza bermoq"],["Experience","Tajriba"],["Qualification","Malaka"],["Responsible","Mas'uliyatli"],["Sincerely","Hurmat bilan"]]},
+    {"t":"circle","title":"Circle the Answer","items":["A formal letter starts: → a) Dear Sir/Madam b) Hi c) What's up?"]},
+    {"t":"order","title":"Build the Sentence","items":["writing / apply / I / to / am / job / for / the / .","include / skills / My / English / ."]}
+  ],
+  "reading":{"title":"A Successful Application","passage":"When Zarina saw the job advertisement, she smiled. She had the right skills. She wrote a formal application: 'Dear Sir or Madam, I am writing to apply for the position of shop assistant. I have one year of experience in a bookshop. My skills include customer service and computers. I am hard-working and responsible. I am available for an interview any day. Yours sincerely, Zarina.' The manager read it and thought: 'Clear, polite, confident.' He called her the next day.",
+    "qs":["What job did Zarina apply for?","What experience does she have?","What does she say about availability?","What did the manager think of the letter?"]},
+  "listening":{"title":"The Interview Call","qs":["Why did the manager call?","What does he ask Zarina to bring?","When is the interview?"],
+    "script":"Listen. Manager: 'Hello, is this Zarina?' Zarina: 'Yes, speaking.' Manager: 'This is Mr. Karimov. We liked your application. Can you come for an interview on Friday at 10?' Zarina: 'Yes, of course!' Manager: 'Please bring your qualification papers and a reference.' Zarina: 'I will. Thank you very much!'"},
+  "writing":{"title":"Write Your Application","task":"Write a short job application (6-8 lines): greeting, position, skills, availability, ending.","uz":"Ish arizasi yozing."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["What job would you apply for?","A shop assistant or a waiter."],["What skills would you list?","English and customer service."],["How would you end the letter?","Yours sincerely."]]},
+    {"t":"mission","title":"Real-life Mission","body":"Read one real job ad (online or newspaper) and list its requirements. / Haqiqiy e'lon o'qing."}
+  ],
+  "quiz":["Fill: 'I am writing ___ apply.' (to/for)","Fill: 'My skills ___ English.' (include/includes)","Translate: 'Tajribam ikki yil.' → ______","How do you end a formal letter?"],
+  "homework":"Vocabulary: 10 application words 3× · Grammar: write your own application · Reading: re-read 'A Successful Application' · Speaking: explain a job ad to your family.",
+  "teacher":["Formal writing is a key B1 real-life skill.","Provide a clear template.","Watch for informal tone in formal letters.","This connects to L96 (emails)."]
+},
+{
+  "n":96,"title":"Email Writing","sub":"96-dars: Elektron xat yozish","icon":"✉️","accent":"26a69a","band":"b1","type":"normal",
+  "goals":[["✉️ Write a clear email","Tushunarli email yozish"],["📧 Use correct email structure","Email tuzilishini bilish"],["✍️ Write formal and informal emails","Rasmiy va norasmiy email"]],
+  "warmup":[["✉️ Emails","How many emails do you write a week? / Haftada nechta email?"],["📧 Formal or informal?","An email to a friend vs to a teacher — different? / Farqi?"]],
+  "vocab":[
+    {"w":"subject","p":"/SAB-jekt/","u":"Mavzu (subject)","i":"🏷️","x":["Write a clear subject line.","Aniq mavzu yozing."]},
+    {"w":"attachment","p":"/a-TACH-ment/","u":"Ilova (fayl)","i":"📎","x":["I sent the file as an attachment.","Faylni ilova qilib yubordim."]},
+    {"w":"forward","p":"/FOR-werd/","u":"Yo'naltirmoq (forward)","i":"↪️","x":["Please forward this email.","Bu emailni yuboring."]},
+    {"w":"reply","p":"/ri-PLAY/","u":"Javob bermoq","i":"↩️","x":["I will reply tomorrow.","Ertaga javob beraman."]},
+    {"w":"sender","p":"/SEN-der/","u":"Jo'natuvchi","i":"📤","x":["Check the sender's name.","Jo'natuvchini tekshiring."]},
+    {"w":"receiver","p":"/ri-SII-ver/","u":"Qabul qiluvchi","i":"📥","x":["Write the receiver's address.","Qabul qiluvchi manzilini yozing."]},
+    {"w":"draft","p":"/draft/","u":"Qoralama","i":"📝","x":["Save it as a draft first.","Avval qoralama saqlang."]},
+    {"w":"signature","p":"/SIG-ne-cher/","u":"Imzo","i":"🖊️","x":["End with your signature.","Imzo bilan tugating."]},
+    {"w":"Hello / Hi","p":"/HE-lo/ / /hay/","u":"Salom (norasmiy)","i":"👋","x":["Hi Aziz, how are you?","Salom Aziz, qalaysan?"]},
+    {"w":"Best regards","p":"/best ri-GARDZ/","u":"Hurmat bilan","i":"🙏","x":["Best regards, Malika.","Hurmat bilan, Malika."]}
+  ],
+  "grammar":{"rule":"Email structure: **greeting → purpose → details → closing** · formal vs informal tone","uz":"Email: salom → maqsad → tafsilot → xulosa",
+    "ex":[["Formal: **Dear Mr. Karimov, I am writing to inform you...**","Rasmiy: 'Hurmatli janob Karimov...'"],["Informal: **Hi Aziz! Just writing to say...**","Norasmiy: 'Salom Aziz!'"],["**Best regards / Yours sincerely**","'Hurmat bilan'"]],
+    "mistake":["Wrong: email with no subject line","Right: *always add a subject*","Mavzu sattri shart."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["Write a clear ___ line. (subject/object)","I sent the file as an ___. (attachment/attach)","___ regards, Malika. (Best/Good)","I will ___ tomorrow. (reply/replay)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Subject","Mavzu"],["Attachment","Ilova"],["Reply","Javob"],["Draft","Qoralama"],["Signature","Imzo"]]},
+    {"t":"circle","title":"Circle the Answer","items":["A formal email starts: → a) Dear Mr. Karimov b) Yo c) What's up?"]},
+    {"t":"order","title":"Build the Sentence","items":["a / subject / write / clear / line / .","the / sent / I / as / file / attachment / an / ."]}
+  ],
+  "reading":{"title":"A Teacher's Email","passage":"Last week, our teacher sent an email to the class. The subject was 'Class trip — important!'. It said: 'Dear students, I am writing to inform you that the trip to Khiva is on Saturday. Please arrive at school at 7 a.m. Bring water and comfortable shoes. Reply to this email if you are coming. Best regards, Mr. Rahimov.' My friend replied: 'Hi Mr. Rahimov, I will come. Thanks!' We all smiled at his informal email — but the teacher didn't mind.",
+    "qs":["What was the subject of the email?","What time must students arrive?","What should they bring?","What did the friend's reply say?"]},
+  "listening":{"title":"The Email to the Manager","qs":["Why is the girl writing?","What does she attach?","What does she ask?"],
+    "script":"Listen. Girl: 'I need to email the manager. I'm writing to ask about the school project.' Friend: 'Attach your questions.' Girl: 'Good idea. Subject: Project questions. Dear Mrs. Azizova, I am writing to ask about the history project. When is the deadline? Please find my questions in the attachment. Thank you. Best regards, Nigora.' Friend: 'Perfect — clear and polite.'"},
+  "writing":{"title":"Write an Email","task":"Write an email (8-10 lines) to your teacher asking about homework or a trip. Use correct structure.","uz":"O'qituvchingizga email yozing."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["Who do you write emails to?","My teachers and relatives."],["What's a good subject line for this?","'Homework question'."],["Formal or informal to a teacher?","Formal, with Best regards."]]},
+    {"t":"mission","title":"Real-life Mission","body":"Write one real email this week to a teacher or relative. / Bu hafta bitta email yozing."}
+  ],
+  "quiz":["Fill: 'Write a clear ___ line.' (subject/object)","Fill: '___ regards, Malika.' (Best/Good)","Translate: 'Faylni ilova qilib yubordim.' → ______","Why is a subject line important?"],
+  "homework":"Vocabulary: 10 email words 3× · Grammar: write a formal and an informal email · Reading: re-read 'A Teacher's Email' · Speaking: explain email structure to your family.",
+  "teacher":["Real-life skill: students will write emails forever.","Show both formal and informal examples.","Emphasize the subject line.","This builds on L95 formal writing."]
+},
+{
+  "n":97,"title":"Giving Advice","sub":"97-dars: Maslahat berish","icon":"💡","accent":"ffa726","band":"b1","type":"normal",
+  "goals":[["💡 Give advice with the Second Conditional","Ikkinchi shart gap bilan maslahat"],["🤔 Use 'If I were you...'","'If I were you' ishlatish"],["🧠 Suggest solutions politely","Xushmuomala yechim taklif qilish"]],
+  "warmup":[["💡 Advice time","A friend is sad. What do you say? / Nima deysiz?"],["🤔 If I were you...","'If I were you, I would rest.' What about you? / Siz nima qilardingiz?"]],
+  "vocab":[
+    {"w":"If I were you","p":"/if ay wer yu/","u":"Sizning o'rningizda bo'lsam","i":"💡","x":["If I were you, I would rest.","Sizning o'rningizda bo'lsam, dam olardim."]},
+    {"w":"I would","p":"/ay wud/","u":"Men qilardim","i":"🔮","x":["I would talk to her.","Men u bilan gaplashardim."]},
+    {"w":"advice","p":"/ad-VAYS/","u":"Maslahat","i":"💬","x":["Can I give you some advice?","Maslahat bera olamanmi?"]},
+    {"w":"problem","p":"/PRO-blem/","u":"Muammo","i":"⚠️","x":["What is your problem?","Muammoingiz nima?"]},
+    {"w":"solution","p":"/sa-LU-shen/","u":"Yechim","i":"🔧","x":["I have a simple solution.","Oddiy yechimim bor."]},
+    {"w":"worried","p":"/WOR-id/","u":"Xavotirlangan","i":"😟","x":["Don't be worried.","Xavotirlanmang."]},
+    {"w":"try","p":"/tray/","u":"Harakat qilmoq","i":"💪","x":["You should try again.","Yana urinib ko'ring."]},
+    {"w":"decision","p":"/di-SI-zhen/","u":"Qaror","i":"⚖️","x":["It's your decision.","Bu sizning qaroringiz."]},
+    {"w":"maybe","p":"/MAY-bi/","u":"Balki","i":"🤔","x":["Maybe you should ask.","Balki so'rashingiz kerak."]},
+    {"w":"instead","p":"/in-STED/","u":"O'rniga","i":"🔄","x":["Stay home instead.","O'rniga uyda qoling."]}
+  ],
+  "grammar":{"rule":"**Second Conditional:** If I were you, **I would + verb** (imaginary advice)","uz":"'If I were you, I would + fe'l' — maslahat",
+    "ex":[["**If I were you, I would** rest more.","Sizning o'rningizda bo'lsam, ko'proq dam olardim."],["**If I were you, I wouldn't** worry.","Sizning o'rningizda bo'lsam, xavotirlanmasdim."],["Maybe **you should** talk to your teacher.","Balki o'qituvchingiz bilan gaplashishingiz kerak."]],
+    "mistake":["Wrong: *If I was you.*","Right: *If I were you.*","'If I were you' — qat'iy shakl."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["If I ___ you, I would rest. (were/was)","If I were you, I ___ talk to her. (would/will)","I would ___ to the teacher. (talk/talking)","Maybe you ___ ask. (should/shouldn't)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Advice","Maslahat"],["Problem","Muammo"],["Solution","Yechim"],["Decision","Qaror"],["Worried","Xavotirlangan"]]},
+    {"t":"circle","title":"Circle the Answer","items":["A friend can't sleep. You say: → a) If I were you, I would relax b) You are wrong c) Good night"]},
+    {"t":"order","title":"Build the Sentence","items":["you / If / were / rest / I / would / I / , / .","should / maybe / ask / you / ."]}
+  ],
+  "reading":{"title":"Ask the Teacher","passage":"A student wrote to the school advice corner: 'I am always tired. I can't finish my homework, and I am worried about my exams.' The teacher replied: 'Thank you for your letter. If I were you, I would make a plan. Do the most important homework first. I would also sleep eight hours — a tired brain can't learn. Maybe you should rest between lessons instead of looking at your phone. If you try this for two weeks, you will see a difference. Good luck!'",
+    "qs":["What is the student's problem?","What should she do first, says the teacher?","Why is sleep important?","What should she do between lessons?"]},
+  "listening":{"title":"Advice for a Friend","qs":["What is the boy worried about?","What would the girl do if she were him?","What should he do before the test?"],
+    "script":"Listen. Boy: 'I have a big test tomorrow and I'm worried.' Girl: 'If I were you, I wouldn't worry too much. You studied hard.' Boy: 'But I forget everything!' Girl: 'Maybe you should sleep well tonight. A rested brain remembers better.' Boy: 'You're right. I would sleep now.' Girl: 'Good idea. Good luck tomorrow!'"},
+  "writing":{"title":"Write Advice","task":"A friend is nervous about an exam. Write advice (5-7 sentences) using 'If I were you' and 'Maybe you should'.","uz":"Imtihondan qo'rqqan do'stingizga maslahat yozing."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["I can't find time to study.","If I were you, I would make a plan."],["I feel nervous before speaking.","Maybe you should practice at home."],["I failed my test.","I would try again. You can do it!"]]},
+    {"t":"mission","title":"Real-life Mission","body":"Give real advice to a family member using 'If I were you'. / Oilangizga maslahat bering."}
+  ],
+  "quiz":["Fill: 'If I ___ you, I would rest.' (were/was)","Fill: 'I would ___ to the teacher.' (talk/talking)","Translate: 'Sizning o'rningizda bo'lsam, dam olardim.' → ______","Correct: 'If I was you.'"],
+  "homework":"Vocabulary: 10 advice words 3× · Grammar: 6 'If I were you' sentences · Reading: re-read 'Ask the Teacher' · Speaking: role-play advice with your family.",
+  "teacher":["Second conditional is a B1 milestone.","Drill 'If I were you, I would...' as a chunk.","Watch for 'If I was'.","This feeds L98 (problems/solutions) and L99."]
+},
+{
+  "n":98,"title":"Problems and Solutions","sub":"98-dars: Muammolar va yechimlar","icon":"🧩","accent":"ef5350","band":"b1","type":"normal",
+  "goals":[["🧩 Describe common problems","Keng tarqalgan muammolarni tasvirlash"],["🔧 Suggest practical solutions","Amaliy yechim taklif qilish"],["🗣️ Discuss what to do in difficult situations","Qiyin vaziyatda nima qilishni muhokama qilish"]],
+  "warmup":[["🧩 Small problems","What little problems do you face at school? / Maktabda qanday kichik muammolar?"],["🔧 Solutions","What do you do when you lose your keys? / Kalit yo'qotsangiz?"]],
+  "vocab":[
+    {"w":"problem","p":"/PRO-blem/","u":"Muammo","i":"⚠️","x":["The problem is the traffic.","Muammo — tirbandlik."]},
+    {"w":"solution","p":"/sa-LU-shen/","u":"Yechim","i":"🔧","x":["We found a solution.","Yechim topdik."]},
+    {"w":"deal with","p":"/diil with/","u":"Hal qilmoq","i":"🤝","x":["How do you deal with stress?","Stressni qanday hal qilasiz?"]},
+    {"w":"fix","p":"/fiks/","u":"Tuzatmoq","i":"🔨","x":["Dad can fix it.","Dadam buni tuzatadi."]},
+    {"w":"improve","p":"/im-PRUUV/","u":"Yaxshilamoq","i":"📈","x":["We want to improve the situation.","Vaziyatni yaxshilamoqchimiz."]},
+    {"w":"difficult","p":"/DI-fi-kelt/","u":"Qiyin","i":"😓","x":["It's a difficult choice.","Bu qiyin tanlov."]},
+    {"w":"advice","p":"/ad-VAYS/","u":"Maslahat","i":"💬","x":["My advice is to relax.","Maslahatim — dam olish."]},
+    {"w":"succeed","p":"/sak-SIID/","u":"Muvaffaqiyat qozonmoq","i":"🏆","x":["If you try, you will succeed.","Urinsangiz, muvaffaq bo'lasiz."]},
+    {"w":"fail","p":"/feyl/","u":"Muvaffaqiyatsizlikka uchramoq","i":"❌","x":["Don't be afraid to fail.","Yiqilishdan qo'rqmang."]},
+    {"w":"opportunity","p":"/o-por-TU-ni-ti/","u":"Imkoniyat","i":"🚪","x":["Every problem is an opportunity.","Har muammo — imkoniyat."]}
+  ],
+  "grammar":{"rule":"Problems → solutions: **The problem is... / The best solution is to... / You should... / If I were you...**","uz":"Muammo → yechim iboralari",
+    "ex":[["**The problem is** I have no time.","Muammo — vaqtim yo'q."],["**The best solution is to** make a plan.","Eng yaxshi yechim — reja tuzish."],["**If I were you, I would** ask for help.","Sizning o'rningizda bo'lsam, yordam so'rardim."]],
+    "mistake":["Wrong: *The solution is make a plan.*","Right: *The solution is to make a plan.*","'to' sharti kerak."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["The ___ is the noise. (problem/solution)","The best solution is ___ plan. (to make/making)","How do you ___ with stress? (deal/dealing)","You should ask for ___. (help/helping)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Problem","Muammo"],["Solution","Yechim"],["Fix","Tuzatish"],["Improve","Yaxshilash"],["Succeed","Muvaffaq bo'lish"]]},
+    {"t":"circle","title":"Circle the Answer","items":["A friend is tired all day. Best solution: → a) sleep more b) drink cola c) watch TV all night"]},
+    {"t":"order","title":"Build the Sentence","items":["problem / is / The / time / no / I / have / .","solution / is / to / plan / best / a / make / The / ."]}
+  ],
+  "reading":{"title":"The Crowded Bus Problem","passage":"Our bus is always crowded in the morning, and students are late. What is the solution? We discussed it in class. 'The problem is that there are too many students and too few buses,' said Akmal. 'The best solution is to add two more buses,' said Malika. 'Or we could start school ten minutes later,' suggested Timur. 'But that changes everything!' someone said. Our teacher smiled: 'Problems have many solutions. We need to choose the most practical one.' We wrote a letter to the bus company — and they answered!",
+    "qs":["What is the problem?","What solution did Malika suggest?","What did Timur suggest?","What did the class do in the end?"]},
+  "listening":{"title":"The Lost Phone","qs":["What is the woman's problem?","What would the man do?","What should she do first?"],
+    "script":"Listen. Woman: 'I can't find my phone!' Man: 'Where did you last see it?' Woman: 'In the kitchen, I think.' Man: 'If I were you, I would call it first. Then check the kitchen — maybe it's under a book.' Woman: 'Good idea. And if I don't find it?' Man: 'The best solution is to use a tracking app. You should set one up!'"},
+  "writing":{"title":"A Problem and Its Solution","task":"Write a paragraph (6-8 sentences): describe a problem you had and how you solved it.","uz":"Muammo va yechimingiz haqida yozing."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["What's your biggest problem at school?","Too much homework."],["What's the solution?","Make a weekly plan."],["Have you ever solved a big problem?","Yes, I found my lost dog!"]]},
+    {"t":"mission","title":"Real-life Mission","body":"Ask your family about a problem they solved. Report. / Oilangizdan so'rang."}
+  ],
+  "quiz":["Fill: 'The best solution is ___ a plan.' (to make/making)","Fill: 'How do you ___ with stress?' (deal/dealing)","Translate: 'Har muammo — imkoniyat.' → ______","What is a practical solution?"],
+  "homework":"Vocabulary: 10 problem/solution words 3× · Grammar: 6 problem-solution sentences · Reading: re-read 'The Crowded Bus Problem' · Speaking: discuss a problem with your family.",
+  "teacher":["Practical life skills — students love solving real problems.","Teach the problem→solution chunks.","Watch for missing 'to'.","This prepares L99 final project."]
+},
+{
+  "n":99,"title":"Final Project Workshop","sub":"99-dars: Yakuniy loyiha ustaxonasi","icon":"🚀","accent":"7e57c2","band":"b1","type":"workshop",
+  "goals":[["🚀 Plan a final English project","Yakuniy ingliz tili loyihasini rejalash"],["🎯 Choose a topic and structure","Mavzu va tuzilmani tanlash"],["🗣️ Prepare a clear presentation","Aniq taqdimot tayyorlash"]],
+  "warmup":[["🚀 Project ideas","What would you like to present? / Nimani taqdim qilmoqchisiz?"],["🎯 Presentation skills","What makes a good presentation? / Yaxshi taqdimot nima?"]],
+  "vocab":[
+    {"w":"project","p":"/PRO-jekt/","u":"Loyiha","i":"📁","x":["This is my final project.","Bu yakuniy loyiham."]},
+    {"w":"presentation","p":"/pre-zen-TEY-shen/","u":"Taqdimot","i":"🎤","x":["My presentation is about my town.","Taqdimotim shahrim haqida."]},
+    {"w":"slide","p":"/slayd/","u":"Slayd","i":"🖼️","x":["Use pictures on your slides.","Slaydlarda rasm ishlating."]},
+    {"w":"audience","p":"/O-di-ens/","u":"Tomoshabinlar","i":"👀","x":["Look at your audience.","Tomoshabinlarga qarang."]},
+    {"w":"topic","p":"/TO-pik/","u":"Mavzu","i":"📌","x":["Choose an interesting topic.","Qiziqarli mavzu tanlang."]},
+    {"w":"introduce","p":"/in-tro-DUUS/","u":"Taqdim etmoq","i":"👋","x":["Introduce your topic first.","Avval mavzuni tanishtiring."]},
+    {"w":"conclusion","p":"/ken-KLU-zhen/","u":"Xulosa","i":"🎯","x":["Finish with a conclusion.","Xulosa bilan tugating."]},
+    {"w":"confident","p":"/KON-fi-dent/","u":"Ishongan","i":"😎","x":["Be confident when you speak.","Gapirganda ishonchli bo'ling."]},
+    {"w":"eye contact","p":"/ay KON-takt/","u":"Ko'z bilan qarash","i":"👁️","x":["Keep eye contact with listeners.","Tinglovchilar bilan ko'z bilan qarang."]},
+    {"w":"practice","p":"/PRAK-tis/","u":"Mashq qilish","i":"🎯","x":["Practice makes perfect.","Mashq — mukammallik sari."]}
+  ],
+  "practice":[
+    {"t":"task","title":"Build Your Project","items":["Choose a topic: my town, a tradition, a famous person, a hobby, the environment. / Mavzu tanlang.","Plan 3 parts: introduction, main ideas (2-3), conclusion. / 3 qism.","Write key phrases on cards, not full sentences. / Kalit iboralar.","Make 3-4 slides with pictures. / 3-4 slayd.","Practice aloud 3 times — time it. / 3 marta mashq qiling.","Get feedback from your partner. / Fikr oling."]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Project","Loyiha"],["Presentation","Taqdimot"],["Slide","Slayd"],["Audience","Tomoshabinlar"],["Conclusion","Xulosa"]]},
+    {"t":"order","title":"Build the Sentence","items":["topic / interesting / an / Choose / .","with / conclusion / a / finish / ."]}
+  ],
+  "speaking":[
+    {"t":"talk","title":"Rehearse","body":"Present your project to your partner: intro, 2 ideas, conclusion. (2 minutes) / Juftingizga taqdim eting."},
+    {"t":"partner","title":"Feedback","body":"Give your partner one strength and one improvement. / Fikr bering."},
+    {"t":"mission","title":"Polish","body":"Fix your cards and slides based on feedback. / Takomillashtiring."}
+  ],
+  "quiz":["Fill: 'Choose an ___ topic.' (interesting/interested)","Fill: 'Finish with a ___ .' (conclusion/concluding)","Translate: 'Mashq — mukammallik sari.' → ______","Name 3 parts of a presentation."],
+  "homework":"Finish your presentation for Lesson 100. Practice it aloud twice tonight. / Taqdimotni tayyorlang.",
+  "teacher":["Workshop: the final project preparation.","Help students choose achievable topics.","Emphasize practice over perfection.","This is the run-up to L100 final presentations."]
+},
+{
+  "n":100,"title":"Final Presentations","sub":"100-dars: Yakuniy taqdimotlar","icon":"🏆","accent":"f5a623","band":"b1","type":"speaking",
+  "goals":[["🏆 Present your project to the class","Loyihangizni sinfga taqdim qilish"],["🎤 Speak confidently in English","Ishonch bilan inglizcha gapirish"],["👏 Listen, evaluate and celebrate","Tinglash, baholash va nishonlash"]],
+  "warmup":[["🏆 Final day!","Today you present your project. Take a deep breath! / Bugun taqdimot kun!"],["🎤 Confidence tips","Smile, stand straight, look at the audience. / Tabassum, tik turish, qarash."]],
+  "vocab":[
+    {"w":"introduce","p":"/in-tro-DUUS/","u":"Taqdim etmoq","i":"👋","x":["Let me introduce my topic.","Mavzuimni tanishtiraman."]},
+    {"w":"present","p":"/pri-ZENT/","u":"Taqdim qilmoq","i":"🎤","x":["I will present my project.","Loyihamni taqdim qilaman."]},
+    {"w":"congratulate","p":"/ken-GRA-che-leyt/","u":"Tabriklamoq","i":"🎉","x":["I congratulate all of you!","Barchangizni tabriklayman!"]},
+    {"w":"proud","p":"/praud/","u":"Faxrlanadigan","i":"🦁","x":["We are proud of you.","Sizdan faxrlanamiz."]},
+    {"w":"success","p":"/sak-SES/","u":"Muvaffaqiyat","i":"🏆","x":["This is your success.","Bu sizning muvaffaqiyatingiz."]},
+    {"w":"graduate","p":"/GRA-ju-eyt/","u":"Bitirmoq","i":"🎓","x":["You are graduating this level!","Siz bu darajani bitirasiz!"]}
+  ],
+  "practice":[
+    {"t":"task","title":"Presentation Order","items":["Introduce: 'Good morning! My project is about...' / Tanishtirish.","Main part: 2-3 ideas with pictures. / Asosiy qism.","Conclusion: 'In conclusion, ...' / Xulosa.","Questions: answer 2 questions from the class. / Savollarga javob.","Vote: the class chooses the best presentation. / Ovoz berish."]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Introduce","Taqdim etmoq"],["Present","Taqdim qilmoq"],["Congratulate","Tabriklamoq"],["Success","Muvaffaqiyat"],["Proud","Faxr"]]}
+  ],
+  "speaking":[
+    {"t":"talk","title":"My Final Presentation","body":"Present your project for 2-3 minutes. Use your cards, look at the audience. / Taqdimotingizni qiling."},
+    {"t":"partner","title":"Audience Questions","body":"The class asks 2 questions. Answer clearly. / Savollar bering."},
+    {"t":"mission","title":"The Vote","body":"The class votes for the best presentation. / Eng yaxshi taqdimot."}
+  ],
+  "quiz":["Fill: 'My project is ___ about my town.' (about/of)","Fill: 'In ___, this is important.' (conclusion/concluding)","Translate: 'Barchangizni tabriklayman!' → ______","What is your favourite topic from this course?"],
+  "homework":"Write a short reflection: what you learned in 100 lessons and your next goal in English. / Fikr yozing.",
+  "teacher":["Final speaking circle — the celebration of 100 lessons!","Keep it supportive and positive.","Give every student a certificate feeling.","This completes the 100-lesson curriculum."]
+}
+]}
