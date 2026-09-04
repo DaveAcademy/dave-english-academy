@@ -1,6 +1,6 @@
 // MyProgress.jsx
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { CheckCircle2, Clock, XCircle, CalendarCheck, FileCheck2, BookOpen } from 'lucide-react';
@@ -17,6 +17,8 @@ import SectionLabel from '../../components/SectionLabel';
 import StatusPill from '../../components/StatusPill';
 import LessonStatsBar from '../../components/lesson/LessonStatsBar';
 import { SkeletonList } from '../../components/Skeleton';
+import { listAchievementDefinitions, getStudentAchievements } from '../../lib/storageBridge';
+import AchievementCollection from '../../features/achievements/components/AchievementCollection';
 
 const STATUS_ICON = { Present: CheckCircle2, Late: Clock, Absent: XCircle };
 const STATUS_COLOR = { Present: 'text-active', Late: 'text-levelB', Absent: 'text-inactive' };
@@ -130,6 +132,48 @@ export default function MyProgress() {
     return { total, completed, rate: total > 0 ? Math.round((completed / total) * 100) : null };
   }, [homeworkRows]);
 
+  // Achievements — authoritative backend via storageBridge, ordered by sort_order
+  const [badgeDefinitions, setBadgeDefinitions] = useState([]);
+  const [studentAchievements, setStudentAchievements] = useState([]);
+
+  useEffect(() => {
+    if (!me?.id) return;
+    let cancelled = false;
+    Promise.all([listAchievementDefinitions(), getStudentAchievements(me.id)])
+      .then(([defs, earned]) => {
+        if (cancelled) return;
+        setBadgeDefinitions(defs || []);
+        setStudentAchievements(earned || []);
+      })
+      .catch(() => {
+        if (!cancelled) { setBadgeDefinitions([]); setStudentAchievements([]); }
+      });
+    return () => { cancelled = true; };
+  }, [me?.id]);
+
+  const earnedKeys = useMemo(() => new Set((studentAchievements || []).map((a) => a.achievement?.key || a.key)), [studentAchievements]);
+
+  const computedBadges = useMemo(() => {
+    if (!badgeDefinitions.length) return [];
+    return badgeDefinitions.map((def) => {
+      const isEarned = earnedKeys.has(def.key);
+      if (isEarned) return { id: def.id, key: def.key, name: def.name, description: def.description, icon: def.icon, category: def.category, rarity: def.rarity || 'common', rule_config: def.rule_config, unlocked: true, progress: 100 };
+      const rc = def.rule_config;
+      if (def.trigger_type === 'threshold' && rc?.metric && rc?.value) {
+        const metrics = {
+          lessons_completed: lessonBlock?.completed ?? 0,
+          practice_submitted: homeworkStats.completed,
+          attendance_present: attendedCount,
+          total_points: examAvg ?? 0,
+        };
+        const cur = metrics[rc.metric] ?? 0;
+        const pct = Math.min(100, Math.max(0, (cur / rc.value) * 100));
+        return { id: def.id, key: def.key, name: def.name, description: def.description, icon: def.icon, category: def.category, rarity: def.rarity || 'common', rule_config: rc, unlocked: false, progress: pct };
+      }
+      return { id: def.id, key: def.key, name: def.name, description: def.description, icon: def.icon, category: def.category, rarity: def.rarity || 'common', rule_config: def.rule_config, unlocked: false, progress: 0 };
+    });
+  }, [badgeDefinitions, earnedKeys, lessonBlock, homeworkStats.completed, attendedCount, examAvg]);
+
   if (!me) {
     return (
       <div className="rounded-xl border border-ink/[0.06] bg-white p-10 text-center shadow-card">
@@ -237,6 +281,18 @@ export default function MyProgress() {
           </div>
         )}
       </Panel>
+
+      <div className="mt-8">
+        <AchievementCollection
+          badges={computedBadges}
+          studentMetrics={{
+            lessons_completed: lessonBlock?.completed ?? 0,
+            practice_submitted: homeworkStats.completed,
+            attendance_present: attendedCount,
+            total_points: examAvg ?? 0,
+          }}
+        />
+      </div>
 
       {(finalWriting || finalSpeaking) && (
         <div className="mb-6 rounded-xl border-2 border-brand-200 bg-brand-50/40 p-4 shadow-card">
