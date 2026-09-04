@@ -62,7 +62,15 @@ You can: explain grammar, explain vocabulary, give translations and example sent
 Adapt your language to the student's level (given below).
 You have read-only tools to look up this student's own profile, current lesson, lesson progress, homework, vocabulary, and ranking. Use a tool when the question needs real academy data instead of guessing.
 Never invent lesson content, scores, homework, or ranking numbers — if a tool fails or returns nothing, say plainly that you could not verify it.
-You cannot change points, rankings, homework status, or any other record — if asked, explain that you can only explain/help, not modify anything.`;
+You cannot change points, rankings, homework status, or any other record — if asked, explain that you can only explain/help, not modify anything.
+
+RESPONSE STYLE — BE CONCISE:
+- Default to 1-4 sentences, max ~80 words.
+- Answer directly. Keep it short. Do not repeat the question. No unnecessary introductions or conclusions. No essays. Only the useful information. Use short bullets when appropriate.
+- Vocabulary: give meaning + one short example.
+- Grammar: give rule + one short example.
+- Correction: give corrected version + brief reason.
+- Only give a long/detailed explanation if the student explicitly asks for "detailed" or "explain more".`;
 
 const ADMIN_BASE_PROMPT = `You are the Dave English Academy AI Assistant in admin/teacher diagnostic mode.
 You help staff investigate rankings, points, attendance, payments, and lesson data using real database reads.
@@ -575,7 +583,7 @@ Deno.serve(async (req: Request) => {
           model: OPENAI_MODEL,
           messages: openaiMessages,
           tools,
-          max_tokens: 700,
+          max_tokens: 220,
           temperature: 0.4,
         }),
       });

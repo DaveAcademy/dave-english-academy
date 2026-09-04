@@ -359,20 +359,7 @@ begin
     raise exception 'Dictionary word progress not found' using errcode = 'P0001';
   end if;
 
-  -- Check all four stage completions AND SRS mastery (state = MASTERED with interval >= 90)
-  return query
-  select
-    v_current.id as word_id,
-    v_current.student_id,
-    v_current.translation_complete is not null as translation_complete,
-    v_current.typing_complete is not null as typing_complete,
-    v_current.sentence_complete is not null as sentence_complete,
-    v_current.retention_at is not null as retention_complete,
-    -- SRS mastery: state = MASTERED and the word has been mastered (interval >= 90 days)
-    (v_current.state = 'MASTERED' AND v_current.interval_days >= 90) as srs_mastered,
-    v_current.mastered_at
-  from public.student_dictionary_words v_current
-  where v_current.id = p_word_id;
+  return query select v_current.id as word_id, v_current.student_id, (v_current.translation_complete is not null) as translation_complete, (v_current.typing_complete is not null) as typing_complete, (v_current.sentence_complete is not null) as sentence_complete, (v_current.retention_at is not null) as retention_complete, (v_current.state = 'MASTERED' AND v_current.interval_days >= 90) as srs_mastered, v_current.mastered_at;
 end;
 $$;
 

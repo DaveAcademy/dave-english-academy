@@ -100,6 +100,7 @@ begin
         when 'grammar_battle' then lower(trim(r.answer)) = lower(v.english)
       end
     )
+    into v_correct
     from public.student_available_vocabulary() v
     where v.id = r.vocabulary_id;
 

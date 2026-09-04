@@ -33,7 +33,7 @@ begin
   -- Find the mission by key
   select * into v_mission
   from public.daily_missions
-  where key = p_mission_id or key = p_mission_key;
+  where key = p_mission_key;
 
   -- Actually, p_mission_key should be the mission key; look up by key
   select * into v_mission

@@ -32,7 +32,7 @@
 --
 create or replace function public.get_round_difficulty(p_level integer)
 returns table (easy_count integer, medium_count integer, hard_count integer, vh_count integer)
-language sql
+language plpgsql
 immutable
 set search_path = 'public'
 as $$

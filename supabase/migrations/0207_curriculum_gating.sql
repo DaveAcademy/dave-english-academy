@@ -22,7 +22,7 @@ RETURNS table(round_id uuid, id uuid, english text, type text, difficulty text, 
 LANGUAGE plpgsql
 STABLE
 SET search_path TO 'public'
-AS \$\$
+AS $$
 DECLARE
   v_student_id bigint;
   v_current_level integer;
@@ -85,7 +85,7 @@ BEGIN
     LIMIT 1
   ) r;
 END;
-\$\$;
+$$;
 
 -- ============================
 -- 2. get_word_detective_round() - ADD GATING FILTER
@@ -96,7 +96,7 @@ RETURNS table(round_id uuid, id uuid, sentence text, wrong_index integer, correc
 LANGUAGE plpgsql
 STABLE
 SET search_path TO 'public'
-AS \$\$
+AS $$
 DECLARE
   v_student_id bigint;
   v_current_level integer;
@@ -136,7 +136,7 @@ BEGIN
   ORDER BY random()
   LIMIT 1;
 END;
-\$\$;
+$$;
 
 -- ============================
 -- 3. get_grammar_battle_round() - ADD GATING FILTER
@@ -147,7 +147,7 @@ RETURNS table(round_id uuid, id uuid, question text, options jsonb, difficulty t
 LANGUAGE plpgsql
 STABLE
 SET search_path TO 'public'
-AS \$\$
+AS $$
 DECLARE
   v_student_id bigint;
   v_current_level integer;
@@ -199,7 +199,7 @@ BEGIN
       random()
   LIMIT 1;
 END;
-\$\$;
+$$;
 
 -- ============================
 -- Verification notes
