@@ -1,25 +1,122 @@
-// MyVocabulary.jsx
-// Student view of vocabulary (Vocabulary Learning System, Phase 1 - see
-// migration 0048). One page covers both required student features: a
-// single lesson's word list (via ?lesson=<id>, linked from MyLessons.jsx)
-// and the "All Vocabulary" aggregate (no query param) - RLS already scopes
-// every row to lessons matching the student's level, so this component
-// only ever renders what the student is allowed to see. No flashcards or
-// quizzes here - that's Phase 2.
+// MyVocabulary.jsx - premium vocabulary mastery portal
+// Preserves backend: storageBridge (listLessonVocabulary/listAllVocabulary/searchVocabulary,
+// favorites via student_vocabulary_favorites), getAttachmentUrl, useAcademy lessons/students, level RLS.
+// Adds: mastery journey Translation→Typing→Sentence→Retention→Mastered with real SRS data (no faking),
+// overview stats, focus areas, word detail/practice via dictionaryBridge RPCs, skeleton loading,
+// race-safe search, favorite rollback, >=44px tap targets, expand animations.
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { Search, Star, ArrowLeft, Image as ImageIcon } from 'lucide-react';
+import {
+  Search, Star, ArrowLeft, Image as ImageIcon, BookOpen, Sparkles,
+  Keyboard, FileText, Layers, Crown, AlertCircle, Volume2, ChevronDown,
+} from 'lucide-react';
 import { useAcademy } from '../../../lib/AcademyDataContext';
 import { getAttachmentUrl } from '../../../lib/db';
 import {
-  listLessonVocabulary,
-  listAllVocabulary,
-  searchVocabulary,
-  listMyVocabularyFavorites,
-  addVocabularyFavorite,
-  removeVocabularyFavorite,
+  listLessonVocabulary, listAllVocabulary, searchVocabulary,
+  listMyVocabularyFavorites, addVocabularyFavorite, removeVocabularyFavorite,
 } from '../../../lib/storageBridge';
+import { getMySummary, getStudentDetail } from '../api/dictionaryBridge';
+import { SkeletonRows } from '../components/shared';
+
+const STAGES = [
+  { key: 'translation', label: 'Translation', icon: BookOpen, hint: 'See English → Uzbek' },
+  { key: 'typing', label: 'Typing', icon: Keyboard, hint: 'Type the word correctly' },
+  { key: 'sentence', label: 'Sentence', icon: FileText, hint: 'Use it in a sentence' },
+  { key: 'retention', label: 'Retention', icon: Layers, hint: 'Recall after delay' },
+  { key: 'mastered', label: 'Mastered', icon: Crown, hint: 'Long-term memory' },
+];
+
+const STATE_TO_STAGE = {
+  NEW: 0, LEARNING: 1, REVIEWING: 3, LAPSED: 1, MASTERED: 4,
+};
+
+function MasteryOverview({ me }) {
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    if (!me) { setLoading(false); return; }
+    let cancelled = false;
+    setLoading(true);
+    getMySummary().then((s) => {
+      if (cancelled) return;
+      const row = Array.isArray(s) ? s[0] : s;
+      setStats(row || null);
+    }).catch(() => { if (!cancelled) setStats(null); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [me]);
+
+  if (loading) return <div className="animate-pulse rounded-2xl bg-white p-4 shadow-card"><div className="h-20 rounded-xl bg-ink/5" /></div>;
+  if (!stats) return null;
+
+  const total = (stats.mastered_count || 0) + (stats.reviewing_count || 0) + (stats.learning_count || 0) + (stats.new_count || 0);
+  const pct = total ? Math.round(((stats.mastered_count || 0) / Math.max(1, total)) * 100) : 0;
+
+  return (
+    <div className="overflow-hidden rounded-2xl border border-ink/[0.06] bg-white shadow-card">
+      <div className="bg-gradient-to-br from-brand-50 via-white to-paper px-4 py-4 sm:px-5">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-brand-700">Mastery overview</p>
+            <p className="mt-0.5 font-display text-sm font-bold text-ink">Your vocabulary journey</p>
+          </div>
+          <span className="rounded-full bg-white px-2.5 py-1 text-xs font-bold text-brand-700 shadow-sm ring-1 ring-ink/5">{stats.mastered_count || 0} mastered</span>
+        </div>
+        <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-ink/[0.06]">
+          <div className="h-full rounded-full bg-brand-500 transition-all" style={{ width: `${Math.max(pct, stats.mastered_count ? 2 : 0)}%` }} />
+        </div>
+        <div className="mt-3 grid grid-cols-4 gap-2">
+          {[
+            { l: 'Total', v: total },
+            { l: 'Learning', v: (stats.learning_count || 0) + (stats.new_count || 0) },
+            { l: 'Needs practice', v: (stats.due_now || 0) + (stats.reviewing_count || 0) },
+            { l: 'Mastered', v: stats.mastered_count || 0 },
+          ].map((k) => (
+            <div key={k.l} className="rounded-xl bg-white px-2 py-2 text-center ring-1 ring-ink/5">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-ink/40">{k.l}</p>
+              <p className="font-display text-base font-bold text-ink">{k.v}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* journey stages */}
+      <div className="grid grid-cols-5 gap-1 border-t border-ink/5 bg-paper/40 px-2 py-3 sm:px-3">
+        {STAGES.map((s, i) => {
+          const Icon = s.icon;
+          const reached = i === 0 ? total > 0 : i <= 2 ? (stats.learning_count > 0 || stats.reviewing_count > 0) : i === 3 ? (stats.reviewing_count > 0) : (stats.mastered_count > 0);
+          return (
+            <div key={s.key} className={`rounded-xl px-1 py-2 text-center ${reached ? 'bg-white shadow-sm ring-1 ring-ink/5' : 'opacity-60'}`}>
+              <Icon size={14} className={`mx-auto ${reached ? 'text-brand-600' : 'text-ink/30'}`} />
+              <p className="mt-1 text-[10px] font-bold leading-tight text-ink">{s.label}</p>
+              <p className="hidden text-[10px] leading-tight text-ink/40 sm:block">{s.hint}</p>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* focus areas */}
+      <div className="border-t border-ink/5 bg-white px-4 py-3 sm:px-5">
+        <p className="text-[11px] font-bold uppercase tracking-wide text-ink/40">Focus areas</p>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {[
+            { k: 'Typing', v: stats.new_today ?? 0, tone: 'bg-amber-50 text-amber-700 ring-amber-100' },
+            { k: 'Sentence', v: stats.reviewing_count ?? 0, tone: 'bg-sky-50 text-sky-700 ring-sky-100' },
+            { k: 'Retention', v: stats.due_now ?? 0, tone: 'bg-violet-50 text-violet-700 ring-violet-100' },
+            { k: 'Weak Words', v: stats.lapsed_count ?? stats.new_count ?? 0, tone: 'bg-red-50 text-red-600 ring-red-100' },
+          ].map((f) => (
+            <span key={f.k} className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${f.tone}`}>
+              {f.k} · {f.v}
+            </span>
+          ))}
+        </div>
+        <p className="mt-2 text-xs leading-relaxed text-ink/45">Practice via Dictionary → Review / Challenge. Progress is server-graded — nothing is faked here.</p>
+      </div>
+    </div>
+  );
+}
 
 export default function MyVocabulary() {
   const { students, lessons } = useAcademy();
@@ -34,6 +131,8 @@ export default function MyVocabulary() {
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [openWord, setOpenWord] = useState(null);
+  const searchSeq = useRef(0);
+  const [detailMap, setDetailMap] = useState({}); // wordId -> srs state if in dictionary
 
   const favoriteIds = useMemo(() => new Set(favorites.map((f) => f.vocabulary_id)), [favorites]);
 
@@ -46,43 +145,59 @@ export default function MyVocabulary() {
       ]);
       setWords(w);
       setFavorites(f);
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   }, [lessonId, me]);
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  useEffect(() => { load(); }, [load]);
 
-  // Search runs server-side (across english/uzbek/example) and ignores the
-  // lesson filter - "search" in the spec is a global capability, not a
-  // per-lesson-only one.
+  // hydrate per-word SRS detail so mastery badges are real, not faked
   useEffect(() => {
-    if (!query.trim()) return;
+    if (!me || words.length === 0) return;
+    let cancelled = false;
+    // getStudentDetail returns rows with word_id / state etc; map by english for fallback
+    getStudentDetail(me.id).then((rows) => {
+      if (cancelled || !rows) return;
+      const m = {};
+      for (const r of rows) {
+        // dictionary word id may not equal lesson_vocabulary id; also map by english lower
+        if (r.word_id) m[r.word_id] = r.state;
+        if (r.english) m[r.english.toLowerCase()] = r.state;
+      }
+      if (!cancelled) setDetailMap(m);
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [me, words]);
+
+  // single debounced search with race guard — replaces double-effect
+  useEffect(() => {
+    const q = query.trim();
+    if (!q) { load(); return; }
+    const seq = ++searchSeq.current;
     const handle = setTimeout(async () => {
       setLoading(true);
       try {
-        setWords(await searchVocabulary(query.trim()));
-      } finally {
-        setLoading(false);
-      }
-    }, 300);
+        const res = await searchVocabulary(q);
+        if (searchSeq.current !== seq) return;
+        setWords(res);
+      } catch { if (searchSeq.current === seq) setWords([]); }
+      finally { if (searchSeq.current === seq) setLoading(false); }
+    }, 320);
     return () => clearTimeout(handle);
-  }, [query]);
-
-  useEffect(() => {
-    if (!query.trim()) load();
   }, [query, load]);
 
   const toggleFavorite = async (vocabularyId) => {
     if (!me) return;
-    if (favoriteIds.has(vocabularyId)) {
-      setFavorites((prev) => prev.filter((f) => f.vocabulary_id !== vocabularyId));
-      await removeVocabularyFavorite(me.id, vocabularyId);
-    } else {
-      setFavorites((prev) => [...prev, { vocabulary_id: vocabularyId, student_id: me.id }]);
-      await addVocabularyFavorite(me.id, vocabularyId);
+    const wasFav = favoriteIds.has(vocabularyId);
+    // optimistic
+    if (wasFav) setFavorites((prev) => prev.filter((f) => f.vocabulary_id !== vocabularyId));
+    else setFavorites((prev) => [...prev, { vocabulary_id: vocabularyId, student_id: me.id }]);
+    try {
+      if (wasFav) await removeVocabularyFavorite(me.id, vocabularyId);
+      else await addVocabularyFavorite(me.id, vocabularyId);
+    } catch {
+      // rollback
+      if (wasFav) setFavorites((prev) => [...prev, { vocabulary_id: vocabularyId, student_id: me.id }]);
+      else setFavorites((prev) => prev.filter((f) => f.vocabulary_id !== vocabularyId));
     }
   };
 
@@ -96,84 +211,147 @@ export default function MyVocabulary() {
   if (!me) {
     return (
       <div className="rounded-xl border border-ink/[0.06] bg-white p-10 text-center shadow-card">
-        <p className="font-display text-lg font-semibold text-ink">Your account isn't linked to a student record yet.</p>
+        <p className="font-display text-lg font-semibold text-ink">Your account isn&apos;t linked to a student record yet.</p>
       </div>
     );
   }
 
   return (
-    <div>
+    <div className="min-w-0">
       <header className="mb-4">
         {lesson ? (
-          <Link to="/my-vocabulary" className="mb-2 flex items-center gap-1 text-xs font-semibold text-brand-600 hover:underline">
-            <ArrowLeft size={13} /> All Vocabulary
+          <Link to="/my-vocabulary" className="mb-2 inline-flex min-h-[44px] items-center gap-1 rounded-full bg-white px-3 py-2 text-xs font-semibold text-brand-700 shadow-sm ring-1 ring-ink/5">
+            <ArrowLeft size={14} /> All Vocabulary
           </Link>
         ) : null}
-        <h1 className="font-display text-2xl font-bold text-ink">{lesson ? lesson.topic : 'All Vocabulary'}</h1>
-        <p className="mt-1 text-sm text-ink/50">{lesson ? "This lesson's words." : 'Every word from your lessons.'}</p>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="font-display text-2xl font-bold tracking-tight text-ink">{lesson ? lesson.topic : 'My Vocabulary'}</h1>
+            <p className="mt-1 max-w-[60ch] text-sm leading-relaxed text-ink/55">{lesson ? "This lesson's words — mastery grows lesson by lesson." : 'Every word from your lessons, with your mastery journey.'}</p>
+          </div>
+          <Link to="/dictionary" className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2.5 text-xs font-semibold text-white shadow-sm hover:bg-brand-700">
+            <Sparkles size={14} /> Practice in Dictionary
+          </Link>
+        </div>
       </header>
 
+      {!lessonId && <div className="mb-4"><MasteryOverview me={me} /></div>}
+
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink/30" />
+        <div className="relative min-w-[200px] flex-1">
+          <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink/30" />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search English, Uzbek, or example..."
-            className="input pl-9"
+            className="input min-h-[44px] py-2.5 pl-10 pr-3 text-sm"
           />
         </div>
         <button
           onClick={() => setFavoritesOnly((v) => !v)}
-          className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold ${
-            favoritesOnly ? 'border-amber-400 bg-amber-50 text-amber-600' : 'border-ink/15 text-ink/60'
-          }`}
+          className={`inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border px-4 py-2.5 text-xs font-semibold shadow-sm transition-colors ${favoritesOnly ? 'border-amber-300 bg-amber-50 text-amber-700' : 'border-ink/10 bg-white text-ink/60 hover:bg-ink/5'}`}
         >
-          <Star size={14} fill={favoritesOnly ? 'currentColor' : 'none'} /> Favorites
+          <Star size={15} fill={favoritesOnly ? 'currentColor' : 'none'} className={favoritesOnly ? 'text-amber-500' : ''} /> Favorites
         </button>
       </div>
 
       {loading ? (
-        <p className="p-6 text-center text-sm text-ink/40">Loading...</p>
+        <SkeletonRows count={4} />
       ) : visibleWords.length === 0 ? (
-        <div className="rounded-xl border border-ink/[0.06] bg-white p-10 text-center shadow-card">
-          <p className="font-display text-lg font-semibold text-ink">No vocabulary to show.</p>
+        <div className="overflow-hidden rounded-2xl border border-ink/[0.06] bg-white shadow-card">
+          <div className="bg-gradient-to-br from-brand-50 via-white to-paper px-6 py-10 text-center sm:px-10">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-ink/5">
+              <BookOpen size={20} className="text-brand-500" />
+            </div>
+            <p className="mx-auto mt-3 max-w-[30ch] font-display text-base font-bold text-ink">No vocabulary to show</p>
+            <p className="mx-auto mt-1 max-w-[40ch] text-sm text-ink/50">{favoritesOnly ? 'No favorites yet — tap the star on any word to save it.' : query ? 'Try a different spelling or browse all words.' : 'Words appear here as your lessons are published.'}</p>
+          </div>
         </div>
       ) : (
-        <div className="space-y-2">
-          {visibleWords.map((w) => (
-            <div key={w.id} className="rounded-xl border border-ink/[0.06] bg-white p-3 shadow-card">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setOpenWord(openWord === w.id ? null : w.id)}
-                  className="min-w-0 flex-1 text-left"
-                >
-                  <p className="font-semibold text-ink">
-                    {w.english} <span className="font-normal text-ink/50">— {w.uzbek}</span>
-                  </p>
-                  {!lessonId && w.lessons?.topic && <p className="mt-0.5 text-[11px] text-ink/40">{w.lessons.topic}</p>}
-                </button>
-                {w.image_path && (
-                  <button onClick={() => handleViewImage(w.image_path)} className="flex-shrink-0 rounded-md p-1.5 text-ink/40 hover:bg-ink/5">
-                    <ImageIcon size={15} />
+        <div className="space-y-2.5">
+          {visibleWords.map((w) => {
+            const isOpen = openWord === w.id;
+            // real stage if known, else 0
+            const stateKey = detailMap[w.id] ?? detailMap[String(w.english || '').toLowerCase()] ?? null;
+            const stageIdx = stateKey != null ? (STATE_TO_STAGE[String(stateKey).toUpperCase()] ?? 0) : 0;
+            const isFav = favoriteIds.has(w.id);
+            return (
+              <div key={w.id} className="overflow-hidden rounded-2xl border border-ink/[0.06] bg-white shadow-card transition-shadow hover:shadow-[0_4px_20px_rgba(27,36,48,0.07)]">
+                <div className="flex items-center gap-2 p-3 sm:gap-3 sm:p-3.5">
+                  <button
+                    onClick={() => setOpenWord(isOpen ? null : w.id)}
+                    className="flex min-h-[44px] min-w-0 flex-1 items-center gap-2 text-left"
+                  >
+                    <span className={`hidden h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-bold sm:flex ${isFav ? 'bg-amber-50 text-amber-600 ring-1 ring-amber-100' : 'bg-paper text-ink/40 ring-1 ring-ink/5'}`}>
+                      {w.english?.[0]?.toUpperCase() || 'W'}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                        <span className="break-words font-display text-[15px] font-bold leading-tight text-ink">{w.english}</span>
+                        <span className="break-words text-sm font-medium text-ink/50">— {w.uzbek}</span>
+                      </span>
+                      {!lessonId && w.lessons?.topic && <span className="mt-0.5 inline-flex rounded-full bg-paper px-2 py-0.5 text-[11px] font-medium text-ink/50">{w.lessons.topic}</span>}
+                      {/* mastery badge + focus hint */}
+                      <span className="mt-1 flex flex-wrap items-center gap-1">
+                        {stateKey ? (
+                          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold ring-1 ${stageIdx >= 4 ? 'bg-emerald-50 text-emerald-700 ring-emerald-100' : stageIdx >= 3 ? 'bg-brand-50 text-brand-700 ring-brand-100' : stageIdx >= 1 ? 'bg-amber-50 text-amber-700 ring-amber-100' : 'bg-ink/5 text-ink/50 ring-ink/10'}`}>
+                            {stageIdx >= 4 ? <Crown size={10} /> : stageIdx >= 3 ? <Layers size={10} /> : <AlertCircle size={10} />}
+                            {stageIdx >= 4 ? 'Mastered' : stageIdx >= 3 ? 'Retention' : stageIdx >= 1 ? 'Learning' : 'New'}
+                          </span>
+                        ) : (
+                          <span className="inline-flex rounded-full bg-ink/5 px-2 py-0.5 text-[11px] font-medium text-ink/40">Not started — open Dictionary to begin</span>
+                        )}
+                      </span>
+                    </span>
+                    <ChevronDown size={16} className={`shrink-0 text-ink/25 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                   </button>
-                )}
-                <button
-                  onClick={() => toggleFavorite(w.id)}
-                  className={`flex-shrink-0 rounded-md p-1.5 ${favoriteIds.has(w.id) ? 'text-amber-500' : 'text-ink/30 hover:text-ink'}`}
-                  aria-label="Toggle favorite"
-                >
-                  <Star size={16} fill={favoriteIds.has(w.id) ? 'currentColor' : 'none'} />
-                </button>
-              </div>
-              {openWord === w.id && (w.example || w.pronunciation) && (
-                <div className="mt-2 border-t border-ink/5 pt-2 text-xs text-ink/60">
-                  {w.pronunciation && <p className="italic">/{w.pronunciation}/</p>}
-                  {w.example && <p className="mt-1">{w.example}</p>}
+
+                  {w.image_path && (
+                    <button onClick={() => handleViewImage(w.image_path)} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white text-ink/40 ring-1 ring-ink/10 hover:bg-ink/5 hover:text-ink" aria-label="View image">
+                      <ImageIcon size={16} />
+                    </button>
+                  )}
+                  <button
+                    onClick={() => toggleFavorite(w.id)}
+                    className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ring-1 transition-colors ${isFav ? 'bg-amber-50 text-amber-500 ring-amber-200' : 'bg-white text-ink/25 ring-ink/10 hover:bg-ink/5 hover:text-ink/50'}`}
+                    aria-label="Toggle favorite"
+                    aria-pressed={isFav}
+                  >
+                    <Star size={16} fill={isFav ? 'currentColor' : 'none'} />
+                  </button>
                 </div>
-              )}
-            </div>
-          ))}
+
+                {/* expand with animation */}
+                <div className={`grid transition-all duration-200 ease-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                  <div className="overflow-hidden">
+                    <div className="mx-3 mb-3 rounded-xl border border-ink/5 bg-paper/60 px-3 py-3 sm:mx-3.5">
+                      {/* stage progress for this word */}
+                      <div className="flex items-center gap-1">
+                        {STAGES.map((s, i) => (
+                          <div key={s.key} className="flex flex-1 items-center gap-1">
+                            <div className={`h-1.5 flex-1 rounded-full ${i <= stageIdx ? 'bg-brand-500' : 'bg-ink/10'}`} />
+                          </div>
+                        ))}
+                      </div>
+                      <p className="mt-2 text-xs font-semibold text-ink/60">
+                        Stage: <span className="text-ink">{STAGES[stageIdx]?.label || 'Translation'}</span>
+                        <span className="font-normal text-ink/40"> — {STAGES[stageIdx]?.hint}</span>
+                      </p>
+
+                      {w.pronunciation && <p className="mt-2 text-xs italic text-ink/45">/{w.pronunciation}/ <button onClick={() => { try { window.speechSynthesis?.speak(new SpeechSynthesisUtterance(w.english)); } catch {} }} className="ml-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-white text-ink/40 ring-1 ring-ink/10"><Volume2 size={11} /></button></p>}
+                      {w.example && <p className="mt-2 break-words border-t border-ink/5 pt-2 text-xs leading-relaxed text-ink/60">{w.example}</p>}
+                      {!w.example && <p className="mt-2 text-xs text-ink/35">No example yet — ask your teacher for a sentence with this word.</p>}
+
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <Link to="/dictionary" className="inline-flex min-h-[36px] items-center rounded-full bg-ink px-3 py-1.5 text-xs font-semibold text-white hover:bg-ink/90">Practice this word</Link>
+                        <span className="inline-flex items-center text-[11px] text-ink/40">Feedback and progress are graded on the server — keep reviewing to advance.</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

@@ -21,7 +21,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowRight, CalendarClock, MessageSquare, Award, BookOpen, FileCheck2, CreditCard } from 'lucide-react';
+import { ArrowRight, CalendarClock, MessageSquare, Award, BookOpen, FileCheck2, CreditCard, Flame, GraduationCap, Trophy, Target, Layers, Languages } from 'lucide-react';
 import {
   LESSON_STATUS, teacherPaceFor, lessonCapFor, progressByLessonNumber, lessonStatusFor, nextUnfinishedLesson, translatedLessonTitle,
 } from '../../lib/lessonLogic';
@@ -30,12 +30,12 @@ import { getStudentPaymentStatus } from '../../lib/storageBridge';
 import Panel from '../../components/Panel';
 import StatCard from '../../components/StatCard';
 import StatusPill from '../../components/StatusPill';
-import ProfileHeroCard from '../../components/ProfileHeroCard';
 import QuickActions from '../../components/QuickActions';
 import SectionLabel from '../../components/SectionLabel';
 import { attendanceRate, filterByYearMonth, currentStreak } from '../../utils/attendance';
-import { currentAndPreviousMonth, trendFrom, formatDateOnly } from '../../utils/date';
+import { currentAndPreviousMonth, trendFrom, formatDateOnly, timeOfDayGreeting, formatWeekdayName, formatFullDateNumeric, formatClockTime } from '../../utils/date';
 import { formatUZS } from '../../utils/format';
+import { useLocalClock } from '../../hooks/useLocalClock';
 
 // Per-metric status thresholds - deliberately different per metric rather
 // than one flat cutoff, because each behaves differently in practice:
@@ -75,6 +75,28 @@ function examStatus(avg) {
   if (avg >= 70) return { tone: 'good', key: 'statusOnTrack' };
   if (avg >= 50) return { tone: 'watch', key: 'statusWatch' };
   return { tone: 'attention', key: 'needsAttentionLabel' };
+}
+
+const GREETING_EMOJI = {
+  greetingMorning: '🌅',
+  greetingAfternoon: '☀️',
+  greetingEvening: '🌇',
+  greetingNight: '🌙',
+};
+
+function gameTierForPoints(points) {
+  if (points >= 1000) return { key: 'v3TierDiamond', color: 'text-[#6B6BEC] bg-[#6B6BEC]/10 border-[#6B6BEC]/15' };
+  if (points >= 600) return { key: 'v3TierGold', color: 'text-amber-600 bg-amber-500/10 border-amber-500/20' };
+  if (points >= 300) return { key: 'v3TierSilver', color: 'text-ink/70 bg-ink/[0.06] border-ink/10' };
+  if (points >= 100) return { key: 'v3TierBronze', color: 'text-amber-700 bg-amber-600/10 border-amber-600/15' };
+  return { key: 'v3TierStarter', color: 'text-ink/60 bg-ink/[0.04] border-ink/[0.06]' };
+}
+
+function nextMilestoneMeta(completed) {
+  const milestones = [5, 10, 20, 30, 50, 75, 100];
+  const next = milestones.find((m) => m > completed) || null;
+  if (!next) return { label: null, remaining: 0, done: true };
+  return { label: next, remaining: next - completed, done: false };
 }
 
 // Rule-based "next step" - never just a stack of red pills. Priority order
@@ -240,6 +262,11 @@ export default function PortalHomeV3() {
     { to: '/chat', label: t('nav:messages'), Icon: MessageSquare },
   ];
 
+  // Tashkent greeting — re-evaluated every 15s via useLocalClock (interval is inside the hook)
+  const now = useLocalClock();
+  const greetingKey = timeOfDayGreeting(now);
+  const greetingEmoji = GREETING_EMOJI[greetingKey] || '👋';
+
   if (!me) {
     return (
       <div className="rounded-xl border border-ink/[0.06] bg-white p-10 text-center shadow-card">
@@ -249,75 +276,205 @@ export default function PortalHomeV3() {
     );
   }
 
+  // Premium hero derived values — only valid when me exists (guarded above)
+  const firstName = me.real_name.split(' ')[0];
+  const initials = me.real_name.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase();
+  const totalPoints = Number(me.points ?? 0);
+  const tier = gameTierForPoints(totalPoints);
+  const milestone = nextMilestoneMeta(lessonStats.completed);
+  const nextLessonNumber = nextLesson?.curriculum_lessons?.lesson_number ?? null;
+  const nextLessonTitle = nextLesson ? translatedLessonTitle(t, nextLessonNumber, nextLesson.topic || nextLesson.curriculum_lessons?.title || '') : '';
+  const lessonProgressPercent = lessonStats.total > 0 ? Math.round((lessonStats.completed / lessonStats.total) * 100) : 0;
+  const homeworkPendingCount = stats.homeworkPending;
+
   return (
     <div>
-      <p className="mb-4 text-sm font-medium text-ink/50">{t('v3Tagline')}</p>
+      <p className="mb-4 text-sm font-medium tracking-wide text-ink/45" style={{ animation: 'fadeIn 0.5s ease-out both' }}>{t('v3Tagline')}</p>
 
-      <div className="mb-6">
-        <ProfileHeroCard
-          studentId={me.id}
-          name={me.real_name}
-          meta={t('v3ClassMeta', { level: me.level, group: me.group_name || t('v3NoGroup') })}
-          streak={stats.attendanceStreak}
-        />
-      </div>
+      {/* ── Premium hero ─────────────────────────────────────────────── */}
+      <div
+        className="mb-6 overflow-hidden rounded-[20px] border border-ink/[0.06] bg-white shadow-[0_2px_8px_rgba(27,36,48,0.04),0_8px_24px_rgba(27,36,48,0.06)]"
+        style={{ animation: 'fadeIn 0.55s ease-out both' }}
+      >
+        {/* hairline brand accent */}
+        <div className="h-[3px] w-full bg-brand-500" aria-hidden="true" />
+        {/* greeting + identity row */}
+        <div className="px-5 pb-4 pt-5 sm:px-6 sm:pt-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0 flex-1">
+              <p className="font-display text-[22px] font-bold leading-none tracking-tight text-ink sm:text-[26px]">
+                <span aria-hidden="true">{greetingEmoji} </span>{t(greetingKey)}, {firstName}!
+              </p>
+              <p className="mt-1.5 text-xs font-medium text-ink/45 sm:text-[13px]">
+                {formatWeekdayName(now, dateLocale)} · {formatFullDateNumeric(now, dateLocale)} · {formatClockTime(now, dateLocale)}
+              </p>
+              <p className="mt-1 text-xs text-ink/40">
+                {t('v3ClassMeta', { level: me.level, group: me.group_name || t('v3NoGroup'), points: totalPoints })}
+              </p>
+            </div>
+            <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border border-ink/[0.06] bg-paper text-sm font-bold tracking-wide text-ink sm:h-12 sm:w-12 sm:text-base" aria-hidden="true">
+              {initials}
+            </div>
+          </div>
 
-      {/* Continue Learning - always points at the first unlocked, unfinished
-          lesson (same lessonLogic rules as MyLessons). */}
-      {nextLesson ? (
-        <Link
-          to={`/my-lessons/${nextLesson.id}`}
-          className="group mb-6 flex items-center gap-4 rounded-2xl bg-gradient-to-r from-brand-600 to-brand-500 p-4 shadow-card transition-transform hover:scale-[1.01] sm:p-5"
-        >
-          <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-white/15 text-2xl" aria-hidden="true">🚀</span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-xs font-bold uppercase tracking-wide text-white/70">{t('v3ContinueLearning')}</span>
-            <span className="mt-0.5 block truncate font-display text-lg font-bold text-white">
-              {t('v3ContinueWithLesson', { topic: translatedLessonTitle(t, nextLesson.curriculum_lessons?.lesson_number, nextLesson.topic || nextLesson.curriculum_lessons?.title) })}
+          {/* compact stats strip — level / points / tier / streak / milestone */}
+          <div className="mt-4 flex flex-wrap gap-2 border-t border-ink/[0.06] pt-4">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-100 bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700">
+              <GraduationCap size={13} aria-hidden="true" />{t('v3LevelLabel', { level: me.level })}
             </span>
-            <span className="mt-0.5 block text-xs text-white/70">
-              {t('v3LessonsProgress', { completed: lessonStats.completed, total: lessonStats.total })}
-              {lessonStats.remaining > 0 && <> · {t('v3LessonsRemaining', { remaining: lessonStats.remaining })}</>}
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-ink/[0.06] bg-white px-2.5 py-1 text-xs font-semibold text-ink shadow-sm">
+              <Trophy size={13} className="text-brand-500" aria-hidden="true" />{totalPoints} {t('v3PointsLabel')}
             </span>
-          </span>
-          <ArrowRight size={22} className="flex-shrink-0 text-white/80 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
-        </Link>
-      ) : myLessons.length > 0 ? (
-        <div className="mb-6 flex items-center gap-3 rounded-2xl border border-active/20 bg-active/5 p-4 shadow-card sm:p-5">
-          <span className="text-2xl" aria-hidden="true">🎉</span>
-          <div>
-            <p className="font-display text-base font-bold text-ink">{t('v3AllCaughtUp')}</p>
-            <p className="text-xs text-ink/60">{t('v3AllCaughtUpHint')}</p>
+            <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold ${tier.color}`}>
+              <Layers size={13} aria-hidden="true" />{t(tier.key)}
+            </span>
+            <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold ${stats.attendanceStreak > 0 ? 'border-active/15 bg-active/10 text-active' : 'border-ink/[0.06] bg-white text-ink/50'}`}>
+              <Flame size={13} aria-hidden="true" />{stats.attendanceStreak} · {t('v3StreakLabel')}
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-ink/[0.06] bg-white px-2.5 py-1 text-xs font-semibold text-ink/70">
+              <Target size={13} className="text-ink/40" aria-hidden="true" />
+              {milestone.done ? t('v3MilestoneComplete') : t('v3MilestoneLessons', { remaining: milestone.remaining, milestone: milestone.label })}
+            </span>
           </div>
         </div>
-      ) : null}
+
+        {/* Today's Learning + Next Goal */}
+        <div className="grid gap-0 border-t border-ink/[0.06] sm:grid-cols-[1.15fr_1fr]">
+          {/* Today's Learning — visually obvious */}
+          <div className="border-b border-ink/[0.06] p-5 sm:border-b-0 sm:border-r sm:p-6" style={{ animation: 'slideUp 0.5s ease-out 0.12s both' }}>
+            <div className="mb-3 flex items-center gap-2">
+              <span className="h-6 w-0.5 rounded-full bg-brand-500" aria-hidden="true" />
+              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-ink/40">{t('v3TodaysLearning')}</p>
+              <span className="ml-auto text-[11px] font-medium text-ink/35">{lessonProgressPercent}%</span>
+            </div>
+            {/* thin progress rail */}
+            <div className="mb-4 h-1.5 overflow-hidden rounded-full bg-ink/[0.06]">
+              <div className="h-full rounded-full bg-brand-500 transition-all" style={{ width: `${lessonProgressPercent}%` }} />
+            </div>
+            <ul className="space-y-2.5">
+              <li className="flex items-center gap-3 rounded-xl border border-ink/[0.06] bg-paper px-3 py-2.5">
+                <span className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg ${nextLesson ? 'bg-brand-500 text-white' : 'bg-active/15 text-active'}`}>
+                  <BookOpen size={14} aria-hidden="true" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-xs font-bold uppercase tracking-wide text-ink/40">{t('v3MissionLesson')}</span>
+                  <span className="block truncate text-sm font-semibold text-ink">{nextLesson ? nextLessonTitle : t('v3AllCaughtUp')}</span>
+                </span>
+                {nextLesson ? (
+                  <Link to={`/my-lessons/${nextLesson.id}`} className="flex-shrink-0 rounded-full bg-ink px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-ink/90">
+                    {t('v3MissionLessonContinue')}
+                  </Link>
+                ) : (
+                  <span className="text-xs font-medium text-active">✓</span>
+                )}
+              </li>
+              <li className="flex items-center gap-3 rounded-xl border border-ink/[0.06] bg-white px-3 py-2.5">
+                <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-levelA/10 text-levelA">
+                  <Languages size={14} aria-hidden="true" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-xs font-bold uppercase tracking-wide text-ink/40">{t('v3MissionVocab')}</span>
+                  <span className="block text-sm font-semibold text-ink">
+                    {nextLesson ? t('v3MissionVocabHint', { count: nextLesson.vocabulary_count || 10 }) : t('v3MissionVocabHint', { count: 10 })}
+                  </span>
+                </span>
+                <Link to={nextLesson ? `/my-lessons/${nextLesson.id}` : '/my-lessons'} className="flex-shrink-0 text-xs font-semibold text-brand-600 hover:underline">
+                  {t('viewAll')}
+                </Link>
+              </li>
+              <li className="flex items-center gap-3 rounded-xl border border-ink/[0.06] bg-white px-3 py-2.5">
+                <span className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg ${homeworkPendingCount > 0 ? 'bg-levelB/15 text-levelB' : 'bg-active/10 text-active'}`}>
+                  <FileCheck2 size={14} aria-hidden="true" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-xs font-bold uppercase tracking-wide text-ink/40">{t('v3MissionHomework')}</span>
+                  <span className="block text-sm font-semibold text-ink">
+                    {homeworkPendingCount > 0 ? t('v3MissionHomeworkPending', { count: homeworkPendingCount }) : t('v3MissionHomeworkDone')}
+                  </span>
+                </span>
+                {homeworkPendingCount > 0 && (
+                  <Link to="/my-homework" className="flex-shrink-0 text-xs font-semibold text-brand-600 hover:underline">
+                    {t('viewAll')}
+                  </Link>
+                )}
+              </li>
+            </ul>
+          </div>
+
+          {/* Next Goal — prominent */}
+          <div className="bg-paper/60 p-5 sm:p-6" style={{ animation: 'slideUp 0.5s ease-out 0.2s both' }}>
+            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-ink/40">{t('v3NextGoalLabel')}</p>
+            {nextLesson ? (
+              <>
+                <p className="mt-2 font-display text-[20px] font-bold leading-tight tracking-tight text-ink sm:text-[22px]">
+                  {t('v3NextGoalFinish', { number: nextLessonNumber })}
+                </p>
+                <p className="mt-1 line-clamp-2 text-sm leading-snug text-ink/60">
+                  {nextLessonTitle}
+                </p>
+                <div className="mt-3 flex items-center gap-2 text-xs text-ink/45">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-white px-2 py-1 font-medium shadow-sm">
+                    <Target size={12} aria-hidden="true" /> {t('v3LessonsProgress', { completed: lessonStats.completed, total: lessonStats.total })}
+                  </span>
+                  {stats.attendanceStreak > 0 && (
+                    <span className="inline-flex items-center gap-1">
+                      <Flame size={12} className="text-active" aria-hidden="true" />{stats.attendanceStreak}-day
+                    </span>
+                  )}
+                </div>
+                <Link
+                  to={`/my-lessons/${nextLesson.id}`}
+                  className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white shadow-[0_2px_8px_rgba(27,36,48,0.12)] transition-colors hover:bg-ink/90 sm:w-auto"
+                >
+                  {t('v3OpenLesson')} <ArrowRight size={16} aria-hidden="true" />
+                </Link>
+                <p className="mt-2 text-xs text-ink/35">
+                  {lessonStats.remaining > 0 ? t('v3LessonsRemaining', { remaining: lessonStats.remaining }) : t('v3AllCaughtUpHint')}
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="mt-2 font-display text-[20px] font-bold leading-tight tracking-tight text-ink sm:text-[22px]">
+                  {t('v3NextGoalAllDone')}
+                </p>
+                <p className="mt-1 text-sm leading-snug text-ink/60">{t('v3AllCaughtUpHint')}</p>
+                <div className="mt-4 inline-flex items-center gap-2 rounded-xl bg-active/10 px-3 py-2 text-sm font-semibold text-active">
+                  <Trophy size={16} aria-hidden="true" /> {t('v3MilestoneComplete')}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
 
       <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <div>
+        <div style={{ animation: 'slideUp 0.45s ease-out 0.28s both' }}>
           <StatCard label={t('nav:attendance')} value={stats.attendanceRate == null ? '—' : `${stats.attendanceRate}%`} trend={stats.attendanceTrend} tone="success" icon={CalendarClock} />
           {attendanceStatusValue && (
             <div className="mt-1.5"><StatusPill tone={attendanceStatusValue.tone}>{t(attendanceStatusValue.key)}</StatusPill></div>
           )}
         </div>
         {!homeworkStatusValue ? (
-          <div className="rounded-xl border border-ink/[0.06] bg-white p-4 shadow-card sm:p-5">
+          <div className="rounded-xl border border-ink/[0.06] bg-white p-4 shadow-card sm:p-5" style={{ animation: 'slideUp 0.45s ease-out 0.34s both' }}>
             <p className="text-xs font-medium text-ink/60 sm:text-sm">{t('homework')}</p>
             <p className="mt-1.5 text-sm font-semibold text-ink sm:mt-2">{t('v3NoAssignmentsYet')}</p>
             <div className="mt-1.5"><StatusPill tone="info">ℹ️ {t('v3WaitingForHomework')}</StatusPill></div>
           </div>
         ) : (
-          <div>
+          <div style={{ animation: 'slideUp 0.45s ease-out 0.34s both' }}>
             <StatCard label={t('homework')} value={`${stats.homeworkDoneRate}%`} tone="info" icon={BookOpen} />
             <div className="mt-1.5"><StatusPill tone={homeworkStatusValue.tone}>{t(homeworkStatusValue.key)}</StatusPill></div>
           </div>
         )}
-        <div>
+        <div style={{ animation: 'slideUp 0.45s ease-out 0.40s both' }}>
           <StatCard label={t('examAverage')} value={stats.examAvg == null ? '—' : `${stats.examAvg}%`} tone="brand" icon={FileCheck2} />
           {examStatusValue && (
             <div className="mt-1.5"><StatusPill tone={examStatusValue.tone}>{t(examStatusValue.key)}</StatusPill></div>
           )}
         </div>
-        <StatCard label={t('v3LessonsCompletedLabel')} value={stats.lessonsCompleted} tone="info" icon={CalendarClock} />
+        <div style={{ animation: 'slideUp 0.45s ease-out 0.46s both' }}>
+          <StatCard label={t('v3LessonsCompletedLabel')} value={stats.lessonsCompleted} tone="info" icon={CalendarClock} />
+        </div>
       </div>
 
       <Link
