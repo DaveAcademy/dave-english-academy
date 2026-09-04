@@ -2,15 +2,22 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SkeletonList } from '../../../components/Skeleton';
 
-export const StreakDisplay = () => {
+export const StreakDisplay = ({ currentStreak: propStreak, bestStreak: propBest, lastActiveDate: propDate }) => {
   const { t } = useTranslation('dashboard');
-  const [streak, setStreak] = useState(0);
-  const [bestStreak, setBestStreak] = useState(0);
-  const [lastActiveDate, setLastActiveDate] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [streak, setStreak] = useState(propStreak ?? 0);
+  const [bestStreak, setBestStreak] = useState(propBest ?? 0);
+  const [lastActiveDate, setLastActiveDate] = useState(propDate ?? null);
+  const [loading, setLoading] = useState(propStreak === undefined);
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (propStreak !== undefined) {
+      setStreak(propStreak);
+      setBestStreak(propBest ?? 0);
+      setLastActiveDate(propDate ?? null);
+      setLoading(false);
+      return;
+    }
     const loadStreak = async () => {
       setLoading(true);
       try {
@@ -31,18 +38,12 @@ export const StreakDisplay = () => {
     };
 
     loadStreak();
-    const interval = setInterval(loadStreak, 60000); // refresh every minute
+    const interval = setInterval(loadStreak, 60000);
     return () => clearInterval(interval);
-  }, [t]);
+  }, [t, propStreak, propBest, propDate]);
 
   if (loading) {
-    return (
-      <div className="space-y-1">
-        <SkeletonList className="h-6 w-full" />
-        <SkeletonList className="h-6 w-full" />
-        <SkeletonList className="h-6 w-full" />
-      </div>
-    );
+    return <SkeletonList count={3} lines={1} />;
   }
 
   if (error) {

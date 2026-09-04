@@ -42,6 +42,9 @@ import ActivityFeed from '../../../components/ActivityFeed';
 import ProgressAnalytics from '../../../components/ProgressAnalytics';
 import WebsiteEngagementSummary from '../../../components/WebsiteEngagementSummary';
 import AcademicProgressSummary from '../../../components/AcademicProgressSummary';
+import DailyMissions from '../components/DailyMissions';
+import WeeklyMissions from '../components/WeeklyMissions';
+import StreakDisplay from '../components/StreakDisplay';
 import { TONE } from '../../../utils/tone';
 import { formatUZS } from '../../../utils/format';
 import { attendanceRate, filterByYearMonth } from '../../../utils/attendance';
@@ -147,6 +150,49 @@ function AdminDashboard() {
     return () => {
       cancelled = true;
     };
+  }, []);
+
+  // Stage 14: Missions and streaks data
+  const [dailyMissionProgress, setDailyMissionProgress] = useState(null);
+  const [weeklyMissionProgress, setWeeklyMissionProgress] = useState(null);
+  const [currentStreak, setCurrentStreak] = useState(0);
+  const [bestStreak, setBestStreak] = useState(0);
+  const [lastActiveDate, setLastActiveDate] = useState(null);
+
+  useEffect(() => {
+    const fetchMissionsAndStreak = async () => {
+      try {
+        const dailyResp = await fetch('/api/missions/daily-progress', {
+          credentials: 'include',
+        });
+        if (dailyResp.ok) {
+          const dailyData = await dailyResp.json();
+          setDailyMissionProgress(dailyData);
+        }
+
+        const weeklyResp = await fetch('/api/missions/weekly-progress', {
+          credentials: 'include',
+        });
+        if (weeklyResp.ok) {
+          const weeklyData = await weeklyResp.json();
+          setWeeklyMissionProgress(weeklyData.progress);
+        }
+
+        const streakResp = await fetch('/api/streak/current-best', {
+          credentials: 'include',
+        });
+        if (streakResp.ok) {
+          const streakData = await streakResp.json();
+          setCurrentStreak(streakData.currentStreak);
+          setBestStreak(streakData.bestStreak);
+          setLastActiveDate(streakData.lastActiveDate);
+        }
+      } catch (e) {
+        console.error('Failed to fetch missions/streak data:', e);
+      }
+    };
+
+    fetchMissionsAndStreak();
   }, []);
 
   const progressRows = useMemo(
@@ -553,6 +599,15 @@ function AdminDashboard() {
           )}
         </div>
       </DashboardErrorBoundary>
+
+      {/* Stage 14: Daily Missions */}
+      <DailyMissions dailyProgress={dailyMissionProgress} />
+
+      {/* Stage 14: Weekly Missions */}
+      <WeeklyMissions weeklyProgress={weeklyMissionProgress} />
+
+      {/* Stage 14: Streak Display */}
+      <StreakDisplay currentStreak={currentStreak} bestStreak={bestStreak} lastActiveDate={lastActiveDate} />
 
       <DashboardErrorBoundary>
         <div className="mt-6">

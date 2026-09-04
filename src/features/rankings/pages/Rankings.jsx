@@ -671,7 +671,7 @@ export default function Rankings() {
                   onClick={() => navReferenceDate(boardPeriod === 'week' ? -1 : 0, boardPeriod === 'month' ? -1 : 0)}
                   className="rounded-lg bg-ink/5 px-2 py-1 font-semibold hover:bg-ink/10"
                 >
-                  GÂ… Prev
+                  ‚Üê Prev
                 </button>
                 <span className="font-medium text-ink/70">
                   {boardPeriod === 'week'
@@ -683,7 +683,7 @@ export default function Rankings() {
                   onClick={() => navReferenceDate(boardPeriod === 'week' ? 1 : 0, boardPeriod === 'month' ? 1 : 0)}
                   className="rounded-lg bg-ink/5 px-2 py-1 font-semibold hover:bg-ink/10"
                 >
-                  Next GÂ∆
+                  Next ‚Üí
                 </button>
               </div>
             )}
@@ -722,7 +722,7 @@ export default function Rankings() {
                       {boardPeriod !== 'all_time' && (
                         <td className="px-3 py-2">
                           {row.rank_change == null || row.rank_change === 0 ? (
-                            <span className="text-ink/30">G«ˆ</span>
+                            <span className="text-ink/30">‚Äî</span>
                           ) : (
                             <span className={`flex items-center gap-0.5 font-semibold ${row.rank_change > 0 ? 'text-active' : 'text-inactive'}`}>
                               {row.rank_change > 0 ? <ArrowUp size={13} /> : <ArrowDown size={13} />}
@@ -731,7 +731,7 @@ export default function Rankings() {
                           )}
                         </td>
                       )}
-                      <td className="px-3 py-2 text-ink/60">{row.attendance_rate != null ? `${row.attendance_rate}%` : 'G«ˆ'}</td>
+                      <td className="px-3 py-2 text-ink/60">{row.attendance_rate != null ? `${row.attendance_rate}%` : '‚Äî'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -786,7 +786,7 @@ export default function Rankings() {
                     </td>
                     {matrixView.sessions.map((s) => (
                       <td key={s.id} className="px-3 py-2 text-center text-ink/70">
-                        {row.perSession[s.id] == null ? <span className="text-ink/30">G«ˆ</span> : row.perSession[s.id]}
+                        {row.perSession[s.id] == null ? <span className="text-ink/30">‚Äî</span> : row.perSession[s.id]}
                       </td>
                     ))}
                     <td className="px-3 py-2 text-center text-base font-bold text-brand-600">
@@ -887,7 +887,7 @@ export default function Rankings() {
                   {classScoreDoneStudents.map((s) => (
                     <div key={s.id} className="flex items-center justify-between gap-2 rounded-lg bg-active/10 px-3 py-2">
                       <span className="text-sm text-ink">{s.real_name}</span>
-                      <span className="text-sm font-semibold text-active">{recordedClassScores[s.id]} G£Ù</span>
+                      <span className="text-sm font-semibold text-active">{recordedClassScores[s.id]} pts</span>
                     </div>
                   ))}
                 </div>

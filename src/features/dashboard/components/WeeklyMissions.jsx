@@ -2,14 +2,19 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SkeletonList } from '../../../components/Skeleton';
 
-export const WeeklyMissions = () => {
+export const WeeklyMissions = ({ weeklyProgress }) => {
   const { t } = useTranslation('dashboard');
-  const [progress, setProgress] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [progress, setProgress] = useState(weeklyProgress ?? null);
+  const [loading, setLoading] = useState(!weeklyProgress);
   const [error, setError] = useState(null);
   const [weekStart, setWeekStart] = useState(null);
 
   useEffect(() => {
+    if (weeklyProgress !== undefined && weeklyProgress !== null) {
+      setProgress(weeklyProgress);
+      setLoading(false);
+      return;
+    }
     const loadProgress = async () => {
       setLoading(true);
       try {
@@ -29,17 +34,12 @@ export const WeeklyMissions = () => {
     };
 
     loadProgress();
-    const interval = setInterval(loadProgress, 600000); // refresh every 10 min
+    const interval = setInterval(loadProgress, 600000);
     return () => clearInterval(interval);
-  }, [t]);
+  }, [t, weeklyProgress]);
 
   if (loading) {
-    return (
-      <div className="space-y-2">
-        <SkeletonList className="h-6 w-full" />
-        <SkeletonList className="h-6 w-full" />
-      </div>
-    );
+    return <SkeletonList count={2} lines={1} />;
   }
 
   if (error) {

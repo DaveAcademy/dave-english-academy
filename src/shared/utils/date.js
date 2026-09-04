@@ -84,10 +84,11 @@ export function daysUntilDue(deadlineDay) {
  * text, since this is a plain util with no access to `t()` - callers
  * translate it themselves. */
 export function timeOfDayGreeting(date = new Date()) {
-  const hour = date.getHours();
-  if (hour < 12) return 'greetingMorning';
-  if (hour < 18) return 'greetingAfternoon';
-  return 'greetingEvening';
+  const hour = Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Tashkent', hour: 'numeric', hour12: false }).format(date));
+  if (hour >= 6 && hour < 12) return 'greetingMorning';
+  if (hour >= 12 && hour < 18) return 'greetingAfternoon';
+  if (hour >= 18 && hour < 24) return 'greetingEvening';
+  return 'greetingNight';
 }
 
 // Explicit Uzbek date formatting - this runtime's Intl support for the
