@@ -12,8 +12,7 @@ import { SkeletonList } from '../../../components/Skeleton';
 
 export default function MyCertificates() {
   const { t } = useTranslation('portal');
-  const { students, certificates, certificateTemplates, loading } = useAcademy();
-  const me = students[0];
+  const { me, students, certificates, certificateTemplates, loading } = useAcademy();
   const [certError, setCertError] = useState('');
 
   const resolveTemplate = async (title) => {

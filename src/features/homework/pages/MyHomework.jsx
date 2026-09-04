@@ -48,7 +48,7 @@ export default function MyHomework() {
     students, homework, homeworkStatus, homeworkSubmissionFiles, lessons,
     submitMyHomeworkFiles, removeMyHomeworkSubmissionFile, loading,
   } = useAcademy();
-  const me = students[0];
+  const { me } = useAcademy(); // single source, no fallback
   const [submittingId, setSubmittingId] = useState(null);
   const [actionError, setActionError] = useState(null);
   const [pendingByHomework, setPendingByHomework] = useState({});

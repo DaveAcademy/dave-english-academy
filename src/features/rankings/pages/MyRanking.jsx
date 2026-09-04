@@ -23,19 +23,18 @@ const RARITY_STYLE = {
 const PERIODS = ['week', 'month', 'all_time'];
 
 const AWARD_TYPE_INFO = {
-  student_of_week: { icon: '=ƒÅå', key: 'awardStudentOfWeek' },
-  student_of_month: { icon: '=ƒÅà', key: 'awardStudentOfMonth' },
-  most_improved: { icon: '=ƒôê', key: 'awardMostImproved' },
-  best_attendance: { icon: 'G£à', key: 'awardBestAttendance' },
-  best_homework: { icon: '=ƒôÜ', key: 'awardBestHomework' },
-  best_behavior: { icon: 'G¡É', key: 'awardBestBehavior' },
+  student_of_week: { icon: '=ï¿½ï¿½ï¿½', key: 'awardStudentOfWeek' },
+  student_of_month: { icon: '=ï¿½ï¿½ï¿½', key: 'awardStudentOfMonth' },
+  most_improved: { icon: '=ï¿½ï¿½ï¿½', key: 'awardMostImproved' },
+  best_attendance: { icon: 'Gï¿½ï¿½', key: 'awardBestAttendance' },
+  best_homework: { icon: '=ï¿½ï¿½ï¿½', key: 'awardBestHomework' },
+  best_behavior: { icon: 'Gï¿½ï¿½', key: 'awardBestBehavior' },
 };
 
 export default function MyRanking() {
   const { t, i18n } = useTranslation(['portal', 'dashboard', 'common']);
   const dateLocale = i18n.language === 'uz' ? 'uz' : 'en-US';
-  const { students } = useAcademy();
-  const me = students[0];
+  const { me, students } = useAcademy();
   const [period, setPeriod] = useState('week');
   const [leaderboard, setLeaderboard] = useState(null);
   const [awards, setAwards] = useState(null);
@@ -177,7 +176,7 @@ export default function MyRanking() {
           ) : (
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {awards.map((a) => {
-                const info = AWARD_TYPE_INFO[a.award_type] || { icon: '=ƒÄûn+Å', key: 'awardStudentOfWeek' };
+                const info = AWARD_TYPE_INFO[a.award_type] || { icon: '=ï¿½ï¿½ï¿½n+ï¿½', key: 'awardStudentOfWeek' };
                 return (
                   <div key={a.id} className="flex items-center gap-3 rounded-xl border border-ink/[0.06] bg-white p-3 shadow-card sm:p-4">
                     <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-levelB/10 text-lg">
@@ -186,7 +185,7 @@ export default function MyRanking() {
                     <div className="min-w-0 flex-1">
                       <p className="break-words font-semibold text-ink">{t(`portal:${info.key}`)}</p>
                       <p className="text-xs text-ink/50">
-                        {formatMonthDay(new Date(a.period_start), dateLocale)} GÇô {formatMonthDay(new Date(a.period_end), dateLocale)}
+                        {formatMonthDay(new Date(a.period_start), dateLocale)} Gï¿½ï¿½ {formatMonthDay(new Date(a.period_end), dateLocale)}
                         {a.is_co_winner ? ` -+ ${t('portal:coWinnerLabel')}` : ''}
                       </p>
                     </div>
@@ -211,7 +210,7 @@ export default function MyRanking() {
               {earnedAchievements.map((a) => (
                 <div key={a.achievement?.key} className="flex items-start gap-3 rounded-xl border border-ink/[0.06] bg-white p-3 shadow-card sm:p-4">
                   <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-brand-500/10 text-lg">
-                    {a.achievement?.icon || '=ƒÅå'}
+                    {a.achievement?.icon || '=ï¿½ï¿½ï¿½'}
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-1.5">
@@ -232,7 +231,7 @@ export default function MyRanking() {
               ))}
               {lockedAchievements.map((d) => (
                 <div key={d.key} className="flex items-start gap-3 rounded-xl border border-ink/[0.06] bg-ink/[0.02] p-3 opacity-60 shadow-card sm:p-4">
-                  <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-ink/5 text-lg grayscale">{d.icon || '=ƒöÆ'}</span>
+                  <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-ink/5 text-lg grayscale">{d.icon || '=ï¿½ï¿½ï¿½'}</span>
                   <div className="min-w-0 flex-1">
                     <p className="break-words font-semibold text-ink/70">{d.name}</p>
                     {d.description && <p className="text-xs text-ink/40">{d.description}</p>}

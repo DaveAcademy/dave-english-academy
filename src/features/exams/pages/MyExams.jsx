@@ -39,8 +39,7 @@ function countdownLabel(targetDateStr) {
 export default function MyExams() {
   const { t, i18n } = useTranslation(['exams', 'common']);
   const dateLocale = i18n.language === 'uz' ? 'uz' : 'en-US';
-  const { students, exams, examScores, submitMyExamAnswer, loading } = useAcademy();
-  const me = students[0];
+  const { me, students, exams, examScores, submitMyExamAnswer, loading } = useAcademy();
   const [submittingId, setSubmittingId] = useState(null);
   const [actionError, setActionError] = useState(null);
 

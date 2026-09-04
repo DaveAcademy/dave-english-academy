@@ -119,8 +119,7 @@ function MasteryOverview({ me }) {
 }
 
 export default function MyVocabulary() {
-  const { students, lessons } = useAcademy();
-  const me = students[0];
+  const { me, students, lessons } = useAcademy();
   const [searchParams] = useSearchParams();
   const lessonId = searchParams.get('lesson') ? Number(searchParams.get('lesson')) : null;
   const lesson = lessonId ? lessons.find((l) => l.id === lessonId) : null;

@@ -96,8 +96,7 @@ const CONFETTI = [
 
 export default function PetCollection() {
   const { t } = useTranslation('game');
-  const { students } = useAcademy();
-  const me = students[0];
+  const { me } = useAcademy();
   const [petData, setPetData] = useState(null);
   const [checkinStatus, setCheckinStatus] = useState(null);
   const [loading, setLoading] = useState(true);

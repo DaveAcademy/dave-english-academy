@@ -27,8 +27,7 @@ const TABS = ['learn', 'review', 'challenge', 'progress', 'leaderboard', 'search
 
 export default function Dictionary() {
   const { t } = useTranslation('dictionary');
-  const { students } = useAcademy();
-  const me = students[0];
+  const { me, students } = useAcademy();
   const [tab, setTab] = useState('learn');
 
   return (

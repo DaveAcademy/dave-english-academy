@@ -66,8 +66,8 @@ function tierForAccuracy(pct) {
 export default function MyProgress() {
   const { t, i18n } = useTranslation(['portal', 'attendance', 'dashboard', 'game']);
   const dateLocale = i18n.language === 'uz' ? 'uz' : 'en-US';
-  const { students, attendance, homework, homeworkStatus, exams, examScores, lessons, curriculumProgress, lessonProgress, loading } = useAcademy();
-  const me = students[0];
+  const { students, attendance, homework, homeworkStatus, exams, examScores, lessons, curriculumProgress, lessonProgress, loading, me: academyMe } = useAcademy();
+  const me = academyMe ?? null;
 
   // ── attendance (preserved logic) ──────────────────────────────────────
   const attendanceRows = useMemo(() => [...attendance].sort((a, b) => new Date(b.date) - new Date(a.date)), [attendance]);
