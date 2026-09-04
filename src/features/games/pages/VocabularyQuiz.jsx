@@ -188,7 +188,7 @@ export default function VocabularyQuiz() {
               <button
                 key={option}
                 onClick={() => handleChoose(option)}
-                disabled={!!chosen}
+                disabled={!!chosen || submitting}
                 aria-pressed={isChosen}
                 className={`flex min-h-[3.25rem] items-center gap-2.5 rounded-xl border px-4 py-3 text-left text-sm font-semibold shadow-sm transition-all duration-200 ${style}`}
               >

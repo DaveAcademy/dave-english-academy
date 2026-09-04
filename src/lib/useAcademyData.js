@@ -104,11 +104,13 @@ export function useAcademyData() {
   const [lessonProgress, setLessonProgressState] = useState([]);
 
   // The portal's "me": the student row whose profile_id matches the
-  // signed-in user, falling back to the first roster student (the
-  // long-standing convention) when no profile link exists yet. Portal pages
-  // should read this instead of hand-rolling students[0].
+  // signed-in user. No fallback to students[0] — that leaked the first
+  // roster student's data to unlinked/admin users and broke "not linked yet"
+  // empty states. Admin/teacher users correctly get me=null and use the
+  // admin dashboard (see App.jsx isStudent branching). Do not reintroduce
+  // students[0] fallback here; portal pages must handle me=null explicitly.
   const me = useMemo(
-    () => students.find((s) => s.profile_id && profile?.id && s.profile_id === profile.id) ?? students[0] ?? null,
+    () => students.find((s) => s.profile_id && profile?.id && s.profile_id === profile.id) ?? null,
     [students, profile]
   );
 

@@ -204,7 +204,7 @@ export default function WordDetective() {
               </button>
               <button
                 onClick={handleConfirm}
-                disabled={!correctionInput.trim()}
+                disabled={!correctionInput.trim() || submitting}
                 className="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-white shadow-sm disabled:opacity-40"
               >
                 {t('check')}
