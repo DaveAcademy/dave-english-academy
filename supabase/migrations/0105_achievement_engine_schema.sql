@@ -119,15 +119,25 @@ insert into public.achievement_definitions
 values
   (1, 'first_lesson', 'First Lesson', 'Completed your first lesson', '📘', 'achievement', 'immediate_event', '{"op": ">=", "value": 1, "metric": "lessons_completed"}', 5, 'common', true, 10),
   (2, 'first_practice', 'First Practice', 'Submitted your first lesson practice', '✏️', 'achievement', 'immediate_event', '{"op": ">=", "value": 1, "metric": "practice_submitted"}', 5, 'common', true, 20),
-  (3, 'first_attendance', 'Present and Accounted For', 'Marked present for the first time', '✅', 'achievement', 'immediate_event', '{"op": ">=", "value": 1, "metric": "attendance_present"}', 5, 'common', true, 30),
-  (4, 'ten_lessons', 'Lesson Regular', 'Completed 10 lessons', '📗', 'milestone', 'threshold', '{"op": ">=", "value": 10, "metric": "lessons_completed"}', 20, 'rare', true, 40),
+  (3, 'first_attendance', 'First Day', 'Marked present for the first time', '✅', 'achievement', 'immediate_event', '{"op": ">=", "value": 1, "metric": "attendance_present"}', 5, 'common', true, 30),
+  (4, 'ten_lessons', 'Lesson Builder', 'Completed 10 lessons', '📗', 'milestone', 'threshold', '{"op": ">=", "value": 10, "metric": "lessons_completed"}', 20, 'rare', true, 40),
   (5, 'twenty_five_lessons', 'Lesson Veteran', 'Completed 25 lessons', '📚', 'milestone', 'threshold', '{"op": ">=", "value": 25, "metric": "lessons_completed"}', 50, 'epic', true, 50),
   (6, 'ten_practices', 'Practice Habit', 'Submitted 10 lesson practices', '📝', 'milestone', 'threshold', '{"op": ">=", "value": 10, "metric": "practice_submitted"}', 20, 'rare', true, 60),
-  (7, 'twenty_five_attendance', 'Reliable Attendee', 'Marked present 25 times', '🗓️', 'milestone', 'threshold', '{"op": ">=", "value": 25, "metric": "attendance_present"}', 20, 'rare', true, 70),
-  (8, 'hundred_points', 'Century Club', 'Reached 100 points', '💯', 'milestone', 'threshold', '{"op": ">=", "value": 100, "metric": "total_points"}', 15, 'rare', true, 80),
-  (9, 'five_hundred_points', 'High Achiever', 'Reached 500 points', '🏅', 'milestone', 'threshold', '{"op": ">=", "value": 500, "metric": "total_points"}', 40, 'epic', true, 90),
-  (10, 'teacher_recognition', 'Teacher''s Star', 'Recognized by a teacher for outstanding effort', '⭐', 'badge', 'manual', '{}', 0, 'epic', true, 100)
-on conflict (id) do nothing;
+  (7, 'twenty_five_attendance', 'Attendance Builder', 'Marked present 25 times', '🗓️', 'milestone', 'threshold', '{"op": ">=", "value": 25, "metric": "attendance_present"}', 20, 'rare', true, 70),
+  (8, 'hundred_points', 'Point Collector', 'Reached 100 points', '💯', 'milestone', 'threshold', '{"op": ">=", "value": 100, "metric": "total_points"}', 15, 'rare', true, 80),
+  (9, 'five_hundred_points', 'Point Master', 'Reached 500 points', '🏅', 'milestone', 'threshold', '{"op": ">=", "value": 500, "metric": "total_points"}', 40, 'epic', true, 90),
+  (10, 'teacher_recognition', "Teacher's Star", 'Recognized by a teacher for outstanding effort', '⭐', 'badge', 'manual', '{}', 0, 'epic', true, 100)
+on conflict (key) do update set
+  name = excluded.name,
+  description = excluded.description,
+  icon = excluded.icon,
+  category = excluded.category,
+  trigger_type = excluded.trigger_type,
+  rule_config = excluded.rule_config,
+  bonus_points = excluded.bonus_points,
+  rarity = excluded.rarity,
+  active = excluded.active,
+  sort_order = excluded.sort_order;
 
 select setval('public.achievement_definitions_id_seq', 10, true);
 
