@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SkeletonList } from '../../../components/Skeleton';
+import { useAcademy } from '../../../lib/AcademyDataContext';
+import { getCurrentStreak, getBestStreak } from '../../../lib/storageBridge';
 
 export const StreakDisplay = ({ currentStreak: propStreak, bestStreak: propBest, lastActiveDate: propDate }) => {
   const { t } = useTranslation('dashboard');
+  const { me } = useAcademy();
   const [streak, setStreak] = useState(propStreak ?? 0);
   const [bestStreak, setBestStreak] = useState(propBest ?? 0);
   const [lastActiveDate, setLastActiveDate] = useState(propDate ?? null);
-  const [loading, setLoading] = useState(propStreak === undefined);
+  const [loading, setLoading] = useState(propStreak === undefined && !!me?.id);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -18,17 +21,20 @@ export const StreakDisplay = ({ currentStreak: propStreak, bestStreak: propBest,
       setLoading(false);
       return;
     }
+    if (!me?.id) {
+      setLoading(false);
+      return;
+    }
     const loadStreak = async () => {
       setLoading(true);
       try {
-        const resp = await fetch('/api/streak/current-best', {
-          credentials: 'include',
-        });
-        if (!resp.ok) throw new Error('Failed to load streak data');
-        const data = await resp.json();
-        setStreak(data.currentStreak);
-        setBestStreak(data.bestStreak);
-        setLastActiveDate(data.lastActiveDate);
+        const [cur, best] = await Promise.all([
+          getCurrentStreak(me.id).catch(() => 0),
+          getBestStreak(me.id).catch(() => 0),
+        ]);
+        setStreak(typeof cur === 'number' ? cur : 0);
+        setBestStreak(typeof best === 'number' ? best : 0);
+        setLastActiveDate(cur > 0 ? new Date().toISOString().slice(0, 10) : null);
       } catch (e) {
         setError(t('streak:loadError', { defaultValue: 'Failed to load streak data' }));
         console.error(e);
@@ -40,7 +46,7 @@ export const StreakDisplay = ({ currentStreak: propStreak, bestStreak: propBest,
     loadStreak();
     const interval = setInterval(loadStreak, 60000);
     return () => clearInterval(interval);
-  }, [t, propStreak, propBest, propDate]);
+  }, [t, propStreak, propBest, propDate, me?.id]);
 
   if (loading) {
     return <SkeletonList count={3} lines={1} />;

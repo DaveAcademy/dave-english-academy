@@ -28,6 +28,10 @@ import {
   listCertificates,
   listAllStudentLessonProgress,
   listStudentLoginInfo,
+  getDailyMissionProgress,
+  getWeeklyMissionProgress,
+  getCurrentStreak,
+  getBestStreak,
 } from '../../../lib/storageBridge';
 import { useAuth } from '../../../lib/AuthContext';
 import StatCard from '../../../components/StatCard';
@@ -77,6 +81,7 @@ function AdminDashboard() {
   const months = useMemo(() => lastNMonths(6), []);
   const { current, previous } = useMemo(() => currentAndPreviousMonth(), []);
 
+  const { me } = useAcademy();
   const [levelFilter, setLevelFilter] = useState('');
   const active = useMemo(
     () => students.filter((s) => s.status === 'Active' && (!levelFilter || s.level === levelFilter)),
@@ -160,40 +165,30 @@ function AdminDashboard() {
   const [lastActiveDate, setLastActiveDate] = useState(null);
 
   useEffect(() => {
+    if (!me?.id) return;
+    let cancelled = false;
     const fetchMissionsAndStreak = async () => {
       try {
-        const dailyResp = await fetch('/api/missions/daily-progress', {
-          credentials: 'include',
-        });
-        if (dailyResp.ok) {
-          const dailyData = await dailyResp.json();
-          setDailyMissionProgress(dailyData);
-        }
-
-        const weeklyResp = await fetch('/api/missions/weekly-progress', {
-          credentials: 'include',
-        });
-        if (weeklyResp.ok) {
-          const weeklyData = await weeklyResp.json();
-          setWeeklyMissionProgress(weeklyData.progress);
-        }
-
-        const streakResp = await fetch('/api/streak/current-best', {
-          credentials: 'include',
-        });
-        if (streakResp.ok) {
-          const streakData = await streakResp.json();
-          setCurrentStreak(streakData.currentStreak);
-          setBestStreak(streakData.bestStreak);
-          setLastActiveDate(streakData.lastActiveDate);
-        }
+        const [daily, weekly, cur, best] = await Promise.all([
+          getDailyMissionProgress(me.id).catch(() => null),
+          getWeeklyMissionProgress(me.id).catch(() => null),
+          getCurrentStreak(me.id).catch(() => 0),
+          getBestStreak(me.id).catch(() => 0),
+        ]);
+        if (cancelled) return;
+        if (daily) setDailyMissionProgress({ missions: daily });
+        if (weekly) setWeeklyMissionProgress(weekly);
+        setCurrentStreak(typeof cur === 'number' ? cur : 0);
+        setBestStreak(typeof best === 'number' ? best : 0);
+        // lastActiveDate derived from streak presence; keep as today if streak>0
+        if (cur > 0) setLastActiveDate(new Date().toISOString().slice(0, 10));
       } catch (e) {
         console.error('Failed to fetch missions/streak data:', e);
       }
     };
-
     fetchMissionsAndStreak();
-  }, []);
+    return () => { cancelled = true; };
+  }, [me?.id]);
 
   const progressRows = useMemo(
     () => buildStudentProgressRows({ students, attendance, exams, examScores, homeworkStatus, lessons, curriculumProgress, lessonProgress: allLessonProgress }),

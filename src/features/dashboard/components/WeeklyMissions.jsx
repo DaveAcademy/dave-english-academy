@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SkeletonList } from '../../../components/Skeleton';
+import { useAcademy } from '../../../lib/AcademyDataContext';
+import { getWeeklyMissionProgress } from '../../../lib/storageBridge';
 
 export const WeeklyMissions = ({ weeklyProgress }) => {
   const { t } = useTranslation('dashboard');
+  const { me } = useAcademy();
   const [progress, setProgress] = useState(weeklyProgress ?? null);
-  const [loading, setLoading] = useState(!weeklyProgress);
+  const [loading, setLoading] = useState(!weeklyProgress && !!me?.id);
   const [error, setError] = useState(null);
   const [weekStart, setWeekStart] = useState(null);
 
@@ -15,16 +18,16 @@ export const WeeklyMissions = ({ weeklyProgress }) => {
       setLoading(false);
       return;
     }
+    if (!me?.id) {
+      setLoading(false);
+      return;
+    }
     const loadProgress = async () => {
       setLoading(true);
       try {
-        const resp = await fetch('/api/missions/weekly-progress', {
-          credentials: 'include',
-        });
-        if (!resp.ok) throw new Error('Failed to load weekly mission progress');
-        const data = await resp.json();
-        setProgress(data.progress);
-        setWeekStart(data.weekStart);
+        const data = await getWeeklyMissionProgress(me.id);
+        setProgress(Array.isArray(data) ? data : data?.progress ?? data);
+        setWeekStart(data?.weekStart ?? null);
       } catch (e) {
         setError(t('missions:loadError', { defaultValue: 'Failed to load weekly missions' }));
         console.error(e);
@@ -36,7 +39,7 @@ export const WeeklyMissions = ({ weeklyProgress }) => {
     loadProgress();
     const interval = setInterval(loadProgress, 600000);
     return () => clearInterval(interval);
-  }, [t, weeklyProgress]);
+  }, [t, weeklyProgress, me?.id]);
 
   if (loading) {
     return <SkeletonList count={2} lines={1} />;

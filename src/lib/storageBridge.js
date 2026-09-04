@@ -1787,6 +1787,41 @@ export async function deleteFileRecord(id) {
   return true;
 }
 
+// ---------- Daily / Weekly Missions & Streaks (0203 + 20260903150000) ----------
+// Server-authoritative via get_daily_mission_progress / get_weekly_mission_progress /
+// get_current_streak / get_best_streak / get_academy_week_start.
+// Asia/Tashkent boundaries are enforced server-side; client never computes dates.
+
+export async function getDailyMissionProgress(studentId) {
+  const { data, error } = await supabase.rpc('get_daily_mission_progress', { p_student_id: studentId });
+  if (error) throw error;
+  return data;
+}
+
+export async function getWeeklyMissionProgress(studentId) {
+  const { data, error } = await supabase.rpc('get_weekly_mission_progress', { p_student_id: studentId });
+  if (error) throw error;
+  return data;
+}
+
+export async function getAcademyWeekStart() {
+  const { data, error } = await supabase.rpc('get_academy_week_start');
+  if (error) throw error;
+  return data;
+}
+
+export async function getCurrentStreak(studentId) {
+  const { data, error } = await supabase.rpc('get_current_streak', { p_student_id: studentId });
+  if (error) throw error;
+  return data;
+}
+
+export async function getBestStreak(studentId) {
+  const { data, error } = await supabase.rpc('get_best_streak', { p_student_id: studentId });
+  if (error) throw error;
+  return data;
+}
+
 // ---------- Pet Collection (Game section) ----------
 // See migration 0196. All rewards are server-authoritative — the client
 // never supplies part IDs. Auto-grants the active pet on first call.

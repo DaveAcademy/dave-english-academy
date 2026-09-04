@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SkeletonList } from '../../../components/Skeleton';
+import { useAcademy } from '../../../lib/AcademyDataContext';
+import { getDailyMissionProgress } from '../../../lib/storageBridge';
 
 export const DailyMissions = ({ dailyProgress }) => {
   const { t } = useTranslation('dashboard');
+  const { me } = useAcademy();
   const [progress, setProgress] = useState(dailyProgress ?? null);
-  const [loading, setLoading] = useState(!dailyProgress);
+  const [loading, setLoading] = useState(!dailyProgress && !!me?.id);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -14,15 +17,15 @@ export const DailyMissions = ({ dailyProgress }) => {
       setLoading(false);
       return;
     }
+    if (!me?.id) {
+      setLoading(false);
+      return;
+    }
     const loadProgress = async () => {
       setLoading(true);
       try {
-        const resp = await fetch('/api/missions/daily-progress', {
-          credentials: 'include',
-        });
-        if (!resp.ok) throw new Error('Failed to load mission progress');
-        const data = await resp.json();
-        setProgress(data);
+        const data = await getDailyMissionProgress(me.id);
+        setProgress({ missions: Array.isArray(data) ? data : [] });
       } catch (e) {
         setError(t('missions:loadError', { defaultValue: 'Failed to load daily missions' }));
         console.error(e);
@@ -34,7 +37,7 @@ export const DailyMissions = ({ dailyProgress }) => {
     loadProgress();
     const interval = setInterval(loadProgress, 300000);
     return () => clearInterval(interval);
-  }, [t, dailyProgress]);
+  }, [t, dailyProgress, me?.id]);
 
   if (loading) {
     return <SkeletonList count={2} lines={1} />;
