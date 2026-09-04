@@ -98,7 +98,7 @@ begin
   end if;
 
   return jsonb_build_object(
-    'status', case when v_just_completed then 'completed' : 'progress',
+    'status', case when v_just_completed then 'completed' else 'progress' end,
     'mission_key', p_mission_key,
     'progress', v_new_progress,
     'target', v_mission.target_value,
@@ -273,7 +273,7 @@ begin
   end if;
 
   return jsonb_build_object(
-    'status', case when v_just_completed then 'completed' : 'progress',
+    'status', case when v_just_completed then 'completed' else 'progress' end,
     'mission_key', p_mission_key,
     'progress', v_new_progress,
     'target', v_mission.target_value,

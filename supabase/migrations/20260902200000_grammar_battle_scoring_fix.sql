@@ -66,7 +66,7 @@ begin
       'words_correct', v_words_correct,
       'words_total', v_words_total,
       'is_new_best', false,
-      'results', '--- duplicate round ---
+      'results', '--- duplicate round ---'
     );
   end if;
 
@@ -146,9 +146,8 @@ begin
     insert into public.game_level_progress (student_id, game_type, current_level, best_level_reached)
     values (v_student_id, p_game_type, v_new_level, v_new_level)
     on conflict (student_id, game_type) do update set
-      current_level := v_new_level,
-      best_level_reached := greatest(best_level_reached, v_new_level::text);
-    end if;
+      current_level = v_new_level,
+      best_level_reached = greatest(best_level_reached, v_new_level::text);
   end if;
 
   select v_score > coalesce(max(score), -1)
