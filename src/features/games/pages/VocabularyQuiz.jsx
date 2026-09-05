@@ -104,7 +104,7 @@ export default function VocabularyQuiz() {
           {result.game_points_awarded > 0 ? (
             <div className="mt-4 animate-[scaleIn_0.3s_ease-out_0.15s_both]">
               <p className="font-display text-5xl font-extrabold text-amber-500">+{result.game_points_awarded}</p>
-              <p className="mt-1 text-sm font-semibold text-amber-600">Game Points{result.game_points_is_perfect ? ' ⭐' : ''}</p>
+              <p className="mt-1 text-sm font-semibold text-amber-600">{t('gamePoints')}{result.game_points_is_perfect ? ' ⭐' : ''}</p>
             </div>
           ) : (
             <p className="mt-4 font-display text-5xl font-extrabold text-brand-600">{result.score}</p>

@@ -21,7 +21,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowRight, CalendarClock, MessageSquare, Award, BookOpen, FileCheck2, CreditCard, Flame, GraduationCap, Trophy, Target, Layers, Languages, Sparkles } from 'lucide-react';
+import { ArrowRight, CalendarClock, MessageSquare, BookOpen, FileCheck2, CreditCard, Flame, GraduationCap, Trophy, Target, Layers, Languages, Sparkles } from 'lucide-react';
 import {
   LESSON_STATUS, teacherPaceFor, lessonCapFor, progressByLessonNumber, lessonStatusFor, nextUnfinishedLesson, translatedLessonTitle,
 } from '../../lib/lessonLogic';
@@ -123,9 +123,9 @@ function nextStepFor(attendance, homework, exam) {
 }
 
 export default function PortalHomeV3() {
-  const { t, i18n } = useTranslation(['dashboard', 'nav']);
+  const { t, i18n } = useTranslation(['dashboard', 'nav', 'portal']);
   const dateLocale = i18n.language === 'uz' ? 'uz' : 'en-US';
-  const { lessons, attendance, homework, homeworkStatus, exams, examScores, certificates, curriculumProgress, lessonProgress, me } = useAcademy();
+  const { lessons, attendance, homework, homeworkStatus, exams, examScores, curriculumProgress, lessonProgress, me } = useAcademy();
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [totalXp, setTotalXp] = useState(null);
   const [xpProgress, setXpProgress] = useState(null);
@@ -196,8 +196,6 @@ export default function PortalHomeV3() {
         return new Date(b.created_at) - new Date(a.created_at);
       });
   }, [lessons, me]);
-  const upcoming = useMemo(() => myLessons.slice(0, 4), [myLessons]);
-
   // Same unlock/status rules as MyLessons (lessonLogic.js) - the Continue
   // Learning button always points at the first unlocked, unfinished lesson.
   const pace = teacherPaceFor(curriculumProgress, me?.level);
@@ -382,10 +380,10 @@ export default function PortalHomeV3() {
           {xpLevelUp != null && (
             <div className="mx-5 mb-4 flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white p-4 shadow-sm sm:mx-6 motion-safe:animate-[fadeIn_0.3s_ease-out]">
               <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-amber-700">Level Up!</p>
-                <p className="mt-0.5 font-display text-sm font-bold text-ink">You reached Level {xpLevelUp} — {xpProgress?.total_xp ?? ''} XP</p>
+                <p className="text-xs font-bold uppercase tracking-wide text-amber-700">{t('portal:mpLevelUpTitle')}</p>
+                <p className="mt-0.5 font-display text-sm font-bold text-ink">{t('portal:mpLevelUpBody', { level: xpLevelUp, xp: xpProgress?.total_xp ?? '' })}</p>
               </div>
-              <button onClick={dismissXpLevelUp} className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-ink/70 shadow-sm ring-1 ring-ink/10 hover:bg-ink/5" aria-label="Dismiss">Dismiss</button>
+              <button onClick={dismissXpLevelUp} className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-ink/70 shadow-sm ring-1 ring-ink/10 hover:bg-ink/5" aria-label={t('portal:mpDismiss')}>{t('portal:mpDismiss')}</button>
             </div>
           )}
           {/* XP Progression — authoritative_level, progress toward next, remaining */}
@@ -412,7 +410,7 @@ export default function PortalHomeV3() {
                 />
               </div>
               <p className="mt-1.5 text-[11px] text-violet-600/60">
-                {xpProgress.is_max ? t('v3XpMaxLevel', { defaultValue: 'Max Level — keep learning!' }) : `${xpProgress.xp_into_level} / ${xpProgress.next_level_xp - xpProgress.current_level_xp} XP`}
+                {xpProgress.is_max ? t('portal:mpMaxLevel') : t('portal:mpXpProgress', { into: xpProgress.xp_into_level, total: xpProgress.next_level_xp - xpProgress.current_level_xp })}
               </p>
             </div>
           )}
@@ -538,7 +536,7 @@ export default function PortalHomeV3() {
           >
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15 text-xl backdrop-blur-sm" aria-hidden>{icons[action.key] || '⭐'}</span>
             <div className="min-w-0 flex-1">
-              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/70">Next up</p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/70">{t('portal:mpNextUpLabel')}</p>
               <p className="truncate text-sm font-bold text-white">{action.label}</p>
               <p className="truncate text-xs text-white/75">{action.reason}</p>
             </div>
@@ -552,9 +550,9 @@ export default function PortalHomeV3() {
         <div className="mb-6 grid gap-3 sm:grid-cols-2">
           {dailyMissions !== null && (
             <div className="rounded-2xl border border-ink/[0.06] bg-white p-4 shadow-card">
-              <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-ink/40"><Target size={12} /> Today&apos;s missions</p>
+              <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-ink/40"><Target size={12} /> {t('portal:mpTodaysMissions')}</p>
               {dailyMissions.length === 0 ? (
-                <p className="mt-2 text-sm text-ink/60">No missions yet — complete a lesson or game to get started.</p>
+                <p className="mt-2 text-sm text-ink/60">{t('portal:mpNoMissions')}</p>
               ) : (
                 <ul className="mt-2 space-y-2">
                   {dailyMissions.slice(0, 3).map((m) => (
@@ -566,7 +564,7 @@ export default function PortalHomeV3() {
                   ))}
                 </ul>
               )}
-              {dailyMissions.some((m) => m.completed) && <p className="mt-2 text-xs font-semibold text-active">Completion is auto-tracked — no claim button needed.</p>}
+              {dailyMissions.some((m) => m.completed) && <p className="mt-2 text-xs font-semibold text-active">{t('portal:mpAutoTracked')}</p>}
             </div>
           )}
           <div className="space-y-3">
@@ -574,8 +572,8 @@ export default function PortalHomeV3() {
               <div className="flex items-center gap-3 rounded-2xl border border-orange-100 bg-orange-50/70 px-4 py-3">
                 <span className={`flex h-8 w-8 items-center justify-center rounded-xl ${learningStreak > 0 ? 'bg-orange-500 text-white' : 'bg-white text-ink/30 ring-1 ring-ink/10'}`}><Flame size={16} /></span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-bold uppercase tracking-wide text-orange-700">Learning streak</p>
-                  <p className="text-sm font-semibold text-ink">{learningStreak === 0 ? 'Start today — do one real activity' : `${learningStreak} day${learningStreak === 1 ? '' : 's'} — keep it going`}</p>
+                  <p className="text-xs font-bold uppercase tracking-wide text-orange-700">{t('portal:mpLearningStreak')}</p>
+                  <p className="text-sm font-semibold text-ink">{learningStreak === 0 ? t('portal:mpStartToday') : t('portal:mpKeepGoing', { count: learningStreak })}</p>
                 </div>
               </div>
             )}
@@ -583,14 +581,14 @@ export default function PortalHomeV3() {
               <Link to="/games/pet" className="flex items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/60 px-4 py-3 transition-colors hover:bg-emerald-50">
                 <span className={`flex h-8 w-8 items-center justify-center rounded-xl text-xs font-bold text-white ${petProgress.stage >= 3 ? 'bg-amber-500' : petProgress.stage === 2 ? 'bg-emerald-500' : 'bg-ink/60'}`}>{petProgress.stage}</span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-bold uppercase tracking-wide text-emerald-700">Pet · {petProgress.stage_name}</p>
+                  <p className="text-xs font-bold uppercase tracking-wide text-emerald-700">{t('portal:mpPetStage', { stage: petProgress.stage_name })}</p>
                   <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-emerald-100"><div className="h-full rounded-full bg-emerald-500 motion-safe:transition-all motion-safe:duration-500" style={{ width: `${Math.min(100, petProgress.progress_percent)}%` }} role="progressbar" aria-valuenow={petProgress.progress_percent} aria-valuemin={0} aria-valuemax={100} /></div>
                 </div>
               </Link>
             )}
             {achievements && achievements.length > 0 && (
               <div className="rounded-2xl border border-amber-100 bg-amber-50/60 px-4 py-3">
-                <p className="text-xs font-bold uppercase tracking-wide text-amber-700">Recent achievements</p>
+                <p className="text-xs font-bold uppercase tracking-wide text-amber-700">{t('portal:mpRecentAchievements')}</p>
                 <ul className="mt-1.5 space-y-1">
                   {achievements.map((a, i) => (
                     <li key={i} className="flex items-center gap-1.5 text-sm text-ink"><span aria-hidden>{a.achievement?.icon || '🏆'}</span><span className="truncate font-medium">{a.achievement?.name || a.achievement?.key || 'Achievement'}</span></li>
@@ -747,43 +745,6 @@ export default function PortalHomeV3() {
         </Panel>
       </div>
 
-      <div className="mb-6 grid gap-4 lg:grid-cols-2">
-        <Panel title={t('certificatesTitle')} icon={Award} action={<Link to="/my-certificates" className="text-xs font-semibold text-brand-600 hover:underline">{t('viewAll')}</Link>}>
-          {certificates.length === 0 ? (
-            <div className="py-4 text-center">
-              <Award className="mx-auto mb-2 text-ink/15" size={28} aria-hidden="true" />
-              <p className="text-sm text-ink/50">{t('noCertificatesYet')}</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-2">
-              {certificates.slice(0, 4).map((c) => (
-                <div key={c.id} className="flex items-center gap-2 rounded-lg border border-brand-100 bg-brand-50 p-2.5">
-                  <Award size={16} className="flex-shrink-0 text-brand-500" aria-hidden="true" />
-                  <span className="truncate text-xs font-semibold text-ink">{c.title}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </Panel>
-
-        <Panel title={t('upcomingLessons')} icon={CalendarClock}>
-          {upcoming.length === 0 ? (
-            <div className="py-4 text-center">
-              <CalendarClock className="mx-auto mb-2 text-ink/15" size={28} aria-hidden="true" />
-              <p className="text-sm text-ink/50">{t('noUpcomingLessons')}</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {upcoming.map((l) => (
-                <div key={l.id} className="flex items-center justify-between gap-3 text-sm">
-                  <span className="truncate font-medium text-ink">{l.topic}</span>
-                  {l.group_name && <span className="flex-shrink-0 text-xs text-ink/50">{l.group_name}</span>}
-                </div>
-              ))}
-            </div>
-          )}
-        </Panel>
-      </div>
     </div>
   );
 }

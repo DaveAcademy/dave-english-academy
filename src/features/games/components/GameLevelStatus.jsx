@@ -48,8 +48,7 @@ export default function GameLevelStatus({ level, pass, leveledUp, gamePointsAwar
         )}
         {leveledUp && gamePointsAwarded > 0 && (
           <p className="mt-2 text-sm font-bold text-amber-600 animate-[fadeIn_0.3s_ease-out_0.3s_both]">
-            +{gamePointsAwarded} Game Points
-            {gamePointsIsPerfect && <span className="ml-1">&#11088;</span>}
+            {t('gamePointsEarned', { points: gamePointsAwarded, perfect: gamePointsIsPerfect ? ' ⭐' : '' })}
           </p>
         )}
       </div>

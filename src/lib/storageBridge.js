@@ -1895,3 +1895,13 @@ export async function setActivePet(petKey) {
   if (error) throw error;
   return data;
 }
+export async function getPremiumPetsProgress() {
+  const { data, error } = await supabase.rpc('get_premium_pets_progress');
+  if (error) throw error;
+  return data;
+}
+export async function unlockPremiumPet(petKey) {
+  const { data, error } = await supabase.rpc('unlock_premium_pet', { p_pet_key: petKey });
+  if (error) throw error;
+  return data;
+}

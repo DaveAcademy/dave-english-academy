@@ -101,7 +101,7 @@ export default function PictureQuiz() {
             {result.game_points_awarded > 0 ? (
               <>
                 <p className="mt-4 font-display text-5xl font-extrabold text-amber-500">+{result.game_points_awarded}</p>
-                <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-ink/50">{t('gamePoints', 'Game Points')}</p>
+                <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-ink/50">{t('gamePoints')}</p>
               </>
             ) : (
               <p className="mt-4 font-display text-5xl font-extrabold text-brand-600">{result.score}</p>

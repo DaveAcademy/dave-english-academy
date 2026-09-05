@@ -55,9 +55,9 @@ export default function GameResults({ gradientClass = 'from-brand-50 to-sky-100'
         {/* Points vs XP — distinct, authoritative */}
         <div className="mt-4 grid grid-cols-2 gap-3 animate-[scaleIn_0.3s_ease-out_0.15s_both]">
           <div className="rounded-xl bg-white/90 p-3 shadow-sm ring-1 ring-ink/5">
-            <p className="flex items-center justify-center gap-1 text-xs font-bold uppercase tracking-wide text-ink/50"><Trophy size={12} /> {t('pointsLabel', { defaultValue: 'Points' })}</p>
+            <p className="flex items-center justify-center gap-1 text-xs font-bold uppercase tracking-wide text-ink/50"><Trophy size={12} /> {t('pointsLabel')}</p>
             <p className="mt-1 font-display text-2xl font-extrabold text-brand-600">{gamePointsAwarded > 0 ? `+${gamePointsAwarded}` : score}</p>
-            {gamePointsIsPerfect && <p className="text-[11px] font-bold text-amber-600">⭐ Perfect</p>}
+            {gamePointsIsPerfect && <p className="text-[11px] font-bold text-amber-600">⭐ {t('perfect')}</p>}
           </div>
           <div className="rounded-xl bg-violet-50 p-3 shadow-sm ring-1 ring-violet-200">
             <p className="flex items-center justify-center gap-1 text-xs font-bold uppercase tracking-wide text-violet-700"><Sparkles size={12} /> XP</p>
@@ -93,7 +93,7 @@ export default function GameResults({ gradientClass = 'from-brand-50 to-sky-100'
               />
             </div>
             <p className="mt-1 text-center text-[11px] text-ink/50">
-              {xpProgress.is_max ? 'Max Level' : `${xpProgress.xp_remaining} XP to next level`}
+              {xpProgress.is_max ? t('maxLevel') : t('xpToNextLevel', { count: xpProgress.xp_remaining })}
             </p>
           </div>
         )}
@@ -101,8 +101,8 @@ export default function GameResults({ gradientClass = 'from-brand-50 to-sky-100'
         {/* Level-up — derived from authoritative state, idempotent via sessionStorage */}
         {showLevelUp && xpProgress && (
           <div className="mt-3 animate-[scaleIn_0.35s_ease-out_both] rounded-xl bg-gradient-to-br from-violet-600 to-brand-600 p-4 text-center text-white shadow-md">
-            <p className="text-xs font-bold uppercase tracking-widest text-white/80">Level Up</p>
-            <p className="mt-1 font-display text-xl font-extrabold">You reached Level {xpProgress.level}</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-white/80">{t('levelUp')}</p>
+            <p className="mt-1 font-display text-xl font-extrabold">{t('levelUpBody', { level: xpProgress.level })}</p>
             <p className="mt-1 text-xs text-white/80">✨ {xpProgress.total_xp} XP</p>
           </div>
         )}

@@ -4,6 +4,7 @@
 // Server-authoritative: caller passes values derived from backend, never
 // client-computed XP.
 
+import { useTranslation } from 'react-i18next';
 import { Trophy, Sparkles, Target, Award, Flame, PawPrint } from 'lucide-react';
 
 export default function RewardSummary({
@@ -17,6 +18,7 @@ export default function RewardSummary({
   streak = null,       // number | null
   leveledUp = null,    // number | null - new level if just leveled up
 }) {
+  const { t } = useTranslation(['dashboard', 'portal']);
   const hasAny = points != null || xp != null || mission || achievement || petXp != null || streak != null || leveledUp != null;
   if (!hasAny) return null;
 
@@ -24,7 +26,7 @@ export default function RewardSummary({
     <div className="overflow-hidden rounded-2xl border border-ink/[0.06] bg-white shadow-card">
       {/* Header */}
       <div className="bg-gradient-to-r from-brand-50 to-violet-50 px-4 py-3">
-        <p className="text-xs font-bold uppercase tracking-[0.12em] text-ink/40">Rewards Earned</p>
+        <p className="text-xs font-bold uppercase tracking-[0.12em] text-ink/40">{t('dashboard:rewardsEarned', { defaultValue: 'Rewards Earned' })}</p>
       </div>
 
       <div className="space-y-3 p-4">
@@ -34,7 +36,7 @@ export default function RewardSummary({
             {points != null && (
               <div className="rounded-xl bg-brand-50 p-3 ring-1 ring-brand-100">
                 <p className="flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-brand-700">
-                  <Trophy size={12} /> Points
+                  <Trophy size={12} /> {t('dashboard:rewardsPoints')}
                 </p>
                 <p className="mt-1 font-display text-xl font-extrabold text-brand-600">+{points}</p>
               </div>
@@ -42,7 +44,7 @@ export default function RewardSummary({
             {xp != null && (
               <div className="rounded-xl bg-violet-50 p-3 ring-1 ring-violet-200">
                 <p className="flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-violet-700">
-                  <Sparkles size={12} /> XP
+                  <Sparkles size={12} /> {t('dashboard:rewardsXp')}
                 </p>
                 <p className="mt-1 font-display text-xl font-extrabold text-violet-600">+{xp}</p>
                 {xpProgress && (
@@ -59,9 +61,9 @@ export default function RewardSummary({
         {leveledUp != null && (
           <div className="rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 p-3 ring-1 ring-amber-200 motion-safe:animate-[fadeIn_0.3s_ease-out]">
             <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-amber-700">
-              <Award size={14} /> Level Up!
+              <Award size={14} /> {t('dashboard:rewardsLevelUp')}
             </p>
-            <p className="mt-1 font-display text-lg font-bold text-amber-700">You reached Level {leveledUp}</p>
+            <p className="mt-1 font-display text-lg font-bold text-amber-700">{t('dashboard:rewardsLevelReached', { level: leveledUp })}</p>
           </div>
         )}
 
@@ -84,7 +86,7 @@ export default function RewardSummary({
               />
             </div>
             <p className="mt-1 text-center text-[11px] text-ink/50">
-              {xpProgress.is_max ? 'Max Level' : `${xpProgress.xp_remaining} XP to next level`}
+              {xpProgress.is_max ? t('dashboard:rewardsMaxLevel') : t('dashboard:rewardsXpToNext', { remaining: xpProgress.xp_remaining })}
             </p>
           </div>
         )}
@@ -97,7 +99,7 @@ export default function RewardSummary({
             </span>
             <div className="min-w-0 flex-1">
               <p className="text-xs font-bold uppercase tracking-wide text-ink/40">
-                {missionComplete ? 'Mission Complete' : 'Mission'}
+                {missionComplete ? t('dashboard:rewardsMissionComplete') : t('dashboard:rewardsMission')}
               </p>
               <p className="text-sm font-semibold text-ink">{mission.label}</p>
               {mission.target != null && (
@@ -125,7 +127,7 @@ export default function RewardSummary({
           <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5">
             <span className="text-xl">{achievement.icon || '🏆'}</span>
             <div>
-              <p className="text-xs font-bold uppercase tracking-wide text-amber-700">Achievement Unlocked</p>
+              <p className="text-xs font-bold uppercase tracking-wide text-amber-700">{t('dashboard:rewardsAchievementUnlocked')}</p>
               <p className="text-sm font-semibold text-ink">{achievement.name}</p>
             </div>
           </div>
@@ -135,7 +137,7 @@ export default function RewardSummary({
         {petXp != null && (
           <div className="flex items-center gap-2 rounded-xl bg-emerald-50 px-3 py-2.5 ring-1 ring-emerald-200">
             <PawPrint size={16} className="text-emerald-600" />
-            <span className="text-sm font-semibold text-emerald-700">+{petXp} Pet XP</span>
+            <span className="text-sm font-semibold text-emerald-700">{t('dashboard:rewardsPetXp', { xp: petXp })}</span>
           </div>
         )}
 
@@ -143,7 +145,7 @@ export default function RewardSummary({
         {streak != null && streak > 0 && (
           <div className="flex items-center gap-2 rounded-xl bg-orange-50 px-3 py-2.5 ring-1 ring-orange-200">
             <Flame size={16} className="text-orange-600" />
-            <span className="text-sm font-semibold text-orange-700">{streak}-day streak</span>
+            <span className="text-sm font-semibold text-orange-700">{t('dashboard:rewardsStreakDays', { count: streak })}</span>
           </div>
         )}
       </div>

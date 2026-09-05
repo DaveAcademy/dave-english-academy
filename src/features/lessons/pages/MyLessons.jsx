@@ -39,7 +39,7 @@ const STATUS_OPTIONS = [
 ];
 
 export default function MyLessons() {
-  const { t } = useTranslation(['lessons', 'common']);
+  const { t } = useTranslation(['lessons', 'common', 'portal']);
   const { students, lessons, curriculumProgress, lessonProgress, me } = useAcademy();
 
   // --- Search + filters -------------------------------------------------
@@ -189,7 +189,7 @@ export default function MyLessons() {
           className="group mb-5 flex items-center gap-4 rounded-2xl bg-gradient-to-r from-brand-600 to-brand-500 p-4 shadow-card transition-transform hover:scale-[1.01] sm:p-5"
         >
           <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-white/15 text-2xl" aria-hidden="true">
-            =ƒÜÇ
+            =ï¿½ï¿½ï¿½
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-xs font-bold uppercase tracking-wide text-white/70">{t('continueLearning')}</span>
@@ -206,7 +206,7 @@ export default function MyLessons() {
         </Link>
       ) : myLessons.length > 0 ? (
         <div className="mb-5 flex items-center gap-3 rounded-2xl border border-active/20 bg-active/5 p-4 shadow-card sm:p-5">
-          <span className="text-2xl" aria-hidden="true">=ƒÄë</span>
+          <span className="text-2xl" aria-hidden="true">=ï¿½ï¿½ï¿½</span>
           <div>
             <p className="font-display text-base font-bold text-ink">{t('allCaughtUp')}</p>
             <p className="text-xs text-ink/60">{t('allCaughtUpSub')}</p>

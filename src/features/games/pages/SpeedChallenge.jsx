@@ -183,7 +183,7 @@ export default function SpeedChallenge() {
             {result.game_points_awarded > 0 ? (
               <>
                 <p className="font-display text-5xl font-extrabold text-amber-500">+{result.game_points_awarded}</p>
-                <p className="mt-1 text-sm font-medium text-ink/60">Game Points</p>
+                <p className="mt-1 text-sm font-medium text-ink/60">{t('gamePoints')}</p>
               </>
             ) : (
               <p className="font-display text-5xl font-extrabold text-brand-600">{result.score}</p>

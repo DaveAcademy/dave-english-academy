@@ -43,7 +43,7 @@ function deriveJourney(status, hasSubmission, graded) {
 const JOURNEY_ORDER = ['notSubmitted', 'submitted', 'underReview', 'approved', 'needsCorrection', 'completed'];
 
 export default function MyHomework() {
-  const { t } = useTranslation(['homework', 'common']);
+  const { t } = useTranslation(['homework', 'common', 'portal']);
   const {
     students, homework, homeworkStatus, homeworkSubmissionFiles, lessons,
     submitMyHomeworkFiles, removeMyHomeworkSubmissionFile, loading,
@@ -185,13 +185,13 @@ export default function MyHomework() {
           <div className="min-w-0">
             <h1 className="font-display text-2xl font-bold tracking-tight text-ink">{t('myTitle')}</h1>
             <p className="mt-1 max-w-[60ch] text-sm leading-relaxed text-ink/55">{t('mySubtitle')}</p>
-            <p className="mt-1 text-[11px] font-medium uppercase tracking-wide text-ink/35">Points are awarded manually by your teacher — no auto-grading.</p>
+            <p className="mt-1 text-[11px] font-medium uppercase tracking-wide text-ink/35">{t('portal:mpHomeworkProgressHint')}</p>
           </div>
           {!loading && stats.total > 0 && (
             <div className="flex items-center gap-2 rounded-xl border border-ink/[0.06] bg-white px-3 py-2 shadow-card">
               <div className="hidden text-right sm:block">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-ink/40">Progress</p>
-                <p className="text-xs font-bold text-ink">{stats.graded}/{stats.total} graded</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-ink/40">{t('portal:mpHomeworkProgress')}</p>
+                <p className="text-xs font-bold text-ink">{t('portal:mpHomeworkGradedCount', { completed: stats.graded, total: stats.total })}</p>
               </div>
               <div className="h-10 w-10 rounded-full bg-ink/[0.06] p-1">
                 <div className="flex h-full w-full items-center justify-center rounded-full bg-white text-[11px] font-bold text-brand-600 ring-1 ring-ink/5">
@@ -215,18 +215,18 @@ export default function MyHomework() {
               <Sparkles className="text-brand-500" size={22} aria-hidden="true" />
             </div>
             <h2 className="mx-auto mt-4 max-w-[28ch] font-display text-xl font-bold leading-tight text-ink">
-              Your homework journey begins here
+              {t('portal:mpJourneyStart')}
             </h2>
             <p className="mx-auto mt-2 max-w-[42ch] text-sm leading-relaxed text-ink/55">
-              Every lesson unlocks a new assignment. Submit your work, get personal feedback from your teacher, and watch your progress grow — step by step.
+              {t('portal:mpJourneyHint')}
             </p>
             <div className="mx-auto mt-6 flex max-w-[36ch] items-center justify-center gap-2 rounded-full border border-brand-100 bg-brand-50 px-4 py-2">
               <BookOpen size={14} className="text-brand-600" />
-              <span className="text-xs font-semibold text-brand-700">No homework assigned for your level yet — check back after your next lesson.</span>
+              <span className="text-xs font-semibold text-brand-700">{t('portal:mpNoHomeworkAssigned')}</span>
             </div>
             <div className="mt-6 flex flex-wrap justify-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-ink px-3 py-1 text-xs font-semibold text-white"><FileText size={12} /> PDF lesson included</span>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-ink/10 bg-white px-3 py-1 text-xs font-semibold text-ink/60"><Award size={12} /> Manual teacher grading</span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-ink px-3 py-1 text-xs font-semibold text-white"><FileText size={12} /> {t('portal:mpPdfIncluded')}</span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-ink/10 bg-white px-3 py-1 text-xs font-semibold text-ink/60"><Award size={12} /> {t('portal:mpManualGrading')}</span>
             </div>
           </div>
           <div className="grid gap-0 border-t border-ink/5 bg-paper/60 sm:grid-cols-3">
@@ -248,10 +248,10 @@ export default function MyHomework() {
           {/* summary strip */}
           <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
             {[
-              { label: 'Total', value: stats.total, sub: 'assignments', tone: 'text-ink' },
-              { label: 'Submitted', value: stats.submitted, sub: 'with files', tone: 'text-active' },
-              { label: 'Graded', value: stats.graded, sub: 'with points', tone: 'text-brand-600' },
-              { label: 'To do', value: stats.notSubmitted, sub: 'not submitted', tone: 'text-ink/60' },
+              { label: t('portal:mpFilterTotal'), value: stats.total, sub: t('portal:mpAssignments'), tone: 'text-ink' },
+              { label: t('portal:mpFilterSubmitted'), value: stats.submitted, sub: t('portal:mpWithFiles'), tone: 'text-active' },
+              { label: t('portal:mpFilterGraded'), value: stats.graded, sub: t('portal:mpWithPoints'), tone: 'text-brand-600' },
+              { label: t('portal:mpFilterTodo'), value: stats.notSubmitted, sub: t('portal:mpNotSubmitted'), tone: 'text-ink/60' },
             ].map((k) => (
               <div key={k.label} className="rounded-xl border border-ink/[0.06] bg-white px-3 py-3 shadow-card">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-ink/35">{k.label}</p>
@@ -321,7 +321,7 @@ export default function MyHomework() {
                           </span>
                           {lesson ? (
                             <span className="inline-flex items-center gap-1 rounded-full bg-paper px-2 py-0.5 font-medium text-ink/60">
-                              <FileText size={11} /> L{lesson.curriculum_lessons?.lesson_number ?? '·'} · {lesson.topic}
+                              <FileText size={11} /> {t('portal:mpLessonShort', { number: lesson.curriculum_lessons?.lesson_number ?? '·', topic: lesson.topic })}
                             </span>
                           ) : h.lesson_id ? (
                             <span className="text-ink/30">{t('noLinkedLesson')}</span>
@@ -331,7 +331,7 @@ export default function MyHomework() {
 
                         {/* lesson PDF meta */}
                         {lesson?.pdf_path && (
-                          <p className="mt-1 text-xs text-ink/40">Lesson PDF: {lesson.topic} — open the lesson file for context.</p>
+                          <p className="mt-1 text-xs text-ink/40">{t('portal:mpLessonPdfHint', { topic: lesson.topic })}</p>
                         )}
                       </div>
                     </div>
@@ -347,9 +347,9 @@ export default function MyHomework() {
                     {/* status journey */}
                     <div className="mt-3 rounded-xl bg-ink/[0.02] px-3 py-2.5 ring-1 ring-ink/[0.04]">
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="text-[11px] font-bold uppercase tracking-wide text-ink/40">Status</p>
+                        <p className="text-[11px] font-bold uppercase tracking-wide text-ink/40">{t('portal:mpStatus')}</p>
                         <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${journey.tone === 'brand' ? 'bg-brand-50 text-brand-700 ring-1 ring-brand-100' : journey.tone === 'success' ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100' : journey.tone === 'danger' ? 'bg-red-50 text-red-600 ring-1 ring-red-100' : journey.tone === 'info' ? 'bg-sky-50 text-sky-700 ring-1 ring-sky-100' : 'bg-ink/5 text-ink/60'}`}>
-                          {journey.key === 'notSubmitted' ? 'Not submitted' : journey.key === 'submitted' ? 'Submitted' : journey.key === 'underReview' ? 'Under review' : journey.key === 'needsCorrection' ? 'Needs correction' : journey.key === 'approved' ? 'Approved' : 'Completed'}
+                          {journey.key === 'notSubmitted' ? t('portal:mpNotSubmitted') : journey.key === 'submitted' ? t('portal:mpFilterSubmitted') : journey.key === 'underReview' ? t('portal:mpJourneyReviewing') : journey.key === 'needsCorrection' ? t('portal:mpJourneyNeedsCorrection') : journey.key === 'approved' ? t('portal:mpJourneyGreatWork') : t('portal:mpJourneyCompleted')}
                         </span>
                       </div>
                       <div className="mt-2 flex items-center gap-1">
@@ -365,12 +365,12 @@ export default function MyHomework() {
                         })}
                       </div>
                       <p className="mt-1.5 text-xs leading-relaxed text-ink/50">
-                        {journey.key === 'notSubmitted' && 'Upload clear photos of your work to submit.'}
-                        {journey.key === 'submitted' && 'Your work was received — teacher will review soon.'}
-                        {journey.key === 'underReview' && 'Teacher is reviewing your submission.'}
-                        {journey.key === 'approved' && 'Great work — approved by your teacher.'}
-                        {journey.key === 'needsCorrection' && 'Teacher left feedback — please revise and resubmit.'}
-                        {journey.key === 'completed' && 'Completed with distinction — keep it up!'}
+                        {journey.key === 'notSubmitted' && t('portal:mpJourneyUpload')}
+                        {journey.key === 'submitted' && t('portal:mpJourneyReceived')}
+                        {journey.key === 'underReview' && t('portal:mpJourneyReviewing')}
+                        {journey.key === 'approved' && t('portal:mpJourneyGreatWork')}
+                        {journey.key === 'needsCorrection' && t('portal:mpJourneyNeedsCorrection')}
+                        {journey.key === 'completed' && t('portal:mpJourneyCompleted')}
                       </p>
                     </div>
 
@@ -378,20 +378,20 @@ export default function MyHomework() {
                     <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
                       <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-semibold ring-1 ${hasSubmission ? (isValidSubmission ? 'bg-emerald-50 text-emerald-700 ring-emerald-100' : 'bg-amber-50 text-amber-700 ring-amber-200') : 'bg-ink/5 text-ink/50 ring-ink/10'}`}>
                         {hasSubmission ? <CheckCircle2 size={12} /> : <AlertCircle size={12} />}
-                        {hasSubmission ? (submittedFiles.length > 0 ? `${submittedFiles.length} image${submittedFiles.length > 1 ? 's' : ''} submitted` : 'Submission on file') : 'No submission yet'}
-                        {isInvalidSubmission && ' — legacy file only'}
+                        {hasSubmission ? (submittedFiles.length > 0 ? t('portal:mpImagesSubmitted', { count: submittedFiles.length }) : t('portal:mpSubmissionOnFile')) : t('portal:mpNoSubmissionYet')}
+                        {isInvalidSubmission && t('portal:mpLegacyFileOnly')}
                       </span>
-                      {status.submitted_at && <span className="text-ink/40">Submitted {new Date(status.submitted_at).toLocaleDateString()}</span>}
-                      {hasSubmission && <span className="text-ink/30">· Valid submission</span>}
-                      {!hasSubmission && overdue && <span className="font-semibold text-inactive">· Deadline passed</span>}
+                      {status.submitted_at && <span className="text-ink/40">{t('portal:mpSubmittedOn', { date: new Date(status.submitted_at).toLocaleDateString() })}</span>}
+                      {hasSubmission && <span className="text-ink/30">{t('portal:mpValidSubmission')}</span>}
+                      {!hasSubmission && overdue && <span className="font-semibold text-inactive">{t('portal:mpDeadlinePassedInline')}</span>}
                     </div>
 
                     {/* teacher feedback */}
                     {graded && status.feedback && (
                       <div className="mt-3 rounded-xl border border-brand-100 bg-brand-50 px-3 py-3">
-                        <p className="text-[11px] font-bold uppercase tracking-wide text-brand-700/70">Teacher feedback</p>
+                        <p className="text-[11px] font-bold uppercase tracking-wide text-brand-700/70">{t('portal:teacherFeedbackLabel')}</p>
                         <p className="mt-1 text-sm leading-relaxed text-brand-800">{status.feedback}</p>
-                        <p className="mt-2 text-[11px] font-medium text-brand-600/70">Points were awarded manually by your teacher.</p>
+                        <p className="mt-2 text-[11px] font-medium text-brand-600/70">{t('portal:mpTeacherFeedbackHint')}</p>
                       </div>
                     )}
 

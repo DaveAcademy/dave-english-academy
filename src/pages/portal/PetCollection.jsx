@@ -11,26 +11,27 @@ import { useAcademy } from '../../lib/AcademyDataContext';
 import { getActivePetWithParts, claimPetPart, getPetCheckinStatus, getMyPetProgress, getOwlProgress, getPremiumCollection, setActivePet } from '../../lib/storageBridge';
 
 function PremiumGrid({ owl }) {
+  const { t } = useTranslation('game');
   const [data, setData] = React.useState(null);
   const [active, setActive] = React.useState(null);
   React.useEffect(() => { getPremiumCollection().then(setData).catch(()=>{}); }, []);
   if (!data?.pets) return null;
   return (
     <div className="mb-4 rounded-2xl border border-violet-100 bg-white p-4 shadow-sm">
-      <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-violet-700">Premium Pets</p>
+      <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-violet-700">{t('premiumPetsTitle')}</p>
       <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {data.pets.map((p) => (
           <button key={p.key} disabled={!p.unlocked} onClick={() => p.unlocked && setActivePet(p.key).then(()=>setActive(p.key)).catch(()=>{})}
             className={`rounded-2xl p-3 text-center transition-all ${p.unlocked ? 'bg-violet-50 ring-1 ring-violet-200 hover:shadow active:scale-95' : 'bg-ink/[0.03] ring-1 ring-ink/10 opacity-60'}`}>
             <div className="text-2xl">{p.icon}</div>
             <div className="mt-1 text-xs font-bold text-ink">{p.name}</div>
-            <div className={`mt-0.5 text-[10px] ${p.unlocked ? 'text-emerald-600 font-bold' : 'text-ink/40'}`}>{p.unlocked ? (active===p.key?'✓ Active':'✓ Unlocked') : `${p.threshold} Points`}</div>
-            {!p.unlocked && <div className="text-[10px] text-violet-600">{p.points_needed} to go</div>}
+            <div className={`mt-0.5 text-[10px] ${p.unlocked ? 'text-emerald-600 font-bold' : 'text-ink/40'}`}>{p.unlocked ? (active===p.key?t('premiumActive'):t('premiumUnlocked')) : t('premiumThreshold', { threshold: p.threshold })}</div>
+            {!p.unlocked && <div className="text-[10px] text-violet-600">{t('owlPointsToGo', { count: p.points_needed })}</div>}
             <div className={`mt-1 inline-block rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase ${p.rarity==='legendary'?'bg-amber-100 text-amber-700':p.rarity==='epic'?'bg-violet-100 text-violet-700':p.rarity==='rare'?'bg-sky-100 text-sky-700':'bg-ink/5 text-ink/50'}`}>{p.rarity}</div>
           </button>
         ))}
       </div>
-      <p className="mt-2 text-[11px] text-ink/50">Premium pets unlock automatically at Points thresholds. Tap an unlocked pet to set as active.</p>
+      <p className="mt-2 text-[11px] text-ink/50">{t('premiumPetsHint')}</p>
     </div>
   );
 }
@@ -45,6 +46,7 @@ function formatUnlockDate(dateStr) {
 
 /* --- Progress ring (premium collection meter) --- */
 function ProgressRing({ value, total, size = 56 }) {
+  const { t } = useTranslation('game');
   const pct = total > 0 ? Math.round((value / total) * 100) : 0;
   const r = 22;
   const c = 2 * Math.PI * r;
@@ -65,7 +67,7 @@ function ProgressRing({ value, total, size = 56 }) {
       <span className="absolute text-[11px] font-extrabold leading-none text-white tabular-nums">
         {value}/{total}
       </span>
-      <span className="sr-only">{pct}% collected</span>
+      <span className="sr-only">{t('collectionSrOnly', { pct })}</span>
     </div>
   );
 }
@@ -256,9 +258,9 @@ export default function PetCollection() {
         <div className="mb-4 overflow-hidden rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white p-4 shadow-sm sm:p-5">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-amber-700">Owl Collection</p>
-              <p className="mt-0.5 font-display text-lg font-bold text-ink">{owl.points} / 500 Points</p>
-              <p className="text-xs text-ink/60">{owl.complete ? 'Owl Complete ✓' : `${owl.remaining} Points to complete your Owl`}</p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-amber-700">{t('owlCollectionTitle')}</p>
+              <p className="mt-0.5 font-display text-lg font-bold text-ink">{t('owlProgress', { points: owl.points })}</p>
+              <p className="text-xs text-ink/60">{owl.complete ? t('owlComplete') : t('owlPointsToComplete', { remaining: owl.remaining })}</p>
             </div>
             <span className={`flex h-10 w-10 items-center justify-center rounded-xl text-lg ${owl.complete ? 'bg-amber-500 text-white' : 'bg-white ring-1 ring-amber-200'}`}>🦉</span>
           </div>
@@ -270,8 +272,8 @@ export default function PetCollection() {
               <div key={p.milestone} className={`rounded-xl p-2 text-center text-xs ${p.unlocked ? 'bg-amber-500 text-white' : 'bg-white ring-1 ring-ink/10 text-ink/40'}`}>
                 <div className="text-base">{p.icon}</div>
                 <div className="mt-1 font-bold leading-none">{p.name}</div>
-                <div className="mt-0.5 text-[10px]">{p.unlocked ? '✓ Collected' : `Earn ${p.milestone} Points`}</div>
-                {!p.unlocked && p.points_needed > 0 && p.points_needed <= 100 && <div className="text-[10px] font-semibold text-amber-700">{p.points_needed} to go</div>}
+                <div className="mt-0.5 text-[10px]">{p.unlocked ? t('owlCollectedShort') : t('owlEarnPoints', { milestone: p.milestone })}</div>
+                {!p.unlocked && p.points_needed > 0 && p.points_needed <= 100 && <div className="text-[10px] font-semibold text-amber-700">{t('owlPointsToGo', { count: p.points_needed })}</div>}
               </div>
             ))}
           </div>
@@ -296,10 +298,10 @@ export default function PetCollection() {
           </span>
           <div className="min-w-0 flex-1">
             <p className="text-xs font-bold uppercase tracking-wide text-emerald-700">
-              Stage {petProgress.stage} · {petProgress.stage_name}
+              {t('petStageLabel', { stage: petProgress.stage, name: petProgress.stage_name })}
             </p>
             <p className="text-xs text-ink/60">
-              {petProgress.is_max ? 'Max stage — Guardian!' : `${petProgress.total_pet_xp} Pet XP · ${petProgress.xp_remaining} to next stage`}
+              {petProgress.is_max ? t('petMaxStage') : t('petXpProgress', { xp: petProgress.total_pet_xp, remaining: petProgress.xp_remaining })}
             </p>
             <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-emerald-100">
               <div
@@ -350,7 +352,7 @@ export default function PetCollection() {
                   aria-valuenow={collected_count}
                   aria-valuemin={0}
                   aria-valuemax={total_required}
-                  aria-label={`${collected_count} of ${total_required} parts`}
+                  aria-label={t('petProgressAria', { collected: collected_count, total: total_required })}
                 />
               </div>
               <span className="shrink-0 text-xs font-bold tabular-nums text-white/90">
@@ -365,8 +367,8 @@ export default function PetCollection() {
         </div>
         {/* mobile ring row */}
         <div className="mt-3 flex items-center gap-2 sm:hidden">
-          <span className="text-[11px] font-semibold tracking-wide text-white/60">COLLECTION</span>
-          <span className="ml-auto text-xs font-bold tabular-nums text-white">{progressPct}% complete</span>
+          <span className="text-[11px] font-semibold tracking-wide text-white/60">{t('collectionLabel')}</span>
+          <span className="ml-auto text-xs font-bold tabular-nums text-white">{t('collectionComplete', { pct: progressPct })}</span>
         </div>
       </header>
 
@@ -378,7 +380,7 @@ export default function PetCollection() {
           <button
             type="button"
             onClick={() => setError(null)}
-            aria-label="Dismiss"
+            aria-label={t('dismiss')}
             className="shrink-0 rounded-full p-1 text-red-400 hover:bg-red-100 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
           >
             <X size={14} />
@@ -398,7 +400,7 @@ export default function PetCollection() {
                 {t('petDailyCheckin')}
                 {canClaim && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-extrabold tracking-wide text-brand-700 ring-1 ring-brand-100">
-                    <Sparkles size={10} /> READY
+                    <Sparkles size={10} /> {t('readyBadge')}
                   </span>
                 )}
               </p>
@@ -462,7 +464,7 @@ export default function PetCollection() {
                 </p>
                 <p className="mt-0.5 text-xs leading-snug text-brand-600/70">{claimedPart.description}</p>
                 <p className="mt-2 text-[11px] font-semibold tracking-wide text-brand-600/60">
-                  {collected_count}/{total_required} collected
+                  {t('petCollectedCount', { collected: collected_count, total: total_required })}
                 </p>
               </div>
             </div>

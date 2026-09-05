@@ -39,6 +39,7 @@
   "removeImage": "Rasmni o'chirish",
   "selectImages": "{{max}} tagacha rasm tanlang",
   "maxImagesReached": "Siz {{max}} tagacha rasm biriktira olasiz",
+  "uploadImagesCount_one": "{{count}} ta rasmni yuklash",
   "uploadImagesCount_other": "{{count}} ta rasmni yuklash",
   "scorePlaceholder": "Ball /100",
   "feedbackPlaceholder": "Bu o'quvchi uchun fikr-mulohaza (ixtiyoriy)",

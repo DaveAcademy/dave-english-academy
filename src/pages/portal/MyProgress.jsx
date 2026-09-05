@@ -35,32 +35,32 @@ const HOMEWORK_TONE = { Assigned: 'watch', Submitted: 'info', Graded: 'good' };
 
 // ── helpers ──────────────────────────────────────────────────────────────
 function gameTierForPoints(points) {
-  if (points >= 1000) return { key: 'Diamond', color: 'text-[#6B6BEC] bg-[#6B6BEC]/10 border-[#6B6BEC]/20' };
-  if (points >= 600) return { key: 'Gold', color: 'text-amber-700 bg-amber-500/10 border-amber-500/20' };
-  if (points >= 300) return { key: 'Silver', color: 'text-ink/70 bg-ink/[0.06] border-ink/10' };
-  if (points >= 100) return { key: 'Bronze', color: 'text-amber-700 bg-amber-600/10 border-amber-600/15' };
-  return { key: 'Starter', color: 'text-ink/60 bg-ink/[0.04] border-ink/[0.06]' };
+  if (points >= 1000) return { key: 'mpTierDiamond', color: 'text-[#6B6BEC] bg-[#6B6BEC]/10 border-[#6B6BEC]/20' };
+  if (points >= 600) return { key: 'mpTierGold', color: 'text-amber-700 bg-amber-500/10 border-amber-500/20' };
+  if (points >= 300) return { key: 'mpTierSilver', color: 'text-ink/70 bg-ink/[0.06] border-ink/10' };
+  if (points >= 100) return { key: 'mpTierBronze', color: 'text-amber-700 bg-amber-600/10 border-amber-600/15' };
+  return { key: 'mpTierStarter', color: 'text-ink/60 bg-ink/[0.04] border-ink/[0.06]' };
 }
 
 const GAME_META = [
-  { key: 'picture_quiz', label: 'Picture Quiz', icon: '🖼️', to: '/picture-quiz' },
-  { key: 'vocabulary_quiz', label: 'Vocabulary Quiz', icon: '🧠', to: '/vocabulary-quiz' },
-  { key: 'word_match', label: 'Word Match', icon: '🧩', to: '/word-match' },
-  { key: 'hangman', label: 'Hangman', icon: '🪢', to: '/hangman' },
-  { key: 'word_builder', label: 'Word Builder', icon: '🧱', to: '/word-builder' },
-  { key: 'word_scramble', label: 'Word Scramble', icon: '🔤', to: '/word-scramble' },
-  { key: 'speed_challenge', label: 'Speed Challenge', icon: '⚡', to: '/speed-challenge' },
-  { key: 'sentence_scramble', label: 'Sentence Scramble', icon: '📝', to: '/sentence-scramble' },
-  { key: 'word_detective', label: 'Word Detective', icon: '🔍', to: '/word-detective' },
-  { key: 'grammar_battle', label: 'Grammar Battle', icon: '⚔️', to: '/grammar-battle' },
+  { key: 'picture_quiz', i18nKey: 'game:pictureQuizTitle', icon: '🖼️', to: '/picture-quiz' },
+  { key: 'vocabulary_quiz', i18nKey: 'game:vocabularyQuizTitle', icon: '🧠', to: '/vocabulary-quiz' },
+  { key: 'word_match', i18nKey: 'game:wordMatchTitle', icon: '🧩', to: '/word-match' },
+  { key: 'hangman', i18nKey: 'game:hangmanTitle', icon: '🪢', to: '/hangman' },
+  { key: 'word_builder', i18nKey: 'game:wordBuilderTitle', icon: '🧱', to: '/word-builder' },
+  { key: 'word_scramble', i18nKey: 'game:wordScrambleTitle', icon: '🔤', to: '/word-scramble' },
+  { key: 'speed_challenge', i18nKey: 'game:speedChallengeTitle', icon: '⚡', to: '/speed-challenge' },
+  { key: 'sentence_scramble', i18nKey: 'game:sentenceScrambleTitle', icon: '📝', to: '/sentence-scramble' },
+  { key: 'word_detective', i18nKey: 'game:wordDetectiveTitle', icon: '🔍', to: '/word-detective' },
+  { key: 'grammar_battle', i18nKey: 'game:grammarBattleTitle', icon: '⚔️', to: '/grammar-battle' },
 ];
 
 function tierForAccuracy(pct) {
   if (pct == null) return null;
-  if (pct >= 90) return { label: 'Excellent', cls: 'text-active bg-active/10 border-active/15' };
-  if (pct >= 70) return { label: 'Solid', cls: 'text-brand-600 bg-brand-50 border-brand-100' };
-  if (pct >= 50) return { label: 'Growing', cls: 'text-levelB bg-levelB/10 border-levelB/15' };
-  return { label: 'Needs practice', cls: 'text-inactive bg-inactive/10 border-inactive/15' };
+  if (pct >= 90) return { labelKey: 'mpAccuracyExcellent', cls: 'text-active bg-active/10 border-active/15' };
+  if (pct >= 70) return { labelKey: 'mpAccuracySolid', cls: 'text-brand-600 bg-brand-50 border-brand-100' };
+  if (pct >= 50) return { labelKey: 'mpAccuracyGrowing', cls: 'text-levelB bg-levelB/10 border-levelB/15' };
+  return { labelKey: 'mpAccuracyNeedsPractice', cls: 'text-inactive bg-inactive/10 border-inactive/15' };
 }
 
 export default function MyProgress() {
@@ -380,9 +380,9 @@ export default function MyProgress() {
                 {me.real_name}
               </h1>
               <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs font-medium text-ink/60">
-                <span className="inline-flex items-center gap-1 rounded-full border border-ink/[0.08] bg-paper px-2 py-0.5 text-[11px] font-bold text-ink"><GraduationCap size={11} aria-hidden="true" /> Level {academyLevel}</span>
-                <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-bold ${tierInfo.color}`}><Layers size={11} aria-hidden="true" /> {tierInfo.key}</span>
-                <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-amber-700"><Trophy size={11} aria-hidden="true" /> {totalPoints} pts</span>
+                <span className="inline-flex items-center gap-1 rounded-full border border-ink/[0.08] bg-paper px-2 py-0.5 text-[11px] font-bold text-ink"><GraduationCap size={11} aria-hidden="true" /> {t('portal:mpLevelLabel', { level: academyLevel })}</span>
+                <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-bold ${tierInfo.color}`}><Layers size={11} aria-hidden="true" /> {t(`portal:${tierInfo.key}`)}</span>
+                <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-amber-700"><Trophy size={11} aria-hidden="true" /> {totalPoints} {t('portal:mpPointsSuffix')}</span>
               </p>
             </div>
             <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border border-ink/[0.06] bg-paper text-sm font-bold tracking-wide text-ink sm:h-12 sm:w-12 sm:text-base" aria-hidden="true">{initials}</div>
@@ -391,15 +391,15 @@ export default function MyProgress() {
           {/* hero KPI grid — 2 col on mobile, 3 on desktop */}
           <div className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
             <div className="rounded-2xl border border-ink/[0.06] bg-paper px-3.5 py-3.5">
-              <p className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-ink/40"><Target size={11} aria-hidden="true" /> Lessons</p>
+              <p className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-ink/40"><Target size={11} aria-hidden="true" /> {t('portal:mpLessons')}</p>
               <p className="mt-1 font-display text-xl font-bold leading-none text-ink">{lessonBlock ? `${lessonBlock.completed}/${lessonBlock.total}` : '—'}</p>
               <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-ink/[0.06]">
                 <div className="h-full rounded-full bg-brand-500 transition-all duration-700" style={{ width: `${lessonPct}%` }} />
               </div>
-              <p className="mt-1.5 text-[11px] font-semibold text-ink/45">{lessonPct}% complete{lessonBlock?.inProgress ? ` · ${lessonBlock.inProgress} in progress` : ''}</p>
+              <p className="mt-1.5 text-[11px] font-semibold text-ink/45">{t('portal:mpPercentComplete', { percent: lessonPct })}{lessonBlock?.inProgress ? ` · ${t('portal:mpInProgress', { count: lessonBlock.inProgress })}` : ''}</p>
             </div>
             <div className="rounded-2xl border border-ink/[0.06] bg-paper px-3.5 py-3.5">
-              <p className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-ink/40"><Languages size={11} aria-hidden="true" /> Vocabulary</p>
+              <p className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-ink/40"><Languages size={11} aria-hidden="true" /> {t('portal:mpVocabulary')}</p>
               {vocabLoading ? (
                 <div className="mt-1 h-6 w-20 animate-pulse rounded bg-ink/5" />
               ) : (
@@ -408,21 +408,21 @@ export default function MyProgress() {
               <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-ink/[0.06]">
                 <div className="h-full rounded-full bg-active transition-all duration-700" style={{ width: `${vocabMasteryPct}%` }} />
               </div>
-              <p className="mt-1.5 text-[11px] font-semibold text-ink/45">{vocabMasteryPct}% mastered</p>
+              <p className="mt-1.5 text-[11px] font-semibold text-ink/45">{t('portal:mpPercentMastered', { percent: vocabMasteryPct })}</p>
             </div>
             <div className="col-span-2 flex gap-2.5 sm:col-span-1 sm:flex-col">
               <div className="flex flex-1 items-center gap-2.5 rounded-2xl border border-ink/[0.06] bg-white px-3.5 py-3 shadow-sm sm:py-3.5">
                 <span className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl ${lessonStreakVal > 0 ? 'bg-active/10 text-active' : 'bg-ink/[0.06] text-ink/30'}`}><Flame size={16} aria-hidden="true" /></span>
                 <div className="min-w-0">
-                  <p className="text-[11px] font-bold uppercase tracking-wide text-ink/40">Streak</p>
-                  <p className="font-display text-sm font-bold text-ink">{lessonStreakVal} {lessonStreakVal === 1 ? 'day' : 'days'}</p>
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-ink/40">{t('portal:mpStreakTitle')}</p>
+                  <p className="font-display text-sm font-bold text-ink">{lessonStreakVal === 1 ? t('portal:mpDay', { count: lessonStreakVal }) : t('portal:mpDays', { count: lessonStreakVal })}</p>
                 </div>
               </div>
               <div className="flex flex-1 items-center gap-2.5 rounded-2xl border border-ink/[0.06] bg-white px-3.5 py-3 shadow-sm sm:py-3.5">
                 <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600"><BookMarked size={16} aria-hidden="true" /></span>
                 <div className="min-w-0">
-                  <p className="text-[11px] font-bold uppercase tracking-wide text-ink/40">Next up</p>
-                  <p className="truncate font-display text-sm font-bold text-ink">{nextLesson ? `#${nextLesson.curriculum_lessons?.lesson_number ?? '—'}` : 'All done ✨'}</p>
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-ink/40">{t('portal:mpNextUp')}</p>
+                  <p className="truncate font-display text-sm font-bold text-ink">{nextLesson ? `#${nextLesson.curriculum_lessons?.lesson_number ?? '—'}` : t('portal:mpAllDone')}</p>
                 </div>
               </div>
             </div>
@@ -430,11 +430,11 @@ export default function MyProgress() {
 
           {/* compact attendance strip (not dominating) */}
           <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl border border-ink/[0.06] bg-white px-3 py-2.5 text-xs shadow-sm">
-            <span className="inline-flex items-center gap-1.5 font-semibold text-ink"><CalendarCheck size={13} className="text-ink/40" aria-hidden="true" /> Attendance {attendancePct == null ? '—' : `${attendancePct}%`} · {attendedCount}/{attendanceRows.length} classes</span>
+            <span className="inline-flex items-center gap-1.5 font-semibold text-ink"><CalendarCheck size={13} className="text-ink/40" aria-hidden="true" /> {attendancePct == null ? '—' : t('portal:mpAttendanceStrip', { rate: attendancePct, present: attendedCount, total: attendanceRows.length })}</span>
             <span className="hidden text-ink/15 sm:inline">·</span>
-            <span className="text-ink/45">{streakAttendance > 0 ? `🔥 ${streakAttendance}-class streak` : 'Keep attending to build a streak'}</span>
+            <span className="text-ink/45">{streakAttendance > 0 ? t('portal:mpStreakAttendance', { count: streakAttendance }) : t('portal:mpKeepAttending')}</span>
             {nextLesson && (
-              <Link to={`/my-lessons/${nextLesson.id}`} className="ml-auto inline-flex items-center gap-1 rounded-full bg-ink px-3 py-1 text-xs font-semibold text-white hover:bg-ink/90">Open lesson <ArrowRight size={12} aria-hidden="true" /></Link>
+              <Link to={`/my-lessons/${nextLesson.id}`} className="ml-auto inline-flex items-center gap-1 rounded-full bg-ink px-3 py-1 text-xs font-semibold text-white hover:bg-ink/90">{t('portal:mpOpenLesson')} <ArrowRight size={12} aria-hidden="true" /></Link>
             )}
           </div>
         </div>
@@ -442,16 +442,16 @@ export default function MyProgress() {
 
       {/* ── VOCABULARY journey ───────────────────────────────────────── */}
       <div className="mp-stagger mt-6" style={{ animationDelay: '60ms' }}>
-        <SectionLabel>Vocabulary mastery</SectionLabel>
+        <SectionLabel>{t('portal:mpVocabMasteryTitle')}</SectionLabel>
         <div className="overflow-hidden rounded-2xl border border-ink/[0.06] bg-white shadow-card">
           {vocabLoading ? (
             <div className="p-5"><SkeletonList count={2} lines={2} /></div>
           ) : !vocabJourney || vocabJourney.total === 0 ? (
             <div className="px-5 py-10 text-center">
               <Languages className="mx-auto mb-2 text-ink/15" size={28} aria-hidden="true" />
-              <p className="text-sm font-semibold text-ink">No vocabulary words yet</p>
-              <p className="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-ink/50">Complete lessons to unlock words. Your translation → typing → sentence → retention → mastered journey will appear here.</p>
-              {nextLesson && <Link to={`/my-lessons/${nextLesson.id}`} className="mt-3 inline-flex rounded-full bg-brand-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-brand-700">Go to lessons</Link>}
+              <p className="text-sm font-semibold text-ink">{t('portal:mpNoVocabYet')}</p>
+              <p className="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-ink/50">{t('portal:mpNoVocabHint')}</p>
+              {nextLesson && <Link to={`/my-lessons/${nextLesson.id}`} className="mt-3 inline-flex rounded-full bg-brand-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-brand-700">{t('portal:mpGoToLessons')}</Link>}
             </div>
           ) : (
             <>
@@ -459,15 +459,15 @@ export default function MyProgress() {
               <div className="grid grid-cols-3 divide-x divide-ink/[0.06] border-b border-ink/[0.06] bg-paper/50">
                 <div className="px-4 py-4 text-center">
                   <p className="font-display text-2xl font-bold leading-none text-ink">{vocabJourney.total}</p>
-                  <p className="mt-1 text-[11px] font-bold uppercase tracking-wide text-ink/40">Total words</p>
+                  <p className="mt-1 text-[11px] font-bold uppercase tracking-wide text-ink/40">{t('portal:mpTotalWords')}</p>
                 </div>
                 <div className="px-4 py-4 text-center">
                   <p className="font-display text-2xl font-bold leading-none text-active">{vocabJourney.mastered}</p>
-                  <p className="mt-1 text-[11px] font-bold uppercase tracking-wide text-ink/40">Mastered</p>
+                  <p className="mt-1 text-[11px] font-bold uppercase tracking-wide text-ink/40">{t('portal:mpMastered')}</p>
                 </div>
                 <div className="px-4 py-4 text-center">
                   <p className="font-display text-2xl font-bold leading-none text-levelB">{Math.max(0, vocabJourney.learning)}</p>
-                  <p className="mt-1 text-[11px] font-bold uppercase tracking-wide text-ink/40">Still learning</p>
+                  <p className="mt-1 text-[11px] font-bold uppercase tracking-wide text-ink/40">{t('portal:mpStillLearning')}</p>
                 </div>
               </div>
 
@@ -475,11 +475,11 @@ export default function MyProgress() {
               <div className="px-4 py-5 sm:px-5">
                 <div className="flex items-center justify-between gap-1">
                   {[
-                    { key: 'Translation', count: vocabJourney.translation, icon: Languages, color: 'bg-sky-500' },
-                    { key: 'Typing', count: vocabJourney.typing, icon: PenLine, color: 'bg-violet-500' },
-                    { key: 'Sentence', count: vocabJourney.sentence, icon: MessagesSquare, color: 'bg-brand-500' },
-                    { key: 'Retention', count: vocabJourney.retention, icon: Timer, color: 'bg-amber-500' },
-                    { key: 'Mastered', count: vocabJourney.mastered, icon: Crown, color: 'bg-active' },
+                    { key: 'mpStageTranslation', count: vocabJourney.translation, icon: Languages, color: 'bg-sky-500' },
+                    { key: 'mpStageTyping', count: vocabJourney.typing, icon: PenLine, color: 'bg-violet-500' },
+                    { key: 'mpStageSentence', count: vocabJourney.sentence, icon: MessagesSquare, color: 'bg-brand-500' },
+                    { key: 'mpStageRetention', count: vocabJourney.retention, icon: Timer, color: 'bg-amber-500' },
+                    { key: 'mpStageMastered', count: vocabJourney.mastered, icon: Crown, color: 'bg-active' },
                   ].map((stage, i) => {
                     const pct = vocabJourney.total > 0 ? Math.round((stage.count / vocabJourney.total) * 100) : 0;
                     return (
@@ -490,7 +490,7 @@ export default function MyProgress() {
                           </div>
                           {i < 4 && <div className="absolute left-[36px] top-1/2 hidden h-0.5 w-6 -translate-y-1/2 bg-ink/[0.08] sm:block lg:w-10" aria-hidden="true" />}
                         </div>
-                        <p className="mt-1.5 text-center text-[11px] font-bold leading-none text-ink sm:text-xs">{stage.key}</p>
+                        <p className="mt-1.5 text-center text-[11px] font-bold leading-none text-ink sm:text-xs">{t(`portal:${stage.key}`)}</p>
                         <p className="text-[11px] font-semibold text-ink/45">{stage.count} · {pct}%</p>
                       </div>
                     );
@@ -498,20 +498,20 @@ export default function MyProgress() {
                 </div>
                 {/* stacked progress bar */}
                 <div className="mt-4 flex h-2 overflow-hidden rounded-full bg-ink/[0.06]">
-                  <div className="bg-sky-500 transition-all" style={{ width: `${vocabJourney.total ? (vocabJourney.translation / vocabJourney.total) * 100 : 0}%` }} title={`Translation ${vocabJourney.translation}`} />
-                  <div className="bg-violet-500 transition-all" style={{ width: `${vocabJourney.total ? ((vocabJourney.typing) / vocabJourney.total) * 100 : 0}%` }} title={`Typing ${vocabJourney.typing}`} />
-                  <div className="bg-brand-500 transition-all" style={{ width: `${vocabJourney.total ? ((vocabJourney.sentence) / vocabJourney.total) * 100 : 0}%` }} title={`Sentence ${vocabJourney.sentence}`} />
-                  <div className="bg-amber-500 transition-all" style={{ width: `${vocabJourney.total ? ((vocabJourney.retention) / vocabJourney.total) * 100 : 0}%` }} title={`Retention ${vocabJourney.retention}`} />
-                  <div className="bg-active transition-all" style={{ width: `${vocabJourney.masteryPct}%` }} title={`Mastered ${vocabJourney.mastered}`} />
+                  <div className="bg-sky-500 transition-all" style={{ width: `${vocabJourney.total ? (vocabJourney.translation / vocabJourney.total) * 100 : 0}%` }} title={`${t('portal:mpStageTranslation')} ${vocabJourney.translation}`} />
+                  <div className="bg-violet-500 transition-all" style={{ width: `${vocabJourney.total ? ((vocabJourney.typing) / vocabJourney.total) * 100 : 0}%` }} title={`${t('portal:mpStageTyping')} ${vocabJourney.typing}`} />
+                  <div className="bg-brand-500 transition-all" style={{ width: `${vocabJourney.total ? ((vocabJourney.sentence) / vocabJourney.total) * 100 : 0}%` }} title={`${t('portal:mpStageSentence')} ${vocabJourney.sentence}`} />
+                  <div className="bg-amber-500 transition-all" style={{ width: `${vocabJourney.total ? ((vocabJourney.retention) / vocabJourney.total) * 100 : 0}%` }} title={`${t('portal:mpStageRetention')} ${vocabJourney.retention}`} />
+                  <div className="bg-active transition-all" style={{ width: `${vocabJourney.masteryPct}%` }} title={`${t('portal:mpStageMastered')} ${vocabJourney.mastered}`} />
                 </div>
                 <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs">
                   <span className="font-semibold text-ink/50">
-                    {vocabJourney.needPractice > 0 ? `${vocabJourney.needPractice} words need practice` : 'All words mastered — amazing!'}
+                    {vocabJourney.needPractice > 0 ? t('portal:mpWordsNeedPractice', { count: vocabJourney.needPractice }) : t('portal:mpAllMastered')}
                   </span>
-                  <span className="rounded-full bg-ink/5 px-2.5 py-1 text-[11px] font-bold text-ink/60">{vocabMasteryPct}% mastery</span>
+                  <span className="rounded-full bg-ink/5 px-2.5 py-1 text-[11px] font-bold text-ink/60">{t('portal:mpMasteryPercent', { percent: vocabMasteryPct })}</span>
                 </div>
                 {!vocabJourney.rowsExist && vocabJourney.total > 0 && (
-                  <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-700">Dictionary SRS breakdown isn&apos;t available for this account yet — counts above are estimated from completed lessons.</p>
+                  <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-700">{t('portal:mpSrsFallback')}</p>
                 )}
               </div>
             </>
@@ -522,8 +522,8 @@ export default function MyProgress() {
       {/* ── GAME PERFORMANCE (all 10) ────────────────────────────────── */}
       <div className="mp-stagger mt-6" style={{ animationDelay: '120ms' }}>
         <div className="mb-2 flex items-center justify-between gap-2">
-          <h2 className="text-xs font-bold uppercase tracking-wide text-ink/40">Game performance</h2>
-          <Link to="/games" className="text-xs font-semibold text-brand-600 hover:underline">Open Practice →</Link>
+          <h2 className="text-xs font-bold uppercase tracking-wide text-ink/40">{t('portal:mpGamePerformanceTitle')}</h2>
+          <Link to="/games" className="text-xs font-semibold text-brand-600 hover:underline">{t('portal:mpOpenPractice')}</Link>
         </div>
 
         {gameStatsLoading ? (
@@ -531,9 +531,9 @@ export default function MyProgress() {
         ) : !gameStats || gameStats.totalPlayed === 0 ? (
           <div className="rounded-2xl border border-ink/[0.06] bg-white px-5 py-10 text-center shadow-card">
             <Gamepad2 className="mx-auto mb-2 text-ink/15" size={28} aria-hidden="true" />
-            <p className="text-sm font-semibold text-ink">No games played yet</p>
-            <p className="mx-auto mt-1 max-w-sm text-xs text-ink/50">Play any game to see accuracy, points, level and your strengths here. Each game has its own level — keep playing to climb.</p>
-            <Link to="/games" className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-ink px-4 py-1.5 text-xs font-bold text-white hover:bg-ink/90"><Gamepad2 size={12} aria-hidden="true" /> Start playing</Link>
+            <p className="text-sm font-semibold text-ink">{t('portal:mpNoGamesYet')}</p>
+            <p className="mx-auto mt-1 max-w-sm text-xs text-ink/50">{t('portal:mpNoGamesHint')}</p>
+            <Link to="/games" className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-ink px-4 py-1.5 text-xs font-bold text-white hover:bg-ink/90"><Gamepad2 size={12} aria-hidden="true" /> {t('portal:mpStartPlaying')}</Link>
           </div>
         ) : (
           <>
@@ -541,15 +541,15 @@ export default function MyProgress() {
             <div className="mb-3 grid grid-cols-3 gap-2.5">
               <div className="rounded-xl border border-ink/[0.06] bg-white px-3 py-3 text-center shadow-card">
                 <p className="font-display text-lg font-bold leading-none text-ink">{gameStats.totalPlayed}</p>
-                <p className="mt-1 text-[11px] font-bold uppercase tracking-wide text-ink/40">Rounds played</p>
+                <p className="mt-1 text-[11px] font-bold uppercase tracking-wide text-ink/40">{t('portal:mpRoundsPlayed')}</p>
               </div>
               <div className="rounded-xl border border-ink/[0.06] bg-white px-3 py-3 text-center shadow-card">
                 <p className="font-display text-lg font-bold leading-none text-ink">{gameStats.avgAccuracy == null ? '—' : `${gameStats.avgAccuracy}%`}</p>
-                <p className="mt-1 text-[11px] font-bold uppercase tracking-wide text-ink/40">Avg accuracy</p>
+                <p className="mt-1 text-[11px] font-bold uppercase tracking-wide text-ink/40">{t('portal:mpAvgAccuracy')}</p>
               </div>
               <div className="rounded-xl border border-ink/[0.06] bg-white px-3 py-3 text-center shadow-card">
                 <p className="font-display text-lg font-bold leading-none text-ink">{gameStats.totalPointsAll}</p>
-                <p className="mt-1 text-[11px] font-bold uppercase tracking-wide text-ink/40">Game points</p>
+                <p className="mt-1 text-[11px] font-bold uppercase tracking-wide text-ink/40">{t('portal:mpGamePoints')}</p>
               </div>
             </div>
 
@@ -565,23 +565,23 @@ export default function MyProgress() {
                   >
                     <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-paper text-lg" aria-hidden="true">{g.icon}</span>
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-bold leading-none text-ink">{g.label}</span>
+                      <span className="block truncate text-sm font-bold leading-none text-ink">{g.icon} {t(g.i18nKey)}</span>
                       <span className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px]">
                         {s.played === 0 ? (
-                          <span className="font-medium text-ink/40">Not yet played</span>
+                          <span className="font-medium text-ink/40">{t('portal:mpNotYetPlayed')}</span>
                         ) : (
                           <>
-                            <span className="font-semibold text-ink/60">{s.played} plays</span>
+                            <span className="font-semibold text-ink/60">{t('portal:mpPlays', { count: s.played })}</span>
                             <span className="text-ink/20">·</span>
                             <span className="font-bold text-ink">{s.accuracy == null ? '—' : `${s.accuracy}%`}</span>
-                            {s.currentLevel != null && <span className="rounded-full bg-ink px-1.5 py-0.5 text-[10px] font-bold text-white">Lv {s.currentLevel}</span>}
+                            {s.currentLevel != null && <span className="rounded-full bg-ink px-1.5 py-0.5 text-[10px] font-bold text-white">{t('portal:mpLevelShort', { level: s.currentLevel })}</span>}
                           </>
                         )}
                       </span>
                     </span>
                     <span className="flex flex-col items-end gap-1">
-                      {s.played > 0 && s.tier && <span className={`rounded-full border px-1.5 py-0.5 text-[10px] font-bold ${s.tier.cls}`}>{s.tier.label}</span>}
-                      {s.played > 0 && <span className="flex items-center gap-0.5 text-[11px] font-bold text-ink/50"><Star size={10} className="text-amber-400" aria-hidden="true" />{s.bestScore ?? 0} best</span>}
+                      {s.played > 0 && s.tier && <span className={`rounded-full border px-1.5 py-0.5 text-[10px] font-bold ${s.tier.cls}`}>{t(`portal:${s.tier.labelKey}`)}</span>}
+                      {s.played > 0 && <span className="flex items-center gap-0.5 text-[11px] font-bold text-ink/50"><Star size={10} className="text-amber-400" aria-hidden="true" />{t('portal:mpBestScore', { score: s.bestScore ?? 0 })}</span>}
                     </span>
                   </Link>
                 );
@@ -593,24 +593,24 @@ export default function MyProgress() {
               <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
                 {gameStrengths.length > 0 && (
                   <div className="rounded-xl border border-active/15 bg-active/5 px-4 py-3">
-                    <p className="flex items-center gap-1 text-xs font-bold text-active"><TrendingUp size={12} aria-hidden="true" /> Strengths</p>
+                    <p className="flex items-center gap-1 text-xs font-bold text-active"><TrendingUp size={12} aria-hidden="true" /> {t('portal:mpStrengths')}</p>
                     <ul className="mt-1.5 space-y-1 text-xs text-ink">
                       {gameStrengths.map((g) => (
-                        <li key={g.key} className="flex items-center justify-between gap-2"><span className="font-semibold">{g.icon} {g.label}</span><span className="font-bold text-active">{g.accuracy}%</span></li>
+                        <li key={g.key} className="flex items-center justify-between gap-2"><span className="font-semibold">{g.icon} {t(g.i18nKey)}</span><span className="font-bold text-active">{g.accuracy}%</span></li>
                       ))}
                     </ul>
-                    <p className="mt-2 text-[11px] font-medium text-ink/50">Keep using these games to stay sharp.</p>
+                    <p className="mt-2 text-[11px] font-medium text-ink/50">{t('portal:mpStrengthsHint')}</p>
                   </div>
                 )}
                 {gameWeaks.length > 0 && (
                   <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-                    <p className="flex items-center gap-1 text-xs font-bold text-amber-700"><Target size={12} aria-hidden="true" /> Focus next</p>
+                    <p className="flex items-center gap-1 text-xs font-bold text-amber-700"><Target size={12} aria-hidden="true" /> {t('portal:mpFocusNext')}</p>
                     <ul className="mt-1.5 space-y-1 text-xs text-ink">
                       {gameWeaks.map((g) => (
-                        <li key={g.key} className="flex items-center justify-between gap-2"><span className="font-semibold">{g.icon} {g.label}</span><span className="font-bold text-amber-700">{g.accuracy}%</span></li>
+                        <li key={g.key} className="flex items-center justify-between gap-2"><span className="font-semibold">{g.icon} {t(g.i18nKey)}</span><span className="font-bold text-amber-700">{g.accuracy}%</span></li>
                       ))}
                     </ul>
-                    <p className="mt-2 text-[11px] font-medium text-ink/50">2–3 short rounds here will lift these fastest.</p>
+                    <p className="mt-2 text-[11px] font-medium text-ink/50">{t('portal:mpFocusNextHint')}</p>
                   </div>
                 )}
               </div>
@@ -622,7 +622,7 @@ export default function MyProgress() {
       {/* ── LEARNING GROWTH (only real deltas) ───────────────────────── */}
       {hasGrowth && (
         <div className="mp-stagger mt-6" style={{ animationDelay: '180ms' }}>
-          <SectionLabel>Learning growth</SectionLabel>
+          <SectionLabel>{t('portal:mpLearningGrowth')}</SectionLabel>
           <div className="grid gap-2.5 sm:grid-cols-3">
             {examTrend && (
               <div className="flex items-center gap-3 rounded-xl border border-ink/[0.06] bg-white px-4 py-3 shadow-card">
@@ -630,7 +630,7 @@ export default function MyProgress() {
                   {examTrend.direction === 'up' ? <TrendingUp size={16} aria-hidden="true" /> : examTrend.direction === 'down' ? <TrendingDown size={16} aria-hidden="true" /> : <Minus size={16} aria-hidden="true" />}
                 </span>
                 <span className="min-w-0">
-                  <span className="block text-xs font-bold uppercase tracking-wide text-ink/40">Exams</span>
+                  <span className="block text-xs font-bold uppercase tracking-wide text-ink/40">{t('portal:mpExamsLabel')}</span>
                   <span className="block text-sm font-semibold text-ink">
                     {examTrend.direction === 'flat' ? t('portal:examTrendSame') : examTrend.direction === 'up' ? t('portal:examTrendUp', { delta: examTrend.delta, defaultValue: `+${examTrend.delta}% vs last exam` }) : t('portal:examTrendDown', { delta: examTrend.delta, defaultValue: `-${examTrend.delta}% vs last exam` })}
                   </span>
@@ -641,8 +641,8 @@ export default function MyProgress() {
               <div className="flex items-center gap-3 rounded-xl border border-ink/[0.06] bg-white px-4 py-3 shadow-card">
                 <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-active/10 text-active"><Flame size={16} aria-hidden="true" /></span>
                 <span className="min-w-0">
-                  <span className="block text-xs font-bold uppercase tracking-wide text-ink/40">Consistency</span>
-                  <span className="block text-sm font-semibold text-ink">{lessonStreakVal}-day lesson streak</span>
+                  <span className="block text-xs font-bold uppercase tracking-wide text-ink/40">{t('portal:mpConsistency')}</span>
+                  <span className="block text-sm font-semibold text-ink">{t('portal:mpLessonStreakVal', { count: lessonStreakVal })}</span>
                 </span>
               </div>
             )}
@@ -650,8 +650,8 @@ export default function MyProgress() {
               <div className="flex items-center gap-3 rounded-xl border border-ink/[0.06] bg-white px-4 py-3 shadow-card">
                 <span className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl ${homeworkStats.rate >= 80 ? 'bg-active/10 text-active' : homeworkStats.rate >= 50 ? 'bg-levelB/10 text-levelB' : 'bg-inactive/10 text-inactive'}`}><BookOpen size={16} aria-hidden="true" /></span>
                 <span className="min-w-0">
-                  <span className="block text-xs font-bold uppercase tracking-wide text-ink/40">Homework</span>
-                  <span className="block text-sm font-semibold text-ink">{homeworkStats.rate}% completed · {homeworkStats.completed}/{homeworkStats.total}</span>
+                  <span className="block text-xs font-bold uppercase tracking-wide text-ink/40">{t('portal:mpHomeworkLabel')}</span>
+                  <span className="block text-sm font-semibold text-ink">{t('portal:mpHomeworkRate', { rate: homeworkStats.rate, completed: homeworkStats.completed, total: homeworkStats.total })}</span>
                 </span>
               </div>
             )}
@@ -659,21 +659,21 @@ export default function MyProgress() {
               <div className="flex items-center gap-3 rounded-xl border border-ink/[0.06] bg-white px-4 py-3 shadow-card">
                 <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600"><Zap size={16} aria-hidden="true" /></span>
                 <span className="min-w-0">
-                  <span className="block text-xs font-bold uppercase tracking-wide text-ink/40">Attendance</span>
-                  <span className="block text-sm font-semibold text-ink">{streakAttendance} classes in a row</span>
+                  <span className="block text-xs font-bold uppercase tracking-wide text-ink/40">{t('portal:mpAttendanceLabel')}</span>
+                  <span className="block text-sm font-semibold text-ink">{t('portal:mpClassesInARow', { count: streakAttendance })}</span>
                 </span>
               </div>
             )}
           </div>
           {!examTrend && examRows.length < 2 && (
-            <p className="mt-2 text-xs text-ink/40">More trends will appear as you complete exams, homework and lessons.</p>
+            <p className="mt-2 text-xs text-ink/40">{t('portal:mpMoreTrends')}</p>
           )}
         </div>
       )}
 
       {/* ── EXAMS ────────────────────────────────────────────────────── */}
       <div className="mp-stagger mt-6" style={{ animationDelay: '240ms' }}>
-        <SectionLabel>Exams & assessments</SectionLabel>
+        <SectionLabel>{t('portal:mpExamsAssessments')}</SectionLabel>
 
         {/* Final Exams highlight */}
         {(finalWriting || finalSpeaking) && (
@@ -703,7 +703,7 @@ export default function MyProgress() {
         {examAvg != null && (
           <div className="mb-3 flex flex-wrap items-center gap-2 rounded-xl border border-ink/[0.06] bg-white px-4 py-3 shadow-card">
             <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600"><FileCheck2 size={16} aria-hidden="true" /></span>
-            <span className="text-sm font-bold text-ink">Exam average <span className="font-display text-lg">{examAvg}%</span></span>
+            <span className="text-sm font-bold text-ink">{t('dashboard:averageScore')} <span className="font-display text-lg">{examAvg}%</span></span>
             <span className="text-xs text-ink/40">· {examRows.filter((s) => s.score != null).length} graded</span>
             {examTrend && <span className={`ml-auto inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-bold ${examTrend.direction === 'up' ? 'border-active/15 bg-active/10 text-active' : examTrend.direction === 'down' ? 'border-inactive/15 bg-inactive/10 text-inactive' : 'border-ink/10 bg-ink/5 text-ink/50'}`}>{examTrend.direction === 'up' ? <TrendingUp size={12} aria-hidden="true" /> : examTrend.direction === 'down' ? <TrendingDown size={12} aria-hidden="true" /> : <Minus size={12} aria-hidden="true" />}{examTrend.direction === 'flat' ? t('portal:examTrendSame') : examTrend.direction === 'up' ? `+${examTrend.delta}%` : `-${examTrend.delta}%`}</span>}
           </div>
@@ -715,7 +715,7 @@ export default function MyProgress() {
           <div className="rounded-xl border border-ink/[0.06] bg-white p-8 text-center shadow-card">
             <FileCheck2 className="mx-auto mb-2 text-ink/15" size={28} aria-hidden="true" />
             <p className="text-sm font-semibold text-ink/60">{t('portal:noExamScoresYet', { defaultValue: 'No exam scores yet.' })}</p>
-            <p className="mt-1 text-xs text-ink/40">Your results will appear here after your teacher grades them.</p>
+            <p className="mt-1 text-xs text-ink/40">{t('portal:mpNoExamHint')}</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -727,7 +727,7 @@ export default function MyProgress() {
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-semibold text-ink">{s.exam.title}</p>
-                      <p className="text-xs text-ink/40">{s.exam.exam_date} · max {s.exam.max_score}</p>
+                      <p className="text-xs text-ink/40">{s.exam.exam_date} · {t('portal:mpMaxScore', { score: s.exam.max_score })}</p>
                     </div>
                     {s.score != null ? (
                       <span className="flex-shrink-0 rounded-full bg-ink px-3 py-1 text-sm font-bold text-white">{s.score}/{s.exam.max_score}</span>
@@ -750,10 +750,10 @@ export default function MyProgress() {
 
       {/* ── HOMEWORK ─────────────────────────────────────────────────── */}
       <div className="mp-stagger mt-6" style={{ animationDelay: '300ms' }}>
-        <SectionLabel>Homework</SectionLabel>
+        <SectionLabel>{t('portal:mpHomeworkTitle')}</SectionLabel>
         <div className="overflow-hidden rounded-2xl border border-ink/[0.06] bg-white shadow-card">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-ink/[0.06] bg-paper/50 px-4 py-3">
-            <span className="flex items-center gap-2 text-sm font-bold text-ink"><BookOpen size={14} className="text-ink/40" aria-hidden="true" /> {homeworkStats.completed} of {homeworkStats.total} completed</span>
+            <span className="flex items-center gap-2 text-sm font-bold text-ink"><BookOpen size={14} className="text-ink/40" aria-hidden="true" /> {t('portal:mpHomeworkCompleted', { completed: homeworkStats.completed, total: homeworkStats.total })}</span>
             {homeworkStats.rate != null && (
               <span className={`rounded-full border px-2.5 py-1 text-xs font-bold ${homeworkStats.rate >= 80 ? 'border-active/15 bg-active/10 text-active' : homeworkStats.rate >= 50 ? 'border-levelB/15 bg-levelB/10 text-levelB' : 'border-inactive/15 bg-inactive/10 text-inactive'}`}>{homeworkStats.rate}%</span>
             )}
@@ -764,7 +764,7 @@ export default function MyProgress() {
             <div className="px-5 py-10 text-center">
               <BookOpen className="mx-auto mb-2 text-ink/15" size={26} aria-hidden="true" />
               <p className="text-sm font-semibold text-ink/60">{t('dashboard:noHomeworkAssignedYet', { defaultValue: 'No homework assigned yet.' })}</p>
-              <p className="mt-1 text-xs text-ink/40">New assignments from your teacher will show up here.</p>
+              <p className="mt-1 text-xs text-ink/40">{t('portal:mpNoHomeworkHint')}</p>
             </div>
           ) : (
             <div className="divide-y divide-ink/[0.06]">
@@ -779,7 +779,7 @@ export default function MyProgress() {
                         <span className="truncate text-sm font-semibold text-ink">{h.title}</span>
                       </span>
                       {h.statusRow?.feedback && <span className="mt-1 block text-xs text-ink/50">{t('portal:teacherFeedbackLabel', { defaultValue: 'Feedback' })}: {h.statusRow.feedback}</span>}
-                      {h.due_date && <span className="mt-0.5 block text-xs text-ink/35">Due {h.due_date}</span>}
+                      {h.due_date && <span className="mt-0.5 block text-xs text-ink/35">{t('portal:mpDueDate', { date: h.due_date })}</span>}
                     </span>
                     <StatusPill tone={HOMEWORK_TONE[status]}>{t(`dashboard:${status === 'Assigned' ? 'assigned' : status === 'Submitted' ? 'awaitingGrading' : 'graded'}`, { defaultValue: status })}</StatusPill>
                   </div>
@@ -789,48 +789,45 @@ export default function MyProgress() {
           )}
           {homeworkRows.length > 6 && (
             <div className="border-t border-ink/[0.06] bg-paper/50 px-4 py-2.5 text-center">
-              <Link to="/my-homework" className="text-xs font-semibold text-brand-600 hover:underline">View all {homeworkRows.length} assignments →</Link>
+              <Link to="/my-homework" className="text-xs font-semibold text-brand-600 hover:underline">{t('portal:mpViewAllAssignments', { count: homeworkRows.length })}</Link>
             </div>
           )}
         </div>
       </div>
 
-      {/* ── ACHIEVEMENTS ─────────────────────────────────────────────── */}
-      <div className="mp-stagger mt-6 rounded-2xl border border-ink/[0.06] bg-white p-4 shadow-card sm:p-5" style={{ animationDelay: '360ms' }}>
-        <div className="mb-1 flex items-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600"><Award size={16} aria-hidden="true" /></span>
-          <h2 className="font-display text-base font-bold text-ink">Achievements</h2>
-          {computedBadges.length > 0 && <span className="ml-auto rounded-full bg-ink px-2.5 py-1 text-xs font-bold text-white">{computedBadges.filter((b) => b.unlocked).length}/{computedBadges.length}</span>}
+      {/* ── ACHIEVEMENTS — compact collectibles ──────────────────────── */}
+      <div className="mp-stagger mt-6 rounded-xl border border-ink/[0.06] bg-white p-3.5 shadow-card sm:p-4" style={{ animationDelay: '360ms' }}>
+        <div className="mb-2 flex items-center gap-2">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600"><Award size={14} aria-hidden="true" /></span>
+          <h2 className="font-display text-sm font-bold text-ink">{t('portal:achievementsTitle')}</h2>
         </div>
         {computedBadges.length === 0 ? (
-          <div className="py-8 text-center">
-            <Award className="mx-auto mb-2 text-ink/15" size={28} aria-hidden="true" />
+          <div className="py-6 text-center">
+            <Award className="mx-auto mb-1.5 text-ink/15" size={24} aria-hidden="true" />
             <p className="text-sm text-ink/50">{t('portal:achievementsEmpty', { defaultValue: 'No achievements yet — keep going!' })}</p>
           </div>
         ) : (
-          <div className="mt-3">
-            <AchievementCollection
-              badges={computedBadges}
-              studentMetrics={{
-                lessons_completed: lessonBlock?.completed ?? 0,
-                practice_submitted: homeworkStats.completed,
-                attendance_present: attendedCount,
-                total_points: examAvg ?? 0,
-              }}
-            />
-          </div>
+          <AchievementCollection
+            badges={computedBadges}
+            studentMetrics={{
+              lessons_completed: lessonBlock?.completed ?? 0,
+              practice_submitted: homeworkStats.completed,
+              attendance_present: attendedCount,
+              total_points: examAvg ?? 0,
+            }}
+          />
         )}
       </div>
 
       {/* ── PET COLLECTION ───────────────────────────────────────────── */}
       <div className="mp-stagger mt-6" style={{ animationDelay: '420ms' }}>
-        <SectionLabel>Pet collection</SectionLabel>
+        <SectionLabel>{t('portal:mpPetCollection')}</SectionLabel>
         {!petData || !petData.pet ? (
           <div className="rounded-2xl border border-ink/[0.06] bg-white px-5 py-10 text-center shadow-card">
             <PawPrint className="mx-auto mb-2 text-ink/15" size={28} aria-hidden="true" />
-            <p className="text-sm font-semibold text-ink/60">No active pet this month</p>
-            <p className="mt-1 text-xs text-ink/40">Check back soon — a new companion is coming.</p>
-            <Link to="/pet-collection" className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-ink/[0.06] bg-white px-3 py-1.5 text-xs font-semibold text-ink shadow-sm hover:bg-paper">View collection <ArrowRight size={12} aria-hidden="true" /></Link>
+            <p className="text-sm font-semibold text-ink/60">{t('portal:mpNoPet')}</p>
+            <p className="mt-1 text-xs text-ink/40">{t('portal:mpNoPetHint')}</p>
+            <Link to="/pet-collection" className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-ink/[0.06] bg-white px-3 py-1.5 text-xs font-semibold text-ink shadow-sm hover:bg-paper">{t('portal:mpViewCollection')} <ArrowRight size={12} aria-hidden="true" /></Link>
           </div>
         ) : (
           <div className="overflow-hidden rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 shadow-card">
@@ -838,12 +835,12 @@ export default function MyProgress() {
               <span className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-white text-3xl shadow-sm" aria-hidden="true">{petData.pet.icon || '🐾'}</span>
               <div className="min-w-0 flex-1">
                 <p className="font-display text-base font-bold leading-none text-ink">{petData.pet.name}</p>
-                <p className="mt-1 text-xs text-ink/50">{petData.completed ? 'Completed — amazing!' : `${petData.collected_count}/${petData.total_required} parts collected`}</p>
+                <p className="mt-1 text-xs text-ink/50">{petData.completed ? t('portal:mpPetCompleted') : t('portal:mpPetProgress', { collected: petData.collected_count, total: petData.total_required })}</p>
                 <div className="mt-2 h-1.5 max-w-[220px] overflow-hidden rounded-full bg-ink/[0.08]">
                   <div className="h-full rounded-full bg-amber-500 transition-all" style={{ width: `${petData.total_required ? Math.round((petData.collected_count / petData.total_required) * 100) : 0}%` }} />
                 </div>
               </div>
-              <Link to="/pet-collection" className="hidden flex-shrink-0 items-center gap-1 rounded-full bg-ink px-3 py-1.5 text-xs font-bold text-white hover:bg-ink/90 sm:inline-flex">View <ArrowRight size={12} aria-hidden="true" /></Link>
+              <Link to="/pet-collection" className="hidden flex-shrink-0 items-center gap-1 rounded-full bg-ink px-3 py-1.5 text-xs font-bold text-white hover:bg-ink/90 sm:inline-flex">{t('portal:mpViewCollection')} <ArrowRight size={12} aria-hidden="true" /></Link>
             </div>
             {petData.parts && petData.parts.length > 0 && (
               <div className="grid grid-cols-4 gap-2 border-t border-amber-100 bg-white/60 px-3 py-3 sm:grid-cols-6">
@@ -857,10 +854,10 @@ export default function MyProgress() {
             )}
             <div className="flex items-center justify-between border-t border-amber-100 bg-white px-4 py-2.5">
               <span className="flex items-center gap-1.5 text-xs font-semibold text-ink/60">
-                {petCheckin?.claimed_today ? <><CheckCircle2 size={12} className="text-active" aria-hidden="true" /> Claimed today</> : petCheckin?.all_collected ? <><Gift size={12} className="text-amber-600" aria-hidden="true" /> All parts done!</> : <><Gift size={12} className="text-amber-600" aria-hidden="true" /> Daily check-in available</>}
+                {petCheckin?.claimed_today ? <><CheckCircle2 size={12} className="text-active" aria-hidden="true" /> {t('portal:mpClaimedToday')}</> : petCheckin?.all_collected ? <><Gift size={12} className="text-amber-600" aria-hidden="true" /> {t('portal:mpAllPartsDone')}</> : <><Gift size={12} className="text-amber-600" aria-hidden="true" /> {t('portal:mpDailyCheckinAvail')}</>}
               </span>
-              <Link to="/pet-collection" className="text-xs font-bold text-amber-700 hover:underline sm:hidden">View collection →</Link>
-              <Link to="/pet-collection" className="hidden text-xs font-bold text-amber-700 hover:underline sm:inline">Open collection →</Link>
+              <Link to="/pet-collection" className="text-xs font-bold text-amber-700 hover:underline sm:hidden">{t('portal:mpViewCollectionArrow')}</Link>
+              <Link to="/pet-collection" className="hidden text-xs font-bold text-amber-700 hover:underline sm:inline">{t('portal:mpOpenCollectionArrow')}</Link>
             </div>
           </div>
         )}
@@ -869,8 +866,8 @@ export default function MyProgress() {
       {/* ── ATTENDANCE (compact, not dominating) ─────────────────────── */}
       <div className="mp-stagger mt-6 rounded-xl border border-ink/[0.06] bg-white px-4 py-3 shadow-card" style={{ animationDelay: '480ms' }}>
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-ink/40"><CalendarCheck size={12} aria-hidden="true" /> Attendance</h2>
-          <span className="text-xs font-semibold text-ink">{attendancePct == null ? '—' : `${attendancePct}%`} · {attendedCount}/{attendanceRows.length} classes</span>
+          <h2 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-ink/40"><CalendarCheck size={12} aria-hidden="true" /> {t('portal:mpAttendanceSection')}</h2>
+          <span className="text-xs font-semibold text-ink">{attendancePct == null ? '—' : t('portal:mpAttendanceStrip', { rate: attendancePct, present: attendedCount, total: attendanceRows.length })}</span>
         </div>
         {attendanceRows.length > 0 && (
           <div className="mt-3 flex gap-1.5 overflow-x-auto pb-1">
@@ -882,13 +879,13 @@ export default function MyProgress() {
                 </span>
               );
             })}
-            {attendanceRows.length > 14 && <span className="flex-shrink-0 self-center text-xs text-ink/30">+{attendanceRows.length - 14} more</span>}
+            {attendanceRows.length > 14 && <span className="flex-shrink-0 self-center text-xs text-ink/30">{t('portal:mpMoreCount', { count: attendanceRows.length - 14 })}</span>}
           </div>
         )}
-        {attendanceRows.length === 0 && <p className="mt-2 text-xs text-ink/40">{t('portal:noAttendanceRecorded', { defaultValue: 'No attendance recorded yet.' })}</p>}
+        {attendanceRows.length === 0 && <p className="mt-2 text-xs text-ink/40">{t('portal:mpNoAttendance')}</p>}
       </div>
 
-      <p className="mt-6 text-center text-[11px] font-medium text-ink/25">Progress updates as you learn — keep going! ✨</p>
+      <p className="mt-6 text-center text-[11px] font-medium text-ink/25">{t('portal:mpProgressFooter')}</p>
     </div>
   );
 }

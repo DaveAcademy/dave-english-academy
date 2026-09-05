@@ -202,19 +202,19 @@ export default function Hangman() {
                 <PartyPopper size={36} className="mx-auto text-emerald-500" aria-hidden="true" />
               </div>
               <h1 className="mt-2 font-display text-xl font-bold text-ink">{t('resultsTitle')}</h1>
-              <p className="mt-1 animate-[scaleIn_0.3s_ease-out_0.2s_both] text-sm font-semibold text-emerald-600">Word saved ✓</p>
+              <p className="mt-1 animate-[scaleIn_0.3s_ease-out_0.2s_both] text-sm font-semibold text-emerald-600">{t('wordSaved')}</p>
             </>
           ) : (
             <>
               <p className="text-2xl" aria-hidden>🪢</p>
               <h1 className="mt-2 font-display text-xl font-bold text-ink">{t('gameOverTitle')}</h1>
-              <p className="mt-1 text-sm text-stone-500">The word could not be saved</p>
+              <p className="mt-1 text-sm text-stone-500">{t('wordNotSaved')}</p>
             </>
           )}
           {result.game_points_awarded > 0 ? (
             <div className="mt-4 animate-[scaleIn_0.3s_ease-out_0.15s_both]">
               <p className="font-display text-5xl font-extrabold text-amber-500">+{result.game_points_awarded}</p>
-              <p className="mt-1 text-sm font-semibold text-amber-600">Game Points{result.game_points_is_perfect ? ' ⭐' : ''}</p>
+              <p className="mt-1 text-sm font-semibold text-amber-600">{t('gamePoints')}{result.game_points_is_perfect ? ' ⭐' : ''}</p>
             </div>
           ) : (
             <p className="mt-4 font-display text-5xl font-extrabold text-brand-600">{result.score}</p>

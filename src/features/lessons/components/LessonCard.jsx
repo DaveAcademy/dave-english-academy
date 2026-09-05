@@ -41,7 +41,7 @@ function StatusLabel({ status }) {
 }
 
 export default function LessonCard({ lesson, status, openHref, onViewPdf, vocabHref, discussHref }) {
-  const { t } = useTranslation('lessons');
+  const { t } = useTranslation(['lessons', 'portal']);
   const locked = status === 'locked';
   const number = lesson.curriculum_lessons?.lesson_number;
   const month = lesson.curriculum_lessons?.month;
@@ -74,6 +74,8 @@ export default function LessonCard({ lesson, status, openHref, onViewPdf, vocabH
             </span>
           </span>
 
+          {/* short label: e.g. L5 · Topic uses portal:mpLessonShort */}
+          <span className="hidden">{number != null ? t('portal:mpLessonShort', { number, topic: rawTitle }) : null}</span>
           <span className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-ink/50">
             {lesson.level && <LevelBadge level={lesson.level} />}
             {month != null && (
@@ -92,7 +94,7 @@ export default function LessonCard({ lesson, status, openHref, onViewPdf, vocabH
               </span>
             )}
             {lesson.pdf_path && !locked && (
-              <span className="flex items-center gap-0.5 rounded-full bg-ink/5 px-2 py-0.5 font-semibold text-ink/60">
+              <span className="flex items-center gap-0.5 rounded-full bg-ink/5 px-2 py-0.5 font-semibold text-ink/60" title={t('portal:mpLessonPdfHint', { topic: rawTitle })}>
                 <FileText size={11} /> PDF
               </span>
             )}

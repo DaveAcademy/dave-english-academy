@@ -7,6 +7,7 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Search, Star, ArrowLeft, Image as ImageIcon, BookOpen, Sparkles,
   Keyboard, FileText, Layers, Crown, AlertCircle, Volume2, ChevronDown,
@@ -21,11 +22,11 @@ import { getMySummary, getStudentDetail } from '../api/dictionaryBridge';
 import { SkeletonRows } from '../components/shared';
 
 const STAGES = [
-  { key: 'translation', label: 'Translation', icon: BookOpen, hint: 'See English → Uzbek' },
-  { key: 'typing', label: 'Typing', icon: Keyboard, hint: 'Type the word correctly' },
-  { key: 'sentence', label: 'Sentence', icon: FileText, hint: 'Use it in a sentence' },
-  { key: 'retention', label: 'Retention', icon: Layers, hint: 'Recall after delay' },
-  { key: 'mastered', label: 'Mastered', icon: Crown, hint: 'Long-term memory' },
+  { key: 'translation', labelKey: 'portal:mpStageTranslation', icon: BookOpen, hintKey: 'portal:mpStageTranslation' },
+  { key: 'typing', labelKey: 'portal:mpStageTyping', icon: Keyboard, hintKey: 'portal:mpStageTyping' },
+  { key: 'sentence', labelKey: 'portal:mpStageSentence', icon: FileText, hintKey: 'portal:mpStageSentence' },
+  { key: 'retention', labelKey: 'portal:mpStageRetention', icon: Layers, hintKey: 'portal:mpStageRetention' },
+  { key: 'mastered', labelKey: 'portal:mpStageMastered', icon: Crown, hintKey: 'portal:mpStageMastered' },
 ];
 
 const STATE_TO_STAGE = {
@@ -33,6 +34,7 @@ const STATE_TO_STAGE = {
 };
 
 function MasteryOverview({ me }) {
+  const { t } = useTranslation(['portal', 'common']);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
@@ -59,20 +61,20 @@ function MasteryOverview({ me }) {
       <div className="bg-gradient-to-br from-brand-50 via-white to-paper px-4 py-4 sm:px-5">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-widest text-brand-700">Mastery overview</p>
-            <p className="mt-0.5 font-display text-sm font-bold text-ink">Your vocabulary journey</p>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-brand-700">{t('portal:mpMasteryOverview')}</p>
+            <p className="mt-0.5 font-display text-sm font-bold text-ink">{t('portal:mpVocabJourney')}</p>
           </div>
-          <span className="rounded-full bg-white px-2.5 py-1 text-xs font-bold text-brand-700 shadow-sm ring-1 ring-ink/5">{stats.mastered_count || 0} mastered</span>
+          <span className="rounded-full bg-white px-2.5 py-1 text-xs font-bold text-brand-700 shadow-sm ring-1 ring-ink/5">{t('portal:mpMasteredCount', { count: stats.mastered_count || 0 })}</span>
         </div>
         <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-ink/[0.06]">
           <div className="h-full rounded-full bg-brand-500 transition-all" style={{ width: `${Math.max(pct, stats.mastered_count ? 2 : 0)}%` }} />
         </div>
         <div className="mt-3 grid grid-cols-4 gap-2">
           {[
-            { l: 'Total', v: total },
-            { l: 'Learning', v: (stats.learning_count || 0) + (stats.new_count || 0) },
-            { l: 'Needs practice', v: (stats.due_now || 0) + (stats.reviewing_count || 0) },
-            { l: 'Mastered', v: stats.mastered_count || 0 },
+            { l: t('portal:mpTotalLabel'), v: total },
+            { l: t('portal:mpLearningLabel'), v: (stats.learning_count || 0) + (stats.new_count || 0) },
+            { l: t('portal:mpNeedsPractice'), v: (stats.due_now || 0) + (stats.reviewing_count || 0) },
+            { l: t('portal:mpMastered'), v: stats.mastered_count || 0 },
           ].map((k) => (
             <div key={k.l} className="rounded-xl bg-white px-2 py-2 text-center ring-1 ring-ink/5">
               <p className="text-[10px] font-bold uppercase tracking-wide text-ink/40">{k.l}</p>
@@ -90,8 +92,8 @@ function MasteryOverview({ me }) {
           return (
             <div key={s.key} className={`rounded-xl px-1 py-2 text-center ${reached ? 'bg-white shadow-sm ring-1 ring-ink/5' : 'opacity-60'}`}>
               <Icon size={14} className={`mx-auto ${reached ? 'text-brand-600' : 'text-ink/30'}`} />
-              <p className="mt-1 text-[10px] font-bold leading-tight text-ink">{s.label}</p>
-              <p className="hidden text-[10px] leading-tight text-ink/40 sm:block">{s.hint}</p>
+              <p className="mt-1 text-[10px] font-bold leading-tight text-ink">{t(s.labelKey)}</p>
+              <p className="hidden text-[10px] leading-tight text-ink/40 sm:block">{t(s.hintKey)}</p>
             </div>
           );
         })}
@@ -99,26 +101,27 @@ function MasteryOverview({ me }) {
 
       {/* focus areas */}
       <div className="border-t border-ink/5 bg-white px-4 py-3 sm:px-5">
-        <p className="text-[11px] font-bold uppercase tracking-wide text-ink/40">Focus areas</p>
+        <p className="text-[11px] font-bold uppercase tracking-wide text-ink/40">{t('portal:mpFocusAreas')}</p>
         <div className="mt-2 flex flex-wrap gap-1.5">
           {[
-            { k: 'Typing', v: stats.new_today ?? 0, tone: 'bg-amber-50 text-amber-700 ring-amber-100' },
-            { k: 'Sentence', v: stats.reviewing_count ?? 0, tone: 'bg-sky-50 text-sky-700 ring-sky-100' },
-            { k: 'Retention', v: stats.due_now ?? 0, tone: 'bg-violet-50 text-violet-700 ring-violet-100' },
-            { k: 'Weak Words', v: stats.lapsed_count ?? stats.new_count ?? 0, tone: 'bg-red-50 text-red-600 ring-red-100' },
+            { k: t('portal:mpTypingCount', { count: stats.new_today ?? 0 }), v: stats.new_today ?? 0, tone: 'bg-amber-50 text-amber-700 ring-amber-100' },
+            { k: t('portal:mpSentenceCount', { count: stats.reviewing_count ?? 0 }), v: stats.reviewing_count ?? 0, tone: 'bg-sky-50 text-sky-700 ring-sky-100' },
+            { k: t('portal:mpRetentionCount', { count: stats.due_now ?? 0 }), v: stats.due_now ?? 0, tone: 'bg-violet-50 text-violet-700 ring-violet-100' },
+            { k: `Weak Words · ${stats.lapsed_count ?? stats.new_count ?? 0}`, v: stats.lapsed_count ?? stats.new_count ?? 0, tone: 'bg-red-50 text-red-600 ring-red-100' },
           ].map((f) => (
             <span key={f.k} className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${f.tone}`}>
-              {f.k} · {f.v}
+              {f.k}
             </span>
           ))}
         </div>
-        <p className="mt-2 text-xs leading-relaxed text-ink/45">Practice via Dictionary → Review / Challenge. Progress is server-graded — nothing is faked here.</p>
+        <p className="mt-2 text-xs leading-relaxed text-ink/45">{t('portal:mpDictionaryHint')}</p>
       </div>
     </div>
   );
 }
 
 export default function MyVocabulary() {
+  const { t } = useTranslation(['portal', 'common']);
   const { me, students, lessons } = useAcademy();
   const [searchParams] = useSearchParams();
   const lessonId = searchParams.get('lesson') ? Number(searchParams.get('lesson')) : null;
@@ -210,7 +213,7 @@ export default function MyVocabulary() {
   if (!me) {
     return (
       <div className="rounded-xl border border-ink/[0.06] bg-white p-10 text-center shadow-card">
-        <p className="font-display text-lg font-semibold text-ink">Your account isn&apos;t linked to a student record yet.</p>
+        <p className="font-display text-lg font-semibold text-ink">{t('portal:mpLinkedHint')}</p>
       </div>
     );
   }
@@ -220,16 +223,16 @@ export default function MyVocabulary() {
       <header className="mb-4">
         {lesson ? (
           <Link to="/my-vocabulary" className="mb-2 inline-flex min-h-[44px] items-center gap-1 rounded-full bg-white px-3 py-2 text-xs font-semibold text-brand-700 shadow-sm ring-1 ring-ink/5">
-            <ArrowLeft size={14} /> All Vocabulary
+            <ArrowLeft size={14} /> {t('portal:mpAllVocabulary')}
           </Link>
         ) : null}
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
-            <h1 className="font-display text-2xl font-bold tracking-tight text-ink">{lesson ? lesson.topic : 'My Vocabulary'}</h1>
-            <p className="mt-1 max-w-[60ch] text-sm leading-relaxed text-ink/55">{lesson ? "This lesson's words — mastery grows lesson by lesson." : 'Every word from your lessons, with your mastery journey.'}</p>
+            <h1 className="font-display text-2xl font-bold tracking-tight text-ink">{lesson ? lesson.topic : t('portal:mpMyVocabulary')}</h1>
+            <p className="mt-1 max-w-[60ch] text-sm leading-relaxed text-ink/55">{lesson ? t('portal:mpVocabJourney') : t('portal:mpDictionaryEmptyDesc')}</p>
           </div>
           <Link to="/dictionary" className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2.5 text-xs font-semibold text-white shadow-sm hover:bg-brand-700">
-            <Sparkles size={14} /> Practice in Dictionary
+            <Sparkles size={14} /> {t('portal:mpPracticeInDictionary')}
           </Link>
         </div>
       </header>
@@ -242,7 +245,7 @@ export default function MyVocabulary() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search English, Uzbek, or example..."
+            placeholder={t('portal:mpSearchPlaceholder')}
             className="input min-h-[44px] py-2.5 pl-10 pr-3 text-sm"
           />
         </div>
@@ -250,7 +253,7 @@ export default function MyVocabulary() {
           onClick={() => setFavoritesOnly((v) => !v)}
           className={`inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border px-4 py-2.5 text-xs font-semibold shadow-sm transition-colors ${favoritesOnly ? 'border-amber-300 bg-amber-50 text-amber-700' : 'border-ink/10 bg-white text-ink/60 hover:bg-ink/5'}`}
         >
-          <Star size={15} fill={favoritesOnly ? 'currentColor' : 'none'} className={favoritesOnly ? 'text-amber-500' : ''} /> Favorites
+          <Star size={15} fill={favoritesOnly ? 'currentColor' : 'none'} className={favoritesOnly ? 'text-amber-500' : ''} /> {t('portal:mpFavorites')}
         </button>
       </div>
 
@@ -262,8 +265,8 @@ export default function MyVocabulary() {
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-ink/5">
               <BookOpen size={20} className="text-brand-500" />
             </div>
-            <p className="mx-auto mt-3 max-w-[30ch] font-display text-base font-bold text-ink">No vocabulary to show</p>
-            <p className="mx-auto mt-1 max-w-[40ch] text-sm text-ink/50">{favoritesOnly ? 'No favorites yet — tap the star on any word to save it.' : query ? 'Try a different spelling or browse all words.' : 'Words appear here as your lessons are published.'}</p>
+            <p className="mx-auto mt-3 max-w-[30ch] font-display text-base font-bold text-ink">{t('portal:mpNoVocabShow')}</p>
+            <p className="mx-auto mt-1 max-w-[40ch] text-sm text-ink/50">{favoritesOnly ? t('portal:mpNoFavorites') : query ? t('portal:mpNoResults') : t('portal:mpNoWordsYet')}</p>
           </div>
         </div>
       ) : (
@@ -295,10 +298,10 @@ export default function MyVocabulary() {
                         {stateKey ? (
                           <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold ring-1 ${stageIdx >= 4 ? 'bg-emerald-50 text-emerald-700 ring-emerald-100' : stageIdx >= 3 ? 'bg-brand-50 text-brand-700 ring-brand-100' : stageIdx >= 1 ? 'bg-amber-50 text-amber-700 ring-amber-100' : 'bg-ink/5 text-ink/50 ring-ink/10'}`}>
                             {stageIdx >= 4 ? <Crown size={10} /> : stageIdx >= 3 ? <Layers size={10} /> : <AlertCircle size={10} />}
-                            {stageIdx >= 4 ? 'Mastered' : stageIdx >= 3 ? 'Retention' : stageIdx >= 1 ? 'Learning' : 'New'}
+                            {stageIdx >= 4 ? t('portal:mpStageMastered') : stageIdx >= 3 ? t('portal:mpStageRetention') : stageIdx >= 1 ? t('portal:mpLearningLabel') : t('portal:mpNewLabel')}
                           </span>
                         ) : (
-                          <span className="inline-flex rounded-full bg-ink/5 px-2 py-0.5 text-[11px] font-medium text-ink/40">Not started — open Dictionary to begin</span>
+                          <span className="inline-flex rounded-full bg-ink/5 px-2 py-0.5 text-[11px] font-medium text-ink/40">{t('portal:mpNotStarted')}</span>
                         )}
                       </span>
                     </span>
@@ -333,17 +336,16 @@ export default function MyVocabulary() {
                         ))}
                       </div>
                       <p className="mt-2 text-xs font-semibold text-ink/60">
-                        Stage: <span className="text-ink">{STAGES[stageIdx]?.label || 'Translation'}</span>
-                        <span className="font-normal text-ink/40"> — {STAGES[stageIdx]?.hint}</span>
+                        {t('portal:mpStageHint', { label: t(STAGES[stageIdx]?.labelKey || 'portal:mpStageTranslation'), hint: t(STAGES[stageIdx]?.hintKey || 'portal:mpStageTranslation') })}
                       </p>
 
                       {w.pronunciation && <p className="mt-2 text-xs italic text-ink/45">/{w.pronunciation}/ <button onClick={() => { try { window.speechSynthesis?.speak(new SpeechSynthesisUtterance(w.english)); } catch {} }} className="ml-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-white text-ink/40 ring-1 ring-ink/10"><Volume2 size={11} /></button></p>}
                       {w.example && <p className="mt-2 break-words border-t border-ink/5 pt-2 text-xs leading-relaxed text-ink/60">{w.example}</p>}
-                      {!w.example && <p className="mt-2 text-xs text-ink/35">No example yet — ask your teacher for a sentence with this word.</p>}
+                      {!w.example && <p className="mt-2 text-xs text-ink/35">{t('portal:mpNoExample')}</p>}
 
                       <div className="mt-3 flex flex-wrap gap-2">
-                        <Link to="/dictionary" className="inline-flex min-h-[36px] items-center rounded-full bg-ink px-3 py-1.5 text-xs font-semibold text-white hover:bg-ink/90">Practice this word</Link>
-                        <span className="inline-flex items-center text-[11px] text-ink/40">Feedback and progress are graded on the server — keep reviewing to advance.</span>
+                        <Link to="/dictionary" className="inline-flex min-h-[36px] items-center rounded-full bg-ink px-3 py-1.5 text-xs font-semibold text-white hover:bg-ink/90">{t('portal:mpPracticeWord')}</Link>
+                        <span className="inline-flex items-center text-[11px] text-ink/40">{t('portal:mpDictionaryHint')}</span>
                       </div>
                     </div>
                   </div>

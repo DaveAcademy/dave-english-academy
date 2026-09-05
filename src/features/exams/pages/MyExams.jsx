@@ -21,7 +21,7 @@ import { SkeletonList } from '../../../components/Skeleton';
 
 const STATUS_TONE = { graded: 'brand', awaitingGrading: 'success', upcoming: 'info', expired: 'danger', resultPending: 'neutral', notSubmitted: 'neutral' };
 
-function countdownLabel(targetDateStr) {
+function countdownLabel(targetDateStr, t) {
   if (!targetDateStr) return null;
   const [y, m, d] = targetDateStr.slice(0, 10).split('-').map(Number);
   if (!y || !m || !d) return null;
@@ -30,14 +30,14 @@ function countdownLabel(targetDateStr) {
   const diff = target - todayStart;
   const days = Math.ceil(diff / 86400000);
   if (days <= 0) return null;
-  if (days === 1) return 'Tomorrow';
-  if (days < 7) return `In ${days} days`;
-  if (days < 30) return `In ${Math.ceil(days / 7)} weeks`;
-  return `In ${days} days`;
+  if (days === 1) return t('portal:mpCountdownTomorrow');
+  if (days < 7) return t('portal:mpCountdownDays', { count: days });
+  if (days < 30) return t('portal:mpCountdownWeeks', { count: Math.ceil(days / 7) });
+  return t('portal:mpCountdownDays', { count: days });
 }
 
 export default function MyExams() {
-  const { t, i18n } = useTranslation(['exams', 'common']);
+  const { t, i18n } = useTranslation(['exams', 'common', 'portal']);
   const dateLocale = i18n.language === 'uz' ? 'uz' : 'en-US';
   const { me, students, exams, examScores, submitMyExamAnswer, loading } = useAcademy();
   const [submittingId, setSubmittingId] = useState(null);
@@ -128,12 +128,12 @@ export default function MyExams() {
           {!loading && myExams.length > 0 && (
             <div className="flex gap-2">
               <div className="rounded-xl border border-ink/[0.06] bg-white px-3 py-2 shadow-card text-center">
-                <p className="text-[11px] font-bold uppercase tracking-wide text-ink/40">Graded</p>
+                <p className="text-[11px] font-bold uppercase tracking-wide text-ink/40">{t('portal:mpGradedLabel')}</p>
                 <p className="font-display text-lg font-bold text-brand-600">{gradedCount}/{myExams.length}</p>
               </div>
               {avgScore != null && (
                 <div className="rounded-xl border border-ink/[0.06] bg-white px-3 py-2 shadow-card text-center">
-                  <p className="text-[11px] font-bold uppercase tracking-wide text-ink/40">Average</p>
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-ink/40">{t('portal:mpAverageLabel')}</p>
                   <p className="font-display text-lg font-bold text-ink">{avgScore}</p>
                 </div>
               )}
@@ -153,10 +153,10 @@ export default function MyExams() {
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-card ring-1 ring-ink/[0.06]">
               <Sparkles className="text-brand-500" size={22} aria-hidden="true" />
             </div>
-            <h2 className="mx-auto mt-4 max-w-[28ch] font-display text-xl font-bold leading-tight text-ink">Your exams will appear here</h2>
-            <p className="mx-auto mt-2 max-w-[42ch] text-sm leading-relaxed text-ink/55">When your teacher schedules a Written or Oral assessment for your level, you&apos;ll see the date, preparation guide, and submission tools right here.</p>
+            <h2 className="mx-auto mt-4 max-w-[28ch] font-display text-xl font-bold leading-tight text-ink">{t('portal:mpYourExamsWillAppear')}</h2>
+            <p className="mx-auto mt-2 max-w-[42ch] text-sm leading-relaxed text-ink/55">{t('portal:mpWhenTeacherSchedules')}</p>
             <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-brand-100 bg-brand-50 px-4 py-2 text-xs font-semibold text-brand-700">
-              <CalendarDays size={14} /> No exams assigned for your level yet
+              <CalendarDays size={14} /> {t('portal:mpNoExamsAssigned')}
             </div>
           </div>
         </div>
@@ -167,7 +167,7 @@ export default function MyExams() {
             <section aria-labelledby="upcoming-heading">
               <div className="mb-3 flex items-center gap-2">
                 <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-white"><Timer size={14} /></span>
-                <h2 id="upcoming-heading" className="font-display text-sm font-bold uppercase tracking-wide text-ink">Upcoming</h2>
+                <h2 id="upcoming-heading" className="font-display text-sm font-bold uppercase tracking-wide text-ink">{t('portal:mpUpcoming')}</h2>
                 <span className="rounded-full bg-brand-50 px-2 py-0.5 text-xs font-bold text-brand-700 ring-1 ring-brand-100">{upcomingExams.length}</span>
               </div>
               <div className="space-y-3">
@@ -177,7 +177,7 @@ export default function MyExams() {
                   const overdue = isOverdue(e);
                   const upcoming = true;
                   const status = statusOf(result, overdue, upcoming, isOral);
-                  const countdown = countdownLabel(e.exam_date);
+                  const countdown = countdownLabel(e.exam_date, t);
                   return (
                     <div
                       key={e.id}
@@ -210,8 +210,8 @@ export default function MyExams() {
                               )}
                             </div>
                             <div className="mt-2 rounded-xl border border-amber-100 bg-amber-50/70 px-3 py-2">
-                              <p className="text-xs font-semibold text-amber-800">Preparation</p>
-                              <p className="mt-0.5 text-xs leading-relaxed text-amber-700/80">{t('upcomingPrepareMessage')} Review your lesson notes, vocabulary, and practice examples before {formatDateOnly(e.exam_date, dateLocale)}.</p>
+                              <p className="text-xs font-semibold text-amber-800">{t('portal:mpPreparation')}</p>
+                              <p className="mt-0.5 text-xs leading-relaxed text-amber-700/80">{t('portal:mpReviewBefore', { date: formatDateOnly(e.exam_date, dateLocale) })}</p>
                             </div>
                             {e.description && <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-ink/65">{e.description}</p>}
                           </div>
@@ -241,7 +241,7 @@ export default function MyExams() {
               <div className="mb-3 flex items-center gap-2">
                 <span className="flex h-7 w-7 items-center justify-center rounded-full bg-ink/5 text-ink/50"><Award size={14} /></span>
                 <h2 id="previous-heading" className="font-display text-sm font-bold uppercase tracking-wide text-ink">
-                  {upcomingExams.length ? 'Previous & graded' : 'Your exams'}
+                  {upcomingExams.length ? t('portal:mpPreviousGraded') : t('portal:mpYourExams')}
                 </h2>
                 <span className="rounded-full bg-ink/5 px-2 py-0.5 text-xs font-bold text-ink/50">{pastExams.length}</span>
               </div>
@@ -286,18 +286,18 @@ export default function MyExams() {
                           {graded && (
                             <div className="mt-3 rounded-xl border border-brand-100 bg-brand-50/60 px-3 py-2.5">
                               <div className="flex items-center justify-between gap-2">
-                                <span className="inline-flex items-center gap-1 text-xs font-bold text-brand-700"><TrendingUp size={12} /> Score</span>
+                                <span className="inline-flex items-center gap-1 text-xs font-bold text-brand-700"><TrendingUp size={12} /> {t('portal:mpScoreLabel')}</span>
                                 <span className="text-sm font-bold text-brand-700">{t('scoreOutOfMax', { score: result.score, max: e.max_score })} · {pct}%</span>
                               </div>
                               <div className="mt-2 h-2 overflow-hidden rounded-full bg-white ring-1 ring-brand-100">
                                 <div className="h-full rounded-full bg-brand-500 transition-all" style={{ width: `${Math.min(100, pct)}%` }} />
                               </div>
-                              <p className="mt-1.5 text-[11px] font-medium text-brand-600/70">Completion status: graded — feedback below if provided.</p>
+                              <p className="mt-1.5 text-[11px] font-medium text-brand-600/70">{t('portal:mpCompletionGraded')}</p>
                             </div>
                           )}
                           {!graded && result?.answer_file_url && (
                             <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-100">
-                              <FileCheck2 size={12} /> Submitted — awaiting grading
+                              <FileCheck2 size={12} /> {t('portal:mpSubmittedAwaiting')}
                             </div>
                           )}
                           {expired && <p className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-inactive"><AlertTriangle size={12} /> {t('deadlinePassedWarning')}</p>}
