@@ -165,19 +165,14 @@ export default function GrammarBattle() {
     setChosen(option ?? '');
     const nextAnswers = [...answers, { content_id: current.id, answer: option || '', skipped }];
     setAnswers(nextAnswers);
-    setAnsweredCount((c) => c + 1);
+    let nextCount = 0;
+    setAnsweredCount((c) => { nextCount = c + 1; return nextCount; });
     const nextUsed = nextUsedSet(current.id);
     const effectiveLives = livesOverride ?? lives;
 
-    // Adaptive difficulty heuristic: escalate a tier every ESCALATE_AFTER
-    // questions answered without losing a life, drop back to easy the
-    // moment a life is lost. True per-question correctness isn't known
-    // until the whole round is graded, so "no life lost yet" is the best
-    // available proxy for "on a good run" within this single-round-trip
-    // architecture.
     if (skipped || livesOverride != null) {
       setTier('easy');
-    } else if ((answeredCount + 1) % ESCALATE_AFTER === 0) {
+    } else if ((answers.length + 1) % ESCALATE_AFTER === 0) {
       setTier((t) => TIER_ORDER[Math.min(TIER_ORDER.length - 1, TIER_ORDER.indexOf(t) + 1)]);
     }
 

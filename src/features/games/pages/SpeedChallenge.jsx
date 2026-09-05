@@ -130,6 +130,7 @@ export default function SpeedChallenge() {
 
   const recordAnswer = useCallback(
     (option, skipped) => {
+      if (chosen) return;
       clearInterval(tickRef.current);
       const elapsed = Date.now() - questionStart.current;
       setChosen(option);

@@ -5,7 +5,7 @@
 // game - no audio, no images, can't hit the same device problem.
 //
 // Classic letter-by-letter guessing against the Uzbek translation as a
-// hint. Wrong guesses cost lives (6, standard hangman); the client only
+// hint. Wrong guesses cost lives (5); the client only
 // ever submits the fully-assembled word once solved (or '' + skipped on
 // a loss) - grading (does that match lesson_vocabulary.english) happens
 // in submitGameRound() on the server, same as Word Scramble/Word Builder.

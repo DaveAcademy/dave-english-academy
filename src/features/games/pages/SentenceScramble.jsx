@@ -99,6 +99,7 @@ export default function SentenceScramble() {
 
   const handleCheck = () => {
     if (feedback || placed.length === 0) return;
+    if (placed.length !== current.canonical_words.length) return;
     recordAnswer(placed.map((p) => p.word), false);
   };
 

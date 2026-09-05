@@ -123,7 +123,13 @@ export default function WordBuilder() {
 
   const handleReset = () => {
     if (feedback) return;
-    setTiles((prev) => [...prev, ...placed]);
+    const combined = [...placed, ...tiles];
+    // Fisher-Yates reshuffle to avoid leaking previous order
+    for (let i = combined.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [combined[i], combined[j]] = [combined[j], combined[i]];
+    }
+    setTiles(combined);
     setPlaced([]);
   };
 

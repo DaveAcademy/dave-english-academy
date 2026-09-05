@@ -1879,3 +1879,9 @@ export async function getStudentPetProgress(studentId) {
   if (error) throw error;
   return data;
 }
+
+export async function getOwlProgress() {
+  const { data, error } = await supabase.rpc('get_owl_progress');
+  if (error) throw error;
+  return data;
+}

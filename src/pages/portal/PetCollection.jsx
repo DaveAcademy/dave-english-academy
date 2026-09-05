@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, PawPrint, Gift, CheckCircle2, PartyPopper, Lock, Clock, Sparkles, AlertCircle, X } from 'lucide-react';
 import { useAcademy } from '../../lib/AcademyDataContext';
-import { getActivePetWithParts, claimPetPart, getPetCheckinStatus, getMyPetProgress } from '../../lib/storageBridge';
+import { getActivePetWithParts, claimPetPart, getPetCheckinStatus, getMyPetProgress, getOwlProgress } from '../../lib/storageBridge';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -100,6 +100,7 @@ export default function PetCollection() {
   const [petData, setPetData] = useState(null);
   const [checkinStatus, setCheckinStatus] = useState(null);
   const [petProgress, setPetProgress] = useState(null);
+  const [owl, setOwl] = useState(null);
   const [loading, setLoading] = useState(true);
   const [claiming, setClaiming] = useState(false);
   const [claimedPart, setClaimedPart] = useState(null);
@@ -111,14 +112,16 @@ export default function PetCollection() {
     setLoading(true);
     setError(null);
     try {
-      const [pet, status, prog] = await Promise.all([
+      const [pet, status, prog, owlData] = await Promise.all([
         getActivePetWithParts(),
         getPetCheckinStatus(),
         getMyPetProgress().catch(() => null),
+        getOwlProgress().catch(() => null),
       ]);
       setPetData(pet);
       setCheckinStatus(status);
       setPetProgress(prog);
+      setOwl(owlData);
     } catch (err) {
       const msg = String(err.message || err);
       if (/already claimed/i.test(msg)) setError(t('petAlreadyClaimed'));
@@ -222,6 +225,33 @@ export default function PetCollection() {
       >
         <ArrowLeft size={14} /> {t('backToPortal')}
       </Link>
+
+      {/* OWL COLLECTION — 500 Points, auto-unlocked by legitimate Points */}
+      {owl && (
+        <div className="mb-4 overflow-hidden rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white p-4 shadow-sm sm:p-5">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-amber-700">Owl Collection</p>
+              <p className="mt-0.5 font-display text-lg font-bold text-ink">{owl.points} / 500 Points</p>
+              <p className="text-xs text-ink/60">{owl.complete ? 'Owl Complete ✓' : `${owl.remaining} Points to complete your Owl`}</p>
+            </div>
+            <span className={`flex h-10 w-10 items-center justify-center rounded-xl text-lg ${owl.complete ? 'bg-amber-500 text-white' : 'bg-white ring-1 ring-amber-200'}`}>🦉</span>
+          </div>
+          <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-amber-100">
+            <div className="h-full rounded-full bg-amber-500 motion-safe:transition-all motion-safe:duration-500" style={{ width: `${Math.min(100, (owl.points/500)*100)}%` }} role="progressbar" aria-valuenow={owl.points} aria-valuemin={0} aria-valuemax={500} />
+          </div>
+          <div className="mt-3 grid grid-cols-5 gap-2">
+            {owl.parts.map((p) => (
+              <div key={p.milestone} className={`rounded-xl p-2 text-center text-xs ${p.unlocked ? 'bg-amber-500 text-white' : 'bg-white ring-1 ring-ink/10 text-ink/40'}`}>
+                <div className="text-base">{p.icon}</div>
+                <div className="mt-1 font-bold leading-none">{p.name}</div>
+                <div className="mt-0.5 text-[10px]">{p.unlocked ? '✓ Collected' : `Earn ${p.milestone} Points`}</div>
+                {!p.unlocked && p.points_needed > 0 && p.points_needed <= 100 && <div className="text-[10px] font-semibold text-amber-700">{p.points_needed} to go</div>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Pet XP Stage evolution — deterministic Hatchling/Fledgling/Guardian */}
       {petProgress && (

@@ -63,7 +63,8 @@ export default function WordDetective() {
   }, [startRound]);
 
   const current = round?.[index];
-  const tokens = current ? current.sentence.replace(/[.?!]$/, '').split(' ') : [];
+  // Robust tokenization: split on whitespace, strip trailing punctuation per token but preserve indices
+  const tokens = current ? current.sentence.trim().split(/\s+/).map((t) => t.replace(/[,;:.!?")']+$/, '').replace(/^["'(\[]+/, '')) : [];
   const endPunct = current ? current.sentence.match(/[.?!]$/)?.[0] || '' : '';
 
   const handlePickWord = (i) => {
