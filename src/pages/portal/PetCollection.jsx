@@ -3,12 +3,37 @@
 // Starter pet is immediately claimable (all parts unlock_date = 2026-09-01).
 // See migrations 0205 + 20260904000001 for schema + immediate-unlock fix.
 
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, PawPrint, Gift, CheckCircle2, PartyPopper, Lock, Clock, Sparkles, AlertCircle, X } from 'lucide-react';
 import { useAcademy } from '../../lib/AcademyDataContext';
-import { getActivePetWithParts, claimPetPart, getPetCheckinStatus, getMyPetProgress, getOwlProgress } from '../../lib/storageBridge';
+import { getActivePetWithParts, claimPetPart, getPetCheckinStatus, getMyPetProgress, getOwlProgress, getPremiumCollection, setActivePet } from '../../lib/storageBridge';
+
+function PremiumGrid({ owl }) {
+  const [data, setData] = React.useState(null);
+  const [active, setActive] = React.useState(null);
+  React.useEffect(() => { getPremiumCollection().then(setData).catch(()=>{}); }, []);
+  if (!data?.pets) return null;
+  return (
+    <div className="mb-4 rounded-2xl border border-violet-100 bg-white p-4 shadow-sm">
+      <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-violet-700">Premium Pets</p>
+      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {data.pets.map((p) => (
+          <button key={p.key} disabled={!p.unlocked} onClick={() => p.unlocked && setActivePet(p.key).then(()=>setActive(p.key)).catch(()=>{})}
+            className={`rounded-2xl p-3 text-center transition-all ${p.unlocked ? 'bg-violet-50 ring-1 ring-violet-200 hover:shadow active:scale-95' : 'bg-ink/[0.03] ring-1 ring-ink/10 opacity-60'}`}>
+            <div className="text-2xl">{p.icon}</div>
+            <div className="mt-1 text-xs font-bold text-ink">{p.name}</div>
+            <div className={`mt-0.5 text-[10px] ${p.unlocked ? 'text-emerald-600 font-bold' : 'text-ink/40'}`}>{p.unlocked ? (active===p.key?'✓ Active':'✓ Unlocked') : `${p.threshold} Points`}</div>
+            {!p.unlocked && <div className="text-[10px] text-violet-600">{p.points_needed} to go</div>}
+            <div className={`mt-1 inline-block rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase ${p.rarity==='legendary'?'bg-amber-100 text-amber-700':p.rarity==='epic'?'bg-violet-100 text-violet-700':p.rarity==='rare'?'bg-sky-100 text-sky-700':'bg-ink/5 text-ink/50'}`}>{p.rarity}</div>
+          </button>
+        ))}
+      </div>
+      <p className="mt-2 text-[11px] text-ink/50">Premium pets unlock automatically at Points thresholds. Tap an unlocked pet to set as active.</p>
+    </div>
+  );
+}
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -251,6 +276,11 @@ export default function PetCollection() {
             ))}
           </div>
         </div>
+      )}
+
+      {/* Premium collection — Alien/Robot/Unicorn unlocked by Points */}
+      {owl && (
+        <PremiumGrid owl={owl} />
       )}
 
       {/* Pet XP Stage evolution — deterministic Hatchling/Fledgling/Guardian */}

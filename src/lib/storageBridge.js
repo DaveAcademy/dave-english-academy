@@ -1885,3 +1885,13 @@ export async function getOwlProgress() {
   if (error) throw error;
   return data;
 }
+export async function getPremiumCollection() {
+  const { data, error } = await supabase.rpc('get_premium_collection');
+  if (error) throw error;
+  return data;
+}
+export async function setActivePet(petKey) {
+  const { data, error } = await supabase.rpc('set_active_pet', { p_pet_key: petKey });
+  if (error) throw error;
+  return data;
+}
