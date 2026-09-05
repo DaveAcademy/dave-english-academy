@@ -710,9 +710,9 @@ function AdminDashboard() {
       </DashboardErrorBoundary>
 
       <DashboardErrorBoundary>
-        <div className="mt-6">
-          <SectionLabel>{t('academicProgressLabel')}</SectionLabel>
-          <AcademicProgressSummary rows={progressRows} levelFilter={levelFilter} loading={progressDataLoading} />
+        <div>
+          <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-ink/40">{t('websiteEngagementLabel')}</h3>
+          <WebsiteEngagementSummary rows={engagementRows} levelFilter={levelFilter} loading={engagementDataLoading} />
         </div>
       </DashboardErrorBoundary>
 
@@ -819,7 +819,13 @@ function AdminDashboard() {
       </DashboardErrorBoundary>
 
       <div className="mt-8">
-        <SectionLabel>{t('detailedAnalyticsLabel')}</SectionLabel>
+        <details className="group rounded-2xl border border-ink/[0.06] bg-white open:shadow-card">
+          <summary className="flex cursor-pointer list-none items-center justify-between px-5 py-4 text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden">
+            <span>{t('detailedAnalyticsLabel')}</span>
+            <span className="rounded-full bg-ink/[0.04] px-2.5 py-1 text-xs text-ink/60 group-open:hidden">Show</span>
+            <span className="hidden rounded-full bg-ink/[0.04] px-2.5 py-1 text-xs text-ink/60 group-open:inline">Hide</span>
+          </summary>
+          <div className="border-t border-ink/[0.06] p-4 sm:p-5">
 
         <DashboardErrorBoundary>
           <div className="mt-3 overflow-x-auto rounded-xl border border-ink/[0.06] bg-white p-4 shadow-card sm:p-5">
@@ -907,17 +913,19 @@ function AdminDashboard() {
 
         <DashboardErrorBoundary>
           <div className="mt-4">
-            <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-ink/40">{t('progressAnalyticsLabel')}</h2>
+            <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-ink/40">{t('progressAnalyticsLabel')}</h3>
             <ProgressAnalytics rows={progressRows} levelFilter={levelFilter} loading={progressDataLoading} />
           </div>
         </DashboardErrorBoundary>
 
         <DashboardErrorBoundary>
           <div className="mt-4">
-            <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-ink/40">{t('activityFeedLabel')}</h2>
+            <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-ink/40">{t('activityFeedLabel')}</h3>
             <ActivityFeed />
           </div>
         </DashboardErrorBoundary>
+          </div>
+        </details>
       </div>
 
       <DashboardErrorBoundary>

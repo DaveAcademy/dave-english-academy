@@ -19,6 +19,8 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const ALLOWED_ORIGINS = [
   "https://dave-english-academy.vercel.app",
+  "https://davenglish.uz",
+  "https://www.davenglish.uz",
   "http://localhost:5173",
 ];
 

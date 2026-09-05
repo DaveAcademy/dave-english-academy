@@ -458,7 +458,7 @@ export default function Chat() {
   const renderMessages = (thread) => {
     const dividerId = firstUnreadId(thread);
     return (
-      <div className="space-y-2 overflow-y-auto p-4">
+      <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-4">
         {thread.length === 0 ? (
           <p className="py-10 text-center text-sm text-ink/50">{t('chat:noMessagesYet')}</p>
         ) : (
@@ -512,7 +512,7 @@ export default function Chat() {
   };
 
   const renderComposer = () => (
-    <form onSubmit={handleSend} className="space-y-2 border-t border-ink/10 p-3">
+    <form onSubmit={handleSend} className="shrink-0 space-y-2 border-t border-ink/10 p-3">
       {readOnlyNote ? (
         <p className="text-center text-xs text-ink/40">{readOnlyNote}</p>
       ) : (
@@ -598,13 +598,13 @@ export default function Chat() {
 
   if (isContextView) {
     return (
-      <div>
-        <header className="mb-4">
+      <div className="flex h-[calc(100dvh-7rem)] min-h-[420px] flex-col md:h-[calc(100dvh-4rem)]">
+        <header className="mb-4 shrink-0">
           <h1 className="font-display text-2xl font-bold text-ink">{t('chat:discussionTitle', { label: contextLabel || '...' })}</h1>
           <p className="mt-1 text-sm text-ink/50">{t('chat:contextSubtitle')}</p>
         </header>
-        {error && <div className="mb-4 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{error}</div>}
-        <div className="flex h-[70vh] flex-col overflow-hidden rounded-xl bg-white shadow-card">
+        {error && <div className="mb-4 shrink-0 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{error}</div>}
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-white shadow-card">
           {renderMessages(contextThread)}
           {renderComposer()}
         </div>
@@ -613,15 +613,15 @@ export default function Chat() {
   }
 
   return (
-    <div>
-      <header className="mb-4">
+    <div className="flex h-[calc(100dvh-7rem)] min-h-[420px] flex-col md:h-[calc(100dvh-4rem)]">
+      <header className="mb-4 shrink-0">
         <h1 className="font-display text-2xl font-bold text-ink">{t('chat:messagesTitle')}</h1>
         <p className="mt-1 text-sm text-ink/50">{t('chat:messagesSubtitle')}</p>
       </header>
 
-      {error && <div className="mb-4 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{error}</div>}
+      {error && <div className="mb-4 shrink-0 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{error}</div>}
 
-      <div className="flex h-[70vh] gap-4">
+      <div className="flex min-h-0 flex-1 gap-4 overflow-hidden">
         <div className={`w-full flex-shrink-0 flex-col overflow-hidden rounded-xl bg-white shadow-card md:flex md:w-80 ${activeKey ? 'hidden' : 'flex'}`}>
           <div className="border-b border-ink/10 p-3">
             <div className="flex items-center gap-2 rounded-lg bg-paper px-3 py-2">
@@ -665,10 +665,10 @@ export default function Chat() {
           </div>
         </div>
 
-        <div className={`flex-1 flex-col overflow-hidden rounded-xl bg-white shadow-card md:flex ${activeKey ? 'flex' : 'hidden'}`}>
+        <div className={`min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-white shadow-card md:flex ${activeKey ? 'flex' : 'hidden'}`}>
           {activeConversation ? (
             <>
-              <div className="flex items-center gap-2 border-b border-ink/10 p-3">
+              <div className="flex shrink-0 items-center gap-2 border-b border-ink/10 p-3">
                 <button onClick={() => setActiveKey(null)} className="rounded-md p-1 text-ink/50 hover:bg-paper md:hidden" aria-label={t('chat:backToConversations')}>
                   <ArrowLeft size={18} />
                 </button>
