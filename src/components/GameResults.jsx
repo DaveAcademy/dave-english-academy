@@ -71,7 +71,7 @@ export default function GameResults({ gradientClass = 'from-brand-50 to-sky-100'
             </div>
             <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-ink/10">
               <div
-                className="h-full rounded-full bg-violet-600 transition-all duration-700 ease-out"
+                className="h-full rounded-full bg-violet-600 motion-safe:transition-all motion-safe:duration-700 motion-safe:ease-out"
                 style={{ width: `${Math.min(100, Math.max(0, xpProgress.progress_percent))}%` }}
                 role="progressbar"
                 aria-valuenow={xpProgress.progress_percent}

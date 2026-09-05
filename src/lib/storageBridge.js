@@ -1867,3 +1867,15 @@ export async function getPetCheckinStatus() {
   if (error) throw error;
   return data;
 }
+
+export async function getMyPetProgress() {
+  const { data, error } = await supabase.rpc('get_my_pet_progress');
+  if (error) throw error;
+  return data;
+}
+
+export async function getStudentPetProgress(studentId) {
+  const { data, error } = await supabase.rpc('get_student_pet_progress', { p_student_id: studentId });
+  if (error) throw error;
+  return data;
+}

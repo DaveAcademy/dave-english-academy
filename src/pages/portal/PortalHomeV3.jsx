@@ -21,12 +21,12 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowRight, CalendarClock, MessageSquare, Award, BookOpen, FileCheck2, CreditCard, Flame, GraduationCap, Trophy, Target, Layers, Languages } from 'lucide-react';
+import { ArrowRight, CalendarClock, MessageSquare, Award, BookOpen, FileCheck2, CreditCard, Flame, GraduationCap, Trophy, Target, Layers, Languages, Sparkles } from 'lucide-react';
 import {
   LESSON_STATUS, teacherPaceFor, lessonCapFor, progressByLessonNumber, lessonStatusFor, nextUnfinishedLesson, translatedLessonTitle,
 } from '../../lib/lessonLogic';
 import { useAcademy } from '../../lib/AcademyDataContext';
-import { getStudentPaymentStatus, getMyTotalXp } from '../../lib/storageBridge';
+import { getStudentPaymentStatus } from '../../lib/storageBridge';
 import Panel from '../../components/Panel';
 import StatCard from '../../components/StatCard';
 import StatusPill from '../../components/StatusPill';
@@ -36,6 +36,7 @@ import { attendanceRate, filterByYearMonth, currentStreak } from '../../utils/at
 import { currentAndPreviousMonth, trendFrom, formatDateOnly, timeOfDayGreeting, formatWeekdayName, formatFullDateNumeric, formatClockTime } from '../../utils/date';
 import { formatUZS } from '../../utils/format';
 import { useLocalClock } from '../../hooks/useLocalClock';
+import { useLevelUpCelebration } from '../../hooks/useLevelUpCelebration';
 
 // Per-metric status thresholds - deliberately different per metric rather
 // than one flat cutoff, because each behaves differently in practice:
@@ -127,24 +128,24 @@ export default function PortalHomeV3() {
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [totalXp, setTotalXp] = useState(null);
   const [xpProgress, setXpProgress] = useState(null);
+  const { celebrateLevel: xpLevelUp, dismiss: dismissXpLevelUp } = useLevelUpCelebration(me?.id, xpProgress?.level);
   const { current, previous } = useMemo(() => currentAndPreviousMonth(), []);
-
-  useEffect(() => {
-    if (!me) return;
-    let cancelled = false;
-    getMyTotalXp()
-      .then((v) => !cancelled && setTotalXp(v))
-      .catch(() => !cancelled && setTotalXp(0));
-    return () => { cancelled = true; };
-  }, [me]);
 
   useEffect(() => {
     if (!me) return;
     let cancelled = false;
     import('../../lib/storageBridge').then(({ getMyXpProgress }) =>
       getMyXpProgress()
-        .then((p) => !cancelled && setXpProgress(p))
-        .catch(() => !cancelled && setXpProgress(null))
+        .then((p) => {
+          if (cancelled) return;
+          setXpProgress(p);
+          setTotalXp(p?.total_xp ?? 0);
+        })
+        .catch(() => {
+          if (cancelled) return;
+          setXpProgress(null);
+          setTotalXp(0);
+        })
     );
     return () => { cancelled = true; };
   }, [me]);
@@ -364,6 +365,16 @@ export default function PortalHomeV3() {
             </span>
           </div>
 
+          {/* Level-up celebration — restrained, session-level, no duplicate on refresh */}
+          {xpLevelUp != null && (
+            <div className="mx-5 mb-4 flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white p-4 shadow-sm sm:mx-6 motion-safe:animate-[fadeIn_0.3s_ease-out]">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wide text-amber-700">Level Up!</p>
+                <p className="mt-0.5 font-display text-sm font-bold text-ink">You reached Level {xpLevelUp} — {xpProgress?.total_xp ?? ''} XP</p>
+              </div>
+              <button onClick={dismissXpLevelUp} className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-ink/70 shadow-sm ring-1 ring-ink/10 hover:bg-ink/5" aria-label="Dismiss">Dismiss</button>
+            </div>
+          )}
           {/* XP Progression — authoritative_level, progress toward next, remaining */}
           {xpProgress && (
             <div className="mx-5 mb-4 rounded-xl border border-violet-100 bg-gradient-to-br from-violet-50 to-white p-4 shadow-sm sm:mx-6">
@@ -379,7 +390,7 @@ export default function PortalHomeV3() {
               </div>
               <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-violet-100">
                 <div
-                  className="h-full rounded-full bg-violet-600 transition-all duration-700 ease-out"
+                  className="h-full rounded-full bg-violet-600 motion-safe:transition-all motion-safe:duration-700 motion-safe:ease-out"
                   style={{ width: `${Math.min(100, Math.max(0, xpProgress.progress_percent))}%` }}
                   role="progressbar"
                   aria-valuenow={xpProgress.progress_percent}
