@@ -94,6 +94,7 @@ export default function WordScramble() {
   const [hintUsed, setHintUsed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [result, setResult] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const { record } = useGameRecord('word_scramble', !!result);
 

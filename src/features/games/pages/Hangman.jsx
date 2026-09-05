@@ -20,7 +20,7 @@ import useGameRecord from '../hooks/useGameRecord';
 import GameLeaderboardBlock from '../components/GameLeaderboardBlock';
 import GameLevelStatus, { LevelBadge } from '../components/GameLevelStatus';
 
-const MAX_WRONG = 6;
+const MAX_WRONG = 5;
 const ROWS = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'];
 
 export default function Hangman() {
@@ -35,6 +35,7 @@ export default function Hangman() {
   const [feedback, setFeedback] = useState(null); // 'correct' | 'incorrect' | null
   const [loading, setLoading] = useState(true);
   const [result, setResult] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const { record } = useGameRecord('hangman', !!result);
 
@@ -271,7 +272,7 @@ export default function Hangman() {
                     onClick={() => handleGuess(letter)}
                     disabled={!!feedback || isGuessed}
                     aria-label={letter}
-                    className={`flex h-9 w-7 flex-shrink-0 items-center justify-center rounded-md text-xs font-bold shadow-sm transition-all duration-200 sm:h-10 sm:w-8 sm:text-sm ${style}`}
+                    className={`flex h-11 w-9 flex-shrink-0 items-center justify-center rounded-md text-xs font-bold shadow-sm transition-all duration-200 sm:h-10 sm:w-8 sm:text-sm ${style}`}
                   >
                     {letter.toUpperCase()}
                   </button>

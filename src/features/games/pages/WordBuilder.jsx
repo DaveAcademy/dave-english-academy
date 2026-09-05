@@ -51,6 +51,7 @@ export default function WordBuilder() {
   const [feedback, setFeedback] = useState(null);
   const [loading, setLoading] = useState(true);
   const [result, setResult] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const { bestStreak, recordCorrect, recordIncorrect, reset: resetStreak } = useGameStreak();
 
