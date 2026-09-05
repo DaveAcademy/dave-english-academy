@@ -26,7 +26,7 @@ import {
   LESSON_STATUS, teacherPaceFor, lessonCapFor, progressByLessonNumber, lessonStatusFor, nextUnfinishedLesson, translatedLessonTitle,
 } from '../../lib/lessonLogic';
 import { useAcademy } from '../../lib/AcademyDataContext';
-import { getStudentPaymentStatus } from '../../lib/storageBridge';
+import { getStudentPaymentStatus, getMyTotalXp } from '../../lib/storageBridge';
 import Panel from '../../components/Panel';
 import StatCard from '../../components/StatCard';
 import StatusPill from '../../components/StatusPill';
@@ -125,7 +125,17 @@ export default function PortalHomeV3() {
   const dateLocale = i18n.language === 'uz' ? 'uz' : 'en-US';
   const { lessons, attendance, homework, homeworkStatus, exams, examScores, certificates, curriculumProgress, lessonProgress, me } = useAcademy();
   const [paymentStatus, setPaymentStatus] = useState(null);
+  const [totalXp, setTotalXp] = useState(null);
   const { current, previous } = useMemo(() => currentAndPreviousMonth(), []);
+
+  useEffect(() => {
+    if (!me) return;
+    let cancelled = false;
+    getMyTotalXp()
+      .then((v) => !cancelled && setTotalXp(v))
+      .catch(() => !cancelled && setTotalXp(0));
+    return () => { cancelled = true; };
+  }, [me]);
 
   useEffect(() => {
     if (!me) return;
@@ -323,8 +333,13 @@ export default function PortalHomeV3() {
               <GraduationCap size={13} aria-hidden="true" />{t('v3LevelLabel', { level: me.level })}
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-ink/[0.06] bg-white px-2.5 py-1 text-xs font-semibold text-ink shadow-sm">
-              <Trophy size={13} className="text-brand-500" aria-hidden="true" />{totalPoints} {t('v3PointsLabel')}
+              <Trophy size={13} className="text-brand-500" aria-hidden="true" />{totalPoints} {t('v3PointsLabel', { defaultValue: 'Points' })}
             </span>
+            {totalXp !== null && (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-violet-200 bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-700">
+                <Sparkles size={13} aria-hidden="true" />{totalXp} {t('v3XpLabel', { defaultValue: 'XP' })}
+              </span>
+            )}
             <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold ${tier.color}`}>
               <Layers size={13} aria-hidden="true" />{t(tier.key)}
             </span>

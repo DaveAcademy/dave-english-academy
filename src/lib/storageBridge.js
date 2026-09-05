@@ -1822,6 +1822,24 @@ export async function getBestStreak(studentId) {
   return data;
 }
 
+export async function getMyTotalXp() {
+  const { data, error } = await supabase.rpc('get_my_total_xp');
+  if (error) throw error;
+  return data;
+}
+
+export async function getMyXpTransactions(limit = 20) {
+  const { data, error } = await supabase.rpc('get_my_xp_transactions', { p_limit: limit });
+  if (error) throw error;
+  return data;
+}
+
+export async function getMyXpToday() {
+  const { data, error } = await supabase.rpc('get_my_xp_today');
+  if (error) throw error;
+  return data;
+}
+
 // ---------- Pet Collection (Game section) ----------
 // See migration 0196. All rewards are server-authoritative — the client
 // never supplies part IDs. Auto-grants the active pet on first call.
