@@ -20,6 +20,70 @@ import useGameRecord from '../hooks/useGameRecord';
 import GameLeaderboardBlock from '../components/GameLeaderboardBlock';
 import GameLevelStatus, { LevelBadge } from '../components/GameLevelStatus';
 
+function Gallows({ wrongCount, phase }) {
+  // wrongCount 0-5 progressive parts: 1=head 2=body 3=arms 4=legs 5=final (full)
+  const showHead = wrongCount >= 1;
+  const showBody = wrongCount >= 2;
+  const showArms = wrongCount >= 3;
+  const showLegs = wrongCount >= 4;
+  const complete = wrongCount >= 5;
+  const hanging = phase === 'hanging' || phase === 'settled';
+  return (
+    <div className="mx-auto w-full max-w-[220px] sm:max-w-[240px]" aria-hidden="true">
+      <svg viewBox="0 0 200 180" className="h-[150px] w-full sm:h-[170px]" role="img">
+        {/* gallows */}
+        <line x1="20" y1="170" x2="80" y2="170" stroke="#9b7e5a" strokeWidth="6" strokeLinecap="round" />
+        <line x1="40" y1="170" x2="40" y2="15" stroke="#9b7e5a" strokeWidth="6" strokeLinecap="round" />
+        <line x1="40" y1="15" x2="125" y2="15" stroke="#9b7e5a" strokeWidth="6" strokeLinecap="round" />
+        <line x1="65" y1="15" x2="40" y2="40" stroke="#9b7e5a" strokeWidth="4" strokeLinecap="round" />
+        {/* rope — moves with character during hanging */}
+        <g className={hanging ? 'hang-rope' : ''} style={hanging ? { transformOrigin: '125px 15px' } : undefined}>
+          <line x1="125" y1="15" x2="125" y2={complete ? 38 : 32} stroke="#c9a86a" strokeWidth="3" strokeLinecap="round" />
+          {/* character group */}
+          <g className={hanging ? 'hang-figure' : complete ? 'hang-complete' : ''}>
+            {showHead && <circle cx="125" cy="52" r="16" fill="#fff7ed" stroke="#44403c" strokeWidth="2.2" className={wrongCount === 1 ? 'hang-part-in' : ''} />}
+            {showHead && (
+              <>
+                <circle cx="120" cy="50" r="1.7" fill="#44403c" />
+                <circle cx="130" cy="50" r="1.7" fill="#44403c" />
+                <path d={complete ? 'M119 58 Q125 54 131 58' : 'M119 57 Q125 60 131 57'} stroke="#44403c" strokeWidth="1.4" fill="none" strokeLinecap="round" />
+              </>
+            )}
+            {showBody && <line x1="125" y1="68" x2="125" y2="105" stroke="#44403c" strokeWidth="2.4" strokeLinecap="round" className={wrongCount === 2 ? 'hang-part-in' : ''} />}
+            {showArms && (
+              <>
+                <line x1="125" y1="78" x2="108" y2="92" stroke="#44403c" strokeWidth="2.2" strokeLinecap="round" className={wrongCount === 3 ? 'hang-part-in' : ''} />
+                <line x1="125" y1="78" x2="142" y2="92" stroke="#44403c" strokeWidth="2.2" strokeLinecap="round" />
+              </>
+            )}
+            {showLegs && (
+              <>
+                <line x1="125" y1="105" x2="110" y2="128" stroke="#44403c" strokeWidth="2.2" strokeLinecap="round" className={wrongCount === 4 ? 'hang-part-in' : ''} />
+                <line x1="125" y1="105" x2="140" y2="128" stroke="#44403c" strokeWidth="2.2" strokeLinecap="round" />
+              </>
+            )}
+          </g>
+        </g>
+      </svg>
+      <style>{`
+        .hang-part-in { animation: hangPartIn 260ms ease-out both; }
+        @keyframes hangPartIn { from { opacity:0; transform: scale(0.7); } to { opacity:1; transform: scale(1); } }
+        .hang-complete { animation: hangComplete 300ms ease-out both; }
+        @keyframes hangComplete { from { transform: translateY(-4px); } to { transform: translateY(0); } }
+        .hang-figure { animation: hangDrop 380ms cubic-bezier(0.34,1.26,0.64,1) both 420ms, hangSwing 650ms ease-in-out 800ms; }
+        .hang-rope { animation: hangRopeSwing 650ms ease-in-out 800ms; }
+        @keyframes hangDrop { from { transform: translateY(-10px); } to { transform: translateY(14px); } }
+        @keyframes hangSwing { 0%{ transform: translateY(14px) rotate(0deg);} 25%{transform: translateY(14px) rotate(2deg);} 50%{transform: translateY(14px) rotate(-1.6deg);} 75%{transform: translateY(14px) rotate(1deg);} 100%{transform: translateY(14px) rotate(0deg);} }
+        @keyframes hangRopeSwing { 0%{transform: rotate(0deg);} 25%{transform: rotate(1.2deg);} 50%{transform: rotate(-1deg);} 75%{transform: rotate(0.6deg);} 100%{transform: rotate(0deg);} }
+        @media (prefers-reduced-motion: reduce) {
+          .hang-part-in, .hang-complete, .hang-figure, .hang-rope { animation: none !important; }
+          .hang-figure { transform: translateY(14px) !important; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 const MAX_WRONG = 5;
 const ROWS = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'];
 
@@ -33,6 +97,8 @@ export default function Hangman() {
   const [guessed, setGuessed] = useState(new Set());
   const [wrongCount, setWrongCount] = useState(0);
   const [feedback, setFeedback] = useState(null); // 'correct' | 'incorrect' | null
+  const [hangPhase, setHangPhase] = useState('idle'); // idle | hanging | settled
+  const [winAnim, setWinAnim] = useState(false);
   const [loading, setLoading] = useState(true);
   const [result, setResult] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -47,6 +113,8 @@ export default function Hangman() {
     setGuessed(new Set());
     setWrongCount(0);
     setFeedback(null);
+    setHangPhase('idle');
+    setWinAnim(false);
     setError(null);
     try {
       const { roundId: rid, level: lvl, words } = await getHangmanRound();
@@ -74,15 +142,16 @@ export default function Hangman() {
     setAnswers((prev) => [...prev, { vocabulary_id: current.id, answer, used_hint: false, skipped }]);
   };
 
-  // Auto-record the moment the word is fully revealed or lives run out -
-  // no separate "check" step needed since every letter is graded as it's
-  // tapped (unlike WordScramble's typed-then-submit flow).
+  // Auto-record the moment the word is fully revealed or lives run out
   useEffect(() => {
     if (!current || feedback) return;
     if (solved) {
-      recordAnswer(current.english, false);
+      setWinAnim(true);
+      setTimeout(() => recordAnswer(current.english, false), 420);
     } else if (wrongCount >= MAX_WRONG) {
-      recordAnswer('', true);
+      setHangPhase('hanging');
+      setTimeout(() => setHangPhase('settled'), 1500);
+      setTimeout(() => recordAnswer('', true), 950);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [solved, wrongCount, current, feedback]);
@@ -103,6 +172,8 @@ export default function Hangman() {
       setGuessed(new Set());
       setWrongCount(0);
       setFeedback(null);
+      setHangPhase('idle');
+      setWinAnim(false);
       return;
     }
     setLoading(true);
@@ -121,18 +192,24 @@ export default function Hangman() {
   }
 
   if (result) {
+    const isWin = result.pass;
     return (
       <div className="mx-auto max-w-sm animate-[fadeIn_0.3s_ease-out]">
-        <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-fuchsia-50 to-purple-100 p-6 text-center shadow-card sm:p-8">
-          {result.pass ? (
+        <div className={`overflow-hidden rounded-2xl p-6 text-center shadow-card sm:p-8 ${isWin ? 'bg-gradient-to-br from-emerald-50 to-teal-100' : 'bg-gradient-to-br from-stone-50 to-stone-100'}`}>
+          {isWin ? (
             <>
-              <div className="animate-[bounceIn_0.4s_ease-out]">
-                <PartyPopper size={36} className="mx-auto text-fuchsia-500" aria-hidden="true" />
+              <div className="animate-[bounceIn_0.4s_ease-out] motion-safe:animate-[bounceIn_0.4s_ease-out]">
+                <PartyPopper size={36} className="mx-auto text-emerald-500" aria-hidden="true" />
               </div>
               <h1 className="mt-2 font-display text-xl font-bold text-ink">{t('resultsTitle')}</h1>
+              <p className="mt-1 animate-[scaleIn_0.3s_ease-out_0.2s_both] text-sm font-semibold text-emerald-600">Word saved ✓</p>
             </>
           ) : (
-            <h1 className="mt-2 font-display text-xl font-bold text-ink">{t('gameOverTitle')}</h1>
+            <>
+              <p className="text-2xl" aria-hidden>🪢</p>
+              <h1 className="mt-2 font-display text-xl font-bold text-ink">{t('gameOverTitle')}</h1>
+              <p className="mt-1 text-sm text-stone-500">The word could not be saved</p>
+            </>
           )}
           {result.game_points_awarded > 0 ? (
             <div className="mt-4 animate-[scaleIn_0.3s_ease-out_0.15s_both]">
@@ -211,7 +288,9 @@ export default function Hangman() {
         <p className="mt-1.5 text-center text-xs font-semibold text-ink/40">{t('wordOf', { current: index + 1, total: round.length })}</p>
       </div>
 
-      <div className="rounded-2xl bg-gradient-to-br from-fuchsia-50 to-purple-100 p-5 shadow-card sm:p-6">
+      <div className={`rounded-2xl p-5 shadow-card sm:p-6 transition-colors duration-300 ${winAnim ? 'bg-gradient-to-br from-emerald-50 to-teal-100' : hangPhase !== 'idle' ? 'bg-gradient-to-br from-stone-50 to-stone-100' : 'bg-gradient-to-br from-fuchsia-50 to-purple-100'}`}>
+        <Gallows wrongCount={wrongCount} phase={hangPhase} />
+
         <div className="flex items-center justify-center gap-1">
           {Array.from({ length: MAX_WRONG }).map((_, i) => (
             <Heart
@@ -239,7 +318,7 @@ export default function Hangman() {
           })}
         </div>
 
-        {feedback && (
+        {feedback && hangPhase === 'idle' && !winAnim && (
           <p
             role="status"
             className={`mt-3 flex items-center justify-center gap-1.5 text-center text-sm font-bold animate-[scaleIn_0.2s_ease-out] ${
