@@ -126,6 +126,7 @@ export default function PortalHomeV3() {
   const { lessons, attendance, homework, homeworkStatus, exams, examScores, certificates, curriculumProgress, lessonProgress, me } = useAcademy();
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [totalXp, setTotalXp] = useState(null);
+  const [xpProgress, setXpProgress] = useState(null);
   const { current, previous } = useMemo(() => currentAndPreviousMonth(), []);
 
   useEffect(() => {
@@ -134,6 +135,17 @@ export default function PortalHomeV3() {
     getMyTotalXp()
       .then((v) => !cancelled && setTotalXp(v))
       .catch(() => !cancelled && setTotalXp(0));
+    return () => { cancelled = true; };
+  }, [me]);
+
+  useEffect(() => {
+    if (!me) return;
+    let cancelled = false;
+    import('../../lib/storageBridge').then(({ getMyXpProgress }) =>
+      getMyXpProgress()
+        .then((p) => !cancelled && setXpProgress(p))
+        .catch(() => !cancelled && setXpProgress(null))
+    );
     return () => { cancelled = true; };
   }, [me]);
 
@@ -351,6 +363,35 @@ export default function PortalHomeV3() {
               {milestone.done ? t('v3MilestoneComplete') : t('v3MilestoneLessons', { remaining: milestone.remaining, milestone: milestone.label })}
             </span>
           </div>
+
+          {/* XP Progression — authoritative_level, progress toward next, remaining */}
+          {xpProgress && (
+            <div className="mx-5 mb-4 rounded-xl border border-violet-100 bg-gradient-to-br from-violet-50 to-white p-4 shadow-sm sm:mx-6">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-600 text-xs font-bold text-white">Lv{xpProgress.level}</span>
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wide text-violet-700">{t('v3XpLevelLabel', { defaultValue: 'XP Level' })} {xpProgress.level}</p>
+                    <p className="text-xs text-violet-600/70">{xpProgress.total_xp} {t('v3XpLabel')} · {xpProgress.xp_remaining} {t('v3XpRemaining', { defaultValue: 'to next' })}</p>
+                  </div>
+                </div>
+                <span className="text-xs font-bold text-violet-700">{xpProgress.progress_percent}%</span>
+              </div>
+              <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-violet-100">
+                <div
+                  className="h-full rounded-full bg-violet-600 transition-all duration-700 ease-out"
+                  style={{ width: `${Math.min(100, Math.max(0, xpProgress.progress_percent))}%` }}
+                  role="progressbar"
+                  aria-valuenow={xpProgress.progress_percent}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                />
+              </div>
+              <p className="mt-1.5 text-[11px] text-violet-600/60">
+                {xpProgress.is_max ? t('v3XpMaxLevel', { defaultValue: 'Max Level — keep learning!' }) : `${xpProgress.xp_into_level} / ${xpProgress.next_level_xp - xpProgress.current_level_xp} XP`}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Today's Learning + Next Goal */}

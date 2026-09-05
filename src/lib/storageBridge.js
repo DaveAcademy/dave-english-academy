@@ -1840,6 +1840,12 @@ export async function getMyXpToday() {
   return data;
 }
 
+export async function getMyXpProgress() {
+  const { data, error } = await supabase.rpc('get_my_xp_progress');
+  if (error) throw error;
+  return data;
+}
+
 // ---------- Pet Collection (Game section) ----------
 // See migration 0196. All rewards are server-authoritative — the client
 // never supplies part IDs. Auto-grants the active pet on first call.
