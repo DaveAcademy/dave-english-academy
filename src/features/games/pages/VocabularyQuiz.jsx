@@ -27,6 +27,7 @@ export default function VocabularyQuiz() {
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState([]);
   const [chosen, setChosen] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
@@ -69,11 +70,13 @@ export default function VocabularyQuiz() {
   };
 
   const handleNext = async () => {
+    if (submitting) return;
     if (index + 1 < round.length) {
       setIndex((i) => i + 1);
       setChosen(null);
       return;
     }
+    setSubmitting(true);
     setLoading(true);
     try {
       const res = await submitGameRound('vocabulary_quiz', roundId, answers);
@@ -82,6 +85,7 @@ export default function VocabularyQuiz() {
       setError(e.message || String(e));
     } finally {
       setLoading(false);
+      setSubmitting(false);
     }
   };
 
