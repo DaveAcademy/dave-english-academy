@@ -617,9 +617,28 @@ export async function listAttendance() {
 }
 
 export async function setAttendanceStatus(studentId, date, status) {
-  // Direct upsert — no pre-check SELECT. The (student_id, date) unique
-  // constraint handles conflicts. Returns the affected row so the caller
-  // can patch local state without a full table refetch.
+  // Check existing before deciding to toggle or upsert.
+  // This fixes the previous bug where every upsert was immediately deleted
+  // because data.status always equaled the requested status after upsert.
+  const { data: existing, error: selError } = await supabase
+    .from('attendance')
+    .select('id,status')
+    .eq('student_id', studentId)
+    .eq('date', date)
+    .maybeSingle();
+  if (selError) throw selError;
+
+  if (existing && existing.status === status) {
+    // Toggle off: same status clicked again — delete the record.
+    const { error: delError } = await supabase
+      .from('attendance')
+      .delete()
+      .eq('id', existing.id);
+    if (delError) throw delError;
+    return { deleted: true, studentId, date };
+  }
+
+  // Otherwise upsert the new/changed status.
   const { data, error } = await supabase
     .from('attendance')
     .upsert(
@@ -629,25 +648,6 @@ export async function setAttendanceStatus(studentId, date, status) {
     .select()
     .single();
   if (error) throw error;
-
-  // Toggle-off: if the upsert wrote the same status that was already
-  // there, delete the record (clicking the same button clears it).
-  if (data && data.status === status) {
-    // Check if this was an update (row existed) vs insert (new row).
-    // For a new insert, we keep it. For an update to the same status,
-    // we delete (toggle off). We detect this by checking if there was
-    // already a row — the upsert returning the same status means either
-    // it was a no-op insert or a same-status update. To distinguish, we
-    // compare the updated_at or just always delete on same-status click.
-    // Simplest: delete on same-status click (matches original behavior).
-    const { error: delError } = await supabase
-      .from('attendance')
-      .delete()
-      .eq('id', data.id);
-    if (delError) throw delError;
-    return { deleted: true, studentId, date };
-  }
-
   return { row: data, studentId, date };
 }
 

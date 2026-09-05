@@ -354,13 +354,17 @@ export function useAcademyData() {
   const setAttendanceStatus = useCallback(
     async (studentId, date, status) => {
       // Deduplicate: prevent concurrent saves for the same student+date.
+      // Use functional check via pendingAttendanceRef to avoid stale closure.
       const key = `${studentId}:${date}`;
       if (pendingAttendance.has(key)) return;
-      setPendingAttendance((prev) => new Set([...prev, key]));
+      setPendingAttendance((prev) => {
+        if (prev.has(key)) return prev;
+        return new Set([...prev, key]);
+      });
 
       // Capture the original record before the optimistic update, so we can
-      // restore it exactly on failure.
-      const originalRecord = prev?.find((a) => a.student_id === studentId && a.date === date);
+      // restore it exactly on failure. Use attendance from closure (not prev).
+      const originalRecord = attendance.find((a) => a.student_id === studentId && a.date === date);
 
       // Optimistic update: immediately reflect the change in local state.
       setAttendance((prev) => {
@@ -427,7 +431,7 @@ export function useAcademyData() {
         });
       }
     },
-    [touchBackup, pendingAttendance]
+    [touchBackup, pendingAttendance, attendance]
   );
 
   const addLesson = useCallback(async (data) => {

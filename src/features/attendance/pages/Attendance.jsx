@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CheckCircle2, Clock, XCircle } from 'lucide-react';
 import { useAcademy } from '../../../lib/AcademyDataContext';
-import { todayISO } from '../../../utils/date';
+import { todayTashkentISO } from '../../../shared/utils/date';
 import { LEVELS } from '../../../lib/levels';
 
 // labelKey is a translation key (looked up at render time inside the
@@ -20,7 +20,7 @@ const LEVEL_TABS = [
 export default function Attendance() {
   const { t } = useTranslation(['attendance', 'common']);
   const { students, attendance, setAttendanceStatus, pendingAttendance, error } = useAcademy();
-  const [date, setDate] = useState(todayISO());
+  const [date, setDate] = useState(todayTashkentISO());
   const [level, setLevel] = useState('');
 
   const activeStudents = useMemo(
