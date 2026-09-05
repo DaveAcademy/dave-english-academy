@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, PawPrint, Gift, CheckCircle2, PartyPopper, Lock, Clock, Sparkles, AlertCircle, X } from 'lucide-react';
 import { useAcademy } from '../../lib/AcademyDataContext';
-import { getActivePetWithParts, claimPetPart, getPetCheckinStatus } from '../../lib/storageBridge';
+import { getActivePetWithParts, claimPetPart, getPetCheckinStatus, getMyPetProgress } from '../../lib/storageBridge';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -99,6 +99,7 @@ export default function PetCollection() {
   const { me } = useAcademy();
   const [petData, setPetData] = useState(null);
   const [checkinStatus, setCheckinStatus] = useState(null);
+  const [petProgress, setPetProgress] = useState(null);
   const [loading, setLoading] = useState(true);
   const [claiming, setClaiming] = useState(false);
   const [claimedPart, setClaimedPart] = useState(null);
@@ -110,12 +111,14 @@ export default function PetCollection() {
     setLoading(true);
     setError(null);
     try {
-      const [pet, status] = await Promise.all([
+      const [pet, status, prog] = await Promise.all([
         getActivePetWithParts(),
         getPetCheckinStatus(),
+        getMyPetProgress().catch(() => null),
       ]);
       setPetData(pet);
       setCheckinStatus(status);
+      setPetProgress(prog);
     } catch (err) {
       const msg = String(err.message || err);
       if (/already claimed/i.test(msg)) setError(t('petAlreadyClaimed'));
@@ -139,12 +142,14 @@ export default function PetCollection() {
       const part = result?.part ?? null;
       setClaimedPart(part);
       setCelebrateKey((k) => k + 1);
-      const [pet, status] = await Promise.all([
+      const [pet, status, prog] = await Promise.all([
         getActivePetWithParts(),
         getPetCheckinStatus(),
+        getMyPetProgress().catch(() => null),
       ]);
       setPetData(pet);
       setCheckinStatus(status);
+      setPetProgress(prog);
     } catch (err) {
       const msg = String(err.message || err);
       if (/already claimed/i.test(msg)) setError(t('petAlreadyClaimed'));
@@ -218,6 +223,39 @@ export default function PetCollection() {
         <ArrowLeft size={14} /> {t('backToPortal')}
       </Link>
 
+      {/* Pet XP Stage evolution — deterministic Hatchling/Fledgling/Guardian */}
+      {petProgress && (
+        <div className="mb-4 flex items-center gap-3 rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-white px-4 py-3 shadow-sm">
+          <span
+            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white shadow-sm ${
+              petProgress.stage >= 3 ? 'bg-amber-500 ring-2 ring-amber-200' : petProgress.stage === 2 ? 'bg-emerald-500 ring-1 ring-emerald-200' : 'bg-ink/70'
+            }`}
+            aria-hidden
+          >
+            {petProgress.stage}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-bold uppercase tracking-wide text-emerald-700">
+              Stage {petProgress.stage} · {petProgress.stage_name}
+            </p>
+            <p className="text-xs text-ink/60">
+              {petProgress.is_max ? 'Max stage — Guardian!' : `${petProgress.total_pet_xp} Pet XP · ${petProgress.xp_remaining} to next stage`}
+            </p>
+            <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-emerald-100">
+              <div
+                className="h-full rounded-full bg-emerald-500 motion-safe:transition-all motion-safe:duration-700"
+                style={{ width: `${Math.min(100, Math.max(0, petProgress.progress_percent))}%` }}
+                role="progressbar"
+                aria-valuenow={petProgress.progress_percent}
+                aria-valuemin={0}
+                aria-valuemax={100}
+              />
+            </div>
+          </div>
+          <span className="shrink-0 text-xs font-bold text-emerald-700">{petProgress.progress_percent}%</span>
+        </div>
+      )}
+
       {/* Header — premium pet hero */}
       <header
         className="relative mb-5 overflow-hidden rounded-[20px] bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 px-5 py-6 shadow-card sm:px-7 sm:py-7"
@@ -225,12 +263,15 @@ export default function PetCollection() {
         {/* subtle paper texture wash */}
         <div className="pointer-events-none absolute inset-0 opacity-[0.07] ruled-texture" aria-hidden />
         <div className="relative flex items-center gap-4 sm:gap-5">
-          {/* Pet glyph — bounces on claim */}
+          {/* Pet glyph — scales with XP stage, bounces on claim */}
           <div
             key={celebrateKey || 'hero'}
-            className={`flex h-[64px] w-[64px] shrink-0 items-center justify-center rounded-2xl bg-white/15 text-[34px] leading-none shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] ring-1 ring-white/20 backdrop-blur-sm sm:h-[68px] sm:w-[68px] sm:text-[36px] ${claimedPart ? 'animate-correct' : ''}`}
+            className={`flex h-[64px] w-[64px] shrink-0 items-center justify-center rounded-2xl bg-white/15 text-[34px] leading-none shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] ring-1 ring-white/20 backdrop-blur-sm sm:h-[68px] sm:w-[68px] sm:text-[36px] ${claimedPart ? 'animate-correct' : ''} ${
+              petProgress?.stage >= 3 ? 'shadow-[0_0_20px_rgba(255,255,255,0.35)]' : petProgress?.stage === 2 ? 'shadow-[0_0_12px_rgba(255,255,255,0.22)]' : ''
+            }`}
             role="img"
             aria-label={pet.name}
+            style={petProgress ? { transform: `scale(${petProgress.stage === 1 ? 1 : petProgress.stage === 2 ? 1.06 : 1.12})` } : undefined}
           >
             <span className={claimedPart ? 'inline-block' : undefined}>{pet.icon}</span>
           </div>
