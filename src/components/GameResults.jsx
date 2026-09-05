@@ -20,16 +20,29 @@ export default function GameResults({ gradientClass = 'from-brand-50 to-sky-100'
   const { record } = useGameRecord(gameType);
   const [xpProgress, setXpProgress] = useState(null);
   const [xpLoading, setXpLoading] = useState(true);
+  const [showLevelUp, setShowLevelUp] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
+    const prevLevelKey = `xp_prev_level_${gameType}`;
+    const prevLevel = Number(sessionStorage.getItem(prevLevelKey) || 0);
     // Fetch authoritative XP progression after game completion (server is source, not +10 assumption)
     getMyXpProgress()
-      .then((p) => !cancelled && setXpProgress(p))
+      .then((p) => {
+        if (cancelled || !p) return;
+        setXpProgress(p);
+        // Level-up detection: compare previous authoritative level vs new
+        // Only show if new > prev and prev was not 0 (first fetch), idempotent via sessionStorage
+        if (prevLevel > 0 && p.level > prevLevel) {
+          setShowLevelUp(true);
+        }
+        // Store new level for next comparison, idempotent: refresh with same level won't re-show
+        sessionStorage.setItem(prevLevelKey, String(p.level));
+      })
       .catch(() => !cancelled && setXpProgress(null))
       .finally(() => !cancelled && setXpLoading(false));
     return () => { cancelled = true; };
-  }, []);
+  }, [gameType]);
 
   return (
     <div className="mx-auto max-w-sm animate-[fadeIn_0.3s_ease-out]">
@@ -82,6 +95,15 @@ export default function GameResults({ gradientClass = 'from-brand-50 to-sky-100'
             <p className="mt-1 text-center text-[11px] text-ink/50">
               {xpProgress.is_max ? 'Max Level' : `${xpProgress.xp_remaining} XP to next level`}
             </p>
+          </div>
+        )}
+
+        {/* Level-up — derived from authoritative state, idempotent via sessionStorage */}
+        {showLevelUp && xpProgress && (
+          <div className="mt-3 animate-[scaleIn_0.35s_ease-out_both] rounded-xl bg-gradient-to-br from-violet-600 to-brand-600 p-4 text-center text-white shadow-md">
+            <p className="text-xs font-bold uppercase tracking-widest text-white/80">Level Up</p>
+            <p className="mt-1 font-display text-xl font-extrabold">You reached Level {xpProgress.level}</p>
+            <p className="mt-1 text-xs text-white/80">✨ {xpProgress.total_xp} XP</p>
           </div>
         )}
 

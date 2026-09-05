@@ -37,6 +37,7 @@ import { currentAndPreviousMonth, trendFrom, formatDateOnly, timeOfDayGreeting, 
 import { formatUZS } from '../../utils/format';
 import { useLocalClock } from '../../hooks/useLocalClock';
 import { useLevelUpCelebration } from '../../hooks/useLevelUpCelebration';
+import { nextLearningAction } from '../../shared/utils/recommendation';
 
 // Per-metric status thresholds - deliberately different per metric rather
 // than one flat cutoff, because each behaves differently in practice:
@@ -128,13 +129,17 @@ export default function PortalHomeV3() {
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [totalXp, setTotalXp] = useState(null);
   const [xpProgress, setXpProgress] = useState(null);
+  const [dailyMissions, setDailyMissions] = useState(null);
+  const [learningStreak, setLearningStreak] = useState(null);
+  const [achievements, setAchievements] = useState(null);
+  const [petProgress, setPetProgress] = useState(null);
   const { celebrateLevel: xpLevelUp, dismiss: dismissXpLevelUp } = useLevelUpCelebration(me?.id, xpProgress?.level);
   const { current, previous } = useMemo(() => currentAndPreviousMonth(), []);
 
   useEffect(() => {
     if (!me) return;
     let cancelled = false;
-    import('../../lib/storageBridge').then(({ getMyXpProgress }) =>
+    import('../../lib/storageBridge').then(({ getMyXpProgress, getDailyMissionProgress, getCurrentStreak, getActivePetWithParts, getMyPetProgress }) => {
       getMyXpProgress()
         .then((p) => {
           if (cancelled) return;
@@ -145,7 +150,15 @@ export default function PortalHomeV3() {
           if (cancelled) return;
           setXpProgress(null);
           setTotalXp(0);
-        })
+        });
+      // Lightweight, non-blocking enrichment — failures are silent (supplementary)
+      getDailyMissionProgress(me.id).then((d) => !cancelled && setDailyMissions(Array.isArray(d) ? d : null)).catch(() => {});
+      getCurrentStreak(me.id).then((s) => !cancelled && setLearningStreak(typeof s === 'number' ? s : null)).catch(() => {});
+      getMyPetProgress().then((p) => !cancelled && setPetProgress(p)).catch(() => {});
+    });
+    // Achievements — separate import to avoid bundling cost on hot path
+    import('../../lib/storageBridge').then(({ getStudentAchievements }) =>
+      getStudentAchievements(me.id).then((a) => !cancelled && setAchievements(Array.isArray(a) ? a.slice(0, 3) : [])).catch(() => {})
     );
     return () => { cancelled = true; };
   }, [me]);
@@ -513,6 +526,81 @@ export default function PortalHomeV3() {
           </div>
         </div>
       </div>
+
+      {/* ── Next Learning Action (Stage 9: deterministic, real-data only) ── */}
+      {(() => {
+        const action = nextLearningAction({ nextLesson, dailyMissions, homeworkPendingCount, hasVocab: (lessonStats.total > 0) });
+        const icons = { lesson: '📖', mission: '🎯', homework: '📝', vocab: '🗣️', game: '🎮' };
+        return (
+          <Link
+            to={action.to}
+            className="mb-6 flex items-center gap-3 rounded-2xl border border-brand-200 bg-gradient-to-r from-brand-600 to-brand-500 px-4 py-4 shadow-card transition-all hover:shadow-md hover:-translate-y-px active:translate-y-0 active:scale-[0.98] sm:px-5"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15 text-xl backdrop-blur-sm" aria-hidden>{icons[action.key] || '⭐'}</span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/70">Next up</p>
+              <p className="truncate text-sm font-bold text-white">{action.label}</p>
+              <p className="truncate text-xs text-white/75">{action.reason}</p>
+            </div>
+            <ArrowRight size={18} className="shrink-0 text-white/80" aria-hidden />
+          </Link>
+        );
+      })()}
+
+      {/* ── Daily missions + Streak + Pet + Achievements strip (supplementary, fail-silent) ── */}
+      {(dailyMissions !== null || learningStreak !== null || petProgress || (achievements && achievements.length > 0)) && (
+        <div className="mb-6 grid gap-3 sm:grid-cols-2">
+          {dailyMissions !== null && (
+            <div className="rounded-2xl border border-ink/[0.06] bg-white p-4 shadow-card">
+              <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-ink/40"><Target size={12} /> Today&apos;s missions</p>
+              {dailyMissions.length === 0 ? (
+                <p className="mt-2 text-sm text-ink/60">No missions yet — complete a lesson or game to get started.</p>
+              ) : (
+                <ul className="mt-2 space-y-2">
+                  {dailyMissions.slice(0, 3).map((m) => (
+                    <li key={m.key} className="flex items-center gap-2">
+                      <span className={`h-2 w-2 shrink-0 rounded-full ${m.completed ? 'bg-active' : 'bg-amber-400'}`} aria-hidden />
+                      <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink">{m.name || m.key}</span>
+                      <span className="shrink-0 text-xs tabular-nums text-ink/50">{m.progress}/{m.target}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {dailyMissions.some((m) => m.completed) && <p className="mt-2 text-xs font-semibold text-active">Completion is auto-tracked — no claim button needed.</p>}
+            </div>
+          )}
+          <div className="space-y-3">
+            {learningStreak !== null && (
+              <div className="flex items-center gap-3 rounded-2xl border border-orange-100 bg-orange-50/70 px-4 py-3">
+                <span className={`flex h-8 w-8 items-center justify-center rounded-xl ${learningStreak > 0 ? 'bg-orange-500 text-white' : 'bg-white text-ink/30 ring-1 ring-ink/10'}`}><Flame size={16} /></span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold uppercase tracking-wide text-orange-700">Learning streak</p>
+                  <p className="text-sm font-semibold text-ink">{learningStreak === 0 ? 'Start today — do one real activity' : `${learningStreak} day${learningStreak === 1 ? '' : 's'} — keep it going`}</p>
+                </div>
+              </div>
+            )}
+            {petProgress && (
+              <Link to="/games/pet" className="flex items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/60 px-4 py-3 transition-colors hover:bg-emerald-50">
+                <span className={`flex h-8 w-8 items-center justify-center rounded-xl text-xs font-bold text-white ${petProgress.stage >= 3 ? 'bg-amber-500' : petProgress.stage === 2 ? 'bg-emerald-500' : 'bg-ink/60'}`}>{petProgress.stage}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold uppercase tracking-wide text-emerald-700">Pet · {petProgress.stage_name}</p>
+                  <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-emerald-100"><div className="h-full rounded-full bg-emerald-500 motion-safe:transition-all motion-safe:duration-500" style={{ width: `${Math.min(100, petProgress.progress_percent)}%` }} role="progressbar" aria-valuenow={petProgress.progress_percent} aria-valuemin={0} aria-valuemax={100} /></div>
+                </div>
+              </Link>
+            )}
+            {achievements && achievements.length > 0 && (
+              <div className="rounded-2xl border border-amber-100 bg-amber-50/60 px-4 py-3">
+                <p className="text-xs font-bold uppercase tracking-wide text-amber-700">Recent achievements</p>
+                <ul className="mt-1.5 space-y-1">
+                  {achievements.map((a, i) => (
+                    <li key={i} className="flex items-center gap-1.5 text-sm text-ink"><span aria-hidden>{a.achievement?.icon || '🏆'}</span><span className="truncate font-medium">{a.achievement?.name || a.achievement?.key || 'Achievement'}</span></li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <div style={{ animation: 'slideUp 0.45s ease-out 0.28s both' }}>
