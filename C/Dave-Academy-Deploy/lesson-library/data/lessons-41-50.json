@@ -1,0 +1,356 @@
+{"lessons":[
+{
+  "n":41,"title":"Past Simple: Regular Verbs","sub":"41-dars: O'tgan zamon — muntazam fe'llar","icon":"🕰️","accent":"66bb6a","band":"preint","type":"normal",
+  "goals":[["🕰️ Talk about completed past actions","Bajarilgan ishlar haqida gapirish"],["🔧 Form regular past verbs with -ed","'-ed' bilan o'tgan zamon yasash"],["📅 Use 'yesterday, last week'","'yesterday, last week'ni ishlatish"]],
+  "warmup":[["🕰️ Yesterday","What did you do yesterday? Tell me one thing. / Kecha nima qildingiz? Bir narsa ayting."],["🔁 Review routines","Revise L21 verbs: wake up, go to school, do homework. / L21 fe'llarini takrorlang."]],
+  "vocab":[
+    {"w":"watched","p":"/wocht/","u":"Tomosha qildi","i":"📺","x":["I watched a film last night.","Kecha film tomosha qildim."]},
+    {"w":"played","p":"/pleyd/","u":"O'ynadi","i":"🎮","x":["We played football yesterday.","Kecha futbol o'ynadik."]},
+    {"w":"cleaned","p":"/kliind/","u":"Tozaladi","i":"🧹","x":["She cleaned the kitchen.","U oshxonani tozaladi."]},
+    {"w":"cooked","p":"/kukt/","u":"Pishirdi","i":"🍳","x":["Dad cooked dinner last night.","Dadam kecha kechki ovqat pishirdi."]},
+    {"w":"walked","p":"/wokt/","u":"Yurdi (piyoda)","i":"🚶","x":["We walked to the park.","Bog'ga piyoda bordik."]},
+    {"w":"visited","p":"/VI-zit-ed/","u":"Tashrif buyurdi","i":"🏛️","x":["They visited the museum last week.","Ular o'tgan hafta muzeyga bordi."]},
+    {"w":"helped","p":"/helpt/","u":"Yordam berdi","i":"🤝","x":["I helped my mother yesterday.","Kecha onamga yordam berdim."]},
+    {"w":"studied","p":"/STU-did/","u":"O'qidi (dars)","i":"📚","x":["He studied English all evening.","U butun oqshom inglizcha o'qidi."]},
+    {"w":"finished","p":"/FI-nisht/","u":"Tugatdi","i":"✅","x":["She finished her homework.","U uy vazifasini tugatdi."]},
+    {"w":"started","p":"/STAR-tid/","u":"Boshladi","i":"🚦","x":["The lesson started at 9.","Dars soat 9 da boshlandi."]}
+  ],
+  "grammar":{"rule":"Regular past: verb + **-ed** (play → played, watch → watched)","uz":"Muntazam fe'llarga '-ed' qo'shiladi",
+    "ex":[["I **played** football yesterday.","Kecha futbol o'ynadim."],["She **watched** TV last night.","U kecha televizor ko'rdi."],["We **cleaned** the house last week.","Biz o'tgan hafta uyni tozaladik."]],
+    "mistake":["Wrong: *I play football yesterday.*","Right: *I played football yesterday.*","'yesterday' bilan o'tgan zamon ishlatiladi."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["Yesterday I ___ (watch) TV.","She ___ (clean) her room last week.","We ___ (play) games in the garden.","He ___ (study) English on Sunday."]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Watch","Watched"],["Play","Played"],["Clean","Cleaned"],["Study","Studied"],["Visit","Visited"]]},
+    {"t":"circle","title":"Circle the Answer","items":["Yesterday I ___ football. → a) play b) played c) playing","She ___ her homework last night. → a) finish b) finished c) finishes"]},
+    {"t":"order","title":"Build the Sentence","items":["I / watched / a / film / yesterday / .","cleaned / We / last / house / the / week / ."]}
+  ],
+  "reading":{"title":"A Busy Day","passage":"Yesterday was a busy day for Tom. He started his day at seven o'clock. He studied English for one hour. Then he helped his father in the garden. In the afternoon he visited his grandmother. She cooked delicious soup. Tom watched a film in the evening and finished his homework. He was tired, but happy.",
+    "qs":["What time did Tom start his day?","What did Tom do in the garden?","What did his grandmother cook?","How did Tom feel at the end of the day?"]},
+  "listening":{"title":"What Did They Do?","qs":["What did Mark do in the morning?","Where did Anna go?","What did the children play?"],
+    "script":"Listen. Yesterday Mark played tennis in the morning. Anna visited the museum with her class. The children played football in the park. In the evening everyone watched a film together."},
+  "writing":{"title":"Write About Yesterday","task":"Write 4 sentences about your yesterday. Use regular verbs: watched, played, helped, studied, cooked.","uz":"Kechagi kuningiz haqida 4 gap yozing. Muntazam fe'llardan foydalaning."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["What did you do yesterday?","I watched TV."],["Did you play football?","Yes, I did. / No, I didn't."],["Where did you go?","I visited my grandmother."]]},
+    {"t":"mission","title":"Real-life Mission","body":"Ask 3 people what they did yesterday. Write their answers. / 3 kishidan kecha nima qilganini so'rang."}
+  ],
+  "quiz":["Write the past: clean → ______","Write the past: study → ______","Correct: 'I play football yesterday.'","Translate: 'Kecha televizor ko'rdim.' → ______"],
+  "homework":"Vocabulary: 10 verbs in present + past 3× · Grammar: 6 sentences about your yesterday · Reading: re-read 'A Busy Day', answer 4 questions · Speaking: tell your family about your day.",
+  "teacher":["Review present routine verbs first, then add -ed.","Drill the -ed endings (/t/, /d/, /id/) — walked, cleaned, visited.","Watch for 'yesterday I play' — remind that yesterday needs past.","Writing task: model 2 sentences first, then students write."]
+},
+{
+  "n":42,"title":"Past Simple: Irregular Verbs","sub":"42-dars: O'tgan zamon — noto'g'ri fe'llar","icon":"🔄","accent":"ef5350","band":"preint","type":"normal",
+  "goals":[["🔄 Use common irregular past verbs (went, had, saw)","'went, had, saw' kabi fe'llarni ishlatish"],["🧠 Remember irregular past forms","Noto'g'ri fe'l shakllarini yodlash"],["🗣️ Narrate yesterday's events","Kecha bo'lgan voqealarni aytib berish"]],
+  "warmup":[["🔄 Quiz","What is the past of 'go'? Of 'eat'? / 'go'ning o'tgan zamonini ayting."],["🕰️ Review regular verbs","Quick drill: watch → watched, play → played. / Muntazam fe'llarni takrorlang."]],
+  "vocab":[
+    {"w":"went","p":"/went/","u":"Bordi (go→went)","i":"🚶","x":["We went to the park yesterday.","Kecha bog'ga bordik."]},
+    {"w":"had","p":"/had/","u":"Yedi/ichdi; bor edi (have→had)","i":"🍽️","x":["I had breakfast at 7.","Soat 7 da nonushta qildim."]},
+    {"w":"did","p":"/did/","u":"Qildi (do→did)","i":"✅","x":["She did her homework.","U uy vazifasini qildi."]},
+    {"w":"saw","p":"/so/","u":"Ko'rdi (see→saw)","i":"👀","x":["I saw a beautiful bird.","Men chiroyli qush ko'rdim."]},
+    {"w":"ate","p":"/et/","u":"Yedi (eat→ate)","i":"🍎","x":["He ate an apple.","U olma yedi."]},
+    {"w":"came","p":"/keym/","u":"Keldi (come→came)","i":"🏠","x":["My friend came to my house.","Do'stim uyimga keldi."]},
+    {"w":"bought","p":"/bot/","u":"Sotib oldi (buy→bought)","i":"🛍️","x":["Mum bought some bread.","Oyim non sotib oldi."]},
+    {"w":"took","p":"/tuk/","u":"Olib ketdi (take→took)","i":"📦","x":["He took a book from the shelf.","U tokchadan kitob oldi."]},
+    {"w":"made","p":"/meyd/","u":"Yasadi (make→made)","i":"🔨","x":["We made a cake.","Biz tort yasadik."]},
+    {"w":"said","p":"/sed/","u":"Aytdi (say→said)","i":"💬","x":["The teacher said 'Well done!'.","O'qituvchi 'Yaxshi!' dedi."]}
+  ],
+  "grammar":{"rule":"Irregular pasts: **go→went, have→had, do→did, see→saw, eat→ate, buy→bought**","uz":"Noto'g'ri fe'llar — shakllarini yodlang",
+    "ex":[["I **went** to the market yesterday.","Kecha bozorga bordim."],["She **saw** her friend at school.","U maktabda do'stini ko'rdi."],["They **bought** a new phone.","Ular yangi telefon sotib oldi."]],
+    "mistake":["Wrong: *I go to the park yesterday.*","Right: *I went to the park yesterday.*","'go'ning o'tgani 'went'."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["I ___ (go) to school yesterday.","She ___ (see) a film last night.","We ___ (have) a big dinner.","He ___ (buy) a new shirt."]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Go","Went"],["Eat","Ate"],["See","Saw"],["Buy","Bought"],["Make","Made"]]},
+    {"t":"circle","title":"Circle the Answer","items":["Yesterday we ___ to the zoo. → a) go b) went c) gone","She ___ a cake for us. → a) make b) maked c) made"]},
+    {"t":"order","title":"Build the Sentence","items":["went / to / I / the / market / yesterday / .","a / film / saw / They / last / night / ."]}
+  ],
+  "reading":{"title":"A Weekend Visit","passage":"Last Saturday, Aziza and her brother went to their uncle's farm. They saw many animals — cows, sheep and a white horse. They ate fresh bread and drank cold milk. Aziza took some photos. Her brother helped the farmer. In the evening they came home tired and happy. Aziza said: 'What a great day!'",
+    "qs":["Where did Aziza go on Saturday?","What animals did they see?","What did Aziza's brother do?","What did Aziza say at the end?"]},
+  "listening":{"title":"What Happened Yesterday?","qs":["What time did Ali get up?","What did Ali eat for breakfast?","Where did Ali go after school?"],
+    "script":"Listen. Yesterday Ali got up at half past six. He had bread and milk for breakfast. After school, he went to his friend's house. They played games and made pizza. Ali came home at seven o'clock."},
+  "writing":{"title":"A Story in the Past","task":"Write 5 sentences about a visit or trip you made. Use: went, saw, ate, had, came.","uz":"Qilgan safaringiz haqida 5 gap yozing. Berilgan fe'llarni ishlating."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["What did you have for breakfast?","I had bread and tea."],["Where did you go last weekend?","I went to the park."],["Did you see any films?","Yes, I saw an action film."]]},
+    {"t":"mission","title":"Real-life Mission","body":"Tell a story about your last weekend using 5 irregular verbs. / Oxirgi dam olish kuni haqida hikoya ayting."}
+  ],
+  "quiz":["Write the past: eat → ______","Write the past: see → ______","Correct: 'I go to the market yesterday.'","Translate: 'U kitob sotib oldi.' → ______"],
+  "homework":"Vocabulary: 10 irregular verbs (present+past) 3× · Grammar: 6 sentences with irregular pasts · Reading: re-read 'A Weekend Visit' · Speaking: tell your weekend story to your family.",
+  "teacher":["Play memory games with the irregular pairs (matching cards).","Teach irregulars in groups by sound: go/went, see/saw, eat/ate.","Watch for 'goed'/'buyed' — correct to went/bought.","Encourage storytelling; students love sharing real weekend stories."]
+},
+{
+  "n":43,"title":"Food and Quantities","sub":"43-dars: Oziq-ovqat va miqdorlar","icon":"🥫","accent":"ffa726","band":"preint","type":"normal",
+  "goals":[["🥫 Use some / any with food","'some/any'ni oziq-ovqat bilan ishlatish"],["🍎 Know countable and uncountable nouns","Sanoqli va sanoqsiz otlarni bilish"],["🛒 Talk about what there is to eat","Yegulik haqida gapirish"]],
+  "warmup":[["🍎 Food race","Name 5 foods in 20 seconds. / 20 soniyada 5 ta ovqat ayting."],["🛒 In my kitchen","Say: 'In my kitchen there is... / there are...' / Oshxonangizdagi narsalarni ayting."]],
+  "vocab":[
+    {"w":"rice","p":"/rays/","u":"Guruch","i":"🍚","x":["There is some rice in the bag.","Xaltada guruch bor."]},
+    {"w":"bread","p":"/bred/","u":"Non","i":"🍞","x":["We have some bread.","Bizda non bor."]},
+    {"w":"apple","p":"/AP-l/","u":"Olma","i":"🍎","x":["There are some apples on the table.","Stolda olmalar bor."]},
+    {"w":"sugar","p":"/SHUH-gar/","u":"Shakar","i":"🍬","x":["There is some sugar in the tea.","Choyda shakar bor."]},
+    {"w":"milk","p":"/milk/","u":"Sut","i":"🥛","x":["I want some milk.","Men sut istayman."]},
+    {"w":"eggs","p":"/egz/","u":"Tuxum","i":"🥚","x":["There aren't any eggs.","Tuxum yo'q."]},
+    {"w":"cheese","p":"/chiiz/","u":"Pishloq","i":"🧀","x":["Is there any cheese?","Pishloq bormi?"]},
+    {"w":"water","p":"/WO-tar/","u":"Suv","i":"💧","x":["There is some water in the bottle.","Shishada suv bor."]},
+    {"w":"chocolate","p":"/CHO-ko-lat/","u":"Shokolad","i":"🍫","x":["I love chocolate.","Men shokoladni yaxshi ko'raman."]},
+    {"w":"carrot","p":"/KAY-rat/","u":"Sabzi","i":"🥕","x":["There are some carrots.","Sabzilar bor."]}
+  ],
+  "grammar":{"rule":"**some** (positive) / **any** (negative & questions) · countable: a/an, -s · uncountable: no plural","uz":"'some' — tasdiqda, 'any' — inkor va savolda",
+    "ex":[["There is **some** milk.","Sut bor."],["There aren't **any** eggs.","Tuxum yo'q."],["Are there **any** apples?","Olmalar bormi?"]],
+    "mistake":["Wrong: *I have any bread.*","Right: *I have some bread.*","Tasdiq gapda 'some'."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["There is ___ rice. (some/any)","There aren't ___ eggs. (some/any)","Are there ___ apples? (some/any)","I want ___ water. (some/any)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Rice","Guruch"],["Bread","Non"],["Cheese","Pishloq"],["Sugar","Shakar"],["Eggs","Tuxum"]]},
+    {"t":"circle","title":"Circle the Answer","items":["Is there any milk? → a) Yes, there is b) Yes, there are c) Yes, some"]},
+    {"t":"order","title":"Build the Sentence","items":["some / is / There / in / milk / the / fridge / .","any / aren't / eggs / There / ."]}
+  ],
+  "reading":{"title":"The Shopping List","passage":"Mother made a shopping list. 'We have some rice and sugar, but there isn't any bread. There aren't any eggs, and there isn't any milk.' Aziz took the list and went to the shop. He bought some bread, a packet of eggs and a bottle of milk. He also bought some chocolate for himself — but he didn't tell mother!",
+    "qs":["What food is in the house?","What did Aziz buy?","What did Aziz buy for himself?"]},
+  "listening":{"title":"In the Kitchen","qs":["Is there any milk?","Are there any eggs?","What is on the table?"],
+    "script":"Listen. In the kitchen there is some bread and some cheese. There is some milk in the fridge. There aren't any eggs. On the table there are some apples and a bottle of water."},
+  "writing":{"title":"Write About Your Kitchen","task":"Write 5 sentences about your kitchen: 3 with 'some' and 2 with 'any'.","uz":"Oshxonangiz haqida 5 gap yozing: 3 tasi 'some', 2 tasi 'any' bilan."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["Is there any milk?","Yes, there is some."],["Are there any eggs?","No, there aren't any."],["What's in your fridge?","There's some cheese and some water."]]},
+    {"t":"mission","title":"Real-life Mission","body":"Check your fridge at home and say 4 sentences with some/any. / Uydagi muzlatkichni tekshirib, 4 gap ayting."}
+  ],
+  "quiz":["Fill: 'There is ___ cheese.' (some/any)","Fill: 'There aren't ___ apples.' (some/any)","Correct: 'Is there any rice?' → 'Yes, there are.'","Translate: 'Muzlatkichda sut bor.' → ______"],
+  "homework":"Vocabulary: 10 foods 3× · Grammar: 6 sentences with some/any about food at home · Reading: re-read 'The Shopping List' · Speaking: talk about your fridge with your family.",
+  "teacher":["Use real or drawn food items to make some/any physical.","Explain countable (can count: eggs, apples) vs uncountable (rice, water).","Watch for 'some' in negative sentences.","Shopping-list activity is a great model for real life."]
+},
+{
+  "n":44,"title":"How Many / How Much","sub":"44-dars: Qancha (sanoqli/sanoqsiz)","icon":"🔢","accent":"8d6e63","band":"preint","type":"normal",
+  "goals":[["🔢 Ask 'How many...?' for countable things","Sanoqli narsalar uchun 'How many...?' so'rash"],["💰 Ask 'How much...?' for uncountable things","Sanoqsiz narsalar uchun 'How much...?' so'rash"],["🛒 Answer about quantities","Miqdor haqida javob berish"]],
+  "warmup":[["🍎 Count it","How many chairs in this room? How many windows? / Bu xonada nechta stul bor?"],["🥛 Guess","How much water is in this glass? / Stakanda qancha suv bor?"]],
+  "vocab":[
+    {"w":"how many","p":"/hau ME-ni/","u":"Qancha (sanoqli)","i":"🔢","x":["How many apples are there?","Nechta olma bor?"]},
+    {"w":"how much","p":"/hau mach/","u":"Qancha (sanoqsiz)","i":"💰","x":["How much sugar do we need?","Qancha shakar kerak?"]},
+    {"w":"bottle","p":"/BO-tl/","u":"Shisha","i":"🍾","x":["A bottle of milk.","Bir shisha sut."]},
+    {"w":"packet","p":"/PA-kit/","u":"Paket (o'ram)","i":"🎁","x":["A packet of biscuits.","Bir o'ram pechene."]},
+    {"w":"box","p":"/boks/","u":"Quti","i":"📦","x":["A box of chocolate.","Bir quti shokolad."]},
+    {"w":"a lot of","p":"/a lot ov/","u":"Ko'p","i":"🎉","x":["We have a lot of rice.","Bizda guruch ko'p."]},
+    {"w":"a few","p":"/a fiu/","u":"Bir nechta (sanoqli)","i":"🙂","x":["There are a few eggs.","Bir nechta tuxum bor."]},
+    {"w":"a little","p":"/a LI-tl/","u":"Bir oz (sanoqsiz)","i":"🧂","x":["There is a little sugar.","Bir oz shakar bor."]},
+    {"w":"kilo","p":"/KI-lo/","u":"Kilogramm","i":"⚖️","x":["Two kilos of carrots.","Ikki kilo sabzi."]},
+    {"w":"litre","p":"/LI-tar/","u":"Litr","i":"⚗️","x":["A litre of water.","Bir litr suv."]}
+  ],
+  "grammar":{"rule":"**How many** + countable (apples, eggs) · **How much** + uncountable (milk, sugar)","uz":"Sanoqli bilan 'how many', sanoqsiz bilan 'how much'",
+    "ex":[["**How many** eggs are there? — There are six.","Nechta tuxum bor? — Oltita."],["**How much** milk is there? — There's a little.","Qancha sut bor? — Bir oz."],["**How many** apples do you want?","Nechta olma kerak?"]],
+    "mistake":["Wrong: *How much apples are there?*","Right: *How many apples are there?*","Olma sanoqli — 'how many'."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["How ___ chairs are there? (many/much)","How ___ sugar is in the tea? (many/much)","How ___ water do you drink? (many/much)","How ___ students are in your class? (many/much)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["A bottle of","Milk"],["A packet of","Biscuits"],["A box of","Chocolate"],["A kilo of","Carrots"]]},
+    {"t":"circle","title":"Circle the Answer","items":["How much rice is there? → a) There's a lot b) There are five c) It's big"]},
+    {"t":"order","title":"Build the Sentence","items":["many / How / apples / are / there / ?","much / How / sugar / we / do / need / ?"]}
+  ],
+  "reading":{"title":"At the Market","passage":"Nodir went to the market with his mother. 'How many carrots do we need?' his mother asked. 'Three kilos,' Nodir said. 'And how much rice?' asked the seller. 'Two kilos, please.' Nodir also wanted a little chocolate. His mother smiled: 'How much chocolate do you want?' 'A lot!' said Nodir, and everyone laughed.",
+    "qs":["How many kilos of carrots do they need?","How much rice do they buy?","What did Nodir want at the end?"]},
+  "listening":{"title":"Write the Quantity","qs":["Milk: ______","Eggs: ______","Carrots: ______"],
+    "script":"Listen and write. We need a little milk — one litre. We need six eggs. We need two kilos of carrots. And we need a lot of apples for the party."},
+  "writing":{"title":"My Shopping List","task":"Write a shopping list with quantities: 'two kilos of rice, a bottle of milk...' (5 items).","uz":"Miqdorlari bilan xarid ro'yxati yozing (5 ta narsa)."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["How many brothers have you?","I have one brother."],["How much tea do you drink?","I drink a little."],["How many apples do you want?","Three, please."]]},
+    {"t":"mission","title":"Real-life Mission","body":"Ask your partner about their kitchen: 'How many...? How much...?' (3 questions). / Juftingizga 3 ta savol bering."}
+  ],
+  "quiz":["Fill: 'How ___ water is there?' (many/much)","Fill: 'How ___ books do you have?' (many/much)","Correct: 'How many sugar do we need?'","Translate: 'Ikkita kilo guruch.' → ______"],
+  "homework":"Vocabulary: 10 quantity words 3× · Grammar: 6 how many/how much questions + answers · Reading: re-read 'At the Market' · Speaking: use how many/how much at home.",
+  "teacher":["Reinforce countable vs uncountable with physical examples.","Drill the answer patterns: 'There are six / There's a little.'","Watch for 'how much' with countable nouns.","Shopping-list writing is practical and fun."]
+},
+{
+  "n":45,"title":"At the Supermarket","sub":"45-dars: Supermarketda","icon":"🛒","accent":"26a69a","band":"preint","type":"normal",
+  "goals":[["🛒 Shop for groceries politely","Xarid qilishni xushmuomalalik bilan bajarish"],["🧺 Use 'I'd like... / Can I have...?'","'I'd like / Can I have' ishlatish"],["💳 Complete a simple shopping dialogue","Oddiy xarid suhbatini qurish"]],
+  "warmup":[["🛒 What's in a supermarket?","Name 5 things you can buy. / Supermarketda nima sotiladi?"],["🧺 Role the basket","Quick review: 'How much is the bread?' / Narx so'rashni takrorlang."]],
+  "vocab":[
+    {"w":"basket","p":"/BAS-kit/","u":"Savatcha","i":"🧺","x":["I put the apples in the basket.","Olmalarni savatchaga soldim."]},
+    {"w":"cart","p":"/kart/","u":"Arava (savatcha)","i":"🛒","x":["She pushes the cart.","U aravani itaradi."]},
+    {"w":"cashier","p":"/ka-SHIER/","u":"Kassir","i":"🧑‍💼","x":["The cashier is friendly.","Kassir xushmuomala."]},
+    {"w":"checkout","p":"/CHEK-aut/","u":"Kassa (chiqish joyi)","i":"🛃","x":["Pay at the checkout.","Kassada to'lang."]},
+    {"w":"pay","p":"/pey/","u":"To'lamoq","i":"💳","x":["I pay at the end.","Men oxirida to'layman."]},
+    {"w":"receipt","p":"/ri-SIIT/","u":"Chek (kvitansiya)","i":"🧾","x":["Here is your receipt.","Mana chekingiz."]},
+    {"w":"aisle","p":"/ayl/","u":"Javonlar oralig'i","i":"🛤️","x":["The milk is in aisle three.","Sut uchinchi yo'lakda."]},
+    {"w":"trolley","p":"/TRO-li/","u":"Katta arava","i":"🛒","x":["He uses a trolley for big shopping.","Katta xarid uchun arava ishlatadi."]},
+    {"w":"bag","p":"/bag/","u":"Paket, sumka","i":"🛍️","x":["A bag of apples, please.","Bir paket olma, iltimos."]},
+    {"w":"discount","p":"/DIS-kount/","u":"Chegirma","i":"🏷️","x":["There is a discount on bread.","Nonga chegirma bor."]}
+  ],
+  "grammar":{"rule":"Polite requests: **I'd like... / Can I have...?** + quantities","uz":"Xushmuomala so'rov: 'I'd like' — men istayman",
+    "ex":[["**I'd like** a kilo of rice, please.","Iltimos, bir kilo guruch."],["**Can I have** a bottle of milk?","Bir shisha sut olsam bo'ladimi?"],["**How much** is that?","Bu qancha turadi?"]],
+    "mistake":["Wrong: *I want a bread.*","Right: *I'd like some bread.*","Xushmuomala: 'I'd like some bread'."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["I'd ___ a kilo of apples, please. (like/want)","___ I have a packet of biscuits? (Can/Do)","How much is ___ ? (that/it)","Here is your ___. (receipt/basket)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Cashier","Kassir"],["Receipt","Chek"],["Basket","Savatcha"],["Discount","Chegirma"]]},
+    {"t":"circle","title":"Circle the Answer","items":["At the checkout you say: → a) I'd like a bag, please b) I sleep c) Good morning"]},
+    {"t":"order","title":"Build the Sentence","items":["like / I'd / a / of / kilo / rice / , / please / .","is / How / that / much / ?"]}
+  ],
+  "reading":{"title":"A Quick Shopping Trip","passage":"Malika went to the supermarket with a short list. First she took a trolley. In the fruit aisle she put two kilos of apples. In aisle four she found a packet of biscuits and a bottle of juice. At the checkout, she said: 'I'd like a bag, please.' The cashier smiled: 'That will be fifteen thousand som.' Malika paid and took her receipt. She was home in ten minutes.",
+    "qs":["Where did Malika put the apples?","What did she buy in aisle four?","What did she ask for at the checkout?","How much did she pay?"]},
+  "listening":{"title":"At the Checkout","qs":["What does the customer buy?","How much is it?","What does the customer ask for at the end?"],
+    "script":"Listen. Customer: 'I'd like a kilo of cheese, please.' Cashier: 'Here you are.' Customer: 'How much is that?' Cashier: 'Thirty thousand som.' Customer: 'Can I have a bag, please?' Cashier: 'Of course.'"},
+  "writing":{"title":"Write a Dialogue","task":"Write a 4-line dialogue at the checkout between you and the cashier.","uz":"Siz va kassir o'rtasidagi suhbatni yozing (4 qator)."},
+  "speaking":[
+    {"t":"partner","title":"Role-Play: At the Shop","table":[["Can I help you?","Yes, I'd like some apples."],["How many?","Two kilos, please."],["Here you are.","Thank you! How much is that?"]]},
+    {"t":"mission","title":"Real-life Mission","body":"Go shopping with your family and say 'I'd like...' in English! / Xaridda inglizcha gapirib ko'ring."}
+  ],
+  "quiz":["Complete: 'I'd ___ a bag, please.'","Complete: '___ I have a bottle of juice?' (Can/Do)","Translate: 'Chek, iltimos.' → ______","What do you ask at the end? → 'How ___ is that?'"],
+  "homework":"Vocabulary: 10 supermarket words 3× · Grammar: write a shopping dialogue · Reading: re-read 'A Quick Shopping Trip' · Speaking: practice your dialogue with your family.",
+  "teacher":["Set up a classroom shop with real objects and price labels.","Model the dialogue once, then students repeat in pairs.","Watch for 'I want a bread' — drill 'I'd like some bread'.","Use play money for realism."]
+},
+{
+  "n":46,"title":"Jobs and Occupations","sub":"46-dars: Kasblar","icon":"🧑‍⚕️","accent":"5c6bc0","band":"preint","type":"normal",
+  "goals":[["🧑‍⚕️ Ask 'What does he/she do?'","'U nima ish qiladi?' deb so'rash"],["👩‍🏫 Describe jobs: 'He/She is a...'","Kasblarni tasvirlash"],["💼 Talk about what people do at work","Ish haqida gapirish"]],
+  "warmup":[["🎭 Job mime","Act out a job — students guess! / Kasbni imo bilan ko'rsating."],["💭 My family","What does your father do? Your mother? / Otangiz nima ish qiladi?"]],
+  "vocab":[
+    {"w":"doctor","p":"/DOK-tar/","u":"Shifokor","i":"🩺","x":["My uncle is a doctor.","Amakim shifokor."]},
+    {"w":"teacher","p":"/TI-cher/","u":"O'qituvchi","i":"👩‍🏫","x":["She is a teacher.","U o'qituvchi."]},
+    {"w":"engineer","p":"/en-ji-NIER/","u":"Muhandis","i":"🧑‍🔧","x":["He works as an engineer.","U muhandis bo'lib ishlaydi."]},
+    {"w":"farmer","p":"/FAR-mar/","u":"Fermer","i":"👨‍🌾","x":["The farmer grows wheat.","Fermer bug'doy yetishtiradi."]},
+    {"w":"driver","p":"/DRAY-var/","u":"Haydovchi","i":"🚗","x":["My father is a bus driver.","Otam avtobus haydovchisi."]},
+    {"w":"chef","p":"/shef/","u":"Oshpaz","i":"👨‍🍳","x":["The chef cooks delicious food.","Oshpaz mazali taom pishiradi."]},
+    {"w":"nurse","p":"/ners/","u":"Hamshira","i":"💉","x":["The nurse helps the doctor.","Hamshira shifokorga yordam beradi."]},
+    {"w":"pilot","p":"/PAY-let/","u":"Uchuvchi","i":"✈️","x":["The pilot flies planes.","Uchuvchi samolyot boshqaradi."]},
+    {"w":"singer","p":"/SIN-gar/","u":"Xonanda","i":"🎤","x":["She is a famous singer.","U mashhur xonanda."]},
+    {"w":"policeman","p":"/pa-LIIS-man/","u":"Militsioner","i":"👮","x":["The policeman helps people.","Militsioner odamlarga yordam beradi."]}
+  ],
+  "grammar":{"rule":"**What does he/she do? — He/She is a...** (+ what they do at work)","uz":"'U nima ish qiladi?' — 'U...'",
+    "ex":[["**What does** your father **do**? — He's a driver.","Otangiz nima ish qiladi? — U haydovchi."],["**What does** she **do**? — She's a nurse.","U nima ish qiladi? — U hamshira."],["He **flies** planes.","U samolyot boshqaradi."]],
+    "mistake":["Wrong: *What your father does?*","Right: *What does your father do?*","Savolda 'does' birinchi o'rinda."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["What ___ your mother do? (does/do)","She ___ a teacher. (is/does)","He ___ planes. (flies/fly)","My father ___ a doctor. (is/does)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Doctor","Shifokor"],["Farmer","Fermer"],["Pilot","Uchuvchi"],["Chef","Oshpaz"],["Nurse","Hamshira"]]},
+    {"t":"circle","title":"Circle the Answer","items":["What does he do? → a) He is a farmer b) He does a farmer c) Yes, he does"]},
+    {"t":"order","title":"Build the Sentence","items":["does / What / father / your / do / ?","is / a / She / teacher / ."]}
+  ],
+  "reading":{"title":"People in My Family","passage":"Let me tell you about my family. My father, Akmal, is a farmer. He grows wheat and vegetables. My mother, Dilnoza, is a teacher. She teaches English at a big school. My older brother is an engineer — he designs buildings. My aunt is a nurse at the city hospital. And me? I want to be a pilot when I grow up!",
+    "qs":["What does Akmal grow?","Where does Dilnoza teach?","What does the brother do?","What does the writer want to be?"]},
+  "listening":{"title":"Who Are They?","qs":["What does the first man do?","What does the woman do?","Where does the nurse work?"],
+    "script":"Listen. This man is a driver. He drives a bus in the city. This woman is a chef. She works in a big restaurant. This nurse works at the hospital and helps doctors every day."},
+  "writing":{"title":"Write About Jobs","task":"Write 4 sentences: 2 about people in your family and 2 about your dream job.","uz":"Oilangizdagi kishilar va orzu kasbingiz haqida yozing."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["What does your father do?","He's a farmer."],["What does your mother do?","She's a teacher."],["What do you want to be?","I want to be a pilot."]]},
+    {"t":"mission","title":"Real-life Mission","body":"Ask 3 people about their jobs. Report: 'He/She is a...'. / 3 kishidan kasbini so'rang."}
+  ],
+  "quiz":["Complete: 'What ___ your brother do?' (does/do)","Complete: 'She ___ a nurse.' (is/does)","Translate: 'Otam haydovchi.' → ______","What do you want to be?"],
+  "homework":"Vocabulary: 10 jobs 3× · Grammar: 6 questions + answers about jobs · Reading: re-read 'People in My Family' · Speaking: tell your family about today's lesson.",
+  "teacher":["Job mime is a great warm-up — students love acting.","Drill 'does' with he/she; watch for 'He do'.","Use family photos if students bring them.","Connect to L77 (careers) — plant the seed."]
+},
+{
+  "n":47,"title":"Supermarket Role-Play Workshop","sub":"47-dars: Supermarket rolli o'yin ustaxonasi","icon":"🛍️","accent":"ff7043","band":"preint","type":"workshop",
+  "goals":[["🛍️ Complete a shopping dialogue","Xarid suhbatini to'liq qurish"],["🧑‍🤝‍🧑 Role-play customer and cashier","Xaridor va kassir rollarini o'ynash"],["💰 Use quantities, prices and some/any together","Miqdor, narx va some/anyni birga ishlatish"]],
+  "warmup":[["🛒 Shop words","Name as many supermarket words as you can in 30 seconds. / 30 soniyada supermarket so'zlarini ayting."],["🧺 Quick dialogue","Review: 'I'd like... / How much is that?' / Suhbatni takrorlang."]],
+  "vocab":[
+    {"w":"basket","p":"/BAS-kit/","u":"Savatcha","i":"🧺","x":["Put it in my basket.","Uni savatchamga soling."]},
+    {"w":"cashier","p":"/ka-SHIER/","u":"Kassir","i":"🧑‍💼","x":["The cashier scans the items.","Kassir narsalarni o'qiydi."]},
+    {"w":"receipt","p":"/ri-SIIT/","u":"Chek","i":"🧾","x":["Take your receipt.","Chekingizni oling."]},
+    {"w":"aisle","p":"/ayl/","u":"Yo'lak (javonlar orasi)","i":"🛤️","x":["Juice is in aisle two.","Sharbat ikkinchi yo'lakda."]},
+    {"w":"discount","p":"/DIS-kount/","u":"Chegirma","i":"🏷️","x":["Everything has a discount!","Hammasi chegirmada!"]},
+    {"w":"change","p":"/cheynj/","u":"Qaytim","i":"🪙","x":["Here's your change.","Mana qaytimingiz."]}
+  ],
+  "practice":[
+    {"t":"task","title":"Build Your Shop","items":["Make 5 items with price labels (in som). / 5 ta narxli mahsulot yasang.","One of you is the customer, one is the cashier. / Biri xaridor, biri kassir bo'lsin.","Use: 'I'd like... / Can I have...? / How much is that?' / Berilgan gaplarni ishlating.","Swap roles and do it again. / Rollarni almashtiring."]},
+    {"t":"match","title":"Match the Pairs","pairs":[["I'd like some rice","Guruch istayman"],["How much is that?","Bu qancha?"],["Here's your change","Mana qaytimingiz"],["Discount","Chegirma"]]},
+    {"t":"circle","title":"Circle the Answer","items":["The customer asks for bread: → a) I'd like some bread b) Give me bread c) Bread!"]}
+  ],
+  "speaking":[
+    {"t":"talk","title":"Role-Play Time","body":"Perform your shopping dialogue for the class. Use quantities and prices. / Xarid suhbatingizni sinfga ko'rsating."},
+    {"t":"mission","title":"Swap Roles","body":"Now you are the cashier. Serve your partner politely. / Endi siz kassirsiz — xushmuomala bo'ling."}
+  ],
+  "quiz":["Fill: 'I'd ___ a bottle of juice.' (like/want)","Fill: 'How ___ are the apples?' (much/many)","Translate: 'Qaytimingiz, mana.' → ______","Name 3 things in a supermarket."],
+  "homework":"Write your role-play dialogue and practice it at home. / Rolli o'yin suhbatingizni yozing va mashq qiling.",
+  "teacher":["Workshop: set up a 'shop' with real or drawn items.","Let students rehearse before performing.","Praise polite language ('I'd like', 'Thank you').","Give feedback on pronunciation of prices."]
+},
+{
+  "n":48,"title":"Speaking Circle: Talking About Yesterday","sub":"48-dars: Suhbat doirasi — kecha haqida","icon":"🗣️","accent":"7e57c2","band":"preint","type":"speaking",
+  "goals":[["🗣️ Narrate yesterday's events fluently","Kechagi voqealarni ravon aytib berish"],["🕰️ Use regular and irregular past verbs","Muntazam va noto'g'ri fe'llarni ishlatish"],["👥 Ask and answer 'Did you...?'","'Did you...?' savollarini berish va javob berish"]],
+  "warmup":[["🕰️ One thing","Tell one thing you did yesterday. / Kechagi ishingizdan birini ayting."],["🔄 Past review","go→went, eat→ate, see→saw. Say the past! / O'tgan zamonni ayting."]],
+  "vocab":[
+    {"w":"yesterday","p":"/YES-tar-day/","u":"Kecha","i":"📅","x":["Yesterday I stayed home.","Kecha uyda qoldim."]},
+    {"w":"last night","p":"/last nayt/","u":"Kecha oqshom","i":"🌙","x":["We watched TV last night.","Kecha oqshom televizor ko'rdik."]},
+    {"w":"last week","p":"/last wiik/","u":"O'tgan hafta","i":"🗓️","x":["I visited my aunt last week.","O'tgan hafta xolamnikiga bordim."]},
+    {"w":"went out","p":"/went aut/","u":"Chiqib ketdi","i":"🚪","x":["We went out with friends.","Do'stlar bilan chiqdik."]},
+    {"w":"stayed","p":"/steyd/","u":"Qoldi","i":"🏠","x":["I stayed at home.","Uyda qoldim."]},
+    {"w":"got up","p":"/got ap/","u":"Uyg'ondi (turdim)","i":"⏰","x":["I got up late.","Kech turdim."]}
+  ],
+  "practice":[
+    {"t":"task","title":"Yesterday Story Cards","items":["What time did you get up? / Soat nechada turdingiz?","What did you have for breakfast? / Nonushtaga nima yedingiz?","Where did you go? / Qayerga bordingiz?","Who did you see? / Kimni ko'rdingiz?","What did you do in the evening? / Oqshomda nima qildingiz?"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Went","Bordi"],["Had","Yedi/ichdi"],["Saw","Ko'rdi"],["Made","Yasadi"],["Bought","Sotib oldi"]]}
+  ],
+  "speaking":[
+    {"t":"talk","title":"My Yesterday","body":"Speak for 2 minutes about your yesterday: morning, afternoon, evening. Use past verbs. / Kechagi kuningiz haqida 2 daqiqa gapiring."},
+    {"t":"partner","title":"Interview","table":[["Did you get up early?","Yes, I did. / No, I got up late."],["Did you go out?","Yes, I went out. / No, I stayed home."],["Did you see any friends?","Yes, I saw ..."],["Did you do your homework?","Of course!"]]},
+    {"t":"mission","title":"Active Listening","body":"Write 3 things your partner did yesterday. / Juftingizning 3 ta ishini yozing."}
+  ],
+  "quiz":["What is the past of 'go'?","What is the past of 'buy'?","Correct: 'I go to school yesterday.'","Translate: 'Kecha oqshom televizor ko'rdik.' → ______"],
+  "homework":"Write your full yesterday story (8-10 sentences) with past verbs. Practice it aloud. / Kechagi kuni haqida hikoya yozing.",
+  "teacher":["Speaking circle: keep each turn short and supportive.","Have a 'story chair' — one student narrates while others listen.","Correct past-tense errors gently by echoing the right form.","This consolidates L41-42 — no new grammar."]
+},
+{
+  "n":49,"title":"Present Continuous","sub":"49-dars: Hozirgi zamon davom","icon":"🏃","accent":"ec407a","band":"preint","type":"normal",
+  "goals":[["🏃 Describe actions happening now","Hozir bo'layotgan harakatlarni tasvirlash"],["⏰ Use am/is/are + -ing","am/is/are + -ing ishlatish"],["👀 Ask 'What are you doing?'","'Nima qilyapsan?' deb so'rash"]],
+  "warmup":[["🏃 What am I doing?","Teacher mimes an action — students say: 'You are reading!' / Imo bilan ko'rsataman."],["👀 Look around","What are your classmates doing right now? / Sinfdoshlaringiz nima qilmoqda?"]],
+  "vocab":[
+    {"w":"now","p":"/nau/","u":"Hozir","i":"⏰","x":["I am studying now.","Hozir o'qiyapman."]},
+    {"w":"right now","p":"/rayt nau/","u":"Ayni paytda","i":"🔥","x":["She is cooking right now.","U hozir ovqat pishirmoqda."]},
+    {"w":"look","p":"/luk/","u":"Qarang","i":"👀","x":["Look! It is raining.","Qarang! Yomg'ir yog'moqda."]},
+    {"w":"listen","p":"/LI-sn/","u":"Eshiting","i":"👂","x":["Listen! The birds are singing.","Eshiting! Qushlar sayramoqda."]},
+    {"w":"wait","p":"/weyt/","u":"Kutmoq","i":"⏳","x":["Please wait. I am coming.","Iltimos, kuting. Kelyapman."]},
+    {"w":"talking","p":"/TO-king/","u":"Gaplashmoqda","i":"💬","x":["They are talking.","Ular gaplashmoqda."]},
+    {"w":"running","p":"/RU-ning/","u":"Yugurmoqda","i":"🏃","x":["The children are running.","Bolalar yugurmoqda."]},
+    {"w":"eating","p":"/II-ting/","u":"Yemoqda","i":"🍽️","x":["We are eating lunch.","Biz tushlik qilmoqdamiz."]},
+    {"w":"writing","p":"/RAY-ting/","u":"Yozmoqda","i":"✍️","x":["He is writing a letter.","U xat yozmoqda."]},
+    {"w":"reading","p":"/RII-ding/","u":"O'qimoqda","i":"📖","x":["I am reading a book.","Men kitob o'qiyapman."]}
+  ],
+  "grammar":{"rule":"**am/is/are + verb-ing** (do → doing, run → running, write → writing)","uz":"'am/is/are' + fe'lning -ing shakli",
+    "ex":[["I **am reading** a book now.","Hozir kitob o'qiyapman."],["She **is cooking** dinner.","U kechki ovqat pishirmoqda."],["They **are playing** football.","Ular futbol o'ynamoqda."]],
+    "mistake":["Wrong: *She is cook dinner.*","Right: *She is cooking dinner.*","-ing shakli kerak."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["I ___ (read) a book now.","She ___ (cook) dinner.","They ___ (play) in the park.","Look! The dog ___ (run)."]},
+    {"t":"match","title":"Match the Pairs","pairs":[["I am","Running"],["She is","Talking"],["They are","Writing"]]},
+    {"t":"circle","title":"Circle the Answer","items":["What are you doing? → a) I'm writing b) I write c) I wrote","She ___ now. → a) is sleeping b) sleep c) slept"]},
+    {"t":"order","title":"Build the Sentence","items":["is / cooking / She / now / .","are / The / playing / children / ."]}
+  ],
+  "reading":{"title":"A Busy Park","passage":"It is Sunday morning and the park is busy. Look! A man is running with his dog. Two girls are riding bikes. A boy is eating an ice cream. Under a tree, a woman is reading a book. Near the lake, some children are feeding the ducks. Everyone is having a wonderful time on this sunny morning.",
+    "qs":["What is the man doing?","What are the two girls doing?","Who is reading a book?","What are the children doing near the lake?"]},
+  "listening":{"title":"What Is Happening?","qs":["What is the mother doing?","What is the little boy doing?","What are the birds doing?"],
+    "script":"Listen. In this picture, the mother is washing the dishes. The little boy is drawing a picture. His sister is sleeping on the sofa. Outside, the birds are singing in the tree."},
+  "writing":{"title":"What Is Happening in Your Classroom?","task":"Write 4 sentences about what is happening in your classroom right now.","uz":"Sinfda hozir nima bo'layotgani haqida 4 gap yozing."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["What are you doing?","I'm studying."],["What is your partner doing?","He's writing."],["What is the teacher doing?","She's talking."]]},
+    {"t":"mission","title":"Real-life Mission","body":"Watch your family for 1 minute and say what everyone is doing. / Oila a'zolaringizni kuzating va ayting."}
+  ],
+  "quiz":["Fill: 'I ___ reading now.' (am/is/are)","Fill: 'She ___ cooking.' (am/is/are)","Write the -ing form: run → ______","Translate: 'Ular futbol o'ynamoqda.' → ______"],
+  "homework":"Vocabulary: 10 words 3× · Grammar: 6 sentences about actions now · Reading: re-read 'A Busy Park' · Speaking: describe your home to your family.",
+  "teacher":["Mime and pictures make the continuous tense concrete.","Drill -ing spelling: run→running, write→writing.","Watch for missing -ing: 'She is cook'.","Compare with L41 past: now vs yesterday."]
+},
+{
+  "n":50,"title":"Making Plans","sub":"50-dars: Rejalar tuzish","icon":"📅","accent":"42a5f5","band":"preint","type":"normal",
+  "goals":[["📅 Talk about future plans with 'going to'","'going to' bilan kelajak rejalarni aytish"],["🗓️ Use time words: tonight, next weekend","'tonight, next weekend'ni ishlatish"],["🗣️ Ask 'What are you going to do?'","'Nima qilmoqchisiz?' deb so'rash"]],
+  "warmup":[["📅 The weekend","What are you going to do this weekend? / Dam olish kuni nima qilasiz?"],["⏰ Review present continuous","Quick drill: 'What is she doing now?' / Hozirgi zamonni takrorlang."]],
+  "vocab":[
+    {"w":"tonight","p":"/tu-NAYT/","u":"Bugun kechqurun","i":"🌙","x":["I'm going to study tonight.","Bugun kechqurun o'qiyman."]},
+    {"w":"next weekend","p":"/nekst wiik-END/","u":"Keyingi dam olish","i":"📆","x":["We're going to travel next weekend.","Keyingi dam olishda safar qilamiz."]},
+    {"w":"plan","p":"/plan/","u":"Reja","i":"🗓️","x":["What's your plan?","Rejangiz nima?"]},
+    {"w":"visit","p":"/VI-zit/","u":"Bormoq (tashrif)","i":"🏛️","x":["I'm going to visit my uncle.","Amakimnikiga boraman."]},
+    {"w":"stay","p":"/stey/","u":"Qolmoq","i":"🏠","x":["We're going to stay at home.","Uyda qolamiz."]},
+    {"w":"buy","p":"/bay/","u":"Sotib olmoq","i":"🛍️","x":["She's going to buy a dress.","U ko'ylak sotib oladi."]},
+    {"w":"meet","p":"/miit/","u":"Uchrashmoq","i":"🤝","x":["I'm going to meet my friends.","Do'stlarim bilan uchrashaman."]},
+    {"w":"travel","p":"/TRAV-l/","u":"Sayohat qilmoq","i":"✈️","x":["We're going to travel by train.","Poyezdda sayohat qilamiz."]},
+    {"w":"tomorrow","p":"/tu-MO-roh/","u":"Ertaga","i":"☀️","x":["Tomorrow I'm going to rest.","Ertaga dam olaman."]},
+    {"w":"idea","p":"/ay-DII-a/","u":"G'oya, fikr","i":"💡","x":["That's a good idea!","Bu yaxshi g'oya!"]}
+  ],
+  "grammar":{"rule":"Future plan: **am/is/are going to** + verb","uz":"'going to' + fe'l — kelajak reja",
+    "ex":[["I **am going to** study English tonight.","Bugun kechqurun inglizcha o'qiyman."],["She **is going to** visit her aunt.","U xolasinikiga boradi."],["We **are going to** have a party.","Biz ziyofat qilamiz."]],
+    "mistake":["Wrong: *I going to study.*","Right: *I am going to study.*","'am/is/are' kerak."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["I ___ going to watch a film. (am/is/are)","She ___ going to travel. (am/is/are)","We ___ going to visit Samarkand. (am/is/are)","They ___ going to play football. (am/is/are)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Tonight","Bugun kechqurun"],["Next weekend","Keyingi dam olish"],["Tomorrow","Ertaga"],["Plan","Reja"]]},
+    {"t":"circle","title":"Circle the Answer","items":["What are you going to do? → a) I'm going to sleep b) I sleep c) I slept"]},
+    {"t":"order","title":"Build the Sentence","items":["going / I'm / to / study / tonight / .","to / She's / visit / going / aunt / her / ."]}
+  ],
+  "reading":{"title":"Weekend Plans","passage":"Ask the family: what are your plans? 'Tonight we're going to watch a film together,' says Mum. 'On Saturday, Dad and I are going to visit the bazaar,' says Grandmother. 'I'm going to play football with my friends,' says brother. 'And I'm going to finish my book!' says sister. Everyone has a plan — and I am going to help Mum cook dinner!",
+    "qs":["What is the family going to do tonight?","What are the grandmother and Dad going to do on Saturday?","What is the brother going to do?","What is the writer going to do?"]},
+  "listening":{"title":"What's the Plan?","qs":["What is Anna going to do tomorrow?","Where is she going to travel?","Who is she going to meet?"],
+    "script":"Listen. Anna has big plans. Tomorrow she is going to get up early. She is going to travel to Bukhara with her family. There, she is going to meet her cousins and visit the old city."},
+  "writing":{"title":"My Weekend Plan","task":"Write 5 sentences about your weekend using 'going to'.","uz":"Dam olish kuni rejangiz haqida 'going to' bilan 5 gap yozing."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["What are you going to do tonight?","I'm going to study."],["Are you going to travel?","Yes, next weekend."],["Who are you going to meet?","I'm going to meet my cousin."]]},
+    {"t":"mission","title":"Real-life Mission","body":"Tell your family one plan for tomorrow. / Ertangi rejangizni oilangizga ayting."}
+  ],
+  "quiz":["Fill: 'She ___ going to cook.' (am/is/are)","Fill: 'I ___ going to sleep.' (am/is/are)","Translate: 'Ertaga dam olaman.' → ______","Correct: 'We going to play.'"],
+  "homework":"Vocabulary: 10 words 3× · Grammar: 6 'going to' sentences · Reading: re-read 'Weekend Plans' · Speaking: discuss your weekend plan with your family.",
+  "teacher":["Link to L49: now (continuous) vs future (going to).","Use a real calendar to talk about plans.","Watch for missing 'am/is/are'.","Let students plan a real weekend in pairs and present."]
+}
+]}

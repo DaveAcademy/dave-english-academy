@@ -11,7 +11,7 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid #1F5E6B;
+  outline: 2px solid #7EA1FF;
   outline-offset: 2px;
 }
 
@@ -27,8 +27,80 @@ body {
   @apply w-full rounded-lg border border-ink/15 bg-white px-3 py-2 text-sm text-ink shadow-sm focus:border-brand-500;
 }
 
+@keyframes shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-3px); }
+  40%, 60% { transform: translateX(3px); }
+}
+.animate-shake {
+  animation: shake 0.4s ease-in-out;
+}
+
 .ruled-texture {
   background-image: repeating-linear-gradient(
     to bottom, transparent, transparent 27px, rgba(255, 255, 255, 0.06) 27px, rgba(255, 255, 255, 0.06) 28px
   );
 }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes bounceIn {
+  0% { opacity: 0; transform: scale(0.3); }
+  50% { opacity: 1; transform: scale(1.05); }
+  70% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes correctPop {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.15); }
+  60% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+@keyframes incorrectShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+@keyframes letterReveal {
+  from { opacity: 0; transform: translateY(8px) scale(0.8); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes confettiBurst {
+  0% { opacity: 1; transform: translateY(0) rotate(0deg); }
+  100% { opacity: 0; transform: translateY(-40px) rotate(720deg); }
+}
+
+@keyframes countdownPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+.animate-correct { animation: correctPop 0.35s ease-out; }
+.animate-incorrect { animation: incorrectShake 0.4s ease-in-out; }
+.animate-letter-reveal { animation: letterReveal 0.25s ease-out both; }
+.animate-slide-up { animation: slideUp 0.3s ease-out both; }

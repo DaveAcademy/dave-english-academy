@@ -1,0 +1,357 @@
+{"lessons":[
+{
+  "n":30,"title":"Furniture","sub":"30-dars: Mebel","icon":"🛋️","accent":"8d6e63","band":"elementary","type":"normal",
+  "goals":[["🛋️ Describe the furniture in a room","Xonadagi mebellarni tasvirlash"],["🔎 Answer 'What's this?' and 'What are these?'","'Bu nima?' va 'Bular nima?' savollariga javob berish"],["🔢 Use 'There is / There are' correctly","'There is / There are'ni to'g'ri ishlatish"]],
+  "warmup":[["🛋️ Room hunt","Look around the room. Point and say 3 things you can see. / Atrofga qarang. Ko'rgan 3 ta narsaga ishora qilib ayting."],["🧠 Chain game","I say 'There is a table.' The next student adds one more: 'There is a table and a lamp.' / Men bitta narsa aytaman, keyingi o'quvchi yana bittasini qo'shadi."]],
+  "vocab":[
+    {"w":"bed","p":"/bed/","u":"To'shak","i":"🛏️","x":["There is a bed in the bedroom.","Yotoqxonada to'shak bor."]},
+    {"w":"table","p":"/tey-bl/","u":"Stol","i":"🪑","x":["The table is in the kitchen.","Stol oshxonada."]},
+    {"w":"chair","p":"/cheer/","u":"Stul","i":"🪑","x":["There are two chairs at the table.","Stol yonida ikkita stul bor."]},
+    {"w":"sofa","p":"/SOU-fa/","u":"Divan","i":"🛋️","x":["There is a sofa in the living room.","Mehmonxonada divan bor."]},
+    {"w":"lamp","p":"/lamp/","u":"Chiroq","i":"💡","x":["There is a lamp on the desk.","Parta ustida chiroq bor."]},
+    {"w":"wardrobe","p":"/WOR-drohb/","u":"Shkaf","i":"🚪","x":["The wardrobe is in my room.","Shkaf mening xonamda."]},
+    {"w":"desk","p":"/desk/","u":"Parta","i":"🖥️","x":["I do my homework at my desk.","Men uy vazifamni partada qilaman."]},
+    {"w":"mirror","p":"/MI-rar/","u":"Oyna","i":"🪞","x":["There is a mirror on the wall.","Devorda oyna bor."]},
+    {"w":"carpet","p":"/KAR-pet/","u":"Gilam","i":"🟫","x":["There is a carpet on the floor.","Polda gilam bor."]},
+    {"w":"picture","p":"/PIK-cher/","u":"Rasm","i":"🖼️","x":["There is a picture above the sofa.","Divan ustida rasm bor."]}
+  ],
+  "grammar":{"rule":"**There is a** + one thing / **There are** + two or more","uz":"Bitta narsa uchun 'there is', ko'pi uchun 'there are'",
+    "ex":[["There is a bed in my room.","Mening xonamda to'shak bor."],["There are three chairs in the kitchen.","Oshxonada uchta stul bor."],["**This** is my desk. **That** is the wardrobe.","Bu mening partam. Anavi — shkaf."]],
+    "mistake":["Wrong: *There is two lamps.*","Right: *There are two lamps.*","Ko'plikda 'are' ishlatiladi."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["There ___ a sofa in the living room. (is/are)","There ___ four chairs at the table. (is/are)","___ is my mirror — point to the near one. (This/That)","___ are two lamps — point far away. (These/Those)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Wardrobe","Shkaf"],["Mirror","Oyna"],["Carpet","Gilam"],["Sofa","Divan"],["Desk","Parta"]]},
+    {"t":"circle","title":"Circle the Answer","items":["What's this? → a) It's a lamp b) It's a sofa c) It's a bed","What are these? → a) It's a chair b) They are chairs c) They is chairs"]},
+    {"t":"order","title":"Build the Sentence","items":["There / a / is / mirror / wall / on / the / .","There / are / chairs / two / the / in / room / ."]}
+  ],
+  "reading":{"title":"My Dream Room","passage":"My dream room is big. There is a bed next to the window. There are two lamps — one on the desk and one next to the bed. There is a big wardrobe and a soft carpet on the floor. On the wall there is a mirror and three pictures. There is a sofa too. I love my room!",
+    "qs":["Where is the bed?","How many lamps are there?","What is on the floor?","What is on the wall?"]},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["What's this?","It's a lamp."],["What are these?","They are chairs."],["Is there a sofa?","Yes, there is."],["Are there pictures?","Yes, there are. / No, there aren't."]]},
+    {"t":"mission","title":"Real-life Mission","body":"Draw your bedroom. Show it to a partner and describe it with 'There is / There are'. / Xonangizni chizing va 'there is / there are' bilan tasvirlang."}
+  ],
+  "quiz":["Translate: 'Stol ustida chiroq bor.' → ______","Fill in: 'There ___ a carpet on the floor.' (is/are)","Say the opposite: 'big' → ______","Correct the sentence: 'There is two beds.'"],
+  "homework":"Vocabulary: write all 10 words 3× · Grammar: 5 sentences about your room with 'There is / There are' · Reading: re-read 'My Dream Room' and answer the 4 questions in full sentences · Speaking: describe one room in your house to your family.",
+  "teacher":["Show a picture of a room; students name the furniture in English.","Drill 'This/That' with real objects — near/far hand gestures.","Watch for 'there is + plural'; contrast 'There is a chair / There are chairs'.","Follow up: each student describes their own room at home."]
+},
+{
+  "n":31,"title":"Where Is It?","sub":"31-dars: U qayerda?","icon":"🔍","accent":"5c6bc0","band":"elementary","type":"normal",
+  "goals":[["🔍 Ask 'Where is / Where are...?'","'Where is / are...?' deb so'rash"],["📍 Say where things are (on, under, next to)","Narsalarning joyini aytish"],["🎯 Understand short answers: 'It's on the table.'","Qisqa javoblarni tushunish"]],
+  "warmup":[["🔦 Where's my pen?","Hide a small object. Ask 'Where is it?' Students guess: 'Is it under the book?' / Kichkina narsani yashiring. O'quvchilar topishadi."],["🧩 Review furniture","Point and say: 'There is a sofa. Where is it? — It's in the living room.' / Mebellarni takrorlang."]],
+  "vocab":[
+    {"w":"in","p":"/in/","u":"Ichida","i":"📦","x":["The pen is in the bag.","Qalam sumkada."]},
+    {"w":"on","p":"/on/","u":"Ustida","i":"🪑","x":["The book is on the table.","Kitob stol ustida."]},
+    {"w":"under","p":"/UN-dar/","u":"Tagida","i":"🪑","x":["The cat is under the chair.","Mushuk stul tagida."]},
+    {"w":"next to","p":"/nekst tu/","u":"Yonida","i":"🤝","x":["The shop is next to the school.","Do'kon maktab yonida."]},
+    {"w":"behind","p":"/bi-HAYND/","u":"Orqasida","i":"🚪","x":["The ball is behind the door.","To'p eshik orqasida."]},
+    {"w":"in front of","p":"/in front ov/","u":"Oldida","i":"🧍","x":["The teacher is in front of the class.","O'qituvchi sinf oldida."]},
+    {"w":"between","p":"/bi-TWIIN/","u":"Orasida","i":"↔️","x":["The bank is between the shop and the hospital.","Bank do'kon va kasalxona orasida."]},
+    {"w":"where","p":"/wear/","u":"Qayerda","i":"❓","x":["Where is my phone?","Telefonim qayerda?"]}
+  ],
+  "grammar":{"rule":"**Where is** (singular) / **Where are** (plural) → **It's / They're** + place","uz":"Bitta narsa uchun 'where is', ko'pi uchun 'where are'",
+    "ex":[["Where is the lamp? — It's on the desk.","Chiroq qayerda? — U parta ustida."],["Where are the shoes? — They're under the bed.","Tuflilar qayerda? — Ular to'shak tagida."],["Where is the cat? — It's behind the sofa.","Mushuk qayerda? — U divan orqasida."]],
+    "mistake":["Wrong: *Where the pen is?*","Right: *Where is the pen?*","Savolda 'is' so'z birinchi o'rinda."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["Where ___ the mirror? (is/are)","Where ___ the chairs? (is/are)","The cat is ___ the sofa. (under/on)","The lamp is ___ the table. (on/in)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Where is the lamp?","It's on the desk."],["Where are the chairs?","They're next to the table."],["Where is the bed?","It's in the bedroom."]]},
+    {"t":"circle","title":"Circle the Answer","items":["Where is the mirror? → a) It's on the wall b) They're on the wall c) Yes, it is"]},
+    {"t":"order","title":"Build the Sentence","items":["is / the / Where / lamp / ?","are / chairs / the / Where / ?","the / is / cat / under / The / table / ."]}
+  ],
+  "reading":{"title":"Ben's Room","passage":"Ben's room is small but nice. His bed is next to the window. His lamp is on the desk. His books are under the desk. There is a big wardrobe behind the door. His cat, Tom, is on the bed. Where are Ben's shoes? They're under the bed, of course!",
+    "qs":["Where is Ben's lamp?","Where are his books?","Where is Tom the cat?","Where are Ben's shoes?"]},
+  "listening":{"title":"Find It!","qs":["Where is the ball first? (under the chair / on the table)","Where is the ball second?","Where is the ball third?","Where is the ball last?"],
+    "script":"Let's play find it! Listen. The ball is under the chair. (pause) Now the ball is on the table. (pause) Now it is behind the door. (pause) Now it is next to the box."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["Where is your phone?","It's on the table."],["Where are your keys?","They're in my bag."],["Where is the teacher?","She's at the board."]]},
+    {"t":"mission","title":"Real-life Mission","body":"Ask your partner where 3 things in the classroom are. / Sinfdagi 3 ta narsa qayerdaligini juftingizdan so'rang."}
+  ],
+  "quiz":["Translate: 'Mushuk stul tagida.' → ______","Where ___ your books? (is/are)","Answer: 'Where is the lamp?' → ______","Complete: 'The picture is ___ the wall.' (on/in/under)"],
+  "homework":"Vocabulary: write the 8 position words 3× · Grammar: 5 questions with 'Where is/are' + answers · Reading: re-read 'Ben's Room', answer the 4 questions · Speaking: say where 3 things at home are, in English.",
+  "teacher":["Play 'hide the object' to make position words physical.","Drill question word order: Where + is/are + noun.","Move a real ball as you read the listening script.","Watch for yes/no answers to where-questions; teach 'It's/They're + place'."]
+},
+{
+  "n":32,"title":"My Neighborhood","sub":"32-dars: Mening mahallam","icon":"🏘️","accent":"66bb6a","band":"elementary","type":"normal",
+  "goals":[["🏘️ Describe places near home (park, shop, school)","Uy yaqinidagi joylarni tasvirlash"],["🏞️ Use 'There is/are' + near/far","'near/far' bilan joylarni aytish"],["🛤️ Say 'It's near the... / It's far from...'","'...ning yonida / ...dan uzoqda' deyish"]],
+  "warmup":[["🏡 My street","Look out of the window. Name 3 places you can see. / Derazadan qarang. Ko'rgan 3 ta joyni ayting."],["🔄 Review: Where is it?","Quick drill: 'Where is the shop?' — 'It's next to the school.' / Tezkor takrorlash."]],
+  "vocab":[
+    {"w":"park","p":"/park/","u":"Bog' (istirohat bog'i)","i":"🏞️","x":["There is a park near my house.","Uyim yonida bog' bor."]},
+    {"w":"shop","p":"/shop/","u":"Do'kon","i":"🏪","x":["The shop is on my street.","Do'kon mening ko'chamda."]},
+    {"w":"school","p":"/skuul/","u":"Maktab","i":"🏫","x":["The school is near the park.","Maktab bog' yonida."]},
+    {"w":"hospital","p":"/HOS-pi-tal/","u":"Kasalxona","i":"🏥","x":["There is a hospital far from my house.","Uyimdan uzoqda kasalxona bor."]},
+    {"w":"street","p":"/striit/","u":"Ko'cha","i":"🛣️","x":["This is a long street.","Bu uzun ko'cha."]},
+    {"w":"near","p":"/nir/","u":"Yaqin","i":"📍","x":["The shop is near my house.","Do'kon uyimga yaqin."]},
+    {"w":"far","p":"/far/","u":"Uzoq","i":"🗺️","x":["The school is far from here.","Maktab bu yerdan uzoq."]},
+    {"w":"playground","p":"/PLAY-ground/","u":"O'yin maydonchasi","i":"🛝","x":["Children play at the playground.","Bolalar o'yin maydonchasida o'ynaydi."]},
+    {"w":"bank","p":"/bank/","u":"Bank","i":"🏦","x":["The bank is next to the hospital.","Bank kasalxona yonida."]},
+    {"w":"market","p":"/MAR-ket/","u":"Bozor","i":"🛒","x":["There is a market on Sundays.","Yakshanba kuni bozor bo'ladi."]}
+  ],
+  "grammar":{"rule":"There is a park **near** my house. / The school is **far from** my house.","uz":"'near' — yaqin, 'far from' — ...dan uzoq",
+    "ex":[["There is a park near my house.","Uyim yonida bog' bor."],["The hospital is far from the center.","Kasalxona markazdan uzoqda."],["There are many shops on this street.","Bu ko'chada ko'p do'konlar bor."]],
+    "mistake":["Wrong: *The shop is near to my house.*","Right: *The shop is near my house.*","'near' bilan 'to' ishlatilmaydi."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["There is a park ___ my house. (near/near to)","The bank is far ___ the school. (from/at)","There ___ many shops on this street. (is/are)","___ there a hospital near here? (Is/Are)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Park","Bog'"],["Shop","Do'kon"],["Hospital","Kasalxona"],["Playground","O'yin maydonchasi"]]},
+    {"t":"circle","title":"Circle the Answer","items":["Is there a bank near here? → a) Yes, there is b) Yes, there are c) Yes, it is"]},
+    {"t":"order","title":"Build the Sentence","items":["a / near / There / is / park / my / house / .","far / is / hospital / The / from / here / ."]}
+  ],
+  "reading":{"title":"My Street","passage":"My street is nice. There is a small shop next to my house. The school is near the shop. Behind the school there is a big playground. Children play there every day. The park is far from my street, but my family goes there on Sundays. We love our neighborhood!",
+    "qs":["What is next to my house?","Where is the playground?","When does the family go to the park?"]},
+  "listening":{"title":"Listen and Draw","qs":["Where do you draw the shop?","What is near the shop?","Where is the hospital?"],
+    "script":"Draw a picture. In the middle, draw a school. Next to the school, draw a shop. Near the shop, draw a park. Behind the park, draw a hospital. Far from the school, draw your house."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["Is there a park near your house?","Yes, there is. / No, there isn't."],["Where is the shop?","It's next to the school."],["Is the hospital far from here?","Yes, it's far. / No, it's near."]]},
+    {"t":"mission","title":"Real-life Mission","body":"Draw your street. Tell your partner about 4 places with 'near / far from'. / Ko'changizni chizing va 4 ta joy haqida ayting."}
+  ],
+  "quiz":["Translate: 'Bog' uyimga yaqin.' → ______","The hospital is far ___ the school. (from/at)","Fill in: 'There ___ many shops on this street.' (is/are)","Name 3 places in a neighborhood."],
+  "homework":"Vocabulary: 10 words 3× · Grammar: 5 sentences about places near your home (near/far from) · Reading: re-read 'My Street', answer 3 questions · Speaking: tell your family about your street.",
+  "teacher":["Use a simple map on the board and drill near/far from with real positions.","Review 'there is/are' before the new 'near/far' phrases.","Watch for 'near to' — correct to 'near'.","For homework, students can draw and label a map of their street in English."]
+},
+{
+  "n":33,"title":"Design Your Room Workshop","sub":"33-dars: Xona loyihalash ustaxonasi","icon":"🛠️","accent":"ffa726","band":"elementary","type":"workshop",
+  "goals":[["🛠️ Design and describe a dream room","O'z orzu xonasini loyihalash va tasvirlash"],["🗣️ Use 'There is / There are' to present it","'There is/are' bilan taqdim etish"],["🎨 Work together and share ideas","Birgalikda ishlash va fikr almashish"]],
+  "warmup":[["🎨 Furniture quiz","I describe a thing, you name it: 'You sleep on it.' → bed! / Men tasvirlayman, siz topasiz."],["🏷️ Position review","Review: 'Where is the lamp?' — 'It's on the desk.' / Joy so'zlarini takrorlang."]],
+  "vocab":[
+    {"w":"sofa","p":"/SOU-fa/","u":"Divan","i":"🛋️","x":["There is a sofa in my dream room.","Orzu xonamda divan bor."]},
+    {"w":"wardrobe","p":"/WOR-drohb/","u":"Shkaf","i":"🚪","x":["The wardrobe is next to the door.","Shkaf eshik yonida."]},
+    {"w":"lamp","p":"/lamp/","u":"Chiroq","i":"💡","x":["There is a lamp on the desk.","Parta ustida chiroq bor."]},
+    {"w":"mirror","p":"/MI-rar/","u":"Oyna","i":"🪞","x":["There is a mirror on the wall.","Devorda oyna bor."]},
+    {"w":"carpet","p":"/KAR-pet/","u":"Gilam","i":"🟫","x":["The carpet is on the floor.","Gilam polda."]},
+    {"w":"shelf","p":"/shelf/","u":"Tokcha","i":"📚","x":["There is a shelf with books.","Kitobli tokcha bor."]}
+  ],
+  "practice":[
+    {"t":"task","title":"Design Your Room","items":["Choose 5 pieces of furniture. / 5 ta mebel tanlang.","Draw the room on paper. / Xonani qog'ozga chizing.","Write 3 sentences with 'There is' and 2 with 'There are'. / 3 ta 'there is' va 2 ta 'there are' gap yozing.","Name each thing in English. / Har bir narsani inglizcha ayting."]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Shelf","Tokcha"],["Mirror","Oyna"],["Carpet","Gilam"],["Wardrobe","Shkaf"],["Lamp","Chiroq"]]},
+    {"t":"circle","title":"Circle the Answer","items":["Which sentence is correct? → a) There are a bed b) There is a bed c) There is bed"]}
+  ],
+  "speaking":[
+    {"t":"talk","title":"Present Your Room","body":"Show your drawing to the class. Say: 'This is my room. There is... There are...' / Xonangizni sinfga ko'rsating va tasvirlang."},
+    {"t":"mission","title":"Partner Questions","body":"Ask your partner 2 questions with 'Is there...?' about their room. / Juftingiz xonasi haqida 2 ta savol bering."}
+  ],
+  "quiz":["Fill in: 'There ___ a mirror on the wall.' (is/are)","Fill in: 'There ___ two sofas.' (is/are)","Translate: 'Tokchada kitoblar bor.' → ______","Name 3 furniture words you learned today."],
+  "homework":"Finish and color your room picture. Write 5 sentences about it. / Xona rasmini tugating va 5 gap yozing.",
+  "teacher":["Workshop: students design a room in pairs, then present to the class.","Collect the drawings for a wall display.","Keep the pace playful — this lesson consolidates 29-32.","Encourage full sentences, not single words."]
+},
+{
+  "n":34,"title":"Prepositions","sub":"34-dars: Joy so'zlari (predloglar)","icon":"📍","accent":"ab47bc","band":"elementary","type":"normal",
+  "goals":[["📍 Use in, on, under, next to, between","'in, on, under, next to, between'ni ishlatish"],["🗣️ Say where objects are","Narsalarning joyini aytish"],["🔍 Understand questions with 'Where'","'Where' savollarini tushunish"]],
+  "warmup":[["🎒 The mystery object","Hide something. Students ask 'Is it in/on/under...?' / Narsa yashiring, o'quvchilar savol beradi."],["🔄 Review rooms","Name a room, students say furniture in it. / Xonani ayting, mebellarni sanang."]],
+  "vocab":[
+    {"w":"in","p":"/in/","u":"Ichida","i":"📦","x":["The pen is in the bag.","Qalam sumkada."]},
+    {"w":"on","p":"/on/","u":"Ustida","i":"🪑","x":["The book is on the table.","Kitob stol ustida."]},
+    {"w":"under","p":"/UN-dar/","u":"Tagida","i":"🪑","x":["The cat is under the chair.","Mushuk stul tagida."]},
+    {"w":"next to","p":"/nekst tu/","u":"Yonida","i":"🤝","x":["The school is next to the shop.","Maktab do'kon yonida."]},
+    {"w":"between","p":"/bi-TWIIN/","u":"Orasida","i":"↔️","x":["The bank is between the shop and the hospital.","Bank do'kon va kasalxona orasida."]},
+    {"w":"behind","p":"/bi-HAYND/","u":"Orqasida","i":"🚪","x":["The ball is behind the door.","To'p eshik orqasida."]},
+    {"w":"in front of","p":"/in front ov/","u":"Oldida","i":"🧍","x":["The teacher is in front of the class.","O'qituvchi sinf oldida."]},
+    {"w":"above","p":"/a-BAV/","u":"Tepasida","i":"⬆️","x":["The picture is above the sofa.","Rasm divan tepasida."]},
+    {"w":"inside","p":"/in-SAYD/","u":"Ichida (ichkarisida)","i":"🧺","x":["The shoes are inside the wardrobe.","Tuflilar shkaf ichida."]},
+    {"w":"outside","p":"/aut-SAYD/","u":"Tashqarida","i":"🌳","x":["The dog is outside the house.","It uy tashqarida."]}
+  ],
+  "grammar":{"rule":"in, on, under, next to, between, behind, in front of + **the** + place","uz":"Joy so'zlari: ichida, ustida, tagida, yonida, orasida, orqasida, oldida",
+    "ex":[["The lamp is **on** the desk.","Chiroq parta ustida."],["The ball is **under** the chair.","To'p stul tagida."],["The school is **between** the bank and the shop.","Maktab bank va do'kon orasida."]],
+    "mistake":["Wrong: *The cat is under of the table.*","Right: *The cat is under the table.*","'under' dan keyin 'of' qo'yilmaydi."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["The picture is ___ the wall. (on/in)","The shoes are ___ the bed. (under/above)","The bank is ___ the shop and the hospital. (between/next to)","The cat is ___ the door. (behind/under)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["In","Ichida"],["Under","Tagida"],["Between","Orasida"],["Next to","Yonida"],["In front of","Oldida"]]},
+    {"t":"circle","title":"Circle the Answer","items":["Where is the lamp? → a) It's on the desk b) It's under the desk c) It's in the desk"]},
+    {"t":"order","title":"Build the Sentence","items":["is / cat / under / The / table / the / .","school / is / The / the / bank / between / and / shop / the / ."]}
+  ],
+  "reading":{"title":"Where Is Everything?","passage":"It is a busy morning. Dad asks: 'Where is my phone?' Mum says: 'It's on the table, next to the coffee.' 'And my keys?' 'They're under the newspaper!' says Mum. Brother asks: 'Where are my shoes?' 'They're behind the door,' says Mum. 'And the cat?' The cat is on the sofa — sleeping, of course!",
+    "qs":["Where is Dad's phone?","Where are the keys?","Where are the shoes?","Where is the cat?"]},
+  "listening":{"title":"Listen and Place","qs":["Where is the pencil first?","Where is the eraser?","Where do you put the pencil next?","Where is the eraser last?"],
+    "script":"Take a pencil and an eraser. Put the pencil on the book. Put the eraser under the pencil. Put the pencil next to the cup. Put the eraser between the book and the phone."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["Where is your pencil?","It's on my book."],["Where is your bag?","It's under my chair."],["Where is the board?","It's in front of the class."]]},
+    {"t":"mission","title":"Hide and Find","body":"Put 3 objects somewhere. Ask your partner 'Where is it?' — they must find them! / 3 ta narsani joylashtiring, juftingiz topadi."}
+  ],
+  "quiz":["Translate: 'Qalam kitob ustida.' → ______","The cat is ___ the table. (under/on — hidden below)","The school is ___ the bank and the shop. (between/in)","Fill in: 'The picture is ___ the wall.' (on/in/under)"],
+  "homework":"Vocabulary: 10 position words 3× · Grammar: 6 sentences with different prepositions about your room · Reading: re-read 'Where Is Everything?', answer 4 questions · Speaking: hide an object at home and ask your family to find it.",
+  "teacher":["Make the prepositions physical: move a pencil as you drill each word.","Review L30-33 furniture/rooms so students have rich vocabulary to position.","Watch for 'under of' — drill 'under the table' chorally.","The listening task is Simon-says style — students follow with real objects."]
+},
+{
+  "n":35,"title":"Describing a Room","sub":"35-dars: Xonani tasvirlash","icon":"🏠","accent":"ef5350","band":"elementary","type":"normal",
+  "goals":[["🏠 Describe a room in detail","Xonani batafsil tasvirlash"],["📍 Use prepositions with new words","Yangi so'zlar bilan joy so'zlarini ishlatish"],["✍️ Write a short description","Qisqa matn yozish"]],
+  "warmup":[["🖼️ What do you see?","Look at a picture. Say 5 things in it. / Rasmga qarang. 5 ta narsa ayting."],["📍 Preposition race","Quick drill: 'Where is the lamp?' → 'It's on the desk.' / Tezkor mashq."]],
+  "vocab":[
+    {"w":"curtains","p":"/KUR-tins/","u":"Parda","i":"🪟","x":["There are blue curtains on the window.","Derazada ko'k pardalar bor."]},
+    {"w":"shelf","p":"/shelf/","u":"Tokcha","i":"📚","x":["There are books on the shelf.","Tokchada kitoblar bor."]},
+    {"w":"carpet","p":"/KAR-pet/","u":"Gilam","i":"🟫","x":["The carpet is on the floor.","Gilam polda."]},
+    {"w":"mirror","p":"/MI-rar/","u":"Oyna","i":"🪞","x":["There is a mirror on the wall.","Devorda oyna bor."]},
+    {"w":"clock","p":"/klok/","u":"Soat (devor soati)","i":"⏰","x":["There is a clock above the door.","Eshik tepasida soat bor."]},
+    {"w":"wall","p":"/wol/","u":"Devor","i":"🧱","x":["The pictures are on the wall.","Rasmlar devorda."]},
+    {"w":"floor","p":"/floor/","u":"Pol","i":"🟫","x":["The carpet is on the floor.","Gilam polda."]},
+    {"w":"picture","p":"/PIK-cher/","u":"Rasm","i":"🖼️","x":["There are three pictures on the wall.","Devorda uchta rasm bor."]},
+    {"w":"vase","p":"/vays/","u":"Guldon","i":"🏺","x":["There is a vase with flowers on the table.","Stolda gulli guldon bor."]},
+    {"w":"cushion","p":"/KUH-shin/","u":"Yostiqcha","i":"🛋️","x":["There are two cushions on the sofa.","Divanda ikkita yostiqcha bor."]}
+  ],
+  "grammar":{"rule":"Describing: **There is/are** + noun + preposition + place","uz":"Xonani tasvirlash tartibi",
+    "ex":[["There are white curtains on the window.","Derazada oq pardalar bor."],["There is a mirror between the pictures.","Oyna rasmlar orasida."],["The carpet is under the table.","Gilam stol tagida."]],
+    "mistake":["Wrong: *There is two pictures.*","Right: *There are two pictures.*","Ko'plikda 'are' ishlatiladi."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["There ___ blue curtains on the window. (is/are)","There is a clock ___ the wall. (on/in)","The mirror is ___ the two pictures. (between/under)","There ___ a vase on the shelf. (is/are)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Curtains","Parda"],["Shelf","Tokcha"],["Carpet","Gilam"],["Clock","Soat"],["Vase","Guldon"]]},
+    {"t":"circle","title":"Circle the Answer","items":["Where is the mirror? → a) It's on the wall b) It's under the floor c) It's in the shelf"]},
+    {"t":"order","title":"Build the Sentence","items":["There / on / clock / is / wall / a / the / .","curtains / are / on / white / the / window / There / ."]}
+  ],
+  "reading":{"title":"Anna's Living Room","passage":"Anna's living room is warm and nice. There are red curtains on the window. There is a big sofa in front of the window. The carpet on the floor is soft. On the wall there are three pictures and a clock. There is a small table between the sofa and the door. On the table there is a vase with flowers. Anna loves her living room!",
+    "qs":["What color are the curtains?","Where is the sofa?","What is on the wall?","What is on the table?"]},
+  "listening":{"title":"Listen and Draw","qs":["Where are the curtains?","Where is the sofa?","Where is the clock?","What is in the middle of the floor?"],
+    "script":"Draw a room. Draw a window on the left. Put blue curtains on the window. Draw a sofa under the window. Put a clock on the wall — on the right. Draw a carpet in the middle of the floor. Put a small table next to the sofa."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["What color are the curtains?","They're blue."],["Where is the clock?","It's on the wall."],["Is there a vase?","Yes, there is. It's on the table."]]},
+    {"t":"mission","title":"Real-life Mission","body":"Describe your living room to your partner for 1 minute. / Mehmonxonangizni 1 daqiqa tasvirlang."}
+  ],
+  "quiz":["Translate: 'Parda derazada.' → ______","Fill in: 'There ___ a clock on the wall.' (is/are)","Complete: 'The carpet is ___ the floor.' (on/under)","Correct: 'There is two pictures.'"],
+  "homework":"Vocabulary: 10 words 3× · Grammar: 6 sentences describing a room (use prepositions) · Reading: re-read 'Anna's Living Room', answer 4 questions · Speaking: describe your bedroom to your family.",
+  "teacher":["Bring or draw a colorful room picture to make the vocabulary concrete.","Model a full description, then students copy the pattern for their own room.","Watch for missing 'there is/are' agreement.","Encourage adjectives (color, size) to enrich descriptions."]
+},
+{
+  "n":36,"title":"Giving Directions","sub":"36-dars: Yo'l ko'rsatish","icon":"🧭","accent":"26a69a","band":"elementary","type":"normal",
+  "goals":[["🧭 Give simple directions (turn left, go straight)","Oddiy yo'l ko'rsatmalar berish"],["📍 Use 'turn left/right, go straight'","Yo'l so'zlari bilan buyruq berish"],["🗺️ Understand a simple map","Oddiy shahar xaritasini tushunish"]],
+  "warmup":[["🧭 Stand up and turn","Teacher says: 'Turn left! Turn right! Go straight!' Students follow. / Harakat mashqi."],["🔄 Review places","Name a place, students say if it's near/far. / Joylarni takrorlang."]],
+  "vocab":[
+    {"w":"turn left","p":"/turn left/","u":"Chapga buriling","i":"⬅️","x":["Turn left at the bank.","Bankda chapga buriling."]},
+    {"w":"turn right","p":"/turn rayt/","u":"O'ngga buriling","i":"➡️","x":["Turn right at the corner.","Burchakda o'ngga buriling."]},
+    {"w":"go straight","p":"/goh streyt/","u":"To'g'ri yuring","i":"⬆️","x":["Go straight for two blocks.","Ikki kvartal to'g'ri yuring."]},
+    {"w":"corner","p":"/KOR-nar/","u":"Burchak","i":"📍","x":["The shop is on the corner.","Do'kon burchakda."]},
+    {"w":"block","p":"/blok/","u":"Kvartal (masofa)","i":"⬛","x":["The school is two blocks away.","Maktab ikki kvartal narida."]},
+    {"w":"left","p":"/left/","u":"Chap","i":"👈","x":["The bank is on your left.","Bank sizning chapingizda."]},
+    {"w":"right","p":"/rayt/","u":"O'ng","i":"👉","x":["The hospital is on your right.","Kasalxona o'ngingizda."]},
+    {"w":"straight ahead","p":"/streyt a-HED/","u":"To'g'rida","i":"🛣️","x":["Go straight ahead.","To'g'riga yuring."]},
+    {"w":"stop","p":"/stop/","u":"To'xtang","i":"🛑","x":["Stop at the corner.","Burchakda to'xtang."]},
+    {"w":"map","p":"/map/","u":"Xarita","i":"🗺️","x":["Look at the map.","Xaritaga qarang."]}
+  ],
+  "grammar":{"rule":"Imperatives: **Turn left. / Turn right. / Go straight.**","uz":"Buyruq gaplar: chapga buriling, o'ngga buriling, to'g'ri yuring",
+    "ex":[["Turn left at the shop.","Do'konda chapga buriling."],["Go straight and turn right.","To'g'ri yuring va o'ngga buriling."],["The park is on your left.","Bog' sizning chapingizda."]],
+    "mistake":["Wrong: *Go to left.*","Right: *Turn left.*","Chapga — 'turn left', 'to' ishlatilmaydi."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["___ left at the bank. (Turn/Go)","Go ___ for two blocks. (straight/left)","The school is on your ___. (left/under)","Stop ___ the corner. (at/in)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Turn left","Chapga buriling"],["Go straight","To'g'ri yuring"],["On your right","O'ngingizda"],["The corner","Burchak"]]},
+    {"t":"circle","title":"Circle the Answer","items":["You are at the bank. The shop is two blocks ahead. What do you do? → a) Go straight b) Turn left c) Stop"]},
+    {"t":"order","title":"Build the Sentence","items":["left / Turn / the / at / shop / .","your / park / on / is / The / right / ."]}
+  ],
+  "reading":{"title":"A Trip to the Library","passage":"Ask for directions: 'Excuse me, where is the library?' 'Go straight ahead for two blocks. Turn left at the bank. The library is on your right, next to the park.' 'Thank you!' 'You're welcome!'",
+    "qs":["How many blocks do you go straight?","Where do you turn left?","Where is the library?"]},
+  "listening":{"title":"Follow the Map","qs":["What do you pass first?","Where do you turn right?","What is on your left?"],
+    "script":"Start at the school. Go straight one block. Turn right at the corner. Go straight again. The shop is on your left. Stop there."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["Excuse me, where is the bank?","Turn left at the corner."],["Is the park far?","No, go straight one block."],["Where is the hospital?","It's on your right."]]},
+    {"t":"mission","title":"Real-life Mission","body":"Give your partner directions from your desk to the door. / Partangizdan eshikgacha yo'l ko'rsating."}
+  ],
+  "quiz":["Translate: 'Burchakda o'ngga buriling.' → ______","Go ___ for one block. (straight/left)","The park is on your ___. (left/right — you choose)","What do you say to make someone stop?"],
+  "homework":"Vocabulary: 10 words 3× · Grammar: write 5 direction sentences · Reading: re-read 'A Trip to the Library' · Speaking: give your family directions at home.",
+  "teacher":["Act out 'turn left / right / go straight' physically to make it memorable.","Draw a map on the board and practice with real locations.","Watch for 'go to left' — drill 'turn left'.","Role-play polite openers: 'Excuse me, ...'."]
+},
+{
+  "n":37,"title":"City Map Workshop","sub":"37-dars: Shahar xaritasi ustaxonasi","icon":"🗺️","accent":"ff7043","band":"elementary","type":"workshop",
+  "goals":[["🗺️ Read a simple city map","Oddiy shahar xaritasini o'qish"],["🧭 Give and follow directions","Yo'l ko'rsatish va kuzatish"],["👥 Work in pairs on a map task","Xarita bilan juftlikda ishlash"]],
+  "warmup":[["🗺️ Map quiz","Where is the bank on the map? — Point and say. / Xaritada bank qayerda?"],["🧭 Direction race","Teacher says commands, students point or move. / Buyruqlar bo'yicha harakat."]],
+  "vocab":[
+    {"w":"map","p":"/map/","u":"Xarita","i":"🗺️","x":["This is a city map.","Bu shahar xaritasi."]},
+    {"w":"street","p":"/striit/","u":"Ko'cha","i":"🛣️","x":["Main Street is long.","Bosh ko'cha uzun."]},
+    {"w":"corner","p":"/KOR-nar/","u":"Burchak","i":"📍","x":["The shop is on the corner.","Do'kon burchakda."]},
+    {"w":"turn left","p":"/turn left/","u":"Chapga buriling","i":"⬅️","x":["Turn left here.","Shu yerda chapga buriling."]},
+    {"w":"turn right","p":"/turn rayt/","u":"O'ngga buriling","i":"➡️","x":["Turn right at the corner.","Burchakda o'ngga buriling."]},
+    {"w":"go straight","p":"/goh streyt/","u":"To'g'ri yuring","i":"⬆️","x":["Go straight to the park.","Bog'gacha to'g'ri yuring."]}
+  ],
+  "practice":[
+    {"t":"task","title":"Build Your Map","items":["Draw a map of a small town with 6 places (bank, shop, school, park, hospital, your house). / 6 ta joyli shaharcha xaritasi chizing.","Label every place in English. / Har bir joyni inglizcha yozing.","Write directions from your house to the school. / Uyingizdan maktabgacha yo'l yozing.","Check your partner's directions. / Juftingiz yo'lini tekshiring."]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Map","Xarita"],["Corner","Burchak"],["Turn left","Chapga buriling"],["Go straight","To'g'ri yuring"]]},
+    {"t":"circle","title":"Circle the Answer","items":["Your house → the park. Which way? → a) Turn right at the corner b) Sleep c) Open a book"]}
+  ],
+  "speaking":[
+    {"t":"talk","title":"Guide Your Partner","body":"Your partner's pen is a car. Give directions from one place to another on your map. / Juftingizga xaritada yo'l ko'rsating."},
+    {"t":"mission","title":"Tourist and Local","body":"Ask and answer: 'Excuse me, where is the...?' using your maps. / Xaritadan foydalanib so'rang va javob bering."}
+  ],
+  "quiz":["Give a direction: from the shop to the park (you draw the way).","Translate: 'Xarita' → ______","Complete: 'Turn ___ at the bank.' (left/right)","How do you ask politely? → 'Excuse me, ___ is the bank?'"],
+  "homework":"Finish your map. Write 4 directions. Practice saying them aloud. / Xaritani tugating va yo'llarni mashq qiling.",
+  "teacher":["Workshop: students create maps, then role-play tourists and locals.","Provide a sample map to copy before they invent their own.","Circulate and check direction language.","Display the best maps in the classroom."]
+},
+{
+  "n":38,"title":"Speaking Circle: My House and Town","sub":"38-dars: Suhbat doirasi — uyim va shahrim","icon":"🏡","accent":"7e57c2","band":"elementary","type":"speaking",
+  "goals":[["🏡 Talk about my house and neighborhood","Uy va mahallam haqida gapirish"],["🗣️ Use there is/are, prepositions, directions together","O'rganilgan tilni birga ishlatish"],["👥 Speak for 1 minute without stopping","1 daqiqa to'xtamasdan gapirish"]],
+  "warmup":[["🗣️ Think and talk","What is your favorite room? Why? / Eng sevimli xonangiz qaysi? Nega?"],["🔄 Word cloud","Say 5 words from Lessons 29-37. / 29-37-darslardan 5 ta so'z ayting."]],
+  "vocab":[
+    {"w":"house","p":"/haus/","u":"Uy","i":"🏠","x":["My house is near the park.","Mening uyim bog' yonida."]},
+    {"w":"room","p":"/ruum/","u":"Xona","i":"🛏️","x":["My favorite room is my bedroom.","Sevimli xonam — yotoqxona."]},
+    {"w":"street","p":"/striit/","u":"Ko'cha","i":"🛣️","x":["I live on Green Street.","Men Green ko'chasida yashayman."]},
+    {"w":"park","p":"/park/","u":"Bog'","i":"🏞️","x":["There is a park near my house.","Uyim yonida bog' bor."]},
+    {"w":"shop","p":"/shop/","u":"Do'kon","i":"🏪","x":["The shop is next to the school.","Do'kon maktab yonida."]},
+    {"w":"near","p":"/nir/","u":"Yaqin","i":"📍","x":["The bank is near my house.","Bank uyimga yaqin."]}
+  ],
+  "practice":[
+    {"t":"task","title":"Talking Cards","items":["Describe your room (3 sentences). / Xonangizni tasvirlang.","Say where 3 places are near your home. / Uy yaqinidagi 3 joyni ayting.","Give directions from your home to the school. / Uyingizdan maktabgacha yo'l ayting.","Ask your partner a 'Where' question. / Juftingizga savol bering."]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Neighborhood","Mahalla"],["In front of","Oldida"],["Between","Orasida"],["Far from","Uzoqda"]]}
+  ],
+  "speaking":[
+    {"t":"talk","title":"My House and Town","body":"Speak for 1 minute about your house and town. Use: There is/are, near/far, turn left/right. / 1 daqiqa gapiring."},
+    {"t":"partner","title":"Interview","table":[["Where do you live?","I live on ... street."],["Is there a park near you?","Yes, there is. / No, there isn't."],["How do you go to school?","I go straight and turn right."]]},
+    {"t":"mission","title":"Active Listening","body":"Listen to your partner and write 2 things you learned. / Juftingizni tinglab, 2 ta yangi narsa yozing."}
+  ],
+  "quiz":["Describe your room in 2 sentences.","What does 'go straight' mean in Uzbek?","Name 3 places in a neighborhood.","Complete: 'The bank is ___ the corner.' (on/at)"],
+  "homework":"Write a short paragraph about your town (5-6 sentences). Practice speaking it aloud. / Shahringiz haqida qisqa matn yozing.",
+  "teacher":["Speaking circle: give each student a talking card and keep turns short.","Encourage full sentences; correct gently.","Time the 1-minute talks with a timer for fun.","Review vocabulary from 29-37 at the start."]
+},
+{
+  "n":39,"title":"Big Numbers and Prices","sub":"39-dars: Katta sonlar va narxlar","icon":"💰","accent":"42a5f5","band":"elementary","type":"normal",
+  "goals":[["💰 Say numbers up to 1000 (hundred, thousand)","1000 gacha sonlarni aytish"],["🛍️ Ask and answer 'How much is it?'","'Qancha turadi?' deb so'rash va javob berish"],["🏷️ Say prices in sums","Narxlarni ayta olish"]],
+  "warmup":[["🔢 Number flash","Count by tens: 10, 20, 30 ... 100. / O'nlab sanang."],["🛍️ Guess the price","Teacher shows an object; students guess: 'It's 500 som.' / Narxni taxmin qiling."]],
+  "vocab":[
+    {"w":"hundred","p":"/HUN-dred/","u":"Yuz","i":"💯","x":["One hundred students.","Yuz o'quvchi."]},
+    {"w":"thousand","p":"/THAU-zand/","u":"Ming","i":"💵","x":["The ticket costs one thousand som.","Chipta ming som turadi."]},
+    {"w":"price","p":"/prays/","u":"Narx","i":"🏷️","x":["What is the price?","Narxi qancha?"]},
+    {"w":"cheap","p":"/chiip/","u":"Arzon","i":"✅","x":["The book is cheap.","Kitob arzon."]},
+    {"w":"expensive","p":"/ik-SPEN-siv/","u":"Qimmat","i":"💎","x":["The phone is expensive.","Telefon qimmat."]},
+    {"w":"money","p":"/MU-ni/","u":"Pul","i":"💰","x":["I have some money.","Menda pul bor."]},
+    {"w":"cost","p":"/kost/","u":"Turmoq (narxi)","i":"🧾","x":["How much does it cost?","U qancha turadi?"]},
+    {"w":"pay","p":"/pey/","u":"To'lamoq","i":"💳","x":["I pay at the cashier.","Men kassada to'layman."]},
+    {"w":"change","p":"/cheynj/","u":"Qaytim","i":"🪙","x":["Here is your change.","Mana qaytimingiz."]},
+    {"w":"free","p":"/fri/","u":"Bepul","i":"🎁","x":["The museum is free on Sundays.","Muzey yakshanba kuni bepul."]}
+  ],
+  "grammar":{"rule":"Numbers: **hundred / thousand** · Prices: **How much is/are...? — It's / They're ...**","uz":"Sonlar: yuz, ming. Narx so'rash: qancha turadi?",
+    "ex":[["One **hundred** and twenty som.","Yuz yigirma som."],["How much **is** the book? — It's five thousand som.","Kitob qancha turadi? — Besh ming som."],["How much **are** the shoes? — They're cheap!","Tuflilar qancha? — Ular arzon!"]],
+    "mistake":["Wrong: *How much it is?*","Right: *How much is it?*","Narx so'rashda 'is' birinchi o'rinda."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["The ticket ___ two thousand som. (costs/cost)","How much ___ the shoes? (is/are)","One ___ and fifty students. (hundred/thousand)","The bread is very ___. (cheap/expensive)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Hundred","Yuz"],["Thousand","Ming"],["Cheap","Arzon"],["Expensive","Qimmat"],["Price","Narx"]]},
+    {"t":"circle","title":"Circle the Answer","items":["How much is the book? → a) It's three thousand som b) They're three thousand som c) Yes, it is"]},
+    {"t":"order","title":"Build the Sentence","items":["is / How / the / much / bag / ?","hundred / one / students / and / fifty / ."]}
+  ],
+  "reading":{"title":"The Market","passage":"Today is market day! I have two thousand som. First, I buy bread — it is three hundred som. Then I buy apples — they are five hundred som. I see a nice blue bag, but it is very expensive — four thousand som! I ask: 'Is the bag cheaper?' The seller says: 'Two thousand five hundred.' I pay and get my change. Now I have no money, but I am happy!",
+    "qs":["How much is the bread?","How much are the apples?","Why doesn't the boy buy the blue bag at first?"]},
+  "listening":{"title":"Listen and Write the Price","qs":["Bread: ______","Milk: ______","Notebook: ______","Hat: ______"],
+    "script":"Listen and write the prices. The bread is three hundred som. The milk is five thousand five hundred som. The notebook is four thousand som. The hat is fifteen thousand som. The pencils are free for everyone!"},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["How much is this pen?","It's five hundred som."],["How much are these apples?","They're one thousand som."],["Is the bag expensive?","Yes, it is! / No, it's cheap."]]},
+    {"t":"mission","title":"Mini Shop","body":"Make a mini shop with your partner. Buy and sell 3 things, asking the price. / Kichik do'kon o'ynang."}
+  ],
+  "quiz":["Say in English: 350 → ______","Translate: 'Kitob qancha turadi?' → ______","How much ___ the shoes? (is/are)","Fill in: 'The ticket ___ two thousand som.' (costs/cost)"],
+  "homework":"Vocabulary: 10 words 3× · Grammar: 5 'How much...?' questions + answers · Reading: re-read 'The Market', answer 3 questions · Speaking: ask prices at a real shop — in English in your head!",
+  "teacher":["Review numbers 1-100 first, then build to hundred/thousand.","Use play money for the mini shop — great speaking practice.","Watch for 'How much is they?' — drill singular/plural.","Prices in som make the lesson real for students."]
+},
+{
+  "n":40,"title":"Speaking Circle: Elementary Review","sub":"40-dars: Suhbat doirasi — Elementary takrorlash","icon":"🎓","accent":"ec407a","band":"elementary","type":"speaking",
+  "goals":[["🎓 Use Elementary-band language fluently","Elementary darajadagi tilni ravon ishlatish"],["🗣️ Combine routine, house, numbers, directions","Rutina, uy, sonlar, yo'l so'zlarini birlashtirish"],["👥 Have a full conversation","To'liq suhbat qurish"]],
+  "warmup":[["🎯 Countdown","Count from 21 to 40 — the lessons we did! / 21 dan 40 gacha sanang."],["🗣️ Think and talk","What is the best thing you learned in Lessons 21-39? / Eng ko'p nima o'rgandingiz?"]],
+  "vocab":[
+    {"w":"routine","p":"/ruu-TIIN/","u":"Kundalik tartib","i":"🕐","x":["My morning routine starts at 7.","Ertalabki tartibim soat 7 da boshlanadi."]},
+    {"w":"furniture","p":"/FUR-ni-cher/","u":"Mebel","i":"🛋️","x":["There is a lot of furniture in my room.","Xonamda ko'p mebel bor."]},
+    {"w":"neighborhood","p":"/NEY-bor-hud/","u":"Mahalla","i":"🏘️","x":["My neighborhood is quiet.","Mahallam tinch."]},
+    {"w":"directions","p":"/di-REK-shins/","u":"Yo'l ko'rsatma","i":"🧭","x":["He gives good directions.","U yaxshi yo'l ko'rsatadi."]},
+    {"w":"price","p":"/prays/","u":"Narx","i":"💰","x":["What is the price of this?","Buning narxi qancha?"]},
+    {"w":"street","p":"/striit/","u":"Ko'cha","i":"🛣️","x":["Go straight along this street.","Bu ko'cha bo'ylab to'g'ri yuring."]}
+  ],
+  "practice":[
+    {"t":"task","title":"Conversation Cards","items":["Describe your morning routine (3 sentences). / Ertalabki tartibingizni tasvirlang.","Describe your room with 'there is/are'. / Xonangizni tasvirlang.","Give directions to your school. / Maktabingizga yo'l ko'rsating.","Ask: 'How much is...?' for one thing. / Bir narsaning narxini so'rang.","Answer: 'Where is the nearest shop?' / Eng yaqin do'kon qayerda?"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Routine","Tartib"],["Wardrobe","Shkaf"],["Turn right","O'ngga buriling"],["Cheap","Arzon"]]}
+  ],
+  "speaking":[
+    {"t":"talk","title":"My Elementary Year","body":"Speak for 2 minutes about your life using Lessons 21-39 language: routine, home, town, numbers, directions. / 2 daqiqa gapiring."},
+    {"t":"partner","title":"Interview","table":[["What time do you wake up?","I wake up at ..."],["Is there a park near your house?","Yes, there is."],["How much is your bag?","It's ... som."],["How do you go to school?","Go straight and turn left."]]},
+    {"t":"mission","title":"Five Questions","body":"Interview your partner with 5 questions from the course. / Juftingizdan 5 ta savol so'rang."}
+  ],
+  "quiz":["What time is it? (choose a time) → It's ______","Translate: 'Divan stol yonida.' → ______","How much ___ the apples? (is/are)","Give one direction word and its meaning."],
+  "homework":"Write your full daily story (8-10 sentences) using everything from the Elementary band. / Kuningiz haqida to'liq hikoya yozing.",
+  "teacher":["This is the band final — celebrate progress!","Let each student 'graduate' from LEVEL A to LEVEL B with a cheer.","Use the cards as a fluency game.","Note any weak areas to review at the start of Lesson 41."]
+}
+]}
