@@ -447,6 +447,12 @@ export async function getStudentPaymentStatus(studentId) {
   return data[0];
 }
 
+export async function getAdminBatchPaymentStatus(studentIds) {
+  const { data, error } = await supabase.rpc('get_admin_batch_payment_status', { p_student_ids: studentIds });
+  if (error) throw error;
+  return data;
+}
+
 export async function getPaymentTimeline(studentId) {
   const { data, error } = await supabase
     .from('payment_transactions')

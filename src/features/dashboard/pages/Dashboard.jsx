@@ -24,6 +24,7 @@ import {
   getMonthlyPaymentCollection,
   getPaymentCollectionSummary,
   getStudentPaymentStatus,
+  getAdminBatchPaymentStatus,
   listRecognitionAwards,
   listCertificates,
   listAllStudentLessonProgress,
@@ -87,7 +88,11 @@ function AdminDashboard() {
     () => students.filter((s) => s.status === 'Active' && (!levelFilter || s.level === levelFilter)),
     [students, levelFilter],
   );
-  const groupLevels = levelFilter ? [levelFilter] : LEVELS;
+  const activeLevels = useMemo(
+    () => [...new Set(active.map((s) => s.level || 'Unknown'))].sort(),
+    [active]
+  );
+  const groupLevels = levelFilter ? [levelFilter] : activeLevels;
 
   const [recentAwards, setRecentAwards] = useState([]);
   useEffect(() => {
@@ -208,10 +213,12 @@ function AdminDashboard() {
   }, [progressRows, levelFilter]);
 
   const [collectionByMonth, setCollectionByMonth] = useState({});
+  const [collectionByMonthLoading, setCollectionByMonthLoading] = useState(true);
   useEffect(() => {
     const keys = [...months, previous];
     const unique = Array.from(new Map(keys.map((k) => [`${k.year}-${k.month}`, k])).values());
     let cancelled = false;
+    setCollectionByMonthLoading(true);
     Promise.all(
       unique.map((k) =>
         getMonthlyPaymentCollection(k.year, k.month)
@@ -220,6 +227,8 @@ function AdminDashboard() {
       )
     ).then((pairs) => {
       if (!cancelled) setCollectionByMonth(Object.fromEntries(pairs));
+    }).finally(() => {
+      if (!cancelled) setCollectionByMonthLoading(false);
     });
     return () => {
       cancelled = true;
@@ -227,18 +236,23 @@ function AdminDashboard() {
   }, [months, previous]);
 
   const [monthTransactions, setMonthTransactions] = useState([]);
+  const [monthTransactionsLoading, setMonthTransactionsLoading] = useState(true);
   useEffect(() => {
     const pad = (n) => String(n).padStart(2, '0');
     const from = `${current.year}-${pad(current.month)}-01`;
     const daysInMonth = new Date(current.year, current.month, 0).getDate();
     const to = `${current.year}-${pad(current.month)}-${pad(daysInMonth)}`;
     let cancelled = false;
+    setMonthTransactionsLoading(true);
     getPaymentCollectionSummary(from, to)
       .then((rows) => {
         if (!cancelled) setMonthTransactions(rows || []);
       })
       .catch(() => {
         if (!cancelled) setMonthTransactions([]);
+      })
+      .finally(() => {
+        if (!cancelled) setMonthTransactionsLoading(false);
       });
     return () => {
       cancelled = true;
@@ -246,18 +260,29 @@ function AdminDashboard() {
   }, [current]);
 
   const [coverageStatuses, setCoverageStatuses] = useState({});
+  const [paymentLoading, setPaymentLoading] = useState(true);
   useEffect(() => {
-    if (active.length === 0) return;
+    if (active.length === 0) {
+      setPaymentLoading(false);
+      return;
+    }
     let cancelled = false;
-    Promise.all(
-      active.map((s) =>
-        getStudentPaymentStatus(s.id)
-          .then((st) => [s.id, st])
-          .catch(() => [s.id, null])
-      )
-    ).then((pairs) => {
-      if (!cancelled) setCoverageStatuses(Object.fromEntries(pairs));
-    });
+    getAdminBatchPaymentStatus(active.map((s) => s.id))
+      .then((rows) => {
+        if (!cancelled) {
+          const statusMap = {};
+          rows.forEach((r) => {
+            statusMap[r.student_id] = r;
+          });
+          setCoverageStatuses(statusMap);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setCoverageStatuses({});
+      })
+      .finally(() => {
+        if (!cancelled) setPaymentLoading(false);
+      });
     return () => {
       cancelled = true;
     };
@@ -269,10 +294,12 @@ function AdminDashboard() {
 
     const expected = active.reduce((sum, s) => sum + Number(s.monthly_fee || 0), 0);
     const levelById = Object.fromEntries(students.map((s) => [s.id, s.level]));
+    const currentMonthKey = `${current.year}-${current.month}`;
+    const previousMonthKey = `${previous.year}-${previous.month}`;
     const collected = levelFilter
       ? monthTransactions.reduce((sum, tx) => (levelById[tx.student_id] === levelFilter ? sum + Number(tx.amount || 0) : sum), 0)
-      : collectionByMonth[`${current.year}-${current.month}`] || 0;
-    const lastCollected = collectionByMonth[`${previous.year}-${previous.month}`] || 0;
+      : monthTransactions.reduce((sum, tx) => sum + Number(tx.amount || 0), 0);
+    const lastCollected = collectionByMonth[previousMonthKey] || 0;
     const collectionRate = expected > 0 ? Math.round((collected / expected) * 100) : 0;
     const lastCollectionRate = expected > 0 ? Math.round((lastCollected / expected) * 100) : null;
     const outstanding = Math.max(0, expected - collected);
@@ -302,12 +329,11 @@ function AdminDashboard() {
 
     const levelCounts = active.reduce(
       (acc, s) => {
-        if (s.level === 'A') acc.A += 1;
-        else if (s.level === 'B') acc.B += 1;
-        else if (s.level === 'C') acc.C += 1;
+        const level = s.level || 'Unknown';
+        acc[level] = (acc[level] || 0) + 1;
         return acc;
       },
-      { A: 0, B: 0, C: 0 }
+      {}
     );
 
     const collectedByLevel = monthTransactions.reduce((acc, tx) => {
@@ -426,10 +452,13 @@ function AdminDashboard() {
         ? Math.round((scored.reduce((sum, s) => sum + Number(s.score) / (examsById[s.exam_id]?.max_score || 100), 0) / scored.length) * 100)
         : null;
 
-    const income = months.map(({ year, month, label }) => ({
-      label,
-      value: collectionByMonth[`${year}-${month}`] || 0,
-    }));
+    const income = months.map(({ year, month, label }) => {
+      const key = `${year}-${month}`;
+      if (key === currentMonthKey) {
+        return { label, value: collected };
+      }
+      return { label, value: collectionByMonth[key] || 0 };
+    });
 
     const studentsById = Object.fromEntries(students.map((s) => [s.id, s]));
 
@@ -484,7 +513,9 @@ function AdminDashboard() {
     groupLevels,
     levelFilter,
     collectionByMonth,
+    collectionByMonthLoading,
     monthTransactions,
+    monthTransactionsLoading,
     coverageStatuses,
     attendance,
     exams,
@@ -525,10 +556,10 @@ function AdminDashboard() {
               })
         }
         right={
-          <select value={levelFilter} onChange={(e) => setLevelFilter(e.target.value)} className="input sm:w-40" aria-label={t('common:allLevels')}>
+          <select value={levelFilter} onChange={(e) => setLevelFilter(e.target.value)} className="input w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500" aria-label={t('common:allLevels')}>
             <option value="">{t('common:allLevels')}</option>
-            {LEVELS.map((lvl) => (
-              <option key={lvl} value={lvl}>{t(`common:level${lvl}`)}</option>
+            {[...new Set([...LEVELS, ...activeLevels])].map((lvl) => (
+              <option key={lvl} value={lvl}>{t(`common:level${lvl}`, { defaultValue: lvl })}</option>
             ))}
           </select>
         }
@@ -541,7 +572,11 @@ function AdminDashboard() {
             <StatCard
               label={t('activeStudents')}
               value={stats.active}
-              hint={levelFilter ? undefined : t('levelBreakdownHint', { a: stats.levelCounts.A, b: stats.levelCounts.B, c: stats.levelCounts.C })}
+              hint={levelFilter ? undefined : (() => {
+                const entries = Object.entries(stats.levelCounts);
+                if (entries.length === 0) return t('levelBreakdownHint', { a: 0, b: 0, c: 0 });
+                return entries.map(([level, count]) => `${level}: ${count}`).join(' · ');
+              })()}
               tone="success"
               icon={Users}
               loading={loading}
@@ -560,7 +595,7 @@ function AdminDashboard() {
               hint={t('paymentsOverviewHint', { paid: stats.paymentStatusCounts.paid, active: stats.active, rate: stats.collectionRate })}
               tone="danger"
               icon={AlertCircle}
-              loading={loading}
+              loading={loading || monthTransactionsLoading}
             />
             <StatCard
               label={t('atRiskLabel')}
@@ -580,7 +615,7 @@ function AdminDashboard() {
                     <Link
                       key={l.id}
                       to={`/lessons/${l.id}`}
-                      className="flex items-center justify-between gap-3 rounded-lg text-sm hover:text-brand-600"
+                      className="flex items-center justify-between gap-3 rounded-lg text-sm hover:text-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
                     >
                       <span className="font-medium text-ink">{l.topic}</span>
                       <span className="flex-shrink-0 text-ink/50">
@@ -610,15 +645,15 @@ function AdminDashboard() {
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <Panel title={t('paymentAlertsTitle')} icon={Wallet}>
               <div className="space-y-2">
-                <Link to="/payments" className="flex items-center justify-between text-sm hover:text-brand-600">
+                <Link to="/payments" className="flex items-center justify-between text-sm hover:text-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded-lg">
                   <span className="text-ink/60">{t('overdueLabel')}</span>
                   <span className="font-semibold text-inactive">{stats.unpaidStudents.length}</span>
                 </Link>
-                <Link to="/payments" className="flex items-center justify-between text-sm hover:text-brand-600">
+                <Link to="/payments" className="flex items-center justify-between text-sm hover:text-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded-lg">
                   <span className="text-ink/60">{t('dueTodayLabel')}</span>
                   <span className="font-semibold text-levelB">{stats.dueTodayStudents.length}</span>
                 </Link>
-                <Link to="/payments" className="flex items-center justify-between text-sm hover:text-brand-600">
+                <Link to="/payments" className="flex items-center justify-between text-sm hover:text-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded-lg">
                   <span className="text-ink/60">{t('dueWithin7Label')}</span>
                   <span className="font-semibold text-levelA">{stats.dueWithin7Students.length}</span>
                 </Link>
@@ -636,15 +671,15 @@ function AdminDashboard() {
 
             <Panel title={t('attendanceAlertsTitle')} icon={CalendarCheck}>
               <div className="space-y-2">
-                <Link to="/attendance" className="flex items-center justify-between text-sm hover:text-brand-600">
+                <Link to="/attendance" className="flex items-center justify-between text-sm hover:text-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded-lg">
                   <span className="text-ink/60">{t('absentTodayLabel')}</span>
                   <span className="font-semibold text-inactive">{stats.todayAttendanceCounts.Absent}</span>
                 </Link>
-                <Link to="/attendance" className="flex items-center justify-between text-sm hover:text-brand-600">
+                <Link to="/attendance" className="flex items-center justify-between text-sm hover:text-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded-lg">
                   <span className="text-ink/60">{t('twoConsecutiveLabel')}</span>
                   <span className="font-semibold text-levelB">{stats.twoConsecutiveAbsent.length}</span>
                 </Link>
-                <Link to="/attendance" className="flex items-center justify-between text-sm hover:text-brand-600">
+                <Link to="/attendance" className="flex items-center justify-between text-sm hover:text-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded-lg">
                   <span className="text-ink/60">{t('threePlusConsecutiveLabel')}</span>
                   <span className="font-semibold text-inactive">{stats.threePlusConsecutiveAbsent.length}</span>
                 </Link>
@@ -653,11 +688,11 @@ function AdminDashboard() {
 
             <Panel title={t('homeworkReviewTitle')} icon={BookOpen}>
               <div className="space-y-2">
-                <Link to="/homework" className="flex items-center justify-between text-sm hover:text-brand-600">
+                <Link to="/homework" className="flex items-center justify-between text-sm hover:text-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded-lg">
                   <span className="text-ink/60">{t('waitingForReviewLabel')}</span>
                   <span className="font-semibold text-levelB">{stats.homeworkSubmitted}</span>
                 </Link>
-                <Link to="/exams" className="flex items-center justify-between text-sm hover:text-brand-600">
+                <Link to="/exams" className="flex items-center justify-between text-sm hover:text-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded-lg">
                   <span className="text-ink/60">{t('writingExamsGradingLabel')}</span>
                   <span className="font-semibold text-levelB">{stats.examsAwaitingGrading}</span>
                 </Link>
@@ -666,11 +701,11 @@ function AdminDashboard() {
 
             <Panel title={t('academicAlertsTitle')} icon={AlertTriangle}>
               <div className="space-y-2">
-                <Link to="/students" className="flex items-center justify-between text-sm hover:text-brand-600">
+                <Link to="/students" className="flex items-center justify-between text-sm hover:text-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded-lg">
                   <span className="text-ink/60">{t('atRiskLabel')}</span>
                   <span className="font-semibold text-inactive">{progressSummary.atRisk}</span>
                 </Link>
-                <Link to="/students" className="flex items-center justify-between text-sm hover:text-brand-600">
+                <Link to="/students" className="flex items-center justify-between text-sm hover:text-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded-lg">
                   <span className="text-ink/60">{t('behindLabel')}</span>
                   <span className="font-semibold text-levelB">{progressSummary.behind}</span>
                 </Link>
@@ -679,11 +714,11 @@ function AdminDashboard() {
 
             <Panel title={t('websiteAlertsTitle')} icon={Globe}>
               <div className="space-y-2">
-                <Link to="/students" className="flex items-center justify-between text-sm hover:text-brand-600">
+                <Link to="/students" className="flex items-center justify-between text-sm hover:text-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded-lg">
                   <span className="text-ink/60">{t('neverLoggedInLabel')}</span>
                   <span className="font-semibold text-inactive">{engagementSummary.neverLoggedIn}</span>
                 </Link>
-                <Link to="/students" className="flex items-center justify-between text-sm hover:text-brand-600">
+                <Link to="/students" className="flex items-center justify-between text-sm hover:text-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded-lg">
                   <span className="text-ink/60">{t('loggedInNoLessonsLabel')}</span>
                   <span className="font-semibold text-levelB">{engagementSummary.loggedInNoLessons}</span>
                 </Link>
@@ -729,7 +764,7 @@ function AdminDashboard() {
           <div className="grid gap-4 lg:grid-cols-2">
             <div className="overflow-x-auto rounded-xl border border-ink/[0.06] bg-white p-4 shadow-card sm:p-5">
               <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-ink/50">{t('groupBreakdownTitle')}</h2>
-              <table className="w-full min-w-[420px] text-left text-sm">
+              <table className="w-full min-w-0 text-left text-sm">
                 <thead>
                   <tr className="text-xs uppercase tracking-wide text-ink/40">
                     <th className="py-2 font-semibold">{t('group')}</th>
@@ -741,7 +776,7 @@ function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-ink/[0.06]">
-                  {loading ? (
+                  {loading || monthTransactionsLoading ? (
                     <tr>
                       <td colSpan={6} className="py-3 text-ink/40">
                         —
@@ -781,7 +816,7 @@ function AdminDashboard() {
                   components={[<span className="font-semibold text-ink" key="0" />]}
                 />
               </p>
-              <MiniBarChart data={stats.income} formatValue={formatUZS} color="bg-active" loading={loading} />
+              <MiniBarChart data={stats.income} formatValue={formatUZS} color="bg-active" loading={loading || collectionByMonthLoading} />
             </Panel>
           </div>
         </div>
@@ -820,7 +855,7 @@ function AdminDashboard() {
 
       <div className="mt-8">
         <details className="group rounded-2xl border border-ink/[0.06] bg-white open:shadow-card">
-          <summary className="flex cursor-pointer list-none items-center justify-between px-5 py-4 text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden">
+          <summary className="flex cursor-pointer list-none items-center justify-between px-5 py-4 text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2">
             <span>{t('detailedAnalyticsLabel')}</span>
             <span className="rounded-full bg-ink/[0.04] px-2.5 py-1 text-xs text-ink/60 group-open:hidden">Show</span>
             <span className="hidden rounded-full bg-ink/[0.04] px-2.5 py-1 text-xs text-ink/60 group-open:inline">Hide</span>
@@ -1083,7 +1118,7 @@ function TeacherDashboard() {
                 <Link
                   key={l.id}
                   to={`/lessons/${l.id}`}
-                  className="flex items-center justify-between gap-3 rounded-lg text-sm hover:text-brand-600"
+                  className="flex items-center justify-between gap-3 rounded-lg text-sm hover:text-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
                 >
                   <span className="font-medium text-ink">{l.topic}</span>
                   <span className="flex-shrink-0 text-ink/50">

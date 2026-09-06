@@ -36,11 +36,17 @@ const NAV_ITEMS = [
   { to: '/', label: 'home', shortLabel: 'homeShort', Icon: LayoutDashboard, end: true },
   { to: '/students', label: 'students', shortLabel: 'studentsShort', Icon: Users },
   { to: '/payments', label: 'payments', shortLabel: 'paymentsShort', Icon: Wallet, adminOnly: true },
-  // Reminders temporarily hidden from nav (2026-08-19) - feature kept intact, just not exposed.
+  // Reminders temporarily hidden from nav (2026-08-19) - feature kept intact,
+  // but not currently exposed in navigation. /reminders route is disabled.
+  // Uncomment and remove adminOnly check if re-adding this feature.
   // { to: '/reminders', label: 'reminders', shortLabel: 'remindersShort', Icon: BellRing, adminOnly: true },
   { to: '/attendance', label: 'attendance', shortLabel: 'attendanceShort', Icon: CalendarCheck },
   { to: '/lessons', label: 'lessons', shortLabel: 'lessonsShort', Icon: CalendarClock },
-  // Vocabulary temporarily hidden from staff nav (2026-08-22) - superseded by the Dictionary page; feature and /vocabulary route kept intact.
+  // Vocabulary temporarily hidden from staff nav (2026-08-22) - superseded
+  // by the Dictionary page; feature and /vocabulary route kept intact.
+  // The /vocabulary route remains active for backward compatibility;
+  // the Dictionary page replaced the need for this navigation item.
+  // Uncomment if standalone vocabulary navigation is desired again.
   // { to: '/vocabulary', label: 'vocabulary', shortLabel: 'vocabularyShort', Icon: Languages },
   { to: '/exams', label: 'exams', shortLabel: 'examsShort', Icon: FileCheck2 },
   { to: '/homework', label: 'homework', shortLabel: 'homeworkShort', Icon: BookOpen },
@@ -49,12 +55,14 @@ const NAV_ITEMS = [
   { to: '/recognition', label: 'recognition', shortLabel: 'recognitionShort', Icon: Medal, adminOnly: true },
   { to: '/game-results', label: 'gameResults', shortLabel: 'gameResultsShort', Icon: Gamepad2 },
   { to: '/dictionary-admin', label: 'dictionaryAdmin', shortLabel: 'dictionaryAdminShort', Icon: BookMarked },
-  // Reports temporarily hidden from nav (2026-08-21) - feature kept intact, just not exposed.
-  // { to: '/reports', label: 'reports', shortLabel: 'reportsShort', Icon: BarChart3, adminOnly: true },
+  // Reports temporarily hidden from nav (2026-08-21) - feature kept intact,
+  // just not exposed. Uncomment to re-enable admin navigation.
+  { to: '/reports', label: 'reports', shortLabel: 'reportsShort', Icon: BarChart3, adminOnly: true },
   { to: '/ai-assistant', label: 'aiAssistant', shortLabel: 'aiAssistantShort', Icon: Sparkles },
   { to: '/chat', label: 'messages', shortLabel: 'messagesShort', Icon: MessageSquare },
-  // Files temporarily hidden from nav (2026-08-21) - feature kept intact, just not exposed.
-  // { to: '/files', label: 'files', shortLabel: 'filesShort', Icon: FolderOpen },
+  // Files temporarily hidden from nav (2026-08-21) - feature kept intact,
+  // just not exposed. Uncomment to re-enable admin navigation.
+  { to: '/files', label: 'files', shortLabel: 'filesShort', Icon: FolderOpen, adminOnly: true },
   { to: '/settings', label: 'settings', shortLabel: 'settingsShort', Icon: Settings },
 ];
 
@@ -109,7 +117,7 @@ export function Sidebar() {
             to={to}
             end={end}
             className={({ isActive }) =>
-              `flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+              `flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-600 ${
                 isActive ? 'bg-white text-brand-700' : 'text-white/80 hover:bg-white/10 hover:text-white'
               }`
             }
@@ -138,7 +146,7 @@ export function BottomNav() {
           to={to}
           end={end}
           className={({ isActive }) =>
-            `relative flex flex-1 flex-shrink-0 flex-col items-center gap-0.5 px-3 py-2.5 text-xs font-medium ${
+            `relative flex flex-1 flex-shrink-0 flex-col items-center gap-0.5 px-3 py-2.5 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
               isActive ? 'text-brand-600' : 'text-ink/40'
             }`
           }
