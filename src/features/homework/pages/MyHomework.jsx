@@ -165,10 +165,12 @@ export default function MyHomework() {
       if (hasSub) submitted += 1;
       if (s?.score != null) graded += 1;
     }
-    return { total: myHomework.length, submitted, graded, notSubmitted: Math.max(0, myHomework.length - submitted) };
+    const total = myHomework.length;
+    const remaining = Math.max(0, total - submitted);
+    return { total, submitted, graded, remaining };
   }, [myHomework, homeworkStatus, homeworkSubmissionFiles]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const completionPct = stats.total ? Math.round((stats.graded / stats.total) * 100) : 0;
+  const completionPct = stats.total ? Math.round((stats.submitted / stats.total) * 100) : 0;
 
   if (!me) {
     return (
@@ -181,25 +183,31 @@ export default function MyHomework() {
   return (
     <div className="min-w-0">
       <header className="mb-6">
-        <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
           <div className="min-w-0">
             <h1 className="font-display text-2xl font-bold tracking-tight text-ink">{t('myTitle')}</h1>
             <p className="mt-1 max-w-[60ch] text-sm leading-relaxed text-ink/55">{t('mySubtitle')}</p>
-            <p className="mt-1 text-[11px] font-medium uppercase tracking-wide text-ink/35">{t('portal:mpHomeworkProgressHint')}</p>
           </div>
-          {!loading && stats.total > 0 && (
-            <div className="flex items-center gap-2 rounded-xl border border-ink/[0.06] bg-white px-3 py-2 shadow-card">
-              <div className="hidden text-right sm:block">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-ink/40">{t('portal:mpHomeworkProgress')}</p>
-                <p className="text-xs font-bold text-ink">{t('portal:mpHomeworkGradedCount', { completed: stats.graded, total: stats.total })}</p>
-              </div>
-              <div className="h-10 w-10 rounded-full bg-ink/[0.06] p-1">
-                <div className="flex h-full w-full items-center justify-center rounded-full bg-white text-[11px] font-bold text-brand-600 ring-1 ring-ink/5">
-                  {completionPct}%
-                </div>
-              </div>
+          <div className="w-full sm:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:order-2">
+            <div className="flex-1 rounded-xl border border-ink/[0.06] bg-white p-3 shadow-card">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-ink/40">{t('portal:mpHomeworkProgress')}</p>
+              <p className="mt-1 font-display text-2xl font-bold text-ink">
+                {t('portal:mpFilterSubmitted')}: {stats.submitted} / {stats.total}
+              </p>
             </div>
-          )}
+            <div className="flex-1 rounded-xl border border-ink/[0.06] bg-white p-3 shadow-card">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-ink/40">{t('portal:mpFilterTodo')}</p>
+              <p className="mt-1 font-display text-2xl font-bold text-ink/60">
+                {stats.remaining}
+              </p>
+            </div>
+            <div className="flex-1 rounded-xl border border-ink/[0.06] bg-white p-3 shadow-card">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-ink/40">{t('portal:mpFilterGraded')}</p>
+              <p className="mt-1 font-display text-2xl font-bold text-brand-600">
+                {stats.graded}
+              </p>
+            </div>
+          </div>
         </div>
       </header>
 
@@ -245,27 +253,6 @@ export default function MyHomework() {
         </div>
       ) : (
         <>
-          {/* summary strip */}
-          <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {[
-              { label: t('portal:mpFilterTotal'), value: stats.total, sub: t('portal:mpAssignments'), tone: 'text-ink' },
-              { label: t('portal:mpFilterSubmitted'), value: stats.submitted, sub: t('portal:mpWithFiles'), tone: 'text-active' },
-              { label: t('portal:mpFilterGraded'), value: stats.graded, sub: t('portal:mpWithPoints'), tone: 'text-brand-600' },
-              { label: t('portal:mpFilterTodo'), value: stats.notSubmitted, sub: t('portal:mpNotSubmitted'), tone: 'text-ink/60' },
-            ].map((k) => (
-              <div key={k.label} className="rounded-xl border border-ink/[0.06] bg-white px-3 py-3 shadow-card">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-ink/35">{k.label}</p>
-                <p className={`mt-0.5 font-display text-xl font-bold ${k.tone}`}>{k.value}</p>
-                <p className="text-[11px] text-ink/40">{k.sub}</p>
-              </div>
-            ))}
-          </div>
-          {stats.total > 0 && (
-            <div className="mb-4 h-2 overflow-hidden rounded-full bg-ink/[0.06]">
-              <div className="h-full rounded-full bg-brand-500 transition-all duration-700" style={{ width: `${completionPct}%` }} />
-            </div>
-          )}
-
           <div className="space-y-3">
             {myHomework.map((h, idx) => {
               const status = statusFor(h.id) || { status: 'Assigned' };
@@ -300,9 +287,21 @@ export default function MyHomework() {
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-1.5">
                           <h2 className="break-words font-display text-[15px] font-bold leading-tight text-ink sm:text-base">{h.title}</h2>
-                          <StatusPill tone={PILL_TONE[pill]}>
-                            {t(pill === 'notSubmitted' ? 'notSubmitted' : pill === 'awaitingGrading' ? 'statusSubmitted' : 'statusGraded')}
-                          </StatusPill>
+                          {/* prominent status badge using granular journey status */}
+                          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-bold ring-1 ${
+                            journey.tone === 'brand' ? 'bg-brand-50 text-brand-700 ring-brand-100' :
+                            journey.tone === 'success' ? 'bg-emerald-50 text-emerald-700 ring-emerald-100' :
+                            journey.tone === 'danger' ? 'bg-red-50 text-red-600 ring-red-100' :
+                            journey.tone === 'info' ? 'bg-sky-50 text-sky-700 ring-sky-100' :
+                            'bg-ink/5 text-ink/60 ring-ink/10'
+                          }`}>
+                            {journey.key === 'notSubmitted' ? t('portal:mpNotSubmitted') :
+                             journey.key === 'submitted' ? t('portal:mpFilterSubmitted') :
+                             journey.key === 'underReview' ? t('portal:mpJourneyReviewing') :
+                             journey.key === 'needsCorrection' ? t('portal:mpJourneyNeedsCorrection') :
+                             journey.key === 'approved' ? t('portal:mpJourneyGreatWork') :
+                             t('portal:mpJourneyCompleted')}
+                          </span>
                           {graded && (
                             <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-bold text-brand-700 ring-1 ring-brand-100">
                               <Award size={10} /> {t('scoreOutOf', { score: status.score })}
