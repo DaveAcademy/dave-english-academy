@@ -940,9 +940,14 @@ export async function addHomeworkSubmissionFile(homeworkId, studentId, { fileUrl
 }
 
 export async function deleteHomeworkSubmissionFile(id) {
+  const { data: existing } = await supabase.from('homework_submission_files').select('file_url').eq('id', id).maybeSingle();
+  const path = existing?.file_url || null;
   const { data, error } = await supabase.from('homework_submission_files').delete().eq('id', id).select();
   if (error) throw error;
   assertRows(data, 'remove this file');
+  if (path) {
+    try { await supabase.storage.from(ATTACHMENTS_BUCKET).remove([path]); } catch {}
+  }
   return true;
 }
 
@@ -1502,9 +1507,14 @@ export async function addLessonWorkSubmissionFile(submissionId, studentId, { fil
 }
 
 export async function deleteLessonWorkSubmissionFile(id) {
+  const { data: existing } = await supabase.from('lesson_work_submission_files').select('file_url').eq('id', id).maybeSingle();
+  const path = existing?.file_url || null;
   const { data, error } = await supabase.from('lesson_work_submission_files').delete().eq('id', id).select();
   if (error) throw error;
   assertRows(data, 'remove this file');
+  if (path) {
+    try { await supabase.storage.from(ATTACHMENTS_BUCKET).remove([path]); } catch {}
+  }
   return true;
 }
 
