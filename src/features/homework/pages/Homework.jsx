@@ -50,6 +50,7 @@ export default function Homework() {
   const [deletingHomework, setDeletingHomework] = useState(null);
   const [statusFilter, setStatusFilter] = useState('all');
   const [expandedStudentId, setExpandedStudentId] = useState(null);
+  const [lightbox, setLightbox] = useState(null); // { urls: string[], index: number, label: string }
 
   // "Submit Work" domain (lesson_work_submissions) - separate from the
   // Homework domain above, written from LessonHub.jsx's per-lesson
@@ -304,7 +305,16 @@ export default function Homework() {
 
   const handleOpenFile = async (path) => {
     const url = await getAttachmentUrl(path);
-    if (url) window.open(url, '_blank', 'noopener');
+    if (!url) return;
+    const isPdf = path.toLowerCase().endsWith('.pdf');
+    if (isPdf) { window.open(url, '_blank', 'noopener'); return; }
+    setLightbox({ urls: [url], index: 0, label: path.split('/').pop() || 'Image' });
+  };
+  const handleOpenGallery = async (fileUrls, startIndex = 0) => {
+    const urls = await Promise.all(fileUrls.map(async (p) => (await getAttachmentUrl(p)) || p));
+    const valid = urls.filter(Boolean);
+    if (valid.length === 0) return;
+    setLightbox({ urls: valid, index: Math.min(startIndex, valid.length - 1), label: `${valid.length} photos` });
   };
 
   return (
@@ -589,27 +599,26 @@ export default function Homework() {
                                       {item.source === 'homework' ? item.title : item.lessonTopic || 'Unknown lesson'}
                                       {item.date && ` · ${new Date(item.date).toLocaleString()}`}
                                     </p>
-                                    {(item.answerFileUrl || item.files.length > 0) && (
-                                      <div className="mt-1 flex flex-wrap gap-2">
-                                        {item.answerFileUrl && (
-                                          <button
-                                            onClick={() => handleOpenFile(item.answerFileUrl)}
-                                            className="flex items-center gap-1 text-xs text-brand-600 hover:underline"
-                                          >
-                                            <Paperclip size={11} /> {item.answerFileName || 'Submission'}
-                                          </button>
-                                        )}
-                                        {item.files.map((f, i) => (
-                                          <button
-                                            key={f.id}
-                                            onClick={() => handleOpenFile(f.file_url)}
-                                            className="flex items-center gap-1 text-xs text-brand-600 hover:underline"
-                                          >
-                                            <ImageIcon size={11} /> Image {i + 1}
-                                          </button>
-                                        ))}
-                                      </div>
-                                    )}
+                                     {(item.answerFileUrl || item.files.length > 0) && (
+                                       <div className="mt-1 flex flex-wrap gap-2">
+                                         {item.answerFileUrl && (
+                                           <button
+                                             onClick={() => handleOpenFile(item.answerFileUrl)}
+                                             className="flex items-center gap-1 rounded-md border border-ink/10 bg-white px-2 py-1 text-xs font-medium text-brand-600 hover:bg-brand-50"
+                                           >
+                                             <Paperclip size={11} /> {item.answerFileName || 'Submission'}
+                                           </button>
+                                         )}
+                                         {item.files.length > 0 && (
+                                           <button
+                                             onClick={() => handleOpenGallery(item.files.map((f) => f.file_url), 0)}
+                                             className="inline-flex items-center gap-1 rounded-md border border-ink/10 bg-white px-2 py-1 text-xs font-medium text-ink/70 hover:border-brand-200 hover:text-brand-600"
+                                           >
+                                             <ImageIcon size={11} /> {item.files.length} photo{item.files.length === 1 ? '' : 's'} — view
+                                           </button>
+                                         )}
+                                       </div>
+                                     )}
                                   </div>
                                   {item.source === 'homework' ? (
                                     <button
@@ -651,6 +660,25 @@ export default function Homework() {
           onConfirm={handleDelete}
           onCancel={() => setDeletingHomework(null)}
         />
+      )}
+
+      {lightbox && (
+        <div role="dialog" aria-modal="true" aria-label="Photo review" className="fixed inset-0 z-40 flex flex-col bg-black/80 backdrop-blur-sm">
+          <div className="flex items-center justify-between px-4 py-3 text-white">
+            <p className="text-sm font-semibold">{lightbox.label} {lightbox.urls.length > 1 && `— ${lightbox.index + 1} / ${lightbox.urls.length}`}</p>
+            <button onClick={() => setLightbox(null)} className="rounded-full bg-white/15 p-2 text-white hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white" aria-label="Close"><X size={16} /></button>
+          </div>
+          <div className="flex flex-1 items-center justify-center gap-2 p-4">
+            {lightbox.urls.length > 1 && (
+              <button onClick={() => setLightbox((lb) => ({ ...lb, index: (lb.index - 1 + lb.urls.length) % lb.urls.length }))} className="shrink-0 rounded-full bg-white/15 p-2 text-white hover:bg-white/25" aria-label="Previous"><ChevronDown className="rotate-90" size={18} /></button>
+            )}
+            <img src={lightbox.urls[lightbox.index]} alt="Student evidence" className="max-h-[70vh] max-w-[90vw] rounded-lg bg-white object-contain shadow-xl" />
+            {lightbox.urls.length > 1 && (
+              <button onClick={() => setLightbox((lb) => ({ ...lb, index: (lb.index + 1) % lb.urls.length }))} className="shrink-0 rounded-full bg-white/15 p-2 text-white hover:bg-white/25" aria-label="Next"><ChevronRight size={18} /></button>
+            )}
+          </div>
+          <p className="px-4 pb-4 text-center text-xs text-white/60">Teacher review — verify whole page visible, answers readable, not a screenshot of the PDF. Use feedback + score to approve or request improvement.</p>
+        </div>
       )}
     </div>
   );

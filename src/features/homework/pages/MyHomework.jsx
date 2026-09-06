@@ -336,13 +336,20 @@ export default function MyHomework() {
                       </div>
                     </div>
 
-                    {/* requirement */}
-                    {h.description && (
-                      <div className="mt-3 rounded-xl border border-ink/[0.06] bg-paper/60 px-3 py-2.5">
-                        <p className="text-[11px] font-bold uppercase tracking-wide text-ink/40">Homework requirement</p>
-                        <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-ink/75">{h.description}</p>
-                      </div>
-                    )}
+                     {/* requirement */}
+                     {h.description && (
+                       <div className="mt-3 rounded-xl border border-ink/[0.06] bg-paper/60 px-3 py-2.5">
+                         <p className="text-[11px] font-bold uppercase tracking-wide text-ink/40">What to do</p>
+                         <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-ink/75">{h.description}</p>
+                       </div>
+                     )}
+                     {/* Lesson PDF hint — make action explicit */}
+                     {lesson?.pdf_path && !graded && (
+                       <div className="mt-3 flex items-center gap-2 rounded-xl border border-brand-100 bg-brand-50 px-3 py-2.5">
+                         <FileText size={14} className="shrink-0 text-brand-600" />
+                         <p className="text-xs font-medium leading-relaxed text-brand-800">{t('portal:mpLessonPdfHint', { topic: lesson.topic })} — download the PDF, complete it by hand, then photograph every page.</p>
+                       </div>
+                     )}
 
                     {/* status journey */}
                     <div className="mt-3 rounded-xl bg-ink/[0.02] px-3 py-2.5 ring-1 ring-ink/[0.04]">
@@ -374,17 +381,31 @@ export default function MyHomework() {
                       </p>
                     </div>
 
-                    {/* submission summary + valid/invalid */}
-                    <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-                      <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-semibold ring-1 ${hasSubmission ? (isValidSubmission ? 'bg-emerald-50 text-emerald-700 ring-emerald-100' : 'bg-amber-50 text-amber-700 ring-amber-200') : 'bg-ink/5 text-ink/50 ring-ink/10'}`}>
-                        {hasSubmission ? <CheckCircle2 size={12} /> : <AlertCircle size={12} />}
-                        {hasSubmission ? (submittedFiles.length > 0 ? t('portal:mpImagesSubmitted', { count: submittedFiles.length }) : t('portal:mpSubmissionOnFile')) : t('portal:mpNoSubmissionYet')}
-                        {isInvalidSubmission && t('portal:mpLegacyFileOnly')}
-                      </span>
-                      {status.submitted_at && <span className="text-ink/40">{t('portal:mpSubmittedOn', { date: new Date(status.submitted_at).toLocaleDateString() })}</span>}
-                      {hasSubmission && <span className="text-ink/30">{t('portal:mpValidSubmission')}</span>}
-                      {!hasSubmission && overdue && <span className="font-semibold text-inactive">{t('portal:mpDeadlinePassedInline')}</span>}
-                    </div>
+                     {/* submission summary + valid/invalid */}
+                     <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                       <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-semibold ring-1 ${hasSubmission ? (isValidSubmission ? 'bg-emerald-50 text-emerald-700 ring-emerald-100' : 'bg-amber-50 text-amber-700 ring-amber-200') : 'bg-ink/5 text-ink/50 ring-ink/10'}`}>
+                         {hasSubmission ? <CheckCircle2 size={12} /> : <AlertCircle size={12} />}
+                         {hasSubmission ? (submittedFiles.length > 0 ? t('portal:mpImagesSubmitted', { count: submittedFiles.length }) : t('portal:mpSubmissionOnFile')) : t('portal:mpNoSubmissionYet')}
+                         {isInvalidSubmission && t('portal:mpLegacyFileOnly')}
+                       </span>
+                       {status.submitted_at && <span className="text-ink/40">{t('portal:mpSubmittedOn', { date: new Date(status.submitted_at).toLocaleDateString() })}</span>}
+                       {hasSubmission && !graded && <span className="font-medium text-amber-700">{t('portal:mpJourneyReceived')}</span>}
+                       {hasSubmission && graded && <span className="text-ink/30">{t('portal:mpValidSubmission')}</span>}
+                       {!hasSubmission && overdue && <span className="font-semibold text-inactive">{t('portal:mpDeadlinePassedInline')}</span>}
+                     </div>
+                     {/* Photo quality guidance — compact, near upload */}
+                     {!graded && (
+                       <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5">
+                         <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-amber-800"><ImageIcon size={12} /> Photo tips — {t('portal:mpValidSubmission')}</p>
+                         <ul className="mt-1.5 grid gap-1 text-xs leading-relaxed text-amber-900/80 sm:grid-cols-2">
+                           <li>• Take clear, well-lit photos — avoid blur or shadows.</li>
+                           <li>• Show the whole page — answers must be readable.</li>
+                           <li>• Upload all pages of the completed lesson.</li>
+                           <li>• Handwritten work only — don&apos;t screenshot the PDF.</li>
+                           <li className="sm:col-span-2">• Up to {MAX_IMAGES} photos per homework — they stay together as one submission.</li>
+                         </ul>
+                       </div>
+                     )}
 
                     {/* teacher feedback */}
                     {graded && status.feedback && (
@@ -433,38 +454,42 @@ export default function MyHomework() {
                       </div>
                     )}
 
-                    <div className="mt-3 flex flex-wrap items-center gap-2">
-                      {h.file_url && (
-                        <button
-                          onClick={() => handleOpenFile(h.file_url)}
-                          className="inline-flex min-h-[44px] min-w-0 max-w-full items-center gap-1.5 rounded-xl border border-brand-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-brand-700 shadow-sm transition-colors hover:bg-brand-50"
-                        >
-                          <Download size={14} className="shrink-0" /> <span className="min-w-0 max-w-[52vw] truncate sm:max-w-[240px]">{h.file_name || t('homeworkFileDefault')}</span>
-                        </button>
-                      )}
-                      {!graded && roomLeft > 0 && (
-                        <label className="inline-flex min-h-[44px] cursor-pointer items-center gap-1.5 rounded-xl border border-ink/10 bg-white px-3.5 py-2.5 text-xs font-semibold text-ink/70 shadow-sm transition-colors hover:bg-ink/5">
-                          <Upload size={14} />
-                          {t('selectImages', { max: MAX_IMAGES })}
-                          <input
-                            type="file"
-                            accept="image/*"
-                            multiple
-                            className="hidden"
-                            disabled={submittingId === h.id}
-                            onChange={(e) => { handlePickFiles(h.id, e.target.files); e.target.value = ''; }}
-                          />
-                        </label>
-                      )}
-                      {!graded && pending.length > 0 && (
-                        <button
-                          onClick={() => handleUploadPending(h.id)}
-                          disabled={submittingId === h.id}
-                          className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 disabled:opacity-60"
-                        >
-                          {submittingId === h.id ? t('uploading') : t('uploadImagesCount', { count: pending.length })}
-                        </button>
-                      )}
+                     <div className="mt-3 flex flex-wrap items-center gap-2">
+                       {h.file_url && (
+                         <button
+                           onClick={() => handleOpenFile(h.file_url)}
+                           className="inline-flex min-h-[44px] min-w-0 max-w-full items-center gap-1.5 rounded-xl border border-brand-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-brand-700 shadow-sm transition-colors hover:bg-brand-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                         >
+                           <Download size={14} className="shrink-0" /> <span className="min-w-0 max-w-[52vw] truncate sm:max-w-[240px]">{h.file_name || t('homeworkFileDefault')}</span>
+                         </button>
+                       )}
+                       {!graded && roomLeft > 0 && (
+                         <label className="inline-flex min-h-[46px] cursor-pointer items-center gap-2 rounded-xl border-2 border-dashed border-brand-300 bg-brand-50 px-4 py-3 text-sm font-bold text-brand-700 shadow-sm transition-colors hover:border-brand-400 hover:bg-brand-100 focus-within:ring-2 focus-within:ring-brand-500">
+                           <Upload size={16} className="shrink-0" />
+                           Take photo / Choose images
+                           <span className="hidden text-xs font-medium text-brand-600 sm:inline">— up to {roomLeft} more</span>
+                           <input
+                             type="file"
+                             accept="image/*"
+                             capture="environment"
+                             multiple
+                             className="hidden"
+                             disabled={submittingId === h.id}
+                             onChange={(e) => { handlePickFiles(h.id, e.target.files); e.target.value = ''; }}
+                           />
+                         </label>
+                       )}
+                       {!graded && pending.length > 0 && (
+                         <button
+                           onClick={() => handleUploadPending(h.id)}
+                           disabled={submittingId === h.id}
+                           className="inline-flex min-h-[46px] items-center gap-2 rounded-xl bg-ink px-5 py-3 text-sm font-bold text-white shadow-sm transition-colors hover:bg-ink/90 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink"
+                         >
+                           <Upload size={14} />
+                           {submittingId === h.id ? t('uploading') : t('uploadImagesCount', { count: pending.length })}
+                           <span className="hidden text-xs font-normal text-white/70 sm:inline">— will be visible to teacher</span>
+                         </button>
+                       )}
                       {status.answer_file_url && (
                         <button onClick={() => handleOpenFile(status.answer_file_url)} className="inline-flex min-h-[44px] items-center px-3 py-2.5 text-xs font-medium text-ink/50 hover:text-brand-600 hover:underline">
                           {t('viewMySubmission')}
