@@ -1,0 +1,17 @@
+{
+  "title": "Dictionary",
+  "subtitle": "Look up any English or Uzbek word.",
+  "searchPlaceholder": "Search a word...",
+  "clearSearch": "Clear search",
+  "pronunciation": "Pronunciation",
+  "example": "Example",
+  "translation": "Translation",
+  "howToUse": "How to use",
+  "alsoMeans": "Also means",
+  "noResults": "No results found",
+  "noResultsHint": "Check the spelling or try a different word.",
+  "typeToSearch": "Start typing to search the dictionary.",
+  "typeToSearchHint": "Search in English or Uzbek.",
+  "searching": "Searching...",
+  "searchError": "Something went wrong. Please try again."
+}

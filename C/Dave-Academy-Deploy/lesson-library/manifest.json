@@ -1,0 +1,641 @@
+[
+  {
+    "n": 30,
+    "title": "Furniture",
+    "band": "elementary",
+    "type": "normal",
+    "file": "lesson30.html",
+    "words": 10,
+    "pages": 10
+  },
+  {
+    "n": 31,
+    "title": "Where Is It?",
+    "band": "elementary",
+    "type": "normal",
+    "file": "lesson31.html",
+    "words": 8,
+    "pages": 11
+  },
+  {
+    "n": 32,
+    "title": "My Neighborhood",
+    "band": "elementary",
+    "type": "normal",
+    "file": "lesson32.html",
+    "words": 10,
+    "pages": 11
+  },
+  {
+    "n": 33,
+    "title": "Design Your Room Workshop",
+    "band": "elementary",
+    "type": "workshop",
+    "file": "lesson33.html",
+    "words": 6,
+    "pages": 7
+  },
+  {
+    "n": 34,
+    "title": "Prepositions",
+    "band": "elementary",
+    "type": "normal",
+    "file": "lesson34.html",
+    "words": 10,
+    "pages": 11
+  },
+  {
+    "n": 35,
+    "title": "Describing a Room",
+    "band": "elementary",
+    "type": "normal",
+    "file": "lesson35.html",
+    "words": 10,
+    "pages": 11
+  },
+  {
+    "n": 36,
+    "title": "Giving Directions",
+    "band": "elementary",
+    "type": "normal",
+    "file": "lesson36.html",
+    "words": 10,
+    "pages": 11
+  },
+  {
+    "n": 37,
+    "title": "City Map Workshop",
+    "band": "elementary",
+    "type": "workshop",
+    "file": "lesson37.html",
+    "words": 6,
+    "pages": 7
+  },
+  {
+    "n": 38,
+    "title": "Speaking Circle: My House and Town",
+    "band": "elementary",
+    "type": "speaking",
+    "file": "lesson38.html",
+    "words": 6,
+    "pages": 7
+  },
+  {
+    "n": 39,
+    "title": "Big Numbers and Prices",
+    "band": "elementary",
+    "type": "normal",
+    "file": "lesson39.html",
+    "words": 10,
+    "pages": 11
+  },
+  {
+    "n": 40,
+    "title": "Speaking Circle: Elementary Review",
+    "band": "elementary",
+    "type": "speaking",
+    "file": "lesson40.html",
+    "words": 6,
+    "pages": 7
+  },
+  {
+    "n": 41,
+    "title": "Past Simple: Regular Verbs",
+    "band": "preint",
+    "type": "normal",
+    "file": "lesson41.html",
+    "words": 10,
+    "pages": 12
+  },
+  {
+    "n": 42,
+    "title": "Past Simple: Irregular Verbs",
+    "band": "preint",
+    "type": "normal",
+    "file": "lesson42.html",
+    "words": 10,
+    "pages": 12
+  },
+  {
+    "n": 43,
+    "title": "Food and Quantities",
+    "band": "preint",
+    "type": "normal",
+    "file": "lesson43.html",
+    "words": 10,
+    "pages": 12
+  },
+  {
+    "n": 44,
+    "title": "How Many / How Much",
+    "band": "preint",
+    "type": "normal",
+    "file": "lesson44.html",
+    "words": 10,
+    "pages": 12
+  },
+  {
+    "n": 45,
+    "title": "At the Supermarket",
+    "band": "preint",
+    "type": "normal",
+    "file": "lesson45.html",
+    "words": 10,
+    "pages": 12
+  },
+  {
+    "n": 46,
+    "title": "Jobs and Occupations",
+    "band": "preint",
+    "type": "normal",
+    "file": "lesson46.html",
+    "words": 10,
+    "pages": 12
+  },
+  {
+    "n": 47,
+    "title": "Supermarket Role-Play Workshop",
+    "band": "preint",
+    "type": "workshop",
+    "file": "lesson47.html",
+    "words": 6,
+    "pages": 7
+  },
+  {
+    "n": 48,
+    "title": "Speaking Circle: Talking About Yesterday",
+    "band": "preint",
+    "type": "speaking",
+    "file": "lesson48.html",
+    "words": 6,
+    "pages": 7
+  },
+  {
+    "n": 49,
+    "title": "Present Continuous",
+    "band": "preint",
+    "type": "normal",
+    "file": "lesson49.html",
+    "words": 10,
+    "pages": 12
+  },
+  {
+    "n": 50,
+    "title": "Making Plans",
+    "band": "preint",
+    "type": "normal",
+    "file": "lesson50.html",
+    "words": 10,
+    "pages": 12
+  },
+  {
+    "n": 51,
+    "title": "Comparing Things",
+    "band": "preint",
+    "type": "normal",
+    "file": "lesson51.html",
+    "words": 10,
+    "pages": 12
+  },
+  {
+    "n": 52,
+    "title": "Free Time Activities",
+    "band": "preint",
+    "type": "normal",
+    "file": "lesson52.html",
+    "words": 10,
+    "pages": 12
+  },
+  {
+    "n": 53,
+    "title": "Making Invitations",
+    "band": "preint",
+    "type": "normal",
+    "file": "lesson53.html",
+    "words": 10,
+    "pages": 12
+  },
+  {
+    "n": 54,
+    "title": "Weekend Plans Workshop",
+    "band": "preint",
+    "type": "workshop",
+    "file": "lesson54.html",
+    "words": 6,
+    "pages": 7
+  },
+  {
+    "n": 55,
+    "title": "Speaking Circle: My Free Time",
+    "band": "preint",
+    "type": "speaking",
+    "file": "lesson55.html",
+    "words": 6,
+    "pages": 7
+  },
+  {
+    "n": 56,
+    "title": "My Weekend",
+    "band": "preint",
+    "type": "normal",
+    "file": "lesson56.html",
+    "words": 6,
+    "pages": 11
+  },
+  {
+    "n": 57,
+    "title": "Adverbs of Frequency",
+    "band": "preint",
+    "type": "normal",
+    "file": "lesson57.html",
+    "words": 10,
+    "pages": 12
+  },
+  {
+    "n": 58,
+    "title": "A Typical Week",
+    "band": "preint",
+    "type": "normal",
+    "file": "lesson58.html",
+    "words": 10,
+    "pages": 12
+  },
+  {
+    "n": 59,
+    "title": "Plan a Weekend Trip",
+    "band": "preint",
+    "type": "workshop",
+    "file": "lesson59.html",
+    "words": 8,
+    "pages": 8
+  },
+  {
+    "n": 60,
+    "title": "Speaking Circle: Pre-Intermediate Review",
+    "band": "preint",
+    "type": "speaking",
+    "file": "lesson60.html",
+    "words": 6,
+    "pages": 7
+  },
+  {
+    "n": 61,
+    "title": "Holidays",
+    "band": "stronga2",
+    "type": "normal",
+    "file": "lesson61.html",
+    "words": 10,
+    "pages": 12
+  },
+  {
+    "n": 62,
+    "title": "Travel and Transport",
+    "band": "stronga2",
+    "type": "normal",
+    "file": "lesson62.html",
+    "words": 10,
+    "pages": 12
+  },
+  {
+    "n": 63,
+    "title": "At the Airport and Station",
+    "band": "stronga2",
+    "type": "normal",
+    "file": "lesson63.html",
+    "words": 10,
+    "pages": 12
+  },
+  {
+    "n": 64,
+    "title": "Describing a Trip",
+    "band": "stronga2",
+    "type": "normal",
+    "file": "lesson64.html",
+    "words": 10,
+    "pages": 12
+  },
+  {
+    "n": 65,
+    "title": "Comparing Cities",
+    "band": "stronga2",
+    "type": "normal",
+    "file": "lesson65.html",
+    "words": 10,
+    "pages": 12
+  },
+  {
+    "n": 66,
+    "title": "Cultural Traditions",
+    "band": "stronga2",
+    "type": "normal",
+    "file": "lesson66.html",
+    "words": 10,
+    "pages": 12
+  },
+  {
+    "n": 67,
+    "title": "Class Trip Workshop",
+    "band": "stronga2",
+    "type": "workshop",
+    "file": "lesson67.html",
+    "words": 6,
+    "pages": 7
+  },
+  {
+    "n": 68,
+    "title": "Speaking Circle: Holiday",
+    "band": "stronga2",
+    "type": "speaking",
+    "file": "lesson68.html",
+    "words": 6,
+    "pages": 7
+  },
+  {
+    "n": 69,
+    "title": "Healthy Habits",
+    "band": "stronga2",
+    "type": "normal",
+    "file": "lesson69.html",
+    "words": 10,
+    "pages": 12
+  },
+  {
+    "n": 70,
+    "title": "Feelings and Emotions",
+    "band": "stronga2",
+    "type": "normal",
+    "file": "lesson70.html",
+    "words": 10,
+    "pages": 12
+  },
+  {
+    "n": 71,
+    "title": "Body Parts",
+    "band": "stronga2",
+    "type": "normal",
+    "file": "lesson71.html",
+    "words": 10,
+    "pages": 12
+  },
+  {
+    "n": 72,
+    "title": "Health Problems",
+    "band": "stronga2",
+    "type": "normal",
+    "file": "lesson72.html",
+    "words": 10,
+    "pages": 12
+  },
+  {
+    "n": 73,
+    "title": "At the Doctor's",
+    "band": "stronga2",
+    "type": "normal",
+    "file": "lesson73.html",
+    "words": 10,
+    "pages": 12
+  },
+  {
+    "n": 74,
+    "title": "Emergencies",
+    "band": "stronga2",
+    "type": "normal",
+    "file": "lesson74.html",
+    "words": 10,
+    "pages": 12
+  },
+  {
+    "n": 75,
+    "title": "Clinic Role-Play Workshop",
+    "band": "stronga2",
+    "type": "workshop",
+    "file": "lesson75.html",
+    "words": 6,
+    "pages": 7
+  },
+  {
+    "n": 76,
+    "title": "Speaking Circle: Health",
+    "band": "stronga2",
+    "type": "speaking",
+    "file": "lesson76.html",
+    "words": 6,
+    "pages": 7
+  },
+  {
+    "n": 77,
+    "title": "Career Dreams",
+    "band": "stronga2",
+    "type": "normal",
+    "file": "lesson77.html",
+    "words": 10,
+    "pages": 12
+  },
+  {
+    "n": 78,
+    "title": "At Work",
+    "band": "stronga2",
+    "type": "normal",
+    "file": "lesson78.html",
+    "words": 10,
+    "pages": 12
+  },
+  {
+    "n": 79,
+    "title": "Job Interview Workshop",
+    "band": "stronga2",
+    "type": "workshop",
+    "file": "lesson79.html",
+    "words": 10,
+    "pages": 8
+  },
+  {
+    "n": 80,
+    "title": "Speaking Circle: Strong A2 Review",
+    "band": "stronga2",
+    "type": "speaking",
+    "file": "lesson80.html",
+    "words": 6,
+    "pages": 7
+  },
+  {
+    "n": 81,
+    "title": "Technology",
+    "band": "b1",
+    "type": "normal",
+    "file": "lesson81.html",
+    "words": 10,
+    "pages": 12
+  },
+  {
+    "n": 82,
+    "title": "Social Media",
+    "band": "b1",
+    "type": "normal",
+    "file": "lesson82.html",
+    "words": 10,
+    "pages": 12
+  },
+  {
+    "n": 83,
+    "title": "Giving Opinions",
+    "band": "b1",
+    "type": "normal",
+    "file": "lesson83.html",
+    "words": 10,
+    "pages": 12
+  },
+  {
+    "n": 84,
+    "title": "Agreeing and Disagreeing",
+    "band": "b1",
+    "type": "normal",
+    "file": "lesson84.html",
+    "words": 10,
+    "pages": 12
+  },
+  {
+    "n": 85,
+    "title": "Environment",
+    "band": "b1",
+    "type": "normal",
+    "file": "lesson85.html",
+    "words": 10,
+    "pages": 12
+  },
+  {
+    "n": 86,
+    "title": "First Conditional",
+    "band": "b1",
+    "type": "normal",
+    "file": "lesson86.html",
+    "words": 10,
+    "pages": 12
+  },
+  {
+    "n": 87,
+    "title": "Debate Workshop",
+    "band": "b1",
+    "type": "workshop",
+    "file": "lesson87.html",
+    "words": 10,
+    "pages": 8
+  },
+  {
+    "n": 88,
+    "title": "Speaking Circle: Opinions",
+    "band": "b1",
+    "type": "speaking",
+    "file": "lesson88.html",
+    "words": 6,
+    "pages": 7
+  },
+  {
+    "n": 89,
+    "title": "City vs Countryside",
+    "band": "b1",
+    "type": "normal",
+    "file": "lesson89.html",
+    "words": 10,
+    "pages": 12
+  },
+  {
+    "n": 90,
+    "title": "Global Cultures",
+    "band": "b1",
+    "type": "normal",
+    "file": "lesson90.html",
+    "words": 10,
+    "pages": 12
+  },
+  {
+    "n": 91,
+    "title": "Famous People",
+    "band": "b1",
+    "type": "normal",
+    "file": "lesson91.html",
+    "words": 10,
+    "pages": 12
+  },
+  {
+    "n": 92,
+    "title": "Telling a Story",
+    "band": "b1",
+    "type": "normal",
+    "file": "lesson92.html",
+    "words": 10,
+    "pages": 12
+  },
+  {
+    "n": 93,
+    "title": "Mini Documentary Workshop",
+    "band": "b1",
+    "type": "workshop",
+    "file": "lesson93.html",
+    "words": 8,
+    "pages": 8
+  },
+  {
+    "n": 94,
+    "title": "Speaking Circle: Storytelling",
+    "band": "b1",
+    "type": "speaking",
+    "file": "lesson94.html",
+    "words": 6,
+    "pages": 7
+  },
+  {
+    "n": 95,
+    "title": "Job Applications",
+    "band": "b1",
+    "type": "normal",
+    "file": "lesson95.html",
+    "words": 10,
+    "pages": 12
+  },
+  {
+    "n": 96,
+    "title": "Email Writing",
+    "band": "b1",
+    "type": "normal",
+    "file": "lesson96.html",
+    "words": 10,
+    "pages": 12
+  },
+  {
+    "n": 97,
+    "title": "Giving Advice",
+    "band": "b1",
+    "type": "normal",
+    "file": "lesson97.html",
+    "words": 10,
+    "pages": 12
+  },
+  {
+    "n": 98,
+    "title": "Problems and Solutions",
+    "band": "b1",
+    "type": "normal",
+    "file": "lesson98.html",
+    "words": 10,
+    "pages": 12
+  },
+  {
+    "n": 99,
+    "title": "Final Project Workshop",
+    "band": "b1",
+    "type": "workshop",
+    "file": "lesson99.html",
+    "words": 10,
+    "pages": 8
+  },
+  {
+    "n": 100,
+    "title": "Final Presentations",
+    "band": "b1",
+    "type": "speaking",
+    "file": "lesson100.html",
+    "words": 6,
+    "pages": 7
+  }
+]

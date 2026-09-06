@@ -1,0 +1,356 @@
+{"lessons":[
+{
+  "n":61,"title":"Holidays","sub":"61-dars: Bayramlar va dam olish","icon":"🏖️","accent":"ef5350","band":"stronga2","type":"normal",
+  "goals":[["🏖️ Talk about holidays and traditions","Bayram va an'analar haqida gapirish"],["🗓️ Ask and answer 'How do you celebrate?'","'Qanday nishonlaysiz?' so'rash"],["📅 Describe what people do on special days","Maxsus kunlardagi odatlarni tasvirlash"]],
+  "warmup":[["🏖️ Holidays you know","Name 3 holidays in Uzbekistan. / O'zbekistondagi 3 ta bayramni ayting."],["🎉 Celebration","How do you celebrate Nowruz? / Navro'zni qanday nishonlaysiz?"]],
+  "vocab":[
+    {"w":"holiday","p":"/HO-li-day/","u":"Bayram, dam olish kuni","i":"🏖️","x":["Nowruz is my favourite holiday.","Navro'z — sevimli bayramim."]},
+    {"w":"celebrate","p":"/SE-le-breyt/","u":"Nishonlamoq","i":"🎉","x":["We celebrate Eid with our family.","Hayitni oilamiz bilan nishonlaymiz."]},
+    {"w":"tradition","p":"/tra-DI-shen/","u":"An'ana","i":"🏛️","x":["This is an old tradition.","Bu qadimiy an'ana."]},
+    {"w":"gift","p":"/gift/","u":"Sovg'a","i":"🎁","x":["I give gifts to my friends.","Do'stlarimga sovg'a beraman."]},
+    {"w":"invite","p":"/in-VAYT/","u":"Taklif qilmoq","i":"📨","x":["We invite our relatives.","Qarindoshlarimizni taklif qilamiz."]},
+    {"w":"decorate","p":"/DE-ko-reyt/","u":"Bezatmoq","i":"🎊","x":["We decorate the house.","Uyni bezatamiz."]},
+    {"w":"delicious","p":"/di-LI-shes/","u":"Mazali","i":"😋","x":["Grandmother cooks delicious food.","Buvijon mazali taom pishiradi."]},
+    {"w":"guest","p":"/gest/","u":"Mehmon","i":"🤝","x":["The guests arrive in the morning.","Mehmonlar ertalab keladi."]},
+    {"w":"fireworks","p":"/FAIR-werks/","u":"Salut, mushakbozlik","i":"🎆","x":["There are fireworks at night.","Kechasi salut bo'ladi."]},
+    {"w":"together","p":"/tu-GE-ther/","u":"Birgalikda","i":"👨‍👩‍👧","x":["We eat together.","Biz birga ovqatlanamiz."]}
+  ],
+  "grammar":{"rule":"**How do you celebrate...? / We usually... + traditions**","uz":"'Qanday nishonlaysiz?' — odat va an'analar",
+    "ex":[["**How do you celebrate** Nowruz?","Navro'zni qanday nishonlaysiz?"],["We **usually visit** our grandparents and **cook** sumalak.","Biz odatda buvijonnikiga boramiz va sumalak pishiramiz."],["**On this day**, people **decorate** their houses.","Bu kuni odamlar uylarini bezatadi."]],
+    "mistake":["Wrong: *How you celebrate Nowruz?*","Right: *How do you celebrate Nowruz?*","Savolda 'do' kerak."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["How ___ you celebrate Nowruz? (do/does)","We ___ our relatives. (invite/invites)","My grandmother ___ delicious food. (cook/cooks)","There are ___ at night. (fireworks/firework)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Celebrate","Nishonlamoq"],["Tradition","An'ana"],["Gift","Sovg'a"],["Guest","Mehmon"],["Decorate","Bezatmoq"]]},
+    {"t":"circle","title":"Circle the Answer","items":["On Eid we ___ our relatives. → a) visit b) visiting c) visited"]},
+    {"t":"order","title":"Build the Sentence","items":["you / celebrate / How / Nowruz / do / ?","delicious / cooks / food / Grandmother / ."]}
+  ],
+  "reading":{"title":"Nowruz in Our Home","passage":"Nowruz is the most important holiday in our family. A week before, we clean the whole house and decorate the rooms with flowers. On the day, my grandmother cooks sumalak in a big pot — she starts at night and stirs it until morning! Our relatives come as guests, and we eat plov together. Children receive gifts and play outside. At night, we watch fireworks over the city. I love Nowruz because everyone is together.",
+    "qs":["What does the family do a week before Nowruz?","What does grandmother cook?","What do children receive?","Why does the writer love Nowruz?"]},
+  "listening":{"title":"Eid Morning","qs":["What time does the family get up?","Where do they go in the morning?","What do the children get?"],
+    "script":"Listen. On Eid morning, we get up very early — at five o'clock. We put on our new clothes and go to the mosque. Then we visit our grandparents. We have a big breakfast with plov. The children get gifts and new clothes. In the afternoon, friends come to visit us. It is a happy day."},
+  "writing":{"title":"My Favourite Holiday","task":"Write a paragraph (5-7 sentences) about your favourite holiday: what people do, what you eat, who comes.","uz":"Sevimli bayramingiz haqida yozing."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["How do you celebrate Nowruz?","We cook sumalak and visit relatives."],["What do you eat on Eid?","We eat plov and sweets."],["What's your favourite holiday?","Navruz, because I see my cousins."]]},
+    {"t":"mission","title":"Real-life Mission","body":"Ask your parents about an old family tradition and tell the class. / Ota-onangizdan an'ana haqida so'rang."}
+  ],
+  "quiz":["Fill: 'How ___ you celebrate?' (do/does)","Fill: 'We ___ the house.' (decorate/decorates)","Translate: 'Mehmonlar ertalab keladi.' → ______","What do you usually eat on holidays?"],
+  "homework":"Vocabulary: 10 holiday words 3× · Grammar: 6 sentences about your favourite holiday · Reading: re-read 'Nowruz in Our Home' · Speaking: describe a holiday to your family.",
+  "teacher":["Anchor lesson for the Strong A2 band.","Let students share real holiday memories — high motivation.","Drill 'How do you...?' questions.","Compare local and international holidays."]
+},
+{
+  "n":62,"title":"Travel and Transport","sub":"62-dars: Sayohat va transport","icon":"✈️","accent":"42a5f5","band":"stronga2","type":"normal",
+  "goals":[["✈️ Talk about transport options","Transport turlari haqida gapirish"],["🚆 Compare ways to travel","Sayohat usullarini taqqoslash"],["🎫 Buy a ticket and read a timetable","Bilet sotib olish va jadval o'qish"]],
+  "warmup":[["✈️ How do you travel?","Name 5 ways to travel. / 5 ta transport ayting."],["🚆 Fast or slow?","Which is faster: plane or train? / Nima tezroq?"]],
+  "vocab":[
+    {"w":"plane","p":"/pleyn/","u":"Samolyot","i":"✈️","x":["The plane takes two hours.","Samolyot ikki soat yuradi."]},
+    {"w":"train","p":"/treyn/","u":"Poyezd","i":"🚆","x":["The train leaves at six.","Poyezd soat oltida jo'naydi."]},
+    {"w":"bus","p":"/bas/","u":"Avtobus","i":"🚌","x":["Take bus number 40.","40-avtobusga o'tiring."]},
+    {"w":"ticket","p":"/TI-kit/","u":"Bilet","i":"🎫","x":["I need two tickets to Samarkand.","Samarqandga ikkita bilet kerak."]},
+    {"w":"depart","p":"/di-PART/","u":"Jo'namoq","i":"🛫","x":["The train departs at 8:30.","Poyezd 8:30 da jo'naydi."]},
+    {"w":"arrive","p":"/a-RAYV/","u":"Yetib kelmoq","i":"🛬","x":["We arrive at noon.","Tushda yetib boramiz."]},
+    {"w":"timetable","p":"/TAYM-tey-bl/","u":"Jadval","i":"🕒","x":["Check the timetable.","Jadvalni tekshiring."]},
+    {"w":"journey","p":"/JER-ni/","u":"Sayohat (masofa)","i":"🛣️","x":["The journey takes five hours.","Sayohat besh soat davom etadi."]},
+    {"w":"luggage","p":"/LA-gij/","u":"Yuk","i":"🧳","x":["My luggage is heavy.","Yukim og'ir."]},
+    {"w":"platform","p":"/PLAT-form/","u":"Perron","i":"🚉","x":["The train is on platform 2.","Poyezd ikkinchi perronda."]}
+  ],
+  "grammar":{"rule":"**Travel expressions:** It takes + time · depart/arrive at + time · by plane/train/bus","uz":"'It takes' + vaqt, 'by' + transport",
+    "ex":[["**It takes** two hours **by plane**.","Samolyotda ikki soat ketadi."],["The train **departs at** 8:30.","Poyezd 8:30 da jo'naydi."],["**By train**, it takes six hours.","Poyezdda olti soat ketadi."]],
+    "mistake":["Wrong: *I go with bus.*","Right: *I go by bus.*","'by' + transport."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["We travel ___ train. (by/on)","The plane ___ at 10. (departs/depart)","It takes three hours ___ car. (by/with)","We ___ in Tashkent at night. (arrive/arrives)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Plane","Samolyot"],["Train","Poyezd"],["Depart","Jo'namoq"],["Arrive","Yetib kelmoq"],["Timetable","Jadval"]]},
+    {"t":"circle","title":"Circle the Answer","items":["Which is faster? → a) A plane is faster than a train b) A train is faster than a plane"]},
+    {"t":"order","title":"Build the Sentence","items":["by / travel / We / train / .","at / train / departs / The / eight / ."]}
+  ],
+  "reading":{"title":"To Samarkand by Train","passage":"Last summer we travelled to Samarkand by train. We checked the timetable and bought tickets for the morning express. The train departed at 8:30 from platform 2. The journey took four hours. We watched the fields and mountains pass by the window. At noon we arrived at Samarkand station. The city was waiting for us — blue domes, kind people, and delicious bread.",
+    "qs":["How did the family travel to Samarkand?","When did the train depart?","How long did the journey take?","What did they see from the window?"]},
+  "listening":{"title":"At the Station","qs":["Where is the woman going?","When does her train depart?","Which platform is it on?"],
+    "script":"Listen. 'Excuse me, when does the next train to Bukhara depart?' 'At 2:15, from platform 4.' 'How long does it take?' 'About five hours.' 'One ticket, please.' 'Here you are. The train arrives in Bukhara at 7:20 in the evening.'"},
+  "writing":{"title":"Describe a Journey","task":"Write about a journey you made: how you travelled, how long it took, what you saw. (5-7 sentences)","uz":"Qilgan sayohatingiz haqida yozing."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["How do you get to school?","By bus — it takes 20 minutes."],["Have you travelled by train?","Yes, to Samarkand."],["Which is better, plane or train?","Plane is faster, but train is cheaper."]]},
+    {"t":"mission","title":"Real-life Mission","body":"Ask a ticket price and time at a station or online. Report to class. / Bilet narxini so'rang."}
+  ],
+  "quiz":["Fill: 'We travel ___ plane.' (by/on)","Fill: 'The journey ___ three hours.' (take/takes)","Translate: 'Poyezd 8:30 da jo'naydi.' → ______","Which platform? (translate) → 'perron'"],
+  "homework":"Vocabulary: 10 transport words 3× · Grammar: 6 sentences about travelling · Reading: re-read 'To Samarkand by Train' · Speaking: plan a journey with your family.",
+  "teacher":["Use a real timetable for practice.","Drill 'by + transport' and 'It takes'.","Watch for 'with bus' instead of 'by bus'.","Link to L63: the airport and station."]
+},
+{
+  "n":63,"title":"At the Airport and Station","sub":"63-dars: Aeroport va vokzalda","icon":"🛫","accent":"26a69a","band":"stronga2","type":"normal",
+  "goals":[["🛫 Understand airport and station signs","Aeroport belgilarini tushunish"],["🧳 Check in and board","Ro'yxatdan o'tish va bortga chiqish"],["🛄 Ask for help politely","Yordam so'rash"]],
+  "warmup":[["🛫 Sign quiz","What does 'Departures' mean? / 'Departures' nima?"],["🛄 At the airport","What do you need to board a plane? / Samolyotga chiqish uchun nima kerak?"]],
+  "vocab":[
+    {"w":"check-in","p":"/CHEK-in/","u":"Ro'yxatdan o'tish","i":"🛂","x":["Where is the check-in desk?","Ro'yxatdan o'tish joyi qayerda?"]},
+    {"w":"boarding pass","p":"/BOR-ding pas/","u":"Posadka taloni","i":"🎫","x":["Show your boarding pass.","Posadka taloningizni ko'rsating."]},
+    {"w":"departure","p":"/di-PAR-cher/","u":"Jo'nash","i":"🛫","x":["The departure gate is number 5.","Jo'nash darvozasi 5-raqamli."]},
+    {"w":"arrival","p":"/a-RAY-vel/","u":"Yetib kelish","i":"🛬","x":["Arrival time is 9:15.","Yetib kelish vaqti 9:15."]},
+    {"w":"gate","p":"/geyt/","u":"Darvaza (gейт)","i":"🚪","x":["Go to gate 12.","12-darvozaga boring."]},
+    {"w":"customs","p":"/KAS-toms/","u":"Bojxona","i":"🛃","x":["We passed through customs.","Bojxonadan o'tdik."]},
+    {"w":"security","p":"/si-KYUR-i-ti/","u":"Xavfsizlik","i":"🔒","x":["Security checks your bag.","Xavfsizlik sumkangizni tekshiradi."]},
+    {"w":"baggage","p":"/BA-gij/","u":"Yuk (bortga)","i":"🧳","x":["Take your baggage.","Yukingizni oling."]},
+    {"w":"delayed","p":"/di-LEYD/","u":"Kechikkan","i":"⏰","x":["The flight is delayed.","Reyis kechikdi."]},
+    {"w":"on time","p":"/on taym/","u":"O'z vaqtida","i":"✅","x":["The train arrived on time.","Poyezd o'z vaqtida keldi."]}
+  ],
+  "grammar":{"rule":"**Help phrases:** Where is...? / Can I...? / How long does it take? / What time does it...?","uz":"Yordam so'rash iboralari",
+    "ex":[["**Where is** the check-in desk?","Ro'yxatdan o'tish qayerda?"],["**Can I** take this bag on the plane?","Bu sumkani olib kirish mumkinmi?"],["**What time does** the flight depart?","Reyis soat nechada jo'naydi?"]],
+    "mistake":["Wrong: *Where is check-in desk?*","Right: *Where is the check-in desk?*","'the' ishlatiladi."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["___ is the check-in desk? (Where/What)","What time ___ the flight depart? (does/do)","The flight is ___. (delayed/delay)","Show your ___ pass. (boarding/board)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Departure","Jo'nash"],["Arrival","Yetib kelish"],["Gate","Darvaza"],["Customs","Bojxona"],["Security","Xavfsizlik"]]},
+    {"t":"circle","title":"Circle the Answer","items":["Your flight is late. It is: → a) delayed b) on time c) departed"]},
+    {"t":"order","title":"Build the Sentence","items":["is / Where / the / desk / check-in / ?","flight / delayed / is / The / ."]}
+  ],
+  "reading":{"title":"First Flight","passage":"It was Otabek's first flight. At the airport, he went to the check-in desk and showed his passport. The woman smiled and gave him a boarding pass. 'Your gate is number 7,' she said. Then Otabek went through security and waited near the gate. The flight was on time. When he sat by the window, he looked out — the city got smaller and smaller. It was wonderful!",
+    "qs":["Where did Otabek go first at the airport?","What did the woman give him?","Which gate was his?","Was the flight on time?"]},
+  "listening":{"title":"Airport Announcements","qs":["Which flight is boarding?","What is the gate number?","Why is the other flight delayed?"],"script":"Listen to the announcements. 'Attention, passengers. Flight 402 to Moscow is now boarding at gate 7.' 'Flight 305 to London is delayed by two hours because of the weather.' 'Passengers of flight 118, please go to gate 2.'"},
+  "writing":{"title":"At the Airport","task":"Write a dialogue (4-6 lines) between a passenger and an airport worker.","uz":"Yo'lovchi va aeroport xodimi suhbatini yozing."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["Where is the check-in desk?","It's over there, near gate 2."],["What time does the flight depart?","At 6:40."],["Can I take this bag?","Yes, if it's not too heavy."]]},
+    {"t":"mission","title":"Real-life Mission","body":"Find out how to say these signs in Uzbek: Gate, Customs, Departures. / Belgilarni tarjima qiling."}
+  ],
+  "quiz":["Fill: 'Where ___ the check-in desk?' (is/are)","Fill: 'The flight is ___ .' (delayed/delay)","Translate: 'Ro'yxatdan o'tish qayerda?' → ______","What is a boarding pass?"],
+  "homework":"Vocabulary: 10 airport words 3× · Grammar: write the airport dialogue · Reading: re-read 'First Flight' · Speaking: describe the airport to your family.",
+  "teacher":["Show real airport signs and announcements.","Role-play: passenger and worker.","Drill polite help phrases.","Link to L64: describing the trip itself."]
+},
+{
+  "n":64,"title":"Describing a Trip","sub":"64-dars: Sayohatni tasvirlash","icon":"🗺️","accent":"ffa726","band":"stronga2","type":"normal",
+  "goals":[["🗺️ Narrate a trip in order","Sayohatni tartibda aytib berish"],["🕰️ Use first, then, after that, finally","'first, then, finally'ni ishlatish"],["🌄 Describe places you visited","Borilgan joylarni tasvirlash"]],
+  "warmup":[["🗺️ Trip memory","Tell one thing you saw on your last trip. / Oxirgi safarda nima ko'rdingiz?"],["🔄 Sequence words","first → then → finally. What's next? / Tartib so'zlari."]],
+  "vocab":[
+    {"w":"first","p":"/ferst/","u":"Avvalo","i":"1️⃣","x":["First we took the bus.","Avvalo avtobusga o'tirdik."]},
+    {"w":"then","p":"/then/","u":"Keyin","i":"2️⃣","x":["Then we walked to the lake.","Keyin ko'lga bordik."]},
+    {"w":"after that","p":"/AF-ter that/","u":"Undan keyin","i":"3️⃣","x":["After that we had lunch.","Undan keyin tushlik qildik."]},
+    {"w":"finally","p":"/FAI-na-li/","u":"Nihoyat","i":"4️⃣","x":["Finally we came home.","Nihoyat uyga keldik."]},
+    {"w":"scenery","p":"/SII-ne-ri/","u":"Manzara","i":"🏞️","x":["The scenery was beautiful.","Manzara go'zal edi."]},
+    {"w":"view","p":"/viu/","u":"Ko'rinish","i":"🌄","x":["We had a great view of the city.","Shahar manzarasini ko'rdik."]},
+    {"w":"friendly","p":"/FREND-li/","u":"Do'stona","i":"😊","x":["The people were friendly.","Odamlar do'stona edi."]},
+    {"w":"amazing","p":"/a-MEY-zing/","u":"Ajoyib","i":"🤩","x":["The food was amazing!","Taom ajoyib edi!"]},
+    {"w":"tiring","p":"/TAIR-ing/","u":"Charchatadigan","i":"😮‍💨","x":["It was tiring, but fun.","Charchatadigan bo'lsa ham, qiziq edi."]},
+    {"w":"unforgettable","p":"/an-fer-GET-ta-bl/","u":"Unutilmas","i":"🌟","x":["It was an unforgettable trip.","Bu unutilmas sayohat edi."]}
+  ],
+  "grammar":{"rule":"Sequence: **First... Then... After that... Finally...** + past tense","uz":"Tartib so'zlari + o'tgan zamon",
+    "ex":[["**First**, we bought tickets.","Avvalo bilet oldik."],["**Then**, we waited for the train.","Keyin poyezdni kutdik."],["**Finally**, we arrived in Bukhara.","Nihoyat Buxoroga yetib keldik."]],
+    "mistake":["Wrong: *Then finally first we...*","Right: *First... then... finally.*","Tartib: first→then→finally."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["___ we packed our bags. (First/Finally)","___ we took a taxi. (Then/Finally)","___ , we arrived home. (Finally/First)","The ___ was amazing. (view/viewing)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["First","Avvalo"],["Then","Keyin"],["Finally","Nihoyat"],["Amazing","Ajoyib"],["Unforgettable","Unutilmas"]]},
+    {"t":"circle","title":"Circle the Answer","items":["Put in order: → a) First-Travelling-Finally b) First-Then-Finally c) Then-First-Finally"]},
+    {"t":"order","title":"Build the Sentence","items":["packed / First / bags / we / our / .","we / finally / home / arrived / ."]}
+  ],
+  "reading":{"title":"A Day in Khiva","passage":"Last week my class went on a trip to Khiva. First, we left school very early in the morning. The journey by bus took five hours. Then, we walked through the old city. The scenery was amazing — high blue towers and narrow streets. After that, we had lunch at a small café. Finally, we visited the museum and took many photos. It was a tiring but unforgettable day!",
+    "qs":["When did the class leave?","How long was the bus journey?","What did they see in the old city?","Where did they have lunch?"]},
+  "listening":{"title":"The Mountain Trip","qs":["Where did they go?","What did they do first?","What did they see on the mountain?"],
+    "script":"Listen. Last Sunday we went to the mountains. First, we drove for two hours. Then we walked up the mountain. The view from the top was amazing — green valleys and white clouds below us. After that, we had a picnic. Finally, we came down and drove home. What a day!"},
+  "writing":{"title":"Describe a Trip","task":"Write about a trip (6-8 sentences) using: first, then, after that, finally.","uz":"Sayohatingizni tartib so'zlari bilan yozing."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["Where did you go?","We went to Khiva."],["What did you do first?","First we walked through the city."],["How was the food?","It was amazing!"]]},
+    {"t":"mission","title":"Real-life Mission","body":"Tell a family member about a trip using first/then/finally. / Safarni tartib bilan aytib bering."}
+  ],
+  "quiz":["Fill: '___ we packed our bags.' (First/Finally)","Fill: '___ we came home.' (Finally/First)","Translate: 'Manzara ajoyib edi.' → ______","Correct order: first / then / finally"],
+  "homework":"Vocabulary: 10 sequence words 3× · Grammar: write a trip paragraph · Reading: re-read 'A Day in Khiva' · Speaking: describe a trip to your family.",
+  "teacher":["Use photos from trips to spark storytelling.","Drill sequence words — order is the key skill.","Watch for mixing first/finally.","This is a core speaking skill for the whole band."]
+},
+{
+  "n":65,"title":"Comparing Cities","sub":"65-dars: Shaharlarni taqqoslash","icon":"🏙️","accent":"ab47bc","band":"stronga2","type":"normal",
+  "goals":[["🏙️ Compare cities: bigger, older, busier","Shaharlarni taqqoslash"],["➕ Use comparatives and superlatives","Taqqoslash darajalarini ishlatish"],["🗣️ Give reasons for preferences","Afzallik sabablarini aytish"]],
+  "warmup":[["🏙️ City words","Name 5 things you find in a big city. / Katta shaharda nimalar bor?"],["⚖️ Compare","Tashkent vs Samarkand — which is bigger? / Qaysi katta?"]],
+  "vocab":[
+    {"w":"city","p":"/SI-ti/","u":"Shahar","i":"🏙️","x":["The city is very busy.","Shahar juda gavjum."]},
+    {"w":"village","p":"/VI-lij/","u":"Qishloq","i":"🏘️","x":["My grandmother lives in a village.","Buvijonim qishloqda yashaydi."]},
+    {"w":"population","p":"/po-pyu-LEY-shen/","u":"Aholi","i":"👥","x":["The population is about three million.","Aholisi uch millionga yaqin."]},
+    {"w":"modern","p":"/MO-dern/","u":"Zamonaviy","i":"🏢","x":["There are many modern buildings.","Ko'plab zamonaviy binolar bor."]},
+    {"w":"ancient","p":"/EYN-shent/","u":"Qadimiy","i":"🏛️","x":["This is an ancient city.","Bu qadimiy shahar."]},
+    {"w":"crowded","p":"/KRAU-ded/","u":"Gavjum","i":"🚶‍♂️","x":["The bazaar is crowded on Sunday.","Yakshanba kuni bozor gavjum."]},
+    {"w":"quiet","p":"/KWA-yet/","u":"Sokin","i":"🌿","x":["The village is quiet.","Qishloq sokin."]},
+    {"w":"traffic","p":"/TRA-fik/","u":"Transport oqimi, tirbandlik","i":"🚗","x":["The traffic is heavy at 8 am.","Ertalab soat 8 da tirbandlik katta."]},
+    {"w":"the biggest","p":"/the BIG-gest/","u":"Eng katta","i":"🥇","x":["Tashkent is the biggest city.","Toshkent eng katta shahar."]},
+    {"w":"the oldest","p":"/the OHL-dest/","u":"Eng qadimiy","i":"🏆","x":["Bukhara is one of the oldest cities.","Buxoro eng qadimiy shaharlardan."]}
+  ],
+  "grammar":{"rule":"Comparative: **-er / more + than** · Superlative: **the -est / the most**","uz":"Taqqoslash va ustun daraja",
+    "ex":[["Tashkent is **bigger than** Fergana.","Toshkent Farg'onadan katta."],["Bukhara is **older than** Tashkent.","Buxoro Toshkentdan qadimiy."],["Tashkent is **the biggest** city in Uzbekistan.","Toshkent O'zbekistondagi eng katta shahar."]],
+    "mistake":["Wrong: *the more biggest*","Right: *the biggest*","Bitta ustun daraja yetarli."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["Tashkent is ___ (big) than Fergana.","Samarkand is ___ (old) than Tashkent.","This city is ___ (busy) than our village.","It is the ___ (interesting) place I know."]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Bigger","Kattaroq"],["The biggest","Eng katta"],["Older","Qadimiyroq"],["The oldest","Eng qadimiy"]]},
+    {"t":"circle","title":"Circle the Answer","items":["Bukhara is one of ___ cities. → a) the oldest b) older c) more old"]},
+    {"t":"order","title":"Build the Sentence","items":["biggest / Tashkent / is / the / city / .","than / is / Samarkand / Tashkent / older / ?"]}
+  ],
+  "reading":{"title":"Two Lives","passage":"Aziza lives in Tashkent, and her cousin Bek lives in a village near Andijan. Tashkent is bigger and busier than the village. It has more schools, shops and hospitals, but the traffic is heavy. In the village, life is quieter. Bek says the air is cleaner and people are friendlier. 'The village is cheaper and calmer,' he says. 'But I love visiting Tashkent for the cinemas and parks.' Both places are special — in different ways.",
+    "qs":["Where does Bek live?","What does Tashkent have more of?","What does Bek like about the village?","What does Aziza's cousin like about Tashkent?"]},
+  "listening":{"title":"City or Village?","qs":["Why does the woman prefer the village?","Why does the man prefer the city?","Where do they both agree food is cheaper?"],
+    "script":"Listen. Woman: 'I love the village. It's quieter and the air is cleaner.' Man: 'But the city has more jobs and better schools.' Woman: 'True, but food is cheaper in the village.' Man: 'And transport is better in the city. Every place has good and bad points!'"},
+  "writing":{"title":"My Town vs Another Town","task":"Write 5 sentences comparing your town with another place: size, age, traffic, prices, nature.","uz":"Shahringizni boshqa joy bilan taqqoslang."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["Which is bigger, your town or Tashkent?","Tashkent is much bigger."],["Where is food cheaper?","In the village."],["Which do you prefer? Why?","I prefer the city because of the cinemas."]]},
+    {"t":"mission","title":"Real-life Mission","body":"Compare two places you know and share your opinion with your family. / Ikkita joyni taqqoslang."}
+  ],
+  "quiz":["Write the superlative: big → ______","Fill: 'This is ___ city.' (the oldest/older)","Translate: 'Qishloq sokin.' → ______","Correct: 'the more biggest' → ______"],
+  "homework":"Vocabulary: 10 city words 3× · Grammar: 6 comparisons + superlatives · Reading: re-read 'Two Lives' · Speaking: discuss your town with your family.",
+  "teacher":["Use a map of Uzbekistan to compare cities.","Drill -er/-est and more/most rules.","Watch for double comparatives: 'more bigger'.","Personal opinions keep it engaging."]
+},
+{
+  "n":66,"title":"Cultural Traditions","sub":"66-dars: Madaniy an'analar","icon":"🎭","accent":"5c6bc0","band":"stronga2","type":"normal",
+  "goals":[["🎭 Describe cultural traditions","Madaniy an'analarni tasvirlash"],["🌍 Compare traditions of different countries","Turli xalqlar an'analarini taqqoslash"],["📚 Talk about why traditions matter","An'analar nima uchun muhimligini aytish"]],
+  "warmup":[["🎭 Traditions of Uzbekistan","Name 2 traditions: weddings? tea? / O'zbek an'analarini ayting."],["🌍 Around the world","Do you know a tradition from another country? / Boshqa xalq an'anasi?"]],
+  "vocab":[
+    {"w":"tradition","p":"/tra-DI-shen/","u":"An'ana","i":"🏛️","x":["This tradition is very old.","Bu an'ana juda qadimiy."]},
+    {"w":"culture","p":"/KUL-cher/","u":"Madaniyat","i":"🎭","x":["I love learning about different cultures.","Turli madaniyatlarni o'rganishni yaxshi ko'raman."]},
+    {"w":"custom","p":"/KAS-tem/","u":"Odat, urf","i":"📜","x":["It is a custom to greet elders first.","Kattalarga avval salom berish odat."]},
+    {"w":"wedding","p":"/WE-ding/","u":"To'y","i":"💍","x":["Uzbek weddings are big celebrations.","O'zbek to'ylari katta bayramlar."]},
+    {"w":"ceremony","p":"/SE-re-mo-ni/","u":"Marosim","i":"🎊","x":["The ceremony lasted all day.","Marosim kun bo'yi davom etdi."]},
+    {"w":"hospitality","p":"/ho-spi-TA-li-ti/","u":"Mehmondo'stlik","i":"🤲","x":["Hospitality is important in our culture.","Mehmondo'stlik madaniyatimizda muhim."]},
+    {"w":"respect","p":"/ri-SPEKT/","u":"Hurmat","i":"🙏","x":["We show respect to our elders.","Kattalarni hurmat qilamiz."]},
+    {"w":"celebrate","p":"/SE-le-breyt/","u":"Nishonlamoq","i":"🎉","x":["They celebrate this day with music.","Bu kunni musiqa bilan nishonlashadi."]},
+    {"w":"pass down","p":"/pas daun/","u":"Avloddan-avlodga o'tmoq","i":"🔄","x":["Traditions are passed down to children.","An'analar bolalarga o'tadi."]},
+    {"w":"foreign","p":"/FO-ren/","u":"Chet el","i":"🌏","x":["Foreign guests are always welcome.","Chet ellik mehmonlar har doim kutib olinadi."]}
+  ],
+  "grammar":{"rule":"**It is a custom/tradition to + verb** · describing what people usually do","uz":"'It is a tradition to...' — an'ana haqida",
+    "ex":[["**It is a custom to** greet elders first.","Kattalarga avval salom berish odat."],["**People usually** share food with guests.","Odamlar odatda mehmonlar bilan ovqat bo'lishadi."],["**Traditions are passed down** from parents to children.","An'analar ota-onadan bolalarga o'tadi."]],
+    "mistake":["Wrong: *It is tradition to eat plov.*","Right: *It is a tradition to eat plov.*","'a' sharti kerak."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["It is ___ custom to greet elders. (a/the)","We ___ our guests with tea. (welcome/welcomes)","Traditions are ___ down. (passed/pass)","This ___ is very old. (tradition/traditional)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Tradition","An'ana"],["Culture","Madaniyat"],["Wedding","To'y"],["Hospitality","Mehmondo'stlik"],["Respect","Hurmat"]]},
+    {"t":"circle","title":"Circle the Answer","items":["Hospitality means: → a) being kind to guests b) being late c) buying gifts"]},
+    {"t":"order","title":"Build the Sentence","items":["a / It / to / tradition / plov / is / cook / .","elders / show / to / respect / We / ."]}
+  ],
+  "reading":{"title":"An Uzbek Wedding","passage":"An Uzbek wedding is a joyful celebration full of traditions. First, the groom's family comes to the bride's house with gifts. Then everyone goes to the wedding hall. There is a ceremony called 'kelin salom' — the bride greets the guests and bows respectfully. People eat plov, dance and play music late into the night. The traditions are passed down from grandparents to children. Hospitality and respect are at the heart of every celebration.",
+    "qs":["What do the groom's family bring?","What happens in the 'kelin salom' ceremony?","What do people eat at the wedding?","What is at the heart of Uzbek celebrations?"]},
+  "listening":{"title":"Traditions Around the World","qs":["What happens in Japan?","What do people do in Italy?","Which tradition surprises the speaker?"],
+    "script":"Listen. Around the world, traditions are different. In Japan, people bow when they greet each other. In Italy, people celebrate the New Year with fireworks and wear red. In Mexico, the family makes a special dinner on the Day of the Dead. Traditions are beautiful because they are different — that is what makes the world interesting."},
+  "writing":{"title":"A Tradition I Love","task":"Write a paragraph (5-7 sentences) about a tradition in your family or country.","uz":"Sizga yoqadigan an'ana haqida yozing."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["What is a tradition in your family?","We always have plov on Fridays."],["How do you show respect to elders?","We greet them first and stand up."],["Why are traditions important?","They connect us to our past."]]},
+    {"t":"mission","title":"Real-life Mission","body":"Ask your grandparents about a tradition from their time. Tell the class. / Buvilardan an'ana so'rang."}
+  ],
+  "quiz":["Fill: 'It is ___ tradition to greet guests.' (a/the)","Fill: 'We ___ our guests.' (welcome/welcomes)","Translate: 'Mehmondo'stlik muhim.' → ______","What does 'pass down' mean?"],
+  "homework":"Vocabulary: 10 tradition words 3× · Grammar: 6 sentences about traditions · Reading: re-read 'An Uzbek Wedding' · Speaking: explain a tradition to your family.",
+  "teacher":["Invite students to share family traditions — cultural pride.","Drill 'It is a tradition/custom to + verb'.","Watch for missing 'a'.","Compare Uzbek and foreign traditions."]
+},
+{
+  "n":67,"title":"Class Trip Workshop","sub":"67-dars: Sinf sayohati ustaxonasi","icon":"🚌","accent":"8d6e63","band":"stronga2","type":"workshop",
+  "goals":[["🚌 Plan a real class trip","Haqiqiy sinf sayohatini rejalash"],["🗓️ Choose place, transport, and budget","Joy, transport va byudjet tanlash"],["🗣️ Present and vote on the plan","Rejani taqdim etish va ovoz berish"]],
+  "warmup":[["🚌 Trip ideas","Name 3 places your class could visit. / Sinf qayerga borishi mumkin?"],["💰 Budget","How much does a bus trip cost? / Avtobus qancha turadi?"]],
+  "vocab":[
+    {"w":"trip","p":"/trip/","u":"Sayohat","i":"🚌","x":["We are planning a class trip.","Sinf sayohatini rejalayapmiz."]},
+    {"w":"budget","p":"/BA-jit/","u":"Byudjet","i":"💰","x":["Our budget is 50,000 som per person.","Har kishi uchun 50 ming so'm."]},
+    {"w":"entrance fee","p":"/EN-trans fi/","u":"Kirish to'lovi","i":"🎟️","x":["The entrance fee is 10,000 som.","Kirish 10 ming so'm."]},
+    {"w":"guide","p":"/gayd/","u":"Gid, yo'l ko'rsatuvchi","i":"🧭","x":["A guide will show us around.","Gid bizni aylantiradi."]},
+    {"w":"schedule","p":"/SKE-jul/","u":"Dastur, jadval","i":"📋","x":["Here is our schedule.","Mana dasturimiz."]},
+    {"w":"safe","p":"/seyf/","u":"Xavfsiz","i":"🛡️","x":["Is the place safe?","Joy xavfsizmi?"]}
+  ],
+  "practice":[
+    {"t":"task","title":"Plan the Trip","items":["Choose a place and say why it is interesting. / Joy tanlang va sababini ayting.","Choose transport and estimate the cost. / Transport va narxni hisoblang.","Make a schedule: 'First we... Then we... Finally we...' / Dastur tuzing.","Check the budget: entrance fees, food, transport. / Byudjetni tekshiring.","Present your plan — the class votes! / Rejani taqdim eting."]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Budget","Byudjet"],["Guide","Gid"],["Entrance fee","Kirish to'lovi"],["Schedule","Dastur"],["Safe","Xavfsiz"]]},
+    {"t":"order","title":"Build the Sentence","items":["a / we / bus / taking / are / .","is / fee / entrance / The / 10,000 / som / ."]}
+  ],
+  "speaking":[
+    {"t":"talk","title":"Present Your Plan","body":"Present your trip: place, transport, schedule, budget. (5-7 sentences) / Sayohat rejangizni taqdim eting."},
+    {"t":"partner","title":"Persuade Me","body":"Convince your partner your trip is the best: 'It's more interesting than... / cheaper than...'. / Rejangiz eng yaxshiligini isbotlang."},
+    {"t":"mission","title":"Class Vote","body":"The class votes for one trip. The winner becomes the real plan! / Sinf ovoz bersin."}
+  ],
+  "quiz":["Fill: 'The ___ fee is 10,000 som.' (entrance/entering)","Fill: 'A ___ will show us around.' (guide/guided)","Translate: 'Bu xavfsiz joy.' → ______","Why is a budget important?"],
+  "homework":"Write a one-paragraph proposal for your dream class trip. / Orzu qilingan sayohat taklifini yozing.",
+  "teacher":["Workshop: real budgeting is engaging.","Provide price examples in som.","Encourage comparatives in persuasion.","Vote keeps students motivated."]
+},
+{
+  "n":68,"title":"Speaking Circle: Holiday","sub":"68-dars: Suhbat doirasi — dam olish haqida","icon":"☀️","accent":"66bb6a","band":"stronga2","type":"speaking",
+  "goals":[["☀️ Narrate a holiday in the past","Dam olish haqida aytib berish"],["🗣️ Describe celebrations and trips","Bayram va sayohatlarni tasvirlash"],["👥 Compare holidays of different students","Turli dam olishlarni taqqoslash"]],
+  "warmup":[["☀️ Holiday quick share","Tell one thing you did on your last holiday. / Oxirgi dam olishda nima qildingiz?"],["🕰️ Past review","went, saw, ate, visited — quick drill. / O'tgan zamonni takrorlang."]],
+  "vocab":[
+    {"w":"rest","p":"/rest/","u":"Dam olish","i":"😴","x":["I need a good rest.","Menga yaxshi dam kerak."]},
+    {"w":"beach","p":"/biich/","u":"Dengiz qirg'og'i","i":"🏖️","x":["We went to the beach.","Dengizga bordik."]},
+    {"w":"relax","p":"/ri-LAKS/","u":"Hordiq chiqarish","i":"🧘","x":["I relaxed by the lake.","Ko'l bo'yida hordiq chiqardim."]},
+    {"w":"enjoy","p":"/en-JOY/","u":"Zavq olmoq","i":"😊","x":["We enjoyed every day.","Har kundan zavq oldik."]},
+    {"w":"exciting","p":"/ik-SAI-ting/","u":"Qiziqarli, hayajonli","i":"🤩","x":["The trip was exciting.","Sayohat qiziqarli edi."]},
+    {"w":"memories","p":"/ME-mo-riz/","u":"Xotiralar","i":"📸","x":["I have wonderful memories.","Menda ajoyib xotiralar bor."]}
+  ],
+  "practice":[
+    {"t":"task","title":"Holiday Discussion Cards","items":["Where did you go on your last holiday? / Qayerga bordingiz?","Who did you go with? / Kim bilan bordingiz?","What was the best moment? / Eng yaxshi lahza?","What did you eat? / Nima yedingiz?","Was it relaxing or exciting? Why? / Tinchmi yoki hayajonlimi?"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Relax","Hordiq"],["Exciting","Hayajonli"],["Memories","Xotiralar"],["Beach","Dengiz bo'yi"]]}
+  ],
+  "speaking":[
+    {"t":"talk","title":"My Holiday","body":"Speak for 2 minutes about your holiday: place, people, food, best moment. / Dam olishingiz haqida gapiring."},
+    {"t":"partner","title":"Interview","table":[["Where did you go?","I went to my grandparents' village."],["Who did you go with?","With my family."],["What was the best moment?","The picnic by the river."],["Did you take photos?","Yes, lots!"]]},
+    {"t":"mission","title":"Active Listening","body":"Write 3 things your partner did on holiday. / Juftingizning 3 ta ishini yozing."}
+  ],
+  "quiz":["Translate: 'Sayohat hayajonli edi.' → ______","Translate: 'Menda ajoyib xotiralar bor.' → ______","Fill: 'We ___ (go) to the beach.'","Name 3 holiday activities in English."],
+  "homework":"Write your holiday story (8-10 sentences). Practice speaking it. / Dam olish hikoyangizni yozing.",
+  "teacher":["Speaking circle: focus on fluency.","Prompt with photos to spark memories.","Echo-correct past tense gently.","Collect great stories to celebrate progress."]
+},
+{
+  "n":69,"title":"Healthy Habits","sub":"69-dars: Sog'lom odatlar","icon":"🥗","accent":"4caf50","band":"stronga2","type":"normal",
+  "goals":[["🥗 Give advice with 'should/shouldn't'","'should/shouldn't' bilan maslahat berish"],["🍎 Talk about healthy and unhealthy habits","Sog'lom/zararli odatlarni muhokama qilish"],["💪 Make a healthy plan","Sog'lom reja tuzish"]],
+  "warmup":[["🥗 Healthy or not?","Is eating sweets every day healthy? / Har kuni shirinlik yeyish sog'lommi?"],["💪 Good habits","Name 3 healthy habits. / 3 ta sog'lom odat ayting."]],
+  "vocab":[
+    {"w":"healthy","p":"/HEL-thi/","u":"Sog'lom","i":"🥗","x":["Fruit is healthy.","Meva sog'lom."]},
+    {"w":"unhealthy","p":"/an-HEL-thi/","u":"Zararli","i":"🍔","x":["Too much sugar is unhealthy.","Haddan tashqari shakar zararli."]},
+    {"w":"exercise","p":"/EK-ser-sayz/","u":"Jismoniy mashq","i":"🏃","x":["Exercise keeps you strong.","Mashq sizni baquvvat qiladi."]},
+    {"w":"sleep","p":"/sliip/","u":"Uyqu","i":"😴","x":["You should sleep eight hours.","Sakkiz soat uxlashingiz kerak."]},
+    {"w":"breakfast","p":"/BREK-fast/","u":"Nonushta","i":"🥣","x":["Never skip breakfast.","Nonushtani tashlamang."]},
+    {"w":"should","p":"/shud/","u":"Kerak (maslahat)","i":"✅","x":["You should drink water.","Suv ichishingiz kerak."]},
+    {"w":"shouldn't","p":"/SHU-dnt/","u":"Mumkin emas (maslahat)","i":"🚫","x":["You shouldn't eat late at night.","Kechqurun ovqat yemasligingiz kerak."]},
+    {"w":"fresh","p":"/fresh/","u":"Yangi (taom)","i":"🥦","x":["Eat fresh vegetables.","Yangi sabzavotlar yeng."]},
+    {"w":"habit","p":"/HA-bit/","u":"Odat","i":"🔂","x":["A good habit helps you.","Yaxshi odat yordam beradi."]},
+    {"w":"energy","p":"/EN-er-ji/","u":"Kuch, energiya","i":"⚡","x":["Breakfast gives you energy.","Nonushta kuch beradi."]}
+  ],
+  "grammar":{"rule":"Advice: **should + verb** (recommendation) · **shouldn't + verb** (warning)","uz":"'Should' — maslahat, 'shouldn't' — ogohlantirish",
+    "ex":[["You **should drink** more water.","Ko'proq suv ichishingiz kerak."],["You **shouldn't eat** too much sugar.","Ko'p shakar yemasligingiz kerak."],["Children **should sleep** 8-10 hours.","Bolalar 8-10 soat uxlashi kerak."]],
+    "mistake":["Wrong: *You should to eat fruit.*","Right: *You should eat fruit.*","'should' dan keyin 'to' yo'q."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["You ___ drink water. (should/shouldn't)","You ___ eat late at night. (should/shouldn't)","Children ___ sleep early. (should/shouldn't)","You ___ skip breakfast. (should/shouldn't)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Healthy","Sog'lom"],["Exercise","Mashq"],["Sleep","Uyqu"],["Energy","Kuch"],["Habit","Odat"]]},
+    {"t":"circle","title":"Circle the Answer","items":["Advice for a cold: → a) You should rest b) You should run c) You shouldn't sleep"]},
+    {"t":"order","title":"Build the Sentence","items":["water / drink / should / more / You / .","shouldn't / You / sugar / eat / too / much / ."]}
+  ],
+  "reading":{"title":"A Healthier Me","passage":"Last month, Sardor felt tired every day. His doctor said: 'You should sleep more and eat better.' So Sardor made a plan. He started to eat fresh fruit and vegetables. He drank more water and less cola. He exercised for thirty minutes every day. Now Sardor has more energy. 'I feel great!' he says. 'Small healthy habits changed my life.'",
+    "qs":["Why did Sardor see a doctor?","What did the doctor say?","What did Sardor change?","How does he feel now?"]},
+  "listening":{"title":"Health Advice","qs":["What should the boy eat?","What shouldn't he do at night?","What should he do every day?"],
+    "script":"Listen. 'Hello, doctor.' 'Hello, what's the problem?' 'I feel sleepy all the time.' 'You should eat a good breakfast and drink more water. You shouldn't use your phone late at night. You should exercise every day. Then you will feel better!'"},
+  "writing":{"title":"My Healthy Plan","task":"Write 5 pieces of advice for a healthy day using should/shouldn't.","uz":"Sog'lom kun uchun 5 ta maslahat yozing."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["What should I eat for breakfast?","You should eat eggs and bread."],["What shouldn't I do before bed?","You shouldn't watch TV."],["How can I get energy?","You should exercise."]]},
+    {"t":"mission","title":"Real-life Mission","body":"Give one piece of health advice to each family member today. / Oilangizga maslahat bering."}
+  ],
+  "quiz":["Fill: 'You ___ eat more vegetables.' (should/shouldn't)","Fill: 'You ___ drink cola every day.' (should/shouldn't)","Translate: 'Ko'proq suv ichishingiz kerak.' → ______","Correct: 'You should to eat fruit.'"],
+  "homework":"Vocabulary: 10 health words 3× · Grammar: 6 should/shouldn't sentences · Reading: re-read 'A Healthier Me' · Speaking: share your healthy plan with your family.",
+  "teacher":["Give real advice about students' habits.","Drill should + verb (no 'to').","Watch for 'should to'.","Link to L71-73: health problems and the doctor."]
+},
+{
+  "n":70,"title":"Feelings and Emotions","sub":"70-dars: His-tuyg'ular","icon":"😊","accent":"f06292","band":"stronga2","type":"normal",
+  "goals":[["😊 Name feelings in English","His-tuyg'ularni inglizcha aytish"],["🗣️ Say how you feel and why","Qanday his qilayotganingizni va sababini aytish"],["🤝 Ask and care about others' feelings","Boshqalarning kayfiyatiga qiziqish"]],
+  "warmup":[["😊 Feelings mime","Show a feeling — students guess! / Hisni imo bilan ko'rsating."],["🎭 How do you feel today?","Tell the class in English. / Bugun kayfiyatingiz qanday?"]],
+  "vocab":[
+    {"w":"happy","p":"/HA-pi/","u":"Xursand","i":"😊","x":["I am happy today.","Bugun xursandman."]},
+    {"w":"sad","p":"/sad/","u":"G'amgin","i":"😢","x":["She felt sad about the news.","U yangilikdan g'amgin bo'ldi."]},
+    {"w":"angry","p":"/ANG-gri/","u":"Jahli chiqqan","i":"😠","x":["He was angry at first.","U avvaliga jahli chiqdi."]},
+    {"w":"nervous","p":"/NER-ves/","u":"Asabiy","i":"😰","x":["I was nervous before the test.","Testdan oldin asabiy edim."]},
+    {"w":"excited","p":"/ik-SAI-ted/","u":"Hayajonlangan","i":"🤩","x":["We are excited about the trip!","Safardan hayajondamiz!"]},
+    {"w":"tired","p":"/TAYerd/","u":"Charchagan","i":"😮‍💨","x":["I am tired after school.","Maktabdan keyin charchayman."]},
+    {"w":"proud","p":"/praud/","u":"Faxrlanadigan","i":"🦁","x":["My parents are proud of me.","Ota-onam men bilan faxrlanadi."]},
+    {"w":"worried","p":"/WOR-id/","u":"Xavotirlangan","i":"😟","x":["She is worried about the exam.","U imtihondan xavotirda."]},
+    {"w":"surprised","p":"/ser-PRAYZd/","u":"Hayron qolgan","i":"😲","x":["We were surprised by the gift.","Sovg'adan hayron qoldik."]},
+    {"w":"calm","p":"/kam/","u":"Sokin, tinch","i":"😌","x":["Stay calm and relax.","Sokin bo'ling va dam oling."]}
+  ],
+  "grammar":{"rule":"Feelings with **am/is/are + adjective** · **feel + adjective** · reasons with **because**","uz":"'am/is/are' + sifat; sabab — 'because'",
+    "ex":[["I **am happy because** I passed the test.","Testdan o'tganim uchun xursandman."],["She **feels nervous before** exams.","U imtihondan oldin asabiy bo'ladi."],["They **were excited about** the trip.","Ular safardan hayajonlandi."]],
+    "mistake":["Wrong: *I am very happy because of I...*","Right: *I am happy because I...*","'because' dan keyin to'liq gap."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["I am ___ about the test. (nervous/tired)","She feels ___ after school. (tired/happy)","We are ___ about the party. (excited/calm)","He was ___ because he won. (proud/angry)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Happy","Xursand"],["Sad","G'amgin"],["Angry","Jahli chiqqan"],["Nervous","Asabiy"],["Proud","Faxrlangan"]]},
+    {"t":"circle","title":"Circle the Answer","items":["You feel before a big test: → a) nervous b) calm c) bored"]},
+    {"t":"order","title":"Build the Sentence","items":["am / happy / I / because / test / passed / I / .","about / the / trip / excited / We / are / ."]}
+  ],
+  "reading":{"title":"A Big Surprise","passage":"Today was an exciting day. In the morning, I felt nervous because we had a maths test. I studied hard all week, so I was calm. After the test, my teacher smiled and said: 'Well done!' I felt proud and happy. When I came home, my family was waiting for me. 'Surprise!' they shouted — they had prepared my favourite dinner. I was so surprised and happy. It was a perfect day.",
+    "qs":["Why was the writer nervous in the morning?","How did he feel after the test?","What did the family prepare?","How did he feel at the end?"]},
+  "listening":{"title":"How Do They Feel?","qs":["Why is Lola sad?","Why is Umid angry?","Why is Bobur excited?"],
+    "script":"Listen. Lola is sad because her best friend moved to another city. Umid is angry because his brother broke his new phone. Bobur is excited because tomorrow he is going on a trip with his class. Everyone has different feelings today."},
+  "writing":{"title":"How I Felt","task":"Write about a day when you felt happy, nervous or proud (5-7 sentences). Say why.","uz":"Qachondir qanday his qilganingiz haqida yozing."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["How do you feel today?","I'm happy because it's Friday!"],["What makes you nervous?","Exams make me nervous."],["When do you feel proud?","When I help my family."]]},
+    {"t":"mission","title":"Real-life Mission","body":"Ask 3 people how they feel today. Report to class. / 3 kishidan kayfiyatini so'rang."}
+  ],
+  "quiz":["Fill: 'I am ___ before the exam.' (nervous/happy)","Fill: 'We were ___ about the gift.' (surprised/sad)","Translate: 'Ota-onam men bilan faxrlanadi.' → ______","Complete: 'I'm happy because ___ .'"],
+  "homework":"Vocabulary: 10 feelings 3× · Grammar: 6 sentences about feelings + because · Reading: re-read 'A Big Surprise' · Speaking: talk about feelings with your family.",
+  "teacher":["Feelings mime is a great warmer.","Drill adjective after am/is/are.","Watch for 'because of I'.","This prepares L71-73: health and the doctor."]
+}
+]}

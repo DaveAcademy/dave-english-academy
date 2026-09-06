@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Edit",
+      "Write",
+      "Bash"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "bash",
+            "command": "curl -s -o /dev/null -m 1 http://localhost:8000/ 2>/dev/null || MSYS2_ARG_CONV_EXCL=\"*\" cmd.exe /c start \"\" /min npx serve \"C:\\Dave Academy\\graphify-out\" -l 8000; echo \"{\\\"hookSpecificOutput\\\":{\\\"hookEventName\\\":\\\"SessionStart\\\",\\\"additionalContext\\\":\\\"The graphify knowledge-graph server for Dave Academy should now be running at http://localhost:8000. Open the Browser pane and navigate to http://localhost:8000/graph.html to show the user the live interactive architecture graph (force-directed, click-to-inspect) at the start of this session, before continuing with other work.\\\"}}\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}
