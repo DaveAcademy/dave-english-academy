@@ -630,7 +630,8 @@ export function useAcademyData() {
         if (inserted.length > 0) {
           setHomeworkSubmissionFilesState((prev) => [...prev, ...inserted]);
           try {
-            setHomeworkStatusState(await db.markHomeworkSubmitted(homeworkId, studentId));
+            const serverStatuses = await db.markHomeworkSubmitted(homeworkId, studentId);
+            setHomeworkStatusState(serverStatuses);
           } catch {
             // best-effort - the files that did save are already visible
           }
@@ -640,7 +641,34 @@ export function useAcademyData() {
       }
       setHomeworkSubmissionFilesState((prev) => [...prev, ...inserted]);
       try {
-        setHomeworkStatusState(await db.markHomeworkSubmitted(homeworkId, studentId));
+        await db.markHomeworkSubmitted(homeworkId, studentId);
+        // Optimistically update homeworkStatus immediately so UI reflects submission
+        setHomeworkStatusState((prev) => {
+          const existing = prev.find((s) => s.homework_id === homeworkId && s.student_id === studentId);
+          const now = new Date().toISOString();
+          const newStatus = {
+            homework_id: homeworkId,
+            student_id: studentId,
+            status: 'Submitted',
+            submitted_at: now,
+            score: null,
+            feedback: null,
+            answer_file_url: null,
+            answer_file_name: null,
+          };
+          if (existing) {
+            return prev.map((s) =>
+              s.homework_id === homeworkId && s.student_id === studentId
+                ? { ...s, status: 'Submitted', submitted_at: now }
+                : s
+            );
+          }
+          return [...prev, newStatus];
+        });
+        // Background refresh to reconcile with server
+        db.markHomeworkSubmitted(homeworkId, studentId)
+          .then((serverStatuses) => setHomeworkStatusState(serverStatuses))
+          .catch(() => {}); // best-effort reconciliation
       } catch (e) {
         setError('Your files were saved, but we could not update your submission status. Please try again.');
         throw e;
