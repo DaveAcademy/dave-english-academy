@@ -112,17 +112,17 @@ export default function WordBuilder() {
   };
 
   const handleCheck = () => {
-    if (feedback || placed.length === 0) return;
+    if (feedback || placed.length === 0 || submitting) return;
     recordAnswer(currentGuess, false);
   };
 
   const handleSkip = () => {
-    if (feedback) return;
+    if (feedback || submitting) return;
     recordAnswer('', true);
   };
 
   const handleReset = () => {
-    if (feedback) return;
+    if (feedback || submitting) return;
     const combined = [...placed, ...tiles];
     // Fisher-Yates reshuffle to avoid leaking previous order
     for (let i = combined.length - 1; i > 0; i--) {
@@ -134,13 +134,16 @@ export default function WordBuilder() {
   };
 
   const handleNext = async () => {
+    if (submitting) return;
     if (index + 1 < round.length) {
       const nextIndex = index + 1;
       setIndex(nextIndex);
       setupWord(round[nextIndex].english);
       return;
     }
+    setSubmitting(true);
     setLoading(true);
+    setError(null);
     try {
       const res = await submitGameRound('word_builder', roundId, answers);
       setResult(res);
@@ -148,6 +151,7 @@ export default function WordBuilder() {
       setError(e.message || String(e));
     } finally {
       setLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -179,6 +183,13 @@ export default function WordBuilder() {
     return (
       <div className="rounded-2xl bg-white p-10 text-center shadow-card">
         <p className="font-display text-lg font-semibold text-rose-600">{t('loadError')}</p>
+        <button
+          onClick={handleNext}
+          disabled={submitting}
+          className="mt-4 rounded-full bg-brand-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-transform active:scale-95 disabled:opacity-50"
+        >
+          {t('retryButton')}
+        </button>
       </div>
     );
   }
@@ -213,14 +224,14 @@ export default function WordBuilder() {
 
       <div className="rounded-2xl bg-gradient-to-br from-teal-50 to-emerald-100 p-5 shadow-card sm:p-6">
         {/* Placed-letter slots (the student's current spelling) */}
-        <div className="flex min-h-[3.25rem] flex-wrap justify-center gap-2 rounded-xl border-2 border-dashed border-teal-300 bg-white/60 p-2">
+        <div className="flex min-h-[3.25rem] flex-wrap justify-center gap-1.5 rounded-xl border-2 border-dashed border-teal-300 bg-white/60 p-2 sm:gap-2">
           {placed.length === 0 && <span className="py-2.5 text-xs font-semibold text-ink/30">{t('tapLettersHint')}</span>}
           {placed.map((tile) => (
             <button
               key={tile.id}
               onClick={() => handleUnplace(tile)}
-              disabled={!!feedback}
-              className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-teal-500 font-display text-xl font-bold text-white shadow-sm transition-all duration-200 animate-letter-reveal active:scale-95"
+              disabled={!!feedback || submitting}
+              className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-teal-500 font-display text-lg font-bold text-white shadow-sm transition-all duration-200 animate-letter-reveal active:scale-95 sm:h-11 sm:w-11 sm:text-xl"
             >
               {tile.ch.toUpperCase()}
             </button>
@@ -230,13 +241,13 @@ export default function WordBuilder() {
         {/* Available tiles - tracked by tile.id, never by letter value, so
             duplicate letters (e.g. two E's) each stay individually
             selectable/deselectable without ambiguity. */}
-        <div className="mt-4 flex flex-wrap justify-center gap-2">
+        <div className="mt-4 flex flex-wrap justify-center gap-1.5 sm:gap-2">
           {tiles.map((tile) => (
             <button
               key={tile.id}
               onClick={() => handleTapTile(tile)}
-              disabled={!!feedback}
-              className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl border-b-4 border-emerald-400 bg-emerald-100 font-display text-2xl font-bold text-emerald-800 shadow-sm transition-all duration-200 hover:shadow active:scale-95 sm:h-14 sm:w-14"
+              disabled={!!feedback || submitting}
+              className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border-b-4 border-emerald-400 bg-emerald-100 font-display text-xl font-bold text-emerald-800 shadow-sm transition-all duration-200 hover:shadow active:scale-95 sm:h-14 sm:w-14 sm:text-2xl"
             >
               {tile.ch.toUpperCase()}
             </button>
@@ -266,9 +277,10 @@ export default function WordBuilder() {
           {feedback ? (
             <button
               onClick={handleNext}
-              className="ml-auto flex items-center gap-1.5 rounded-full bg-ink px-6 py-3 text-sm font-bold text-white shadow-sm transition-all duration-200 hover:shadow active:scale-95"
+              disabled={submitting}
+              className="ml-auto flex items-center gap-1.5 rounded-full bg-ink px-6 py-3 text-sm font-bold text-white shadow-sm transition-all duration-200 hover:shadow active:scale-95 disabled:opacity-50"
             >
-              {t('next')}
+              {submitting ? t('loading') : t('next')}
             </button>
           ) : (
             <>

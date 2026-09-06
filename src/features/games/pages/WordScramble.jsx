@@ -69,11 +69,11 @@ function revealFirstLetter(scrambledText, firstChar) {
 // deferred to a later session, not required for the grading contract).
 function LetterTiles({ text }) {
   return (
-    <div className="flex flex-wrap justify-center gap-2" aria-label={text}>
+    <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2" aria-label={text}>
       {text.split('').map((ch, i) => (
         <span
           key={i}
-          className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl border-b-4 border-amber-400 bg-amber-100 font-display text-2xl font-bold text-amber-800 shadow-sm sm:h-14 sm:w-14 sm:text-3xl"
+          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border-b-4 border-amber-400 bg-amber-100 font-display text-xl font-bold text-amber-800 shadow-sm sm:h-14 sm:w-14 sm:text-3xl"
         >
           {ch.toUpperCase()}
         </span>
@@ -138,21 +138,22 @@ export default function WordScramble() {
   };
 
   const handleCheck = () => {
-    if (feedback || !input.trim()) return;
+    if (feedback || !input.trim() || submitting) return;
     recordAnswer(input, false);
   };
 
   const handleSkip = () => {
-    if (feedback) return;
+    if (feedback || submitting) return;
     recordAnswer('', true);
   };
 
   const handleHint = () => {
-    if (feedback || hintUsed) return;
+    if (feedback || hintUsed || submitting) return;
     setHintUsed(true);
   };
 
   const handleNext = async () => {
+    if (submitting) return;
     if (index + 1 < round.length) {
       setIndex((i) => i + 1);
       setInput('');
@@ -160,7 +161,9 @@ export default function WordScramble() {
       setHintUsed(false);
       return;
     }
+    setSubmitting(true);
     setLoading(true);
+    setError(null);
     try {
       const res = await submitGameRound('word_scramble', roundId, answers);
       setResult(res);
@@ -168,6 +171,7 @@ export default function WordScramble() {
       setError(e.message || String(e));
     } finally {
       setLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -229,6 +233,13 @@ export default function WordScramble() {
     return (
       <div className="rounded-2xl bg-white p-10 text-center shadow-card">
         <p className="font-display text-lg font-semibold text-rose-600">{t('loadError')}</p>
+        <button
+          onClick={handleNext}
+          disabled={submitting}
+          className="mt-4 rounded-full bg-brand-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-transform active:scale-95 disabled:opacity-50"
+        >
+          {t('retryButton')}
+        </button>
       </div>
     );
   }
@@ -293,9 +304,10 @@ export default function WordScramble() {
           {feedback ? (
             <button
               onClick={handleNext}
-              className="ml-auto flex items-center gap-1.5 rounded-full bg-ink px-6 py-3 text-sm font-bold text-white shadow-sm transition-transform active:scale-95"
+              disabled={submitting}
+              className="ml-auto flex items-center gap-1.5 rounded-full bg-ink px-6 py-3 text-sm font-bold text-white shadow-sm transition-transform active:scale-95 disabled:opacity-50"
             >
-              {t('next')}
+              {submitting ? t('loading') : t('next')}
             </button>
           ) : (
             <>

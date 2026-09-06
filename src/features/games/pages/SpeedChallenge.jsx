@@ -130,7 +130,7 @@ export default function SpeedChallenge() {
 
   const recordAnswer = useCallback(
     (option, skipped) => {
-      if (chosen) return;
+      if (chosen || submitting) return;
       clearInterval(tickRef.current);
       const elapsed = Date.now() - questionStart.current;
       setChosen(option);
@@ -138,7 +138,7 @@ export default function SpeedChallenge() {
       setAnswers(nextAnswers);
       advanceRef.current = setTimeout(() => goToNext(nextAnswers), 350);
     },
-    [answers, current, goToNext]
+    [answers, current, goToNext, chosen, submitting]
   );
 
   // Per-question countdown. Resets whenever the question index changes
@@ -163,7 +163,7 @@ export default function SpeedChallenge() {
   }, [index, round]);
 
   const handleChoose = (option) => {
-    if (chosen) return;
+    if (chosen || submitting) return;
     recordAnswer(option, false);
   };
 

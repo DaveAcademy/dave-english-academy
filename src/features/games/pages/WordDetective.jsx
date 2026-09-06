@@ -32,6 +32,7 @@ export default function WordDetective() {
   const [loading, setLoading] = useState(true);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
   const { bestStreak, recordCorrect, recordIncorrect, reset: resetStreak } = useGameStreak();
 
   const startRound = useCallback(async () => {
@@ -84,6 +85,7 @@ export default function WordDetective() {
   };
 
   const handleNext = async () => {
+    if (submitting) return;
     if (index + 1 < round.length) {
       const nextIndex = index + 1;
       setIndex(nextIndex);
@@ -92,7 +94,9 @@ export default function WordDetective() {
       setCorrectionInput('');
       return;
     }
+    setSubmitting(true);
     setLoading(true);
+    setError(null);
     try {
       const res = await submitGameRound('word_detective', roundId, answers);
       setResult(res);
@@ -101,6 +105,7 @@ export default function WordDetective() {
       setError(e.message || String(e));
     } finally {
       setLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -132,6 +137,13 @@ export default function WordDetective() {
     return (
       <div className="rounded-2xl bg-white p-10 text-center shadow-card">
         <p className="font-display text-lg font-semibold text-rose-600">{t('loadError')}</p>
+        <button
+          onClick={handleNext}
+          disabled={submitting}
+          className="mt-4 rounded-full bg-brand-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-transform active:scale-95 disabled:opacity-50"
+        >
+          {t('retryButton')}
+        </button>
       </div>
     );
   }
@@ -222,9 +234,10 @@ export default function WordDetective() {
             <p className="mt-1 text-xs text-ink/50">{t('explanationRevealNote')}</p>
             <button
               onClick={handleNext}
-              className="mt-4 flex items-center gap-1.5 rounded-full bg-ink px-6 py-3 text-sm font-bold text-white shadow-sm transition-transform active:scale-95 mx-auto"
+              disabled={submitting}
+              className="mt-4 flex items-center gap-1.5 rounded-full bg-ink px-6 py-3 text-sm font-bold text-white shadow-sm transition-transform active:scale-95 mx-auto disabled:opacity-50"
             >
-              {t('next')}
+              {submitting ? t('loading') : t('next')}
             </button>
           </div>
         )}

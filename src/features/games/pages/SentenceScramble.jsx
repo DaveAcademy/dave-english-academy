@@ -70,19 +70,19 @@ export default function SentenceScramble() {
   const current = round?.[index];
 
   const handleTapWord = (tile) => {
-    if (feedback) return;
+    if (feedback || submitting) return;
     setPool((prev) => prev.filter((p) => p.id !== tile.id));
     setPlaced((prev) => [...prev, tile]);
   };
 
   const handleUnplace = (tile) => {
-    if (feedback) return;
+    if (feedback || submitting) return;
     setPlaced((prev) => prev.filter((p) => p.id !== tile.id));
     setPool((prev) => [...prev, tile]);
   };
 
   const handleResetOrder = () => {
-    if (feedback) return;
+    if (feedback || submitting) return;
     setPool((prev) => [...prev, ...placed]);
     setPlaced([]);
   };
@@ -98,24 +98,27 @@ export default function SentenceScramble() {
   };
 
   const handleCheck = () => {
-    if (feedback || placed.length === 0) return;
+    if (feedback || placed.length === 0 || submitting) return;
     if (placed.length !== current.canonical_words.length) return;
     recordAnswer(placed.map((p) => p.word), false);
   };
 
   const handleSkip = () => {
-    if (feedback) return;
+    if (feedback || submitting) return;
     recordAnswer([], true);
   };
 
   const handleNext = async () => {
+    if (submitting) return;
     if (index + 1 < round.length) {
       const nextIndex = index + 1;
       setIndex(nextIndex);
       setupItem(round[nextIndex]);
       return;
     }
+    setSubmitting(true);
     setLoading(true);
+    setError(null);
     try {
       const res = await submitGameRound('sentence_scramble', roundId, answers);
       setResult(res);
@@ -123,6 +126,7 @@ export default function SentenceScramble() {
       setError(e.message || String(e));
     } finally {
       setLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -154,6 +158,13 @@ export default function SentenceScramble() {
     return (
       <div className="rounded-2xl bg-white p-10 text-center shadow-card">
         <p className="font-display text-lg font-semibold text-rose-600">{t('loadError')}</p>
+        <button
+          onClick={handleNext}
+          disabled={submitting}
+          className="mt-4 rounded-full bg-brand-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-transform active:scale-95 disabled:opacity-50"
+        >
+          {t('retryButton')}
+        </button>
       </div>
     );
   }
@@ -237,9 +248,10 @@ export default function SentenceScramble() {
           {feedback ? (
             <button
               onClick={handleNext}
-              className="ml-auto flex items-center gap-1.5 rounded-full bg-ink px-6 py-3 text-sm font-bold text-white shadow-sm transition-all duration-200 hover:shadow active:scale-95"
+              disabled={submitting}
+              className="ml-auto flex items-center gap-1.5 rounded-full bg-ink px-6 py-3 text-sm font-bold text-white shadow-sm transition-all duration-200 hover:shadow active:scale-95 disabled:opacity-50"
             >
-              {t('next')}
+              {submitting ? t('loading') : t('next')}
             </button>
           ) : (
             <>

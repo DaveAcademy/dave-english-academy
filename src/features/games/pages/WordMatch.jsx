@@ -102,6 +102,7 @@ export default function WordMatch() {
   );
 
   const tryMatch = (englishId, uzbekTileIndex) => {
+    if (submitting) return;
     const tile = uzbekTiles[uzbekTileIndex];
     const isCorrect = tile.vocabularyId === englishId;
 
@@ -129,7 +130,7 @@ export default function WordMatch() {
   };
 
   const handleSelectEnglish = (id) => {
-    if (matchedIds.has(id) || wrongPair) return;
+    if (matchedIds.has(id) || wrongPair || submitting) return;
     if (selectedUzbekTile != null) {
       tryMatch(id, selectedUzbekTile);
       return;
@@ -138,7 +139,7 @@ export default function WordMatch() {
   };
 
   const handleSelectUzbek = (index) => {
-    if (matchedIds.has(uzbekTiles[index].vocabularyId) || wrongPair) return;
+    if (matchedIds.has(uzbekTiles[index].vocabularyId) || wrongPair || submitting) return;
     if (selectedEnglishId != null) {
       tryMatch(selectedEnglishId, index);
       return;

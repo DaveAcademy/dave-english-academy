@@ -161,12 +161,12 @@ export default function GrammarBattle() {
   // round and the reconciliation effect below corrects lives/streak to
   // the authoritative values.
   const submitAnswer = (option, skipped, livesOverride) => {
+    if (submitting || gameOver) return;
     clearInterval(tickRef.current);
     setChosen(option ?? '');
     const nextAnswers = [...answers, { content_id: current.id, answer: option || '', skipped }];
     setAnswers(nextAnswers);
-    let nextCount = 0;
-    setAnsweredCount((c) => { nextCount = c + 1; return nextCount; });
+    setAnsweredCount((c) => c + 1);
     const nextUsed = nextUsedSet(current.id);
     const effectiveLives = livesOverride ?? lives;
 
@@ -182,12 +182,12 @@ export default function GrammarBattle() {
   };
 
   const handleChoose = (option) => {
-    if (chosen || gameOver) return;
+    if (chosen || gameOver || submitting) return;
     submitAnswer(option, false);
   };
 
   const handleTimeout = () => {
-    if (chosen || gameOver) return;
+    if (chosen || gameOver || submitting) return;
     const nextLives = Math.max(0, lives - 1);
     setLives(nextLives);
     submitAnswer(null, true, nextLives);

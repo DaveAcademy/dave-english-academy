@@ -7,7 +7,7 @@
 // game_content_bank.payload->>'english') happens in submitGameRound() on
 // the server, same anti-cheat invariant as every other game.
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RefreshCw, ArrowLeft, CheckCircle2, PartyPopper } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -31,6 +31,7 @@ export default function PictureQuiz() {
   const [loading, setLoading] = useState(true);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const lastAnswersRef = useRef(null);
   const { record } = useGameRecord('picture_quiz', !!result);
 
   const startRound = useCallback(async () => {
@@ -40,6 +41,7 @@ export default function PictureQuiz() {
     setIndex(0);
     setChosen(null);
     setError(null);
+    lastAnswersRef.current = null;
     try {
       const { roundId: rid, level: lvl, words } = await getPictureQuizRound();
       setRoundId(rid);
@@ -60,20 +62,22 @@ export default function PictureQuiz() {
   const current = round?.[index];
 
   const handleChoose = (option) => {
-    if (chosen) return;
+    if (chosen || submitting) return;
     setChosen(option);
     setAnswers((prev) => [...prev, { content_id: current.id, answer: option, skipped: false }]);
   };
 
   const handleNext = async () => {
-    if (submitting) return;
+    if (submitting || !chosen) return;
     if (index + 1 < round.length) {
       setIndex((i) => i + 1);
       setChosen(null);
       return;
     }
+    lastAnswersRef.current = answers;
     setSubmitting(true);
     setLoading(true);
+    setError(null);
     try {
       const res = await submitGameRound('picture_quiz', roundId, answers);
       setResult(res);
@@ -141,9 +145,17 @@ export default function PictureQuiz() {
   }
 
   if (error) {
+    const isSubmitError = !!lastAnswersRef.current;
     return (
       <div className="rounded-2xl bg-white p-10 text-center shadow-card">
-        <p className="font-display text-lg font-semibold text-rose-600">{t('loadError')}</p>
+        <p className="font-display text-lg font-semibold text-rose-600">{isSubmitError ? t('submitError') : t('loadError')}</p>
+        <button
+          onClick={() => (isSubmitError ? handleNext() : startRound())}
+          disabled={submitting}
+          className="mt-4 rounded-full bg-brand-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-transform active:scale-95 disabled:opacity-50"
+        >
+          {t('retryButton')}
+        </button>
       </div>
     );
   }
@@ -219,9 +231,10 @@ export default function PictureQuiz() {
           {chosen && (
             <button
               onClick={handleNext}
-              className="rounded-full bg-ink px-6 py-3 text-sm font-bold text-white shadow-sm transition-transform active:scale-95"
+              disabled={submitting}
+              className="rounded-full bg-ink px-6 py-3 text-sm font-bold text-white shadow-sm transition-transform active:scale-95 disabled:opacity-50"
             >
-              {t('next')}
+              {submitting ? t('loading') : t('next')}
             </button>
           )}
         </div>

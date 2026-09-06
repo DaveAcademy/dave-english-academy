@@ -275,15 +275,15 @@ export default function GameCenter() {
       </header>
 
       <div className="mb-6">
-        <div className="mb-3 flex items-center justify-between gap-2">
+        <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="font-display text-lg font-bold text-ink">{t('overallRankingTitle')}</h2>
-          <div className="flex gap-1 overflow-x-auto">
+          <div className="flex gap-1 overflow-x-auto pb-1 sm:pb-0 -mx-1 px-1">
             {['daily', 'weekly', 'monthly', 'all_time'].map((p) => (
               <button
                 key={p}
                 type="button"
                 onClick={() => setPeriod(p)}
-                className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-bold transition-colors ${
+                className={`whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-bold transition-colors sm:px-3 sm:text-xs ${
                   period === p
                     ? 'bg-brand-600 text-white shadow-sm'
                     : 'bg-ink/5 text-ink/60 hover:bg-ink/10'

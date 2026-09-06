@@ -95,6 +95,7 @@ export default function ListeningChallenge() {
   const [loading, setLoading] = useState(true);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
   const [ttsSupported, setTtsSupported] = useState(true);
   const [ttsFailed, setTtsFailed] = useState(false);
   const { bestStreak, recordCorrect, recordIncorrect, reset: resetStreak } = useGameStreak();
@@ -158,28 +159,30 @@ export default function ListeningChallenge() {
   // so choosing just records the tap and shows a neutral "recorded"
   // state - no client-side green/red guess.
   const handleChoose = (option) => {
-    if (chosen) return;
+    if (chosen || submitting) return;
     setChosen(option);
     setAnswers((prev) => [...prev, { vocabulary_id: current.id, answer: option, used_hint: false, skipped: false, answerType: 'mcq' }]);
   };
 
   const handleNext = async () => {
+    if (submitting || !chosen) return;
     if (index + 1 < round.length) {
       setIndex((i) => i + 1);
       setChosen(null);
       return;
     }
+    setSubmitting(true);
     setLoading(true);
+    setError(null);
     try {
       const res = await submitGameRound('listening_challenge', roundId, answers);
       setResult(res);
-      // Streak is computed post-hoc from the server's per-item results
-      // (in submission order) since correctness isn't revealed until
-      // the whole round is graded - this is a display-only stat, not
-      // part of grading.
       (res.results || []).forEach((r) => (r.correct ? recordCorrect() : recordIncorrect()));
+    } catch (e) {
+      setError(e.message || String(e));
     } finally {
       setLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -211,6 +214,13 @@ export default function ListeningChallenge() {
     return (
       <div className="rounded-2xl bg-white p-10 text-center shadow-card">
         <p className="font-display text-lg font-semibold text-rose-600">{t('loadError')}</p>
+        <button
+          onClick={handleNext}
+          disabled={submitting}
+          className="mt-4 rounded-full bg-brand-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-transform active:scale-95 disabled:opacity-50"
+        >
+          {t('retryButton')}
+        </button>
       </div>
     );
   }
@@ -290,9 +300,10 @@ export default function ListeningChallenge() {
           {chosen && (
             <button
               onClick={handleNext}
-              className="flex items-center gap-1.5 rounded-full bg-white px-6 py-3 text-sm font-bold text-cyan-700 shadow-sm transition-transform active:scale-95"
+              disabled={submitting}
+              className="flex items-center gap-1.5 rounded-full bg-white px-6 py-3 text-sm font-bold text-cyan-700 shadow-sm transition-transform active:scale-95 disabled:opacity-50"
             >
-              {t('next')}
+              {submitting ? t('loading') : t('next')}
             </button>
           )}
         </div>

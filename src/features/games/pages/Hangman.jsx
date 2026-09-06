@@ -157,7 +157,7 @@ export default function Hangman() {
   }, [solved, wrongCount, current, feedback]);
 
   const handleGuess = (letter) => {
-    if (feedback || guessed.has(letter)) return;
+    if (feedback || guessed.has(letter) || submitting) return;
     const next = new Set(guessed);
     next.add(letter);
     setGuessed(next);
@@ -167,6 +167,7 @@ export default function Hangman() {
   };
 
   const handleNext = async () => {
+    if (submitting) return;
     if (index + 1 < round.length) {
       setIndex((i) => i + 1);
       setGuessed(new Set());
@@ -176,7 +177,9 @@ export default function Hangman() {
       setWinAnim(false);
       return;
     }
+    setSubmitting(true);
     setLoading(true);
+    setError(null);
     try {
       const res = await submitGameRound('hangman', roundId, answers);
       setResult(res);
@@ -184,6 +187,7 @@ export default function Hangman() {
       setError(e.message || String(e));
     } finally {
       setLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -259,6 +263,13 @@ export default function Hangman() {
     return (
       <div className="rounded-2xl bg-white p-10 text-center shadow-card">
         <p className="font-display text-lg font-semibold text-rose-600">{t('loadError')}</p>
+        <button
+          onClick={handleNext}
+          disabled={submitting}
+          className="mt-4 rounded-full bg-brand-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-transform active:scale-95 disabled:opacity-50"
+        >
+          {t('retryButton')}
+        </button>
       </div>
     );
   }
@@ -337,9 +348,9 @@ export default function Hangman() {
           </p>
         )}
 
-        <div className="mt-4 flex flex-col items-center gap-1.5">
+        <div className="mt-4 flex flex-col items-center gap-1">
           {ROWS.map((row, i) => (
-            <div key={i} className="flex justify-center gap-1">
+            <div key={i} className="flex w-full justify-center gap-1">
               {row.split('').map((letter) => {
                 const isGuessed = guessed.has(letter);
                 const isHit = isGuessed && current.english.toLowerCase().includes(letter);
@@ -349,9 +360,9 @@ export default function Hangman() {
                   <button
                     key={letter}
                     onClick={() => handleGuess(letter)}
-                    disabled={!!feedback || isGuessed}
+                    disabled={!!feedback || isGuessed || submitting}
                     aria-label={letter}
-                    className={`flex h-11 w-9 flex-shrink-0 items-center justify-center rounded-md text-xs font-bold shadow-sm transition-all duration-200 sm:h-10 sm:w-8 sm:text-sm ${style}`}
+                    className={`flex h-11 flex-1 max-w-[2.25rem] items-center justify-center rounded-md text-xs font-bold shadow-sm transition-all duration-200 sm:h-10 sm:max-w-[2rem] sm:text-sm ${style}`}
                   >
                     {letter.toUpperCase()}
                   </button>
@@ -365,9 +376,10 @@ export default function Hangman() {
           {feedback && (
             <button
               onClick={handleNext}
-              className="rounded-full bg-ink px-6 py-3 text-sm font-bold text-white shadow-sm transition-transform active:scale-95"
+              disabled={submitting}
+              className="rounded-full bg-ink px-6 py-3 text-sm font-bold text-white shadow-sm transition-transform active:scale-95 disabled:opacity-50"
             >
-              {t('next')}
+              {submitting ? t('loading') : t('next')}
             </button>
           )}
         </div>
