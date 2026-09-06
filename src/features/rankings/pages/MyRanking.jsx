@@ -49,12 +49,12 @@ function displayName(row) {
 }
 
 function RankBadge({ rank }) {
-  // Top-3 get medal treatment, rest numeric — compact for mobile
-  if (rank === 1) return <span className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-400 text-white shadow-sm" aria-hidden="true"><Crown size={14} /></span>;
-  if (rank === 2) return <span className="flex h-8 w-8 items-center justify-center rounded-full bg-ink/15 text-ink/60 shadow-sm" aria-hidden="true"><Medal size={14} /></span>;
-  if (rank === 3) return <span className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-600/20 text-amber-700 shadow-sm" aria-hidden="true"><Medal size={14} /></span>;
+  // Top-3 get restrained medal treatment, rest numeric — compact for 320px
+  if (rank === 1) return <span className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-400 text-white shadow-sm ring-1 ring-amber-500/20" aria-hidden="true"><Crown size={14} /></span>;
+  if (rank === 2) return <span className="flex h-8 w-8 items-center justify-center rounded-full bg-ink/10 text-ink/70 shadow-sm ring-1 ring-ink/10" aria-hidden="true"><Medal size={14} /></span>;
+  if (rank === 3) return <span className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-600/15 text-amber-700 shadow-sm ring-1 ring-amber-600/15" aria-hidden="true"><Medal size={14} /></span>;
   return (
-    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-ink/[0.06] text-xs font-bold tabular-nums text-ink/60">
+    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-ink/[0.06] text-xs font-bold tabular-nums text-ink/60 ring-1 ring-ink/[0.04]">
       {rank}
     </span>
   );
@@ -211,7 +211,7 @@ export default function MyRanking() {
 
               {/* Right: subtle context on desktop — not a competing card */}
               <div className="mt-4 flex justify-center sm:mt-0 sm:flex-col sm:items-end sm:justify-center">
-                <div className="rounded-2xl border border-ink/[0.06] bg-paper px-4 py-3 text-center sm:min-w-[160px] sm:text-right">
+                <div className="rounded-2xl border border-ink/[0.06] bg-paper px-4 py-3 text-center shadow-sm sm:min-w-[160px] sm:text-right">
                   <p className="text-[11px] font-bold uppercase tracking-wide text-ink/40">{t('portal:totalPointsLabel')}</p>
                   <p className="mt-0.5 font-display text-lg font-bold text-ink">{formatPoints(summary?.lifetime_points ?? myRow?.points)}</p>
                   <p className="text-[11px] font-medium text-ink/40">{t('portal:rankingHeroHint', { defaultValue: 'All-time total' })}</p>
@@ -228,8 +228,8 @@ export default function MyRanking() {
           <h2 id="leaderboard-heading" className="font-display text-base font-bold tracking-tight text-ink">
             {t('portal:leaderboardTitle', { level: me.level })}
           </h2>
-          {/* Period tabs — clear, no invented categories */}
-          <div role="tablist" aria-label={t('portal:rankingPeriodLabel', { defaultValue: 'Ranking period' })} className="flex gap-1.5">
+          {/* Period tabs — clear, no invented categories; wraps at 320px */}
+          <div role="tablist" aria-label={t('portal:rankingPeriodLabel', { defaultValue: 'Ranking period' })} className="flex flex-wrap gap-1.5">
             {PERIODS.map((p) => {
               const isActive = period === p;
               return (
@@ -300,7 +300,7 @@ export default function MyRanking() {
                 return (
                   <li
                     key={row.student_id}
-                    className={`grid grid-cols-[44px_1fr_auto] items-center gap-2 px-3 py-2.5 sm:grid-cols-[52px_1fr_110px] sm:px-4 sm:py-3 ${isMe ? 'relative bg-brand-50/70' : 'bg-white'}`}
+                    className={`grid grid-cols-[44px_1fr_auto] items-center gap-2 px-3 py-2.5 transition-colors sm:grid-cols-[52px_1fr_110px] sm:px-4 sm:py-3 ${isMe ? 'relative bg-brand-50/80 ring-1 ring-brand-100' : 'bg-white hover:bg-paper/40'}`}
                     aria-current={isMe ? 'true' : undefined}
                   >
                     {isMe && <span className="absolute inset-y-0 left-0 w-[3px] bg-brand-500" aria-hidden="true" />}
