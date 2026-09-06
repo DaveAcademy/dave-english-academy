@@ -11,21 +11,24 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Play, Lock, Star, Trophy, Crown } from 'lucide-react';
 
-export default function GameCard({ icon, name, description, gradient, iconBg, to, bestScore, record, level, levelLeader, disabled }) {
+export default function GameCard({ icon, name, description, gradient, iconBg, to, bestScore, record, level, levelLeader, disabled, points }) {
   const { t } = useTranslation('game');
   return (
     <div
       className={`relative overflow-hidden rounded-2xl border border-ink/[0.06] p-5 shadow-card transition-all duration-200 ${gradient} ${
-        disabled ? 'opacity-70' : 'hover:-translate-y-1 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]'
+        disabled ? 'opacity-70' : 'hover:-translate-y-1 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]'}
       }`}
     >
       <div className="flex items-start justify-between gap-2">
         <span className={`flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl text-3xl shadow-sm ${iconBg} transition-transform duration-200 group-hover:rotate-3`} aria-hidden="true">
           {icon}
         </span>
-        <div className="flex flex-col items-end gap-1">
+        <div className="flex flex-col items-end gap-2">
           {level != null && (
-            <span className="rounded-full bg-ink/90 px-2.5 py-1 text-xs font-bold text-white shadow-sm transition-all duration-200">{t('levelLabel', { level })}</span>
+            <span className="font-display font-semibold text-lg text-ink">{t('levelLabel', { level })}</span>
+          )}
+          {points != null && (
+            <span className="text-sm text-ink/60">{t('pointsLabel', { points })}</span>
           )}
           {bestScore != null && (
             <span className="flex items-center gap-1 rounded-full bg-white/80 px-2.5 py-1 text-xs font-bold text-ink/70 shadow-sm">

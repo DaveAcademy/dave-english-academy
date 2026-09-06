@@ -17,7 +17,7 @@ import { useAcademy } from '../../../lib/AcademyDataContext';
 import GameCard from '../components/GameCard';
 import GameLeaderboardBlock from '../components/GameLeaderboardBlock';
 import BadgeShelf from '../../../components/BadgeShelf';
-import { getGamePointsLeaderboard, getGameLevelLeaderboard, getGamePeriodLeaderboard, listMyGameLevels, listAchievementDefinitions, getStudentAchievements } from '../../../lib/storageBridge';
+import { getGamePointsLeaderboard, getGameLevelLeaderboard, getGamePeriodLeaderboard, listMyGameLevels, listAchievementDefinitions, getStudentAchievements, getMyGamePoints } from '../../../lib/storageBridge';
 import { formatStudentDisplayName } from '../utils/gameRecordFormat';
 import SectionLabel from '../../../components/SectionLabel';
 
@@ -136,6 +136,7 @@ export default function GameCenter() {
   const [records, setRecords] = useState({});
   const [levels, setLevels] = useState({});
   const [levelLeaders, setLevelLeaders] = useState({});
+  const [gamePoints, setGamePoints] = useState({});
   const [overall, setOverall] = useState(null);
   const [loadingOverall, setLoadingOverall] = useState(true);
   const [period, setPeriod] = useState('weekly');
@@ -174,6 +175,12 @@ export default function GameCenter() {
     }).catch(() => {
       // A student who has never played a game simply has no row yet -
       // an empty/failed fetch just means no level chip, not an error state.
+    });
+    getMyGamePoints(me.id).then((rows) => {
+      if (cancelled) return;
+      setGamePoints(Object.fromEntries(rows.map((r) => [r.game_type, r.total_points])));
+    }).catch(() => {
+      // A failed points fetch means no points chip, not an error state.
     });
     getGameLevelLeaderboard().then((rows) => {
       if (cancelled) return;
@@ -333,6 +340,7 @@ export default function GameCenter() {
             record={records[g.key]}
             level={levels[g.key]}
             levelLeader={levelLeaders[g.key]}
+            points={gamePoints[g.key]}
           />
         ))}
       </div>

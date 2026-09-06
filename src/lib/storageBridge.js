@@ -1890,6 +1890,12 @@ export async function getStudentPetProgress(studentId) {
   return data;
 }
 
+export async function getMyGamePoints(studentId) {
+  const { data, error } = await supabase.rpc('get_my_game_points', { p_student_id: studentId });
+  if (error) throw error;
+  return data;
+}
+
 export async function getOwlProgress() {
   const { data, error } = await supabase.rpc('get_owl_progress');
   if (error) throw error;
