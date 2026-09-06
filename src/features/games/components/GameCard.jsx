@@ -51,18 +51,19 @@ export default function GameCard({ icon, name, description, gradient, iconBg, to
       <h3 className="mt-3 font-display text-base font-bold text-ink">{name}</h3>
       <p className="mt-0.5 text-xs leading-relaxed text-ink/50">{description}</p>
 
-      <div className="mt-3">
+      <div className="mt-4">
         {disabled ? (
-          <span className="inline-flex items-center gap-1.5 rounded-xl bg-ink/5 px-3 py-1.5 text-xs font-semibold text-ink/30">
-            <Lock size={12} />
+          <span className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-ink/5 px-6 py-3.5 text-sm font-semibold text-ink/30 sm:w-auto sm:justify-start">
+            <Lock size={16} />
             {t('comingSoon')}
           </span>
         ) : (
           <Link
             to={to}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-ink/90 px-3 py-1.5 text-xs font-bold text-white shadow-sm transition-all duration-200 hover:bg-ink hover:shadow active:scale-95"
+            aria-label={`${t('play')} ${name}`}
+            className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-ink px-6 py-3.5 text-sm font-bold text-white shadow-sm transition-all duration-200 hover:bg-ink/90 hover:shadow-md active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 sm:w-auto sm:justify-start sm:py-3.5"
           >
-            <Play size={12} fill="currentColor" />
+            <Play size={16} fill="currentColor" aria-hidden="true" />
             {t('play')}
           </Link>
         )}
