@@ -108,7 +108,10 @@ export default function PictureQuiz() {
                 <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-ink/50">{t('gamePoints')}</p>
               </>
             ) : (
-              <p className="mt-4 font-display text-5xl font-extrabold text-brand-600">{result.score}</p>
+              <>
+                <p className="mt-4 font-display text-5xl font-extrabold text-brand-600">{result.score}</p>
+                <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-ink/50">{t('score')}</p>
+              </>
             )}
           </div>
           <p className="mt-1 text-sm font-medium text-ink/60">{t('correctCount', { correct: result.words_correct, total: result.words_total })}</p>
