@@ -1912,6 +1912,11 @@ export async function getPremiumCollection() {
   if (error) throw error;
   return data;
 }
+export async function getPetCollectionOverview() {
+  const { data, error } = await supabase.rpc('get_pet_collection_overview');
+  if (error) throw error;
+  return data;
+}
 export async function setActivePet(petKey) {
   const { data, error } = await supabase.rpc('set_active_pet', { p_pet_key: petKey });
   if (error) throw error;

@@ -8,7 +8,193 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, PawPrint, Gift, CheckCircle2, PartyPopper, Lock, Clock, Sparkles, AlertCircle, X } from 'lucide-react';
 import { useAcademy } from '../../lib/AcademyDataContext';
-import { getActivePetWithParts, claimPetPart, getPetCheckinStatus, getMyPetProgress, getOwlProgress, getPremiumCollection, setActivePet } from '../../lib/storageBridge';
+import { getActivePetWithParts, claimPetPart, getPetCheckinStatus, getMyPetProgress, getOwlProgress, getPremiumCollection, setActivePet, getPetCollectionOverview, getPremiumPetsProgress, unlockPremiumPet } from '../../lib/storageBridge';
+
+function RarityChip({ label, color }) {
+  if (!label) return null;
+  return (
+    <span
+      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-[0.1em] text-white shadow-sm"
+      style={{ backgroundColor: color || '#64748B' }}
+    >
+      {label}
+    </span>
+  );
+}
+
+function CollectionOverview({ overview }) {
+  const { t } = useTranslation('game');
+  if (!overview) return null;
+  const weekly = overview.weekly_pet;
+  const catPct = overview.catalogue_total ? Math.round((overview.catalogue_owned / overview.catalogue_total) * 100) : 0;
+  const weeklyPartPct = weekly && weekly.parts_total ? Math.round((weekly.parts_collected / weekly.parts_total) * 100) : 0;
+  return (
+    <div className="mb-4 overflow-hidden rounded-2xl border border-ink/[0.06] bg-white shadow-card">
+      <div className="px-5 pt-4 sm:px-6">
+        <p className="font-display text-[13px] font-extrabold tracking-tight text-ink">{t('collectionOverviewTitle')}</p>
+        <p className="mt-0.5 text-xs text-ink/55">{t('collectionOverviewSubtitle')}</p>
+      </div>
+      <div className="mt-3 grid grid-cols-3 gap-px bg-ink/[0.06]">
+        <div className="bg-white px-4 py-3.5 sm:px-5">
+          <p className="text-[10px] font-bold uppercase tracking-wide text-ink/45">{t('collectionCatalogueLabel')}</p>
+          <p className="mt-1 font-display text-lg font-extrabold leading-none text-ink">
+            {overview.catalogue_owned}<span className="text-ink/35">/{overview.catalogue_total}</span>
+          </p>
+          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-ink/[0.06]">
+            <div className="h-full rounded-full bg-brand-500 transition-all motion-safe:duration-700" style={{ width: `${catPct}%` }} role="progressbar" aria-valuenow={overview.catalogue_owned} aria-valuemin={0} aria-valuemax={overview.catalogue_total} />
+          </div>
+        </div>
+        <div className="bg-white px-4 py-3.5 sm:px-5">
+          <p className="text-[10px] font-bold uppercase tracking-wide text-ink/45">{t('collectionPartsLabel')}</p>
+          <p className="mt-1 font-display text-lg font-extrabold leading-none text-ink">{overview.parts_collected_total}</p>
+          <p className="mt-2 text-[10px] font-semibold text-ink/40">{t('petParts')}</p>
+        </div>
+        <div className="bg-white px-4 py-3.5 sm:px-5">
+          <p className="text-[10px] font-bold uppercase tracking-wide text-ink/45">{t('collectionCompletedLabel')}</p>
+          <p className="mt-1 font-display text-lg font-extrabold leading-none text-ink">{overview.completed_pet_sets}</p>
+          <p className="mt-2 text-[10px] font-semibold text-ink/40">{t('petComplete')}</p>
+        </div>
+      </div>
+      {weekly && (
+        <div className="flex items-center gap-3 border-t border-ink/[0.06] px-5 py-3.5 sm:px-6">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-lg ring-1 ring-violet-100">{weekly.icon}</span>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <p className="truncate text-[11px] font-bold tracking-wide text-ink/45">{t('collectionWeeklyLabel')}</p>
+              <RarityChip label={weekly.rarity_label} color={weekly.rarity_color} />
+            </div>
+            <p className="mt-0.5 truncate text-sm font-bold text-ink">{weekly.name}</p>
+            <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-ink/[0.06]">
+              <div className="h-full rounded-full bg-violet-500 transition-all motion-safe:duration-700" style={{ width: `${weeklyPartPct}%` }} role="progressbar" aria-valuenow={weekly.parts_collected} aria-valuemin={0} aria-valuemax={weekly.parts_total} />
+            </div>
+            <p className="mt-1 text-[10px] font-semibold tabular-nums text-ink/45">{weekly.parts_collected}/{weekly.parts_total} · {weeklyPartPct}%</p>
+          </div>
+        </div>
+      )}
+      {overview.rarity?.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5 border-t border-ink/[0.06] px-5 py-3 sm:px-6">
+          <span className="mr-1 text-[10px] font-bold uppercase tracking-wide text-ink/40">{t('collectionLegendLabel')}</span>
+          {overview.rarity.map((r) => (
+            <RarityChip key={r.key} label={r.label} color={r.color} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PremiumCatalogue() {
+  const { t } = useTranslation('game');
+  const [data, setData] = React.useState(null);
+  const [busyKey, setBusyKey] = React.useState(null);
+  const [actionError, setActionError] = React.useState(null);
+  const [info, setInfo] = React.useState(null);
+
+  const load = React.useCallback(() => {
+    getPremiumPetsProgress().then(setData).catch(() => {});
+  }, []);
+
+  React.useEffect(() => { load(); }, [load]);
+
+  if (!data?.pets?.length) return null;
+
+  const ownedCount = data.pets.filter((p) => p.owned).length;
+  const groups = [];
+  for (const p of data.pets) {
+    const g = groups.find((x) => x.rank === p.rarity_rank);
+    if (g) g.pets.push(p);
+    else groups.push({ rank: p.rarity_rank, label: p.rarity_label, color: p.rarity_color, pets: [p] });
+  }
+
+  const handleUnlock = async (pet) => {
+    setBusyKey(pet.key);
+    setActionError(null);
+    setInfo(null);
+    try {
+      const res = await unlockPremiumPet(pet.key);
+      if (res?.unlocked) setInfo(t('premiumJustUnlocked', { name: pet.name }));
+      else if (res?.already_owned) setInfo(t('premiumAlreadyOwned'));
+      setData(await getPremiumPetsProgress());
+    } catch (err) {
+      setActionError(String(err.message || err));
+    } finally {
+      setBusyKey(null);
+    }
+  };
+
+  return (
+    <div className="mb-4 rounded-2xl border border-ink/[0.06] bg-white p-4 shadow-card sm:p-5">
+      <div className="flex items-baseline justify-between gap-3">
+        <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-violet-700">{t('premiumCatalogueTitle')}</p>
+        <span className="shrink-0 rounded-full bg-violet-50 px-2.5 py-1 text-[10px] font-bold tabular-nums text-violet-700 ring-1 ring-violet-100">
+          {t('collectionOwnedCount', { owned: ownedCount, total: data.pets.length })}
+        </span>
+      </div>
+      <p className="mt-1 text-[11px] leading-snug text-ink/50">{t('premiumCatalogueSubtitle')}</p>
+
+      {info && (
+        <div className="mt-3 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-[12px] font-bold text-emerald-700">
+          <CheckCircle2 size={14} className="shrink-0" /> {info}
+        </div>
+      )}
+      {actionError && (
+        <div className="mt-3 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-left">
+          <AlertCircle size={14} className="mt-0.5 shrink-0 text-red-500" />
+          <p className="flex-1 text-[12px] font-medium leading-snug text-red-700">{actionError}</p>
+        </div>
+      )}
+
+      {groups.map((g) => (
+        <div key={g.rank} className="mt-4">
+          <div className="mb-2 flex items-center gap-2">
+            <RarityChip label={g.label} color={g.color} />
+            <span className="text-[10px] font-bold tabular-nums text-ink/40">{g.pets.filter((p) => p.owned).length}/{g.pets.length}</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5">
+            {g.pets.map((p) => {
+              const isBusy = busyKey === p.key;
+              const reasons = p.points_needed > 0 ? t('premiumPointsGate', { count: p.points_needed }) : t('premiumRequirements', { level: p.min_academic_level, xp: p.min_xp, lessons: p.min_lessons, hw: p.min_valid_homework });
+              return (
+                <div key={p.key} className={`flex flex-col rounded-2xl border p-3 text-center transition-all ${p.owned ? 'border-emerald-100 bg-white shadow-sm' : p.can_unlock ? 'border-violet-200 bg-violet-50/60' : 'border-ink/[0.06] bg-white opacity-[0.85]'}`}>
+                  <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full text-[20px] leading-none ring-1 ring-ink/[0.05] bg-white">{p.icon}</div>
+                  <p className="mt-2 line-clamp-1 text-[12px] font-bold text-ink">{p.name}</p>
+                  <div className="mt-1 flex justify-center"><RarityChip label={p.rarity_label} color={p.rarity_color} /></div>
+                  <div className="mt-2 flex-1" />
+                  {p.owned ? (
+                    <p className="inline-flex items-center justify-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-extrabold text-emerald-700 ring-1 ring-emerald-200">
+                      <CheckCircle2 size={11} /> {t('premiumOwned')}
+                    </p>
+                  ) : p.can_unlock ? (
+                    <button
+                      type="button"
+                      onClick={() => handleUnlock(p)}
+                      disabled={isBusy}
+                      className="inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-violet-600 px-3 py-1.5 text-[10px] font-extrabold text-white shadow-sm transition-all hover:bg-violet-700 active:scale-[0.98] disabled:opacity-70"
+                    >
+                      {isBusy ? (
+                        <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-white/25 border-t-white" aria-hidden />
+                      ) : (
+                        <Sparkles size={11} />
+                      )}
+                      {t('premiumUnlockAction', { points: p.points_required })}
+                    </button>
+                  ) : (
+                    <>
+                      <p className="inline-flex items-center justify-center gap-1 rounded-full bg-ink/[0.05] px-2 py-1 text-[10px] font-extrabold text-ink/45">
+                        <Lock size={10} /> {t('premiumLocked')}
+                      </p>
+                      <p className="mt-1 text-[9.5px] leading-snug text-ink/45">{reasons}</p>
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function PremiumGrid({ owl }) {
   const { t } = useTranslation('game');
@@ -27,7 +213,7 @@ function PremiumGrid({ owl }) {
             <div className="mt-1 text-xs font-bold text-ink">{p.name}</div>
             <div className={`mt-0.5 text-[10px] ${p.unlocked ? 'text-emerald-600 font-bold' : 'text-ink/40'}`}>{p.unlocked ? (active===p.key?t('premiumActive'):t('premiumUnlocked')) : t('premiumThreshold', { threshold: p.threshold })}</div>
             {!p.unlocked && <div className="text-[10px] text-violet-600">{t('owlPointsToGo', { count: p.points_needed })}</div>}
-            <div className={`mt-1 inline-block rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase ${p.rarity==='legendary'?'bg-amber-100 text-amber-700':p.rarity==='epic'?'bg-violet-100 text-violet-700':p.rarity==='rare'?'bg-sky-100 text-sky-700':'bg-ink/5 text-ink/50'}`}>{p.rarity}</div>
+            <div className="mt-1 flex justify-center"><RarityChip label={p.rarity_label} color={p.rarity_color} /></div>
           </button>
         ))}
       </div>
@@ -128,6 +314,7 @@ export default function PetCollection() {
   const [checkinStatus, setCheckinStatus] = useState(null);
   const [petProgress, setPetProgress] = useState(null);
   const [owl, setOwl] = useState(null);
+  const [overview, setOverview] = useState(null);
   const [loading, setLoading] = useState(true);
   const [claiming, setClaiming] = useState(false);
   const [claimedPart, setClaimedPart] = useState(null);
@@ -139,16 +326,18 @@ export default function PetCollection() {
     setLoading(true);
     setError(null);
     try {
-      const [pet, status, prog, owlData] = await Promise.all([
+      const [pet, status, prog, owlData, ovData] = await Promise.all([
         getActivePetWithParts(),
         getPetCheckinStatus(),
         getMyPetProgress().catch(() => null),
         getOwlProgress().catch(() => null),
+        getPetCollectionOverview().catch(() => null),
       ]);
       setPetData(pet);
       setCheckinStatus(status);
       setPetProgress(prog);
       setOwl(owlData);
+      setOverview(ovData);
     } catch (err) {
       const msg = String(err.message || err);
       if (/already claimed/i.test(msg)) setError(t('petAlreadyClaimed'));
@@ -172,14 +361,16 @@ export default function PetCollection() {
       const part = result?.part ?? null;
       setClaimedPart(part);
       setCelebrateKey((k) => k + 1);
-      const [pet, status, prog] = await Promise.all([
+      const [pet, status, prog, ovData] = await Promise.all([
         getActivePetWithParts(),
         getPetCheckinStatus(),
         getMyPetProgress().catch(() => null),
+        getPetCollectionOverview().catch(() => null),
       ]);
       setPetData(pet);
       setCheckinStatus(status);
       setPetProgress(prog);
+      setOverview(ovData);
     } catch (err) {
       const msg = String(err.message || err);
       if (/already claimed/i.test(msg)) setError(t('petAlreadyClaimed'));
@@ -252,6 +443,12 @@ export default function PetCollection() {
       >
         <ArrowLeft size={14} /> {t('backToPortal')}
       </Link>
+
+      {/* Collection overview — data-driven from get_pet_collection_overview */}
+      <CollectionOverview overview={overview} />
+
+      {/* Premium Catalogue — 25 data-driven pets from premium_pet_definitions */}
+      <PremiumCatalogue />
 
       {/* OWL COLLECTION — 500 Points, auto-unlocked by legitimate Points */}
       {owl && (
@@ -338,7 +535,10 @@ export default function PetCollection() {
             <span className={claimedPart ? 'inline-block' : undefined}>{pet.icon}</span>
           </div>
           <div className="min-w-0 flex-1">
-            <h1 className="font-display text-[22px] font-extrabold leading-tight text-white sm:text-[26px]">{pet.name}</h1>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="font-display text-[22px] font-extrabold leading-tight text-white sm:text-[26px]">{pet.name}</h1>
+              <RarityChip label={pet.rarity_label} color={pet.rarity_color} />
+            </div>
             <p className="mt-1 max-w-[36ch] text-[13px] font-medium leading-snug text-white/80">
               {completed ? t('petCompleteSubtitle', { name: pet.name }) : t('petPreviewSubtitle')}
             </p>
