@@ -176,7 +176,7 @@ export default function GameCenter() {
       // A student who has never played a game simply has no row yet -
       // an empty/failed fetch just means no level chip, not an error state.
     });
-    getMyGamePoints(me.id).then((rows) => {
+    getMyGamePoints().then((rows) => {
       if (cancelled) return;
       setGamePoints(Object.fromEntries(rows.map((r) => [r.game_type, r.total_points])));
     }).catch(() => {
