@@ -212,8 +212,11 @@ revoke execute on function get_premium_pets_progress() from public;
 grant execute on function get_premium_pets_progress() to authenticated;
 
 -- ========== 8. get_active_pet_with_parts: include rarity presentation ==========
+-- NOTE: must stay VOLATILE — the body performs an auto-grant INSERT (on conflict
+-- do nothing). Postgres rejects DML inside a STABLE function (0A000), which broke
+-- Pets in production with a generic RPC error. Original 0205 default was VOLATILE.
 create or replace function public.get_active_pet_with_parts()
-returns jsonb language plpgsql stable security definer set search_path=public as $$
+returns jsonb language plpgsql volatile security definer set search_path=public as $$
 declare
   v_student_id bigint;
   v_pet_id bigint;
