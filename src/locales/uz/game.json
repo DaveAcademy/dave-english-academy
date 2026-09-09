@@ -111,6 +111,7 @@
   "petParts": "Tana qismlari",
   "petCollected": "Yig'ildi",
   "petClaimNow": "Hozir olish",
+  "petAvailable": "Mavjud",
   "petLocked": "Qulflangan",
   "petUnlocksDate": "{{date}} da ochiladi",
   "petNoPartsUnlocked": "Hali mavjud emas. 8-sentabrga qarang!",

@@ -111,6 +111,7 @@
   "petParts": "Body Parts",
   "petCollected": "Collected",
   "petClaimNow": "Claim now",
+  "petAvailable": "Available",
   "petLocked": "Locked",
   "petUnlocksDate": "Unlocks {{date}}",
   "petNoPartsUnlocked": "No parts available yet. Come back on Sep 8!",

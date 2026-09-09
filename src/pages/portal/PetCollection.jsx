@@ -761,8 +761,8 @@ export default function PetCollection() {
                   {t('petCollected')}
                 </p>
               ) : isClaimable ? (
-                <p className="mt-1 inline-flex items-center justify-center gap-1 rounded-full bg-brand-600 px-2.5 py-1 text-[10px] font-extrabold tracking-wide text-white shadow-sm">
-                  <Gift size={10} /> {t('petClaimNow')}
+                <p className={`mt-1 inline-flex items-center justify-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-extrabold tracking-wide ${canClaim ? 'bg-brand-600 text-white shadow-sm' : 'bg-brand-50 text-brand-700 ring-1 ring-brand-100'}`}>
+                  {canClaim ? <Gift size={10} /> : <Clock size={10} />} {canClaim ? t('petClaimNow') : t('petAvailable')}
                 </p>
               ) : (
                 <p className="mt-1 inline-flex items-center justify-center gap-1 text-[10px] font-semibold text-ink/35">
