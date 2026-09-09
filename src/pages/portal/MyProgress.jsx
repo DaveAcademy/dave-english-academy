@@ -51,7 +51,7 @@ const GAME_META = [
   { key: 'word_scramble', i18nKey: 'game:wordScrambleTitle', icon: '🔤', to: '/word-scramble' },
   { key: 'speed_challenge', i18nKey: 'game:speedChallengeTitle', icon: '⚡', to: '/speed-challenge' },
   { key: 'sentence_scramble', i18nKey: 'game:sentenceScrambleTitle', icon: '📝', to: '/sentence-scramble' },
-  { key: 'word_detective', i18nKey: 'game:wordDetectiveTitle', icon: '🔍', to: '/word-detective' },
+  { key: 'picture_word', i18nKey: 'game:pictureWordTitle', icon: '✍️', to: '/picture-word' },
   { key: 'grammar_battle', i18nKey: 'game:grammarBattleTitle', icon: '⚔️', to: '/grammar-battle' },
 ];
 

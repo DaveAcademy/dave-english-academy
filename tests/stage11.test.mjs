@@ -1,7 +1,7 @@
 // Stage 11: 10-game QA — 100 runs each = 1000 simulations
 import assert from 'assert';
 
-const GAMES = ['picture_quiz','vocabulary_quiz','word_match','hangman','word_builder','word_scramble','speed_challenge','sentence_scramble','word_detective','grammar_battle'];
+const GAMES = ['picture_quiz','vocabulary_quiz','word_match','hangman','word_builder','word_scramble','speed_challenge','sentence_scramble','picture_word','grammar_battle'];
 
 // Mock vocabulary pool size: assume 200 words per level, 5 levels => 1000 pool
 function simulateDiversity(gameIdx, runs=100) {

@@ -32,6 +32,7 @@ const GAME_LABELS = {
   word_detective: 'Word Detective',
   grammar_battle: 'Grammar Battle',
   picture_quiz: 'Picture Quiz',
+  picture_word: 'Picture Word',
 };
 const gameLabel = (key) => GAME_LABELS[key] ?? key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 

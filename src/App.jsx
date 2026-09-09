@@ -56,7 +56,7 @@ const WordMatch = lazy(() => import('./features/games/pages/WordMatch'));
 const WordScramble = lazy(() => import('./features/games/pages/WordScramble'));
 const SentenceScramble = lazy(() => import('./features/games/pages/SentenceScramble'));
 const WordBuilder = lazy(() => import('./features/games/pages/WordBuilder'));
-const WordDetective = lazy(() => import('./features/games/pages/WordDetective'));
+const PictureWord = lazy(() => import('./features/games/pages/PictureWord'));
 const GrammarBattle = lazy(() => import('./features/games/pages/GrammarBattle'));
 const PictureQuiz = lazy(() => import('./features/games/pages/PictureQuiz'));
 const SpeedChallenge = lazy(() => import('./features/games/pages/SpeedChallenge'));
@@ -164,9 +164,9 @@ function RoutedContent({ isStudent }) {
             <Route path="/sentence-scramble" element={<SentenceScramble />} />
             <Route path="/listening-challenge" element={<ListeningChallenge />} />
             <Route path="/hangman" element={<Hangman />} />
-            <Route path="/word-detective" element={<WordDetective />} />
             <Route path="/grammar-battle" element={<GrammarBattle />} />
             <Route path="/picture-quiz" element={<PictureQuiz />} />
+            <Route path="/picture-word" element={<PictureWord />} />
             <Route path="/pet-collection" element={<PetCollection />} />
             <Route path="/my-certificates" element={<MyCertificates />} />
             <Route path="/my-ranking" element={<MyRanking />} />
