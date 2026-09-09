@@ -9,7 +9,7 @@ const EMPTY_FORM = {
   real_name: '',
   english_name: '',
   level: 'A',
-  group_name: '',
+  group_id: '',
   phone: '',
   parent_phone: '',
   telegram_chat_id: '',
@@ -20,12 +20,14 @@ const EMPTY_FORM = {
   notes: '',
 };
 
-export default function StudentForm({ student, onClose, onSave }) {
+export default function StudentForm({ student, onClose, onSave, groups = [] }) {
   const { t } = useTranslation(['students', 'common']);
   const [form, setForm] = useState(EMPTY_FORM);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const isEditing = Boolean(student);
+
+  const activeGroups = groups.filter((g) => g.active).sort((a, b) => a.name.localeCompare(b.name));
 
   useEffect(() => {
     setForm(
@@ -34,7 +36,7 @@ export default function StudentForm({ student, onClose, onSave }) {
             real_name: student.real_name || '',
             english_name: student.english_name || '',
             level: student.level || 'A',
-            group_name: student.group_name || '',
+            group_id: student.group_id || '',
             phone: student.phone || '',
             parent_phone: student.parent_phone || '',
             telegram_chat_id: student.telegram_chat_id || '',
@@ -64,7 +66,7 @@ export default function StudentForm({ student, onClose, onSave }) {
     setError('');
     setSaving(true);
     try {
-      await onSave({ ...form, payment_deadline: deadline, monthly_fee: fee, telegram_chat_id: form.telegram_chat_id.trim() || null });
+      await onSave({ ...form, group_id: form.group_id || null, payment_deadline: deadline, monthly_fee: fee, telegram_chat_id: form.telegram_chat_id.trim() || null });
     } catch (err) {
       setError(err.message || t('genericError'));
     } finally {
@@ -104,12 +106,14 @@ export default function StudentForm({ student, onClose, onSave }) {
               </Field>
 
               <Field label={t('groupOptionalLabel')}>
-                <input
-                  value={form.group_name}
-                  onChange={(e) => update({ group_name: e.target.value })}
-                  className="input"
-                  placeholder={t('groupPlaceholder')}
-                />
+                <select value={form.group_id} onChange={(e) => update({ group_id: e.target.value })} className="input">
+                  <option value="">{t('groupNone')}</option>
+                  {activeGroups.map((g) => (
+                    <option key={g.id} value={g.id}>
+                      {g.name}
+                    </option>
+                  ))}
+                </select>
               </Field>
 
               <Field label={t('statusLabel')}>

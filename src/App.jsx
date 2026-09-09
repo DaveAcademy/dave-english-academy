@@ -18,6 +18,7 @@ import { syncLanguageForRole } from './i18n';
 // large dependency) that most sessions never touch.
 const Dashboard = lazy(() => import('./features/dashboard/pages/Dashboard'));
 const Students = lazy(() => import('./features/students/pages/Students'));
+const GroupsManagement = lazy(() => import('./features/students/pages/GroupsManagement'));
 const Payments = lazy(() => import('./features/payments/pages/Payments'));
 // Reminders temporarily hidden (2026-08-19) - route disabled, feature kept intact.
 // const Reminders = lazy(() => import('./pages/Reminders'));
@@ -177,6 +178,7 @@ function RoutedContent({ isStudent }) {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/students" element={<Students />} />
+            <Route path="/groups" element={<GroupsManagement />} />
             <Route path="/payments" element={<Payments />} />
             {/* <Route path="/reminders" element={<Reminders />} /> */}
             <Route path="/attendance" element={<Attendance />} />

@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import {
   LayoutDashboard,
   Users,
+  UsersRound,
   Wallet,
   CalendarCheck,
   Trophy,
@@ -38,6 +39,7 @@ import { useAcademy } from '../../lib/AcademyDataContext';
 const NAV_ITEMS = [
   { to: '/', label: 'home', shortLabel: 'homeShort', Icon: LayoutDashboard, end: true },
   { to: '/students', label: 'students', shortLabel: 'studentsShort', Icon: Users, section: 'manage' },
+  { to: '/groups', label: 'groups', shortLabel: 'groupsShort', Icon: UsersRound, adminOnly: true, section: 'manage' },
   { to: '/payments', label: 'payments', shortLabel: 'paymentsShort', Icon: Wallet, adminOnly: true, section: 'manage' },
   // Reminders temporarily hidden from nav (2026-08-19) - feature kept intact,
   // but not currently exposed in navigation. /reminders route is disabled.

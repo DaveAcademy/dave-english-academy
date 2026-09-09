@@ -34,6 +34,7 @@
   "levelLabel": "Daraja",
   "groupOptionalLabel": "Guruh (ixtiyoriy)",
   "groupPlaceholder": "masalan, Ertalabki A1",
+  "groupNone": "Guruh yo'q",
   "statusLabel": "Holat",
   "phoneLabel": "Telefon raqami",
   "parentPhoneLabel": "Ota-ona telefoni (ixtiyoriy)",

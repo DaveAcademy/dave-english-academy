@@ -23,7 +23,7 @@ function formatDateTime(iso) {
 
 export default function Students() {
   const { t } = useTranslation(['students', 'common']);
-  const { students, attendance, exams, examScores, homeworkStatus, lessons, curriculumProgress, loading, error, addStudent, editStudent, removeStudent, importStudents } = useAcademy();
+  const { students, groups, attendance, exams, examScores, homeworkStatus, lessons, curriculumProgress, loading, error, addStudent, editStudent, removeStudent, importStudents } = useAcademy();
   const { role } = useAuth();
   const isAdmin = role === 'administrator';
 
@@ -56,10 +56,7 @@ export default function Students() {
   const [achievementsStudent, setAchievementsStudent] = useState(null);
   const [importOpen, setImportOpen] = useState(false);
 
-  const groups = useMemo(() => {
-    const set = new Set(students.map((s) => s.group_name?.trim()).filter(Boolean));
-    return Array.from(set).sort();
-  }, [students]);
+  const activeGroups = useMemo(() => groups.filter((g) => g.active).sort((a, b) => a.name.localeCompare(b.name)), [groups]);
 
   const visible = useMemo(() => {
     let list = [...students];
@@ -75,7 +72,7 @@ export default function Students() {
     }
     if (filters.level) list = list.filter((s) => s.level === filters.level);
     if (filters.status) list = list.filter((s) => s.status === filters.status);
-    if (filters.group) list = list.filter((s) => (s.group_name || '') === filters.group);
+    if (filters.group) list = list.filter((s) => String(s.group_id) === filters.group);
     if (filters.websiteStatus) list = list.filter((s) => engagementById[s.id]?.websiteStatus === filters.websiteStatus);
 
     const ENGAGEMENT_KEYS = { websiteStatus: 'websiteStatus', lastLogin: 'lastSignInAt', lastWebsiteActivity: 'lastWebsiteActivity', lessonsCompleted: 'lessonsCompleted', lessonsAvailable: 'lessonsAvailable', currentLesson: 'currentLessonNumber' };
@@ -178,12 +175,12 @@ export default function Students() {
           <option value="Active">{t('common:active')}</option>
           <option value="Inactive">{t('common:inactive')}</option>
         </select>
-        {groups.length > 0 && (
+        {activeGroups.length > 0 && (
           <select value={filters.group} onChange={(e) => setFilters({ ...filters, group: e.target.value })} className="input sm:w-40">
             <option value="">{t('allGroups')}</option>
-            {groups.map((g) => (
-              <option key={g} value={g}>
-                {g}
+            {activeGroups.map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.name}
               </option>
             ))}
           </select>
@@ -233,12 +230,13 @@ export default function Students() {
                 <tbody>
                   {visible.map((s) => {
                     const eng = engagementById[s.id];
+                    const group = groups.find((g) => g.id === s.group_id);
                     return (
                     <tr key={s.id} className="border-b border-ink/5 last:border-0 hover:bg-ink/[0.015]">
                       <td className="px-4 py-3 font-medium text-ink">{s.real_name}</td>
                       <td className="px-4 py-3 text-ink/70">{s.english_name || '—'}</td>
                       <td className="px-4 py-3"><LevelBadge level={s.level} /></td>
-                      <td className="px-4 py-3 text-ink/70">{s.group_name || '—'}</td>
+                      <td className="px-4 py-3 text-ink/70">{group?.name || '—'}</td>
                       <td className="px-4 py-3 text-ink/70">{s.phone || '—'}</td>
                       <td className="px-4 py-3 text-ink/70">{t('dayNumber', { day: s.payment_deadline })}</td>
                       <td className="px-4 py-3 text-ink/70">{formatUZS(s.monthly_fee)}</td>
@@ -297,6 +295,7 @@ export default function Students() {
           <div className="space-y-2 md:hidden">
             {visible.map((s) => {
               const eng = engagementById[s.id];
+              const group = groups.find((g) => g.id === s.group_id);
               return (
               <div key={s.id} className="rounded-xl bg-white p-3 shadow-card">
                 <div className="flex items-start justify-between">
@@ -327,7 +326,7 @@ export default function Students() {
                 <div className="mt-2 flex flex-wrap items-center gap-1.5">
                   <LevelBadge level={s.level} />
                   <StatusBadge status={s.status} />
-                  {s.group_name && <span className="text-xs text-ink/40">{s.group_name}</span>}
+                  {group?.name && <span className="text-xs text-ink/40">{group.name}</span>}
                   <span className="text-xs text-ink/40">{t('paysDay', { day: s.payment_deadline })}</span>
                   {s.telegram_chat_id ? (
                     <span className="inline-flex items-center gap-1 text-xs font-semibold text-active">
@@ -359,6 +358,7 @@ export default function Students() {
       {formOpen && (
         <StudentForm
           student={editingStudent}
+          groups={groups}
           onClose={() => {
             setFormOpen(false);
             setEditingStudent(null);

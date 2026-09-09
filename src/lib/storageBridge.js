@@ -1927,3 +1927,29 @@ export async function unlockPremiumPet(petKey) {
   if (error) throw error;
   return data;
 }
+
+// ---------- Groups ----------
+
+export async function listGroups() {
+  const { data, error } = await supabase.from('groups').select('*').order('name');
+  if (error) throw error;
+  return data;
+}
+
+export async function createGroup(data) {
+  const { data: record, error } = await supabase.from('groups').insert(data).select().single();
+  if (error) throw error;
+  return record;
+}
+
+export async function updateGroup(id, data) {
+  const { data: rows, error } = await supabase.from('groups').update(data).eq('id', id).select();
+  if (error) throw error;
+  return assertRows(rows, 'edit this group')[0];
+}
+
+export async function deleteGroup(id) {
+  const { error } = await supabase.from('groups').delete().eq('id', id);
+  if (error) throw error;
+  return true;
+}

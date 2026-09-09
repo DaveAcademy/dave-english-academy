@@ -99,6 +99,7 @@ export function useAcademyData() {
   const [messageReads, setMessageReads] = useState([]);
   const [messageAttachments, setMessageAttachments] = useState([]);
   const [files, setFiles] = useState([]);
+  const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [lessonProgress, setLessonProgressState] = useState([]);
@@ -166,7 +167,7 @@ export function useAcademyData() {
   useEffect(() => {
     (async () => {
       try {
-        const [tmpl, msg, reads, atts, fls, hsf, cl, cp] = await Promise.all([
+        const [tmpl, msg, reads, atts, fls, hsf, cl, cp, gr] = await Promise.all([
           db.listCertificateTemplates(),
           db.listMessages(),
           db.listMessageReads(),
@@ -175,6 +176,7 @@ export function useAcademyData() {
           db.listHomeworkSubmissionFiles(),
           db.listCurriculumLessons(),
           db.listCurriculumProgress(),
+          db.listGroups(),
         ]);
         setCertificateTemplates(tmpl);
         setMessages(msg);
@@ -184,6 +186,7 @@ export function useAcademyData() {
         setHomeworkSubmissionFilesState(hsf);
         setCurriculumLessons(cl);
         setCurriculumProgress(cp);
+        setGroups(gr);
       } catch (e) {
         // Messaging/certificate-template/file-library are additive
         // features - leave them at their empty defaults rather than
@@ -797,6 +800,38 @@ export function useAcademyData() {
     }
   }, []);
 
+  const addGroup = useCallback(async (data) => {
+    try {
+      const record = await db.createGroup(data);
+      setGroups((prev) => [...prev, record].sort((a, b) => a.name.localeCompare(b.name)));
+      return record;
+    } catch (e) {
+      setError('Could not create group. Please try again.');
+      throw e;
+    }
+  }, []);
+
+  const editGroup = useCallback(async (id, data) => {
+    try {
+      const record = await db.updateGroup(id, data);
+      setGroups((prev) => prev.map((g) => (g.id === id ? record : g)).sort((a, b) => a.name.localeCompare(b.name)));
+      return record;
+    } catch (e) {
+      setError('Could not update group. Please try again.');
+      throw e;
+    }
+  }, []);
+
+  const removeGroup = useCallback(async (id) => {
+    try {
+      await db.deleteGroup(id);
+      setGroups((prev) => prev.filter((g) => g.id !== id));
+    } catch (e) {
+      setError('Could not delete group. Please try again.');
+      throw e;
+    }
+  }, []);
+
   const addMessage = useCallback(async (data) => {
     try {
       const record = await db.sendMessage(data);
@@ -924,6 +959,7 @@ export function useAcademyData() {
     messageReads,
     messageAttachments,
     files,
+    groups,
     loading,
     error,
     setError,
@@ -966,6 +1002,9 @@ export function useAcademyData() {
     addFile,
     editFile,
     removeFile,
+    addGroup,
+    editGroup,
+    removeGroup,
     reloadAll,
   };
 }
