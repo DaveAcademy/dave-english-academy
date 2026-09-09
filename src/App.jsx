@@ -1,9 +1,10 @@
 // App.jsx
 
-import { lazy, Suspense, useEffect } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Sidebar, BottomNav } from './shared/components/Nav';
+import { Menu } from 'lucide-react';
+import { Sidebar, AdminMobileDrawer } from './shared/components/Nav';
 import { PortalSidebar, PortalBottomNav } from './shared/components/PortalNav';
 import { AcademyDataProvider, useAcademy } from './lib/AcademyDataContext';
 import { AuthProvider, useAuth } from './lib/AuthContext';
@@ -93,6 +94,7 @@ export default function App() {
 function AppShell() {
   const { session, role } = useAuth();
   const isStudent = role === 'student';
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   // AuthGate only renders AppShell once the profile (and therefore role)
   // has resolved, so this is the first point role is definitively known -
@@ -106,12 +108,16 @@ function AppShell() {
       <div className="flex min-h-screen bg-paper">
         {isStudent ? <PortalSidebar /> : <Sidebar />}
         <div className="flex-1">
-          <MobileHeader />
+          <MobileHeader isStudent={isStudent} onMenu={() => setMobileNavOpen(true)} />
           <main className="mx-auto max-w-6xl px-4 pb-24 pt-4 sm:px-6 sm:pt-6 md:pb-8">
             <RoutedContent isStudent={isStudent} />
           </main>
         </div>
-        {isStudent ? <PortalBottomNav /> : <BottomNav />}
+        {isStudent ? (
+          <PortalBottomNav />
+        ) : (
+          <AdminMobileDrawer open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
+        )}
       </div>
     </AcademyDataProvider>
   );
@@ -216,9 +222,19 @@ function PageLoading() {
   return <div className="p-10 text-center text-sm text-ink/40">{t('loading')}</div>;
 }
 
-function MobileHeader() {
+function MobileHeader({ isStudent, onMenu }) {
   return (
-    <header className="sticky top-0 z-10 flex items-center gap-2 bg-brand-700 px-4 py-3 text-white shadow-md md:hidden">
+    <header className="sticky top-0 z-30 flex items-center gap-2 bg-brand-700 px-3 py-3 text-white shadow-md md:hidden">
+      {!isStudent && (
+        <button
+          type="button"
+          onClick={onMenu}
+          className="-ml-1 rounded-lg p-1.5 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+          aria-label="Open navigation menu"
+        >
+          <Menu size={20} />
+        </button>
+      )}
       <img src="/icons/icon-192.png" alt="" className="h-6 w-6 flex-shrink-0 rounded object-contain" />
       <p className="text-sm font-semibold leading-tight">Dave Academy</p>
     </header>

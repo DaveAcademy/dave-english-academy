@@ -1,1 +1,1 @@
-export { Sidebar, BottomNav } from '../shared/components/Nav';
+export { Sidebar, AdminMobileDrawer } from '../shared/components/Nav';

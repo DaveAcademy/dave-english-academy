@@ -51,5 +51,11 @@
   "myLessonsFull": "Darslar",
   "myHomeworkFull": "Mening uy vazifam",
   "ranking": "Reyting",
-  "studentPortal": "O'quvchi portali"
+  "studentPortal": "O'quvchi portali",
+  "sectionManage": "Boshqaruv",
+  "sectionTeaching": "O'qitish",
+  "sectionResults": "Natijalar",
+  "sectionTools": "Vositalar",
+  "navMenu": "Navigatsiya",
+  "closeMenu": "Navigatsiyani yopish"
 }

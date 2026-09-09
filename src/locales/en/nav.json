@@ -51,5 +51,11 @@
   "myLessonsFull": "Lessons",
   "myHomeworkFull": "My Homework",
   "ranking": "Ranking",
-  "studentPortal": "Student portal"
+  "studentPortal": "Student portal",
+  "sectionManage": "Manage",
+  "sectionTeaching": "Teaching",
+  "sectionResults": "Results",
+  "sectionTools": "Tools",
+  "navMenu": "Navigation",
+  "closeMenu": "Close navigation"
 }
