@@ -18,9 +18,7 @@ import {
   FileCheck2,
   BookOpen,
   Award,
-  BarChart3,
   MessageSquare,
-  FolderOpen,
   Medal,
   Languages,
   BellRing,
@@ -59,11 +57,15 @@ const NAV_ITEMS = [
   { to: '/rankings', label: 'rankings', shortLabel: 'rankingsShort', Icon: Trophy, section: 'results' },
   { to: '/recognition', label: 'recognition', shortLabel: 'recognitionShort', Icon: Medal, adminOnly: true, section: 'results' },
   { to: '/game-results', label: 'gameResults', shortLabel: 'gameResultsShort', Icon: Gamepad2, section: 'results' },
-  { to: '/reports', label: 'reports', shortLabel: 'reportsShort', Icon: BarChart3, adminOnly: true, section: 'results' },
+  // Reports temporarily hidden from nav (2026-08-21) - feature kept intact,
+  // just not exposed. Uncomment to re-enable admin navigation.
+  // { to: '/reports', label: 'reports', shortLabel: 'reportsShort', Icon: BarChart3, adminOnly: true, section: 'results' },
   { to: '/dictionary-admin', label: 'dictionaryAdmin', shortLabel: 'dictionaryAdminShort', Icon: BookMarked, section: 'tools' },
   { to: '/ai-assistant', label: 'aiAssistant', shortLabel: 'aiAssistantShort', Icon: Sparkles, section: 'tools' },
   { to: '/chat', label: 'messages', shortLabel: 'messagesShort', Icon: MessageSquare, section: 'tools' },
-  { to: '/files', label: 'files', shortLabel: 'filesShort', Icon: FolderOpen, adminOnly: true, section: 'tools' },
+  // Files temporarily hidden from nav (2026-08-21) - feature kept intact,
+  // just not exposed. Uncomment to re-enable admin navigation.
+  // { to: '/files', label: 'files', shortLabel: 'filesShort', Icon: FolderOpen, adminOnly: true, section: 'tools' },
   { to: '/settings', label: 'settings', shortLabel: 'settingsShort', Icon: Settings },
 ];
 
