@@ -117,7 +117,7 @@ begin
   if v_hw < v_def.min_valid_homework then raise exception 'Insufficient validated homework' using errcode='42501'; end if;
   -- Deduct Points atomically via point_transactions (is_reversal false, category premium_pet)
   insert into point_transactions (student_id, level, category_key, points, reason, awarded_by, is_reversal, reversed_transaction_id)
-  values (v_sid, v_level, 'premium_pet', -v_def.points_required, 'Premium pet: '||v_def.name, v_sid, false, null);
+  values (v_sid, v_level, 'premium_pet', -v_def.points_required, 'Premium pet: '||v_def.name, auth.uid(), false, null);
   insert into premium_pet_ownership (student_id, pet_key, points_spent) values (v_sid, p_pet_key, v_def.points_required);
   return jsonb_build_object('unlocked',p_pet_key,'points_spent',v_def.points_required);
 end $$;

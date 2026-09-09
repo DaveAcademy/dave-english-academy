@@ -154,6 +154,7 @@
   "collectionOwnedCount": "{{owned}} of {{total}}",
   "premiumCatalogueTitle": "Premium Catalogue",
   "premiumCatalogueSubtitle": "Unlock pets permanently with Points, XP and academic progress. Every pet you unlock stays in your collection forever.",
+  "premiumBalance": "{{points}} Points available",
   "premiumOwned": "Owned",
   "premiumLocked": "Locked",
   "premiumUnlockAction": "Unlock · {{points}} Pts",

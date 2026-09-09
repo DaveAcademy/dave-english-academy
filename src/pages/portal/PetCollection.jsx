@@ -124,11 +124,16 @@ function PremiumCatalogue() {
 
   return (
     <div className="mb-4 rounded-2xl border border-ink/[0.06] bg-white p-4 shadow-card sm:p-5">
-      <div className="flex items-baseline justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-violet-700">{t('premiumCatalogueTitle')}</p>
-        <span className="shrink-0 rounded-full bg-violet-50 px-2.5 py-1 text-[10px] font-bold tabular-nums text-violet-700 ring-1 ring-violet-100">
-          {t('collectionOwnedCount', { owned: ownedCount, total: data.pets.length })}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="shrink-0 rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-bold tabular-nums text-amber-700 ring-1 ring-amber-100">
+            {t('premiumBalance', { points: data.points })}
+          </span>
+          <span className="shrink-0 rounded-full bg-violet-50 px-2.5 py-1 text-[10px] font-bold tabular-nums text-violet-700 ring-1 ring-violet-100">
+            {t('collectionOwnedCount', { owned: ownedCount, total: data.pets.length })}
+          </span>
+        </div>
       </div>
       <p className="mt-1 text-[11px] leading-snug text-ink/50">{t('premiumCatalogueSubtitle')}</p>
 
