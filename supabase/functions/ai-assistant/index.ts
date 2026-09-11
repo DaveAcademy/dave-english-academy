@@ -1,6 +1,12 @@
 // AI Assistant — student English tutor + admin read-only diagnostics.
 // Phase 1: strictly read-only. No tool here ever inserts/updates/deletes.
 //
+// LANGUAGE: the authoritative Uzbek-by-default policy lives in language.ts
+// (same folder). index.ts only asks it for the finished system prompt and a
+// per-response language directive; it never re-declares language behaviour.
+// Uzbek is the default answer language for students AND staff (switchable by
+// an explicit request), prompt-injection overrides are refused server-side.
+//
 // Auth pattern copied from admin-create-user/index.ts: a Supabase client
 // scoped to the caller's own JWT (anon key + Authorization header, never
 // the service role key) is used for EVERYTHING — the role lookup and every
@@ -16,6 +22,8 @@
 // (OPENAI_API_KEY) — never in a VITE_* var, never sent to the browser.
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { buildLanguageDirective, buildSystemPrompt } from "./language.ts";
+import type { ChatMessage } from "./language.ts";
 
 const ALLOWED_ORIGINS = [
   "https://dave-english-academy.vercel.app",
@@ -46,47 +54,6 @@ function json(body: unknown, status: number, origin: string | null): Response {
     status,
     headers: { ...corsHeaders(origin), "Content-Type": "application/json" },
   });
-}
-
-// ---------- Compact, static system prompt (see file header: no per-request
-// curriculum/database dump — only this + the small dynamic block appended
-// in buildSystemPrompt() below ever goes in). ----------
-
-const LEVEL_RULES: Record<string, string> = {
-  A: "Use very simple English, short sentences, concrete everyday examples.",
-  A1: "Use beginner-friendly English; you may add short Uzbek clarifications when it genuinely helps understanding.",
-  B: "Use moderately detailed explanations with natural, everyday examples.",
-  C: "Use natural, nuanced English with more advanced vocabulary and explanation.",
-};
-
-const STUDENT_BASE_PROMPT = `You are the Dave English Academy AI Assistant, helping one logged-in student learn English.
-You can: explain grammar, explain vocabulary, give translations and example sentences, explain mistakes, generate short practice exercises, give vocabulary/grammar quizzes, and practice simple conversations.
-Adapt your language to the student's level (given below).
-You have read-only tools to look up this student's own profile, current lesson, lesson progress, homework, vocabulary, and ranking. Use a tool when the question needs real academy data instead of guessing.
-Never invent lesson content, scores, homework, or ranking numbers — if a tool fails or returns nothing, say plainly that you could not verify it.
-You cannot change points, rankings, homework status, or any other record — if asked, explain that you can only explain/help, not modify anything.
-
-RESPONSE STYLE — BE CONCISE:
-- Default to 1-4 sentences, max ~80 words.
-- Answer directly. Keep it short. Do not repeat the question. No unnecessary introductions or conclusions. No essays. Only the useful information. Use short bullets when appropriate.
-- Vocabulary: give meaning + one short example.
-- Grammar: give rule + one short example.
-- Correction: give corrected version + brief reason.
-- Only give a long/detailed explanation if the student explicitly asks for "detailed" or "explain more".`;
-
-const ADMIN_BASE_PROMPT = `You are the Dave English Academy AI Assistant in admin/teacher diagnostic mode.
-You help staff investigate rankings, points, attendance, payments, and lesson data using real database reads.
-You are strictly READ-ONLY: you cannot and must not modify points, rankings, payments, attendance, or any student record — if asked to change something, explain that you can only investigate and explain, and that changes must be made in the app by a human.
-Use your tools to look up real data before answering factual questions — never invent numbers, dates, or student details. If a tool fails or returns nothing, say so plainly instead of guessing.
-Keep answers concise and focused on what was asked.`;
-
-function buildSystemPrompt(mode: "student" | "admin", ctx: Record<string, unknown>): string {
-  if (mode === "student") {
-    const level = String(ctx.level ?? "");
-    const rule = LEVEL_RULES[level] ?? "";
-    return `${STUDENT_BASE_PROMPT}\n\nStudent: ${ctx.name ?? "Student"}\nLevel: ${level}\n${rule}`;
-  }
-  return `${ADMIN_BASE_PROMPT}\n\nStaff member: ${ctx.name ?? ""} (role: ${ctx.role ?? ""})`;
 }
 
 // ---------- Tool schemas (OpenAI function-calling format) ----------
@@ -480,8 +447,6 @@ const MAX_MESSAGE_CHARS = 4000;
 const MAX_TOOL_ITERATIONS = 4;
 const OPENAI_MODEL = Deno.env.get("OPENAI_MODEL") || "gpt-4o-mini";
 
-type ChatMessage = { role: "user" | "assistant"; content: string };
-
 function sanitizeHistory(messages: unknown): ChatMessage[] | null {
   if (!Array.isArray(messages)) return null;
   const trimmed = messages.slice(-MAX_HISTORY_MESSAGES);
@@ -569,7 +534,10 @@ Deno.serve(async (req: Request) => {
   const toolCtx: ToolCtx = { db, studentRowId };
 
   const openaiMessages: any[] = [
-    { role: "system", content: buildSystemPrompt(mode, promptCtx) },
+    {
+      role: "system",
+      content: buildSystemPrompt(mode, promptCtx) + buildLanguageDirective(history),
+    },
     ...history,
   ];
 
@@ -585,7 +553,9 @@ Deno.serve(async (req: Request) => {
           model: OPENAI_MODEL,
           messages: openaiMessages,
           tools,
-          max_tokens: 220,
+          // 400 leaves room for Uzbek answers (more tokens per sentence than
+          // English); the concise style rule in the prompt still applies.
+          max_tokens: 400,
           temperature: 0.4,
         }),
       });

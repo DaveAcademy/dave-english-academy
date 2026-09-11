@@ -12,10 +12,10 @@ import { useAuth } from '../lib/AuthContext';
 import { sendAiAssistantMessage } from '../lib/aiAssistant';
 
 const STUDENT_QUICK_PROMPTS = [
-  { key: 'aiAssistantQuickGrammar', Icon: BookOpen, prompt: "Explain a grammar point I'm struggling with." },
-  { key: 'aiAssistantQuickVocabulary', Icon: Languages, prompt: 'Teach me 5 new vocabulary words for my level.' },
-  { key: 'aiAssistantQuickQuiz', Icon: HelpCircle, prompt: 'Give me a short quiz to practice.' },
-  { key: 'aiAssistantQuickLesson', Icon: GraduationCap, prompt: 'What is my current lesson about?' },
+  { key: 'aiAssistantQuickGrammar', promptKey: 'aiAssistantQuickGrammarPrompt', Icon: BookOpen },
+  { key: 'aiAssistantQuickVocabulary', promptKey: 'aiAssistantQuickVocabularyPrompt', Icon: Languages },
+  { key: 'aiAssistantQuickQuiz', promptKey: 'aiAssistantQuickQuizPrompt', Icon: HelpCircle },
+  { key: 'aiAssistantQuickLesson', promptKey: 'aiAssistantQuickLessonPrompt', Icon: GraduationCap },
 ];
 
 const ADMIN_QUICK_PROMPTS = [
@@ -95,10 +95,10 @@ export default function AiAssistant() {
             <p className="mt-1 text-sm text-ink/50">{isStudent ? t('aiAssistantSubtitle') : 'Ask about a student by name to start investigating.'}</p>
             <div className="mt-4 flex flex-wrap gap-2">
               {isStudent
-                ? STUDENT_QUICK_PROMPTS.map(({ key, Icon, prompt }) => (
+                ? STUDENT_QUICK_PROMPTS.map(({ key, promptKey, Icon }) => (
                     <button
                       key={key}
-                      onClick={() => send(prompt)}
+                      onClick={() => send(t(promptKey))}
                       className="flex items-center gap-1.5 rounded-xl border border-ink/[0.08] bg-white px-3 py-2 text-xs font-semibold text-ink transition-colors hover:border-brand-400 hover:bg-brand-50 hover:text-brand-600"
                     >
                       <Icon size={14} className="text-brand-500" /> {t(key)}
