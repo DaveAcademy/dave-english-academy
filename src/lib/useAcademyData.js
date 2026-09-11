@@ -598,12 +598,67 @@ export function useAcademyData() {
     }
   }, []);
 
-  const setHomeworkStatusForStudent = useCallback(async (homeworkId, studentId, status, score, feedback) => {
+  const setHomeworkStatusForStudent = useCallback(async (homeworkId, studentId, status, score, feedback, submissionQuality) => {
     try {
-      const updated = await db.setHomeworkStatus(homeworkId, studentId, status, score, feedback);
+      const updated = await db.setHomeworkStatus(homeworkId, studentId, status, score, feedback, submissionQuality);
       setHomeworkStatusState(updated);
     } catch (e) {
       setError('Could not update homework status. Please try again.');
+      throw e;
+    }
+  }, []);
+
+  const awardHomeworkPointsForStudent = useCallback(async (homeworkId, studentId, points, reason, awardedBy) => {
+    try {
+      const result = await db.awardHomeworkPoints(homeworkId, studentId, points, reason, awardedBy);
+      setHomeworkStatusState((prev) =>
+        prev.map((s) =>
+          s.homework_id === homeworkId && s.student_id === studentId
+            ? { ...s, points_awarded: points }
+            : s
+        )
+      );
+      return result;
+    } catch (e) {
+      setError('Could not award points. Please try again.');
+      throw e;
+    }
+  }, []);
+
+  const setHomeworkStatusBulkForStudent = useCallback(async (homeworkId, updates) => {
+    try {
+      const result = await db.setHomeworkStatusBulk(homeworkId, updates);
+      setHomeworkStatusState((prev) => {
+        const next = [...prev];
+        for (const sid of result.success) {
+          const idx = next.findIndex((s) => s.homework_id === homeworkId && s.student_id === sid);
+          if (idx >= 0) {
+            const update = updates.find((u) => u.studentId === sid);
+            next[idx] = { ...next[idx], ...update };
+          }
+        }
+        return next;
+      });
+      return result;
+    } catch (e) {
+      setError('Bulk operation failed. Some changes may not have been applied.');
+      throw e;
+    }
+  }, []);
+
+  const awardHomeworkPointsBulkForStudent = useCallback(async (homeworkId, studentIds, points, reason, awardedBy) => {
+    try {
+      const result = await db.awardHomeworkPointsBulk(homeworkId, studentIds, points, reason, awardedBy);
+      setHomeworkStatusState((prev) =>
+        prev.map((s) => {
+          const awarded = result.success.find((r) => r.studentId === s.student_id);
+          if (awarded) return { ...s, points_awarded: points };
+          return s;
+        })
+      );
+      return result;
+    } catch (e) {
+      setError('Bulk point awarding failed. Some students may not have received points.');
       throw e;
     }
   }, []);
@@ -986,6 +1041,9 @@ export function useAcademyData() {
     editHomework,
     removeHomework,
     setHomeworkStatusForStudent,
+    awardHomeworkPointsForStudent,
+    setHomeworkStatusBulkForStudent,
+    awardHomeworkPointsBulkForStudent,
     submitMyHomeworkFiles,
     removeMyHomeworkSubmissionFile,
     addCertificate,
