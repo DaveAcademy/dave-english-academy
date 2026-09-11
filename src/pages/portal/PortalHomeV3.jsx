@@ -21,7 +21,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowRight, CalendarClock, MessageSquare, BookOpen, FileCheck2, CreditCard, Flame, GraduationCap, Trophy, Target, Layers, Languages, Sparkles, Award } from 'lucide-react';
+import { ArrowRight, CalendarClock, MessageSquare, BookOpen, FileCheck2, CreditCard, Flame, GraduationCap, Trophy, Target, Layers, Languages, Sparkles, Award, Shirt } from 'lucide-react';
+import AvatarDisplay from '../../features/avatar/components/AvatarDisplay';
 import {
   LESSON_STATUS, teacherPaceFor, lessonCapFor, progressByLessonNumber, lessonStatusFor, nextUnfinishedLesson, translatedLessonTitle,
 } from '../../lib/lessonLogic';
@@ -133,6 +134,7 @@ export default function PortalHomeV3() {
   const [learningStreak, setLearningStreak] = useState(null);
   const [achievements, setAchievements] = useState(null);
   const [petProgress, setPetProgress] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
   const { celebrateLevel: xpLevelUp, dismiss: dismissXpLevelUp } = useLevelUpCelebration(me?.id, xpProgress?.level);
   const { current, previous } = useMemo(() => currentAndPreviousMonth(), []);
 
@@ -159,6 +161,9 @@ export default function PortalHomeV3() {
     // Achievements — separate import to avoid bundling cost on hot path
     import('../../lib/storageBridge').then(({ getStudentAchievements }) =>
       getStudentAchievements(me.id).then((a) => !cancelled && setAchievements(Array.isArray(a) ? a.slice(0, 3) : [])).catch(() => {})
+    );
+    import('../../lib/storageBridge').then(({ getMyAvatar }) =>
+      getMyAvatar().then((a) => !cancelled && setAvatarPreview(a)).catch(() => {})
     );
     return () => { cancelled = true; };
   }, [me]);
@@ -544,6 +549,19 @@ export default function PortalHomeV3() {
           </Link>
         );
       })()}
+
+      {/* ── Avatar teaser (supplementary, fail-silent) ── */}
+      {avatarPreview && (
+        <Link to="/avatar" className="mb-6 flex items-center gap-4 rounded-2xl border border-ink/[0.06] bg-white p-4 shadow-card transition-colors hover:border-brand-200 hover:shadow-md sm:p-5">
+          <AvatarDisplay config={avatarPreview.avatar?.config} cosmetics={avatarPreview.cosmetics} size={72} compact />
+          <div className="min-w-0 flex-1">
+            <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-brand-600"><Shirt size={12} /> {t('portal:avatarDashboardTitle')}</p>
+            <p className="mt-0.5 text-sm font-semibold text-ink">{t('portal:avatarDashboardHint', { count: avatarPreview.owned?.length ?? 0 })}</p>
+            <p className="mt-0.5 text-xs text-ink/50">{Object.keys(avatarPreview.avatar?.config || {}).filter((k) => avatarPreview.avatar.config[k]).length} {t('portal:avatarEquippedCount')} · {avatarPreview.cosmetics?.length ?? 0} cosmetics</p>
+          </div>
+          <span className="shrink-0 text-xs font-bold text-brand-600">{t('portal:avatarOpenStudio')}</span>
+        </Link>
+      )}
 
       {/* ── Daily missions + Streak + Pet + Achievements strip (supplementary, fail-silent) ── */}
       {(dailyMissions !== null || learningStreak !== null || petProgress || (achievements && achievements.length > 0)) && (

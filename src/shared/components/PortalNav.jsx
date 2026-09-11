@@ -7,7 +7,7 @@
 import * as React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { LayoutDashboard, TrendingUp, FileCheck2, BookOpen, Library, Award, Trophy, Settings, MessageSquare, Languages, Gamepad2, Sparkles, PawPrint } from 'lucide-react';
+import { LayoutDashboard, TrendingUp, FileCheck2, BookOpen, Library, Award, Trophy, Settings, MessageSquare, Languages, Gamepad2, Sparkles, PawPrint, Shirt } from 'lucide-react';
 import { useAuth } from '../../lib/AuthContext';
 import { useAcademy } from '../../lib/AcademyDataContext';
 
@@ -32,6 +32,7 @@ const PORTAL_NAV_ITEMS = [
   { to: '/my-exams', label: 'myExamsFull', shortLabel: 'examsShort', Icon: FileCheck2, lessonsGroup: true },
   { to: '/dictionary', label: 'dictionary', shortLabel: 'dictionaryShort', Icon: Languages },
   { to: '/games', label: 'gameCenterFull', shortLabel: 'gameCenterShort', Icon: Gamepad2 },
+  { to: '/avatar', label: 'avatar', shortLabel: 'avatarShort', Icon: Shirt },
   { to: '/pet-collection', label: 'petCollection', shortLabel: 'petCollectionShort', Icon: PawPrint },
   { to: '/my-certificates', label: 'certificates', shortLabel: 'certificatesShort', Icon: Award },
   { to: '/my-ranking', label: 'ranking', shortLabel: 'rankingsShort', Icon: Trophy },

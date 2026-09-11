@@ -1959,6 +1959,23 @@ export async function updateGroup(id, data) {
   return assertRows(rows, 'edit this group')[0];
 }
 
+// ---------- Avatar (production: avatar_cosmetics / student_avatars / student_avatar_ownership) ----------
+export async function getMyAvatar() {
+  const { data, error } = await supabase.rpc('get_my_avatar');
+  if (error) throw error;
+  return data;
+}
+export async function saveMyAvatar(config) {
+  const { data, error } = await supabase.rpc('save_my_avatar', { p_config: config });
+  if (error) throw error;
+  return data;
+}
+export async function purchaseAvatarCosmetic(cosmeticKey) {
+  const { data, error } = await supabase.rpc('purchase_avatar_cosmetic', { p_cosmetic_key: cosmeticKey });
+  if (error) throw error;
+  return data;
+}
+
 export async function deleteGroup(id) {
   const { error } = await supabase.from('groups').delete().eq('id', id);
   if (error) throw error;

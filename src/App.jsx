@@ -49,6 +49,7 @@ const Dictionary = lazy(() => import('./features/dictionary/pages/Dictionary'));
 const MyRanking = lazy(() => import('./features/rankings/pages/MyRanking'));
 const MyCertificates = lazy(() => import('./features/certificates/pages/MyCertificates'));
 const PetCollection = lazy(() => import('./pages/portal/PetCollection'));
+const AvatarStudio = lazy(() => import('./pages/portal/AvatarStudio'));
 const GameCenter = lazy(() => import('./features/games/pages/GameCenter'));
 const Hangman = lazy(() => import('./features/games/pages/Hangman'));
 const VocabularyQuiz = lazy(() => import('./features/games/pages/VocabularyQuiz'));
@@ -167,6 +168,7 @@ function RoutedContent({ isStudent }) {
             <Route path="/grammar-battle" element={<GrammarBattle />} />
             <Route path="/picture-quiz" element={<PictureQuiz />} />
             <Route path="/picture-word" element={<PictureWord />} />
+            <Route path="/avatar" element={<AvatarStudio />} />
             <Route path="/pet-collection" element={<PetCollection />} />
             <Route path="/my-certificates" element={<MyCertificates />} />
             <Route path="/my-ranking" element={<MyRanking />} />
