@@ -478,23 +478,18 @@ export async function recordPayment({
   referenceNumber = null,
   notes = null,
 }) {
-  const { data, error } = await supabase
-    .from('payment_transactions')
-    .insert({
-      student_id: studentId,
-      amount,
-      transaction_type: transactionType,
-      payment_method: paymentMethod,
-      covers_period_start: coversPeriodStart,
-      covers_period_end: coversPeriodEnd,
-      paid_at: paidAt || new Date().toISOString(),
-      reference_number: referenceNumber,
-      notes,
-      created_by: createdBy,
-      source: 'manual',
-    })
-    .select()
-    .single();
+  const { data, error } = await supabase.rpc('record_student_payment', {
+    p_student_id: studentId,
+    p_amount: amount,
+    p_transaction_type: transactionType,
+    p_payment_method: paymentMethod,
+    p_paid_at: paidAt ? new Date(paidAt).toISOString() : null,
+    p_created_by: createdBy,
+    p_covers_period_start: coversPeriodStart,
+    p_covers_period_end: coversPeriodEnd,
+    p_reference_number: referenceNumber,
+    p_notes: notes,
+  });
   if (error) throw error;
   return data;
 }
