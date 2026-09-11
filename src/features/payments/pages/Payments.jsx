@@ -1,16 +1,18 @@
 // Payments.jsx
-
 import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, ShieldAlert, X, History, MessageSquare } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { Search, ShieldAlert, X, History, MessageSquare, Download } from 'lucide-react';
 import { useAcademy } from '../../../lib/AcademyDataContext';
 import { useAuth } from '../../../lib/AuthContext';
 import { LevelBadge } from '../../../components/Badge';
 import { LEVELS } from '../../../lib/levels';
 import { formatUZS } from '../../../utils/format';
 import { formatDateOnly, todayISO } from '../../../utils/date';
+import { DUE_SOON_DAYS, TIMELINE_INITIAL_LIMIT } from '../config';
 import {
   getStudentPaymentStatus,
+  getAdminBatchPaymentStatus,
   getPaymentTimeline,
   recordPayment,
   createCorrection,
@@ -21,24 +23,6 @@ import {
 
 const CORRECTION_REASONS = ['Duplicate payment', 'Wrong amount entered', 'Wrong student', 'Other'];
 
-// "14 October 2026", not "2026-10-14" - see utils/date.js's formatDateOnly
-// for why this goes through the ISO string's own components rather than
-// `new Date(iso)`. This page is English-only (no useTranslation here),
-// hence no locale argument.
-const formatDueDate = (iso) => formatDateOnly(iso);
-
-const TRANSACTION_TYPE_LABELS = {
-  first_partial: 'First payment',
-  monthly: 'Monthly payment',
-  advance: 'Advance payment',
-  extra: 'Extra payment',
-  correction: 'Correction',
-};
-
-const DUE_SOON_DAYS = 5;
-
-// Whole calendar days from today to an ISO "YYYY-MM-DD" date, via Date.UTC
-// on both sides so it's not sensitive to the browser's local timezone.
 function daysFromToday(iso) {
   const [y, m, d] = iso.split('-').map(Number);
   const target = Date.UTC(y, m - 1, d);
@@ -47,117 +31,114 @@ function daysFromToday(iso) {
   return Math.round((target - today) / 86400000);
 }
 
-// One classification, used for both the row/modal label AND the status
-// filter buttons - they used to read two different signals (this function
-// vs. matchesStatusFilter checking raw st.status) and could disagree,
-// which is exactly how "Due soon shows nothing" and "paid_through_date in
-// the past still reads green" both slipped through: a student could be in
-// a state neither concept flagged. See migration 0068's follow-up for
-// why paid_through_date/current_period_end/next_due_date are three
-// separate facts to begin with.
-//
-// kind is the bucket (drives both filtering and tone); deadlineLine/
-// statusLine are the two-line display described there.
-function classifyPayment(st, monthlyFee) {
-  if (!st) return { kind: 'loading', deadlineLine: null, statusLine: 'Loading…', tone: 'neutral' };
-  const deadlineLine = st.current_period_end ? `Deadline: ${formatDueDate(st.current_period_end)}` : null;
+function nextBillingDateJS(fromISO, billingDay) {
+  const [y, m] = fromISO.split('-').map(Number);
+  const daysThisMonth = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  const candDay = Math.min(Number(billingDay) || 1, daysThisMonth);
+  const cand = `${y}-${String(m).padStart(2, '0')}-${String(candDay).padStart(2, '0')}`;
+  if (cand > fromISO) return cand;
+  let ny = y, nm = m + 1;
+  if (nm > 12) { ny += 1; nm = 1; }
+  const daysNext = new Date(Date.UTC(ny, nm, 0)).getUTCDate();
+  const nd = Math.min(Number(billingDay) || 1, daysNext);
+  return `${ny}-${String(nm).padStart(2, '0')}-${String(nd).padStart(2, '0')}`;
+}
 
+function classifyPayment(st, monthlyFee, t, locale) {
+  const fmt = (iso) => formatDateOnly(iso, locale);
+  if (!st) return { kind: 'loading', deadlineLine: null, statusLine: t('payments:statusLoading'), tone: 'neutral' };
+  const deadlineLine = st.current_period_end ? t('payments:deadlinePrefix', { date: fmt(st.current_period_end) }) : null;
   if (st.status === 'overdue') {
-    return { kind: 'overdue', deadlineLine, statusLine: `Overdue since ${formatDueDate(st.next_due_date)} — ${formatUZS(st.outstanding)} unpaid`, tone: 'bad' };
+    return { kind: 'overdue', deadlineLine, statusLine: t('payments:statusOverdue', { date: fmt(st.next_due_date), amount: formatUZS(st.outstanding) }), tone: 'bad' };
   }
   if (Number(st.paid_to_date) === 0) {
-    return { kind: 'no_payment', deadlineLine, statusLine: `No payment recorded yet — ${formatUZS(st.next_amount_due ?? monthlyFee)} due`, tone: 'info' };
+    return { kind: 'no_payment', deadlineLine, statusLine: t('payments:statusNoPayment', { amount: formatUZS(st.next_amount_due ?? monthlyFee) }), tone: 'info' };
   }
   if (!st.paid_through_date) {
     const remaining = st.next_amount_due != null ? Math.max(0, Number(st.next_amount_due) - Number(st.paid_to_date)) : null;
-    const remainingText = remaining != null ? ` — ${formatUZS(remaining)} remaining` : '';
-    return { kind: 'partial', deadlineLine, statusLine: `Partial payment received — ${formatUZS(st.paid_to_date)}${remainingText}`, tone: 'info' };
+    const remainingText = remaining != null ? t('payments:statusPartialRemaining', { amount: formatUZS(remaining) }) : '';
+    return { kind: 'partial', deadlineLine, statusLine: t('payments:statusPartial', { amount: formatUZS(st.paid_to_date), remaining: remainingText }), tone: 'info' };
   }
   if (st.status === 'due_soon' || daysFromToday(st.paid_through_date) <= DUE_SOON_DAYS) {
-    return { kind: 'due_soon', deadlineLine, statusLine: `Paid until ${formatDueDate(st.paid_through_date)} — payment due soon`, tone: 'warn' };
+    return { kind: 'due_soon', deadlineLine, statusLine: t('payments:statusDueSoon', { date: fmt(st.paid_through_date) }), tone: 'warn' };
   }
-  return { kind: 'paid', deadlineLine, statusLine: `Paid until ${formatDueDate(st.paid_through_date)}`, tone: 'good' };
+  return { kind: 'paid', deadlineLine, statusLine: t('payments:statusPaid', { date: fmt(st.paid_through_date) }), tone: 'good' };
 }
 
 const STATUS_DOT = { good: 'bg-active', warn: 'bg-amber-500', bad: 'bg-inactive', info: 'bg-levelA', neutral: 'bg-ink/20' };
 const STATUS_TEXT = { good: 'text-active', warn: 'text-amber-700', bad: 'text-inactive', info: 'text-levelA', neutral: 'text-ink/40' };
 
-const STATUS_FILTERS = [
-  { key: 'all', label: 'All students' },
-  { key: 'paid', label: 'Paid' },
-  { key: 'due_soon', label: 'Due soon' },
-  { key: 'overdue', label: 'Overdue' },
-  { key: 'no_payment', label: 'No payment recorded' },
-];
-
-// Filters against classifyPayment's kind - the exact same classification
-// the row/modal render, so a student can never appear in a filter bucket
-// that disagrees with what their own row says.
-function matchesStatusFilter(st, filterKey, monthlyFee) {
-  if (filterKey === 'all') return true;
-  if (!st) return false;
-  return classifyPayment(st, monthlyFee).kind === filterKey;
-}
-
-const SORT_OPTIONS = [
-  { key: 'next_due', label: 'Next payment date' },
-  { key: 'outstanding', label: 'Outstanding amount' },
-  { key: 'name', label: 'Student name' },
-  { key: 'level', label: 'Level' },
-];
-
-function sortByKey(list, statuses, sortKey) {
-  const withStatus = [...list];
-  if (sortKey === 'next_due') {
-    withStatus.sort((a, b) => {
-      const da = statuses[a.id]?.next_due_date;
-      const db = statuses[b.id]?.next_due_date;
-      if (!da && !db) return a.real_name.localeCompare(b.real_name);
-      if (!da) return 1;
-      if (!db) return -1;
-      return da.localeCompare(db) || a.real_name.localeCompare(b.real_name);
-    });
-  } else if (sortKey === 'outstanding') {
-    withStatus.sort((a, b) => Number(statuses[b.id]?.outstanding || 0) - Number(statuses[a.id]?.outstanding || 0) || a.real_name.localeCompare(b.real_name));
-  } else if (sortKey === 'level') {
-    withStatus.sort((a, b) => a.level.localeCompare(b.level) || a.real_name.localeCompare(b.real_name));
-  } else {
-    withStatus.sort((a, b) => a.real_name.localeCompare(b.real_name));
-  }
-  return withStatus;
-}
-
 export default function Payments() {
+  const { t, i18n } = useTranslation(['payments', 'common']);
+  const locale = i18n.language === 'uz' ? 'uz' : 'en-US';
+  const formatDueDate = (iso) => formatDateOnly(iso, locale);
   const { students, error } = useAcademy();
   const { role, session } = useAuth();
   const isAdmin = role === 'administrator';
 
   const [search, setSearch] = useState('');
   const [level, setLevel] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all'); // STATUS_FILTERS key
-  const [sortKey, setSortKey] = useState('name'); // SORT_OPTIONS key
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [sortKey, setSortKey] = useState('name');
 
   const activeStudents = useMemo(
     () => [...students].filter((s) => s.status === 'Active').sort((a, b) => a.real_name.localeCompare(b.real_name)),
     [students]
   );
 
-  const [newStatuses, setNewStatuses] = useState({}); // student id -> get_student_payment_status() row
-  const [modalStudent, setModalStudent] = useState(null); // the one student whose record-payment/history modal is open
-  const [modalMode, setModalMode] = useState('record'); // 'record' shows the form by default; 'view' (opened via the Timeline quick action) starts collapsed to just the summary + timeline
-  const [timelines, setTimelines] = useState({}); // student id -> payment_transactions rows
+  const [newStatuses, setNewStatuses] = useState({});
+  const [modalStudent, setModalStudent] = useState(null);
+  const [modalMode, setModalMode] = useState('record');
+  const [timelines, setTimelines] = useState({});
+  const [timelineLoading, setTimelineLoading] = useState({});
+  const [timelineExpanded, setTimelineExpanded] = useState({});
   const [recordForm, setRecordForm] = useState({ amount: '', transactionType: 'monthly', paymentMethod: '', paidAt: todayISO() });
   const [recordError, setRecordError] = useState('');
   const [recording, setRecording] = useState(false);
-  const [recordSuccess, setRecordSuccess] = useState(null); // { nextDueDate } - shown until the modal closes or another save starts
-  const [adminNames, setAdminNames] = useState({}); // profile id -> full_name, for "Admin who created it"
-  const [correctionTx, setCorrectionTx] = useState(null); // the transaction being corrected, or null when the correction modal is closed
+  const [recordSuccess, setRecordSuccess] = useState(null);
+  const [adminNames, setAdminNames] = useState({});
+  const [correctionTx, setCorrectionTx] = useState(null);
   const [correctionAmount, setCorrectionAmount] = useState('');
   const [correctionReason, setCorrectionReason] = useState(CORRECTION_REASONS[0]);
   const [correctionNotes, setCorrectionNotes] = useState('');
   const [correctionConfirming, setCorrectionConfirming] = useState(false);
   const [correctionError, setCorrectionError] = useState('');
   const [correctionSaving, setCorrectionSaving] = useState(false);
+  const [feeConfirming, setFeeConfirming] = useState(false);
+  const [advanceConfirming, setAdvanceConfirming] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState('');
+  const [selectedIds, setSelectedIds] = useState(() => new Set());
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkForm, setBulkForm] = useState({ amount: '', transactionType: 'monthly', paymentMethod: '', paidAt: todayISO() });
+  const [bulkFeeConfirming, setBulkFeeConfirming] = useState(false);
+  const [bulkAdvanceConfirming, setBulkAdvanceConfirming] = useState(false);
+  const [bulkError, setBulkError] = useState('');
+  const [bulkRecording, setBulkRecording] = useState(false);
+  const [bulkResults, setBulkResults] = useState(null);
+
+  const STATUS_FILTERS = useMemo(() => [
+    { key: 'all', label: t('payments:filterAll') },
+    { key: 'paid', label: t('payments:filterPaid') },
+    { key: 'due_soon', label: t('payments:filterDueSoon') },
+    { key: 'overdue', label: t('payments:filterOverdue') },
+    { key: 'no_payment', label: t('payments:filterNoPayment') },
+  ], [t]);
+
+  const SORT_OPTIONS = useMemo(() => [
+    { key: 'next_due', label: t('payments:sortNextDue') },
+    { key: 'outstanding', label: t('payments:sortOutstanding') },
+    { key: 'name', label: t('payments:sortName') },
+    { key: 'level', label: t('payments:sortLevel') },
+  ], [t]);
+
+  const TRANSACTION_TYPE_LABELS = useMemo(() => ({
+    first_partial: t('payments:first_partial', { defaultValue: 'First payment' }),
+    monthly: t('payments:monthly', { defaultValue: 'Monthly payment' }),
+    advance: t('payments:advance', { defaultValue: 'Advance payment' }),
+    extra: t('payments:extra', { defaultValue: 'Extra payment' }),
+    correction: t('payments:correction', { defaultValue: 'Correction' }),
+  }), [t]);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -182,21 +163,21 @@ export default function Payments() {
   async function submitCorrection() {
     const amount = Number(correctionAmount);
     if (!amount || amount >= 0) {
-      setCorrectionError('Correction amount must be negative.');
+      setCorrectionError(t('payments:correctionAmountNegative'));
       return;
     }
     if (Math.abs(amount) > correctionTx.amount && !correctionConfirming) {
-      setCorrectionError('Correction is larger than the original payment. Click "Create Correction" again to confirm.');
+      setCorrectionError(t('payments:correctionLargerConfirm'));
       setCorrectionConfirming(true);
       return;
     }
     if (!correctionReason) {
-      setCorrectionError('Reason is required.');
+      setCorrectionError(t('payments:correctionReasonRequired'));
       return;
     }
     const reasonText = correctionReason === 'Other' ? correctionNotes.trim() : [correctionReason, correctionNotes.trim()].filter(Boolean).join(': ');
     if (!reasonText) {
-      setCorrectionError('Notes are required.');
+      setCorrectionError(t('payments:correctionNotesRequired'));
       return;
     }
     setCorrectionSaving(true);
@@ -221,23 +202,30 @@ export default function Payments() {
     }
   }
 
-  // One RPC call per active student. Fine at today's roster size; if the
-  // academy grows into the hundreds this should become a single batched
-  // RPC instead (get_student_payment_status already has the per-student
-  // logic - a set-returning variant over an array of ids is the natural
-  // next step, not a rewrite).
   useEffect(() => {
     if (!isAdmin || activeStudents.length === 0) return;
     let cancelled = false;
-    Promise.all(
-      activeStudents.map((s) =>
-        getStudentPaymentStatus(s.id)
-          .then((st) => [s.id, st])
-          .catch(() => [s.id, null])
-      )
-    ).then((pairs) => {
-      if (!cancelled) setNewStatuses(Object.fromEntries(pairs));
-    });
+    const ids = activeStudents.map((s) => s.id);
+    const byId = Object.fromEntries(activeStudents.map((s) => [s.id, s]));
+    getAdminBatchPaymentStatus(ids)
+      .then((rows) => {
+        if (cancelled) return;
+        const mapped = {};
+        for (const r of rows) {
+          const s = byId[r.student_id];
+          mapped[r.student_id] = {
+            ...r,
+            paid_through_date: r.paid_through_date ?? s?.paid_through_date ?? null,
+            next_amount_due: r.next_amount_due ?? s?.monthly_fee ?? null,
+            monthly_fee: r.monthly_fee ?? s?.monthly_fee ?? null,
+          };
+        }
+        for (const id of ids) if (!(id in mapped)) mapped[id] = null;
+        setNewStatuses(mapped);
+      })
+      .catch(() => {
+        if (!cancelled) setNewStatuses({});
+      });
     return () => {
       cancelled = true;
     };
@@ -253,15 +241,47 @@ export default function Payments() {
     return list;
   }, [activeStudents, search, level]);
 
+  function matchesStatusFilter(st, filterKey, monthlyFee) {
+    if (filterKey === 'all') return true;
+    if (!st) return false;
+    return classifyPayment(st, monthlyFee, t, locale).kind === filterKey;
+  }
+
   const displayStudents = useMemo(() => {
     const byStatus = filteredStudents.filter((s) => matchesStatusFilter(newStatuses[s.id], statusFilter, s.monthly_fee));
     return sortByKey(byStatus, newStatuses, sortKey);
-  }, [filteredStudents, newStatuses, statusFilter, sortKey]);
+  }, [filteredStudents, newStatuses, statusFilter, sortKey, t, locale]);
 
-  // Amount pre-fills with what's actually owed (outstanding), falling back
-  // to the student's plain monthly fee when nothing is outstanding yet -
-  // covers the everyday "collecting this month's fee" case without the
-  // admin having to type a number that's already known.
+  const summaryCounts = useMemo(() => {
+    const c = { paid: 0, due_soon: 0, overdue: 0, no_payment: 0 };
+    for (const s of filteredStudents) {
+      const k = classifyPayment(newStatuses[s.id], s.monthly_fee, t, locale).kind;
+      if (k in c) c[k] += 1;
+    }
+    return c;
+  }, [filteredStudents, newStatuses, t, locale]);
+
+  function sortByKey(list, statuses, sortKey) {
+    const withStatus = [...list];
+    if (sortKey === 'next_due') {
+      withStatus.sort((a, b) => {
+        const da = statuses[a.id]?.next_due_date;
+        const db = statuses[b.id]?.next_due_date;
+        if (!da && !db) return a.real_name.localeCompare(b.real_name);
+        if (!da) return 1;
+        if (!db) return -1;
+        return da.localeCompare(db) || a.real_name.localeCompare(b.real_name);
+      });
+    } else if (sortKey === 'outstanding') {
+      withStatus.sort((a, b) => Number(statuses[b.id]?.outstanding || 0) - Number(statuses[a.id]?.outstanding || 0) || a.real_name.localeCompare(b.real_name));
+    } else if (sortKey === 'level') {
+      withStatus.sort((a, b) => a.level.localeCompare(b.level) || a.real_name.localeCompare(b.real_name));
+    } else {
+      withStatus.sort((a, b) => a.real_name.localeCompare(b.real_name));
+    }
+    return withStatus;
+  }
+
   async function openModal(s, mode = 'record') {
     const st = newStatuses[s.id];
     const prefill = st && Number(st.outstanding) > 0 ? st.outstanding : s.monthly_fee || '';
@@ -270,12 +290,17 @@ export default function Payments() {
     setRecordForm({ amount: prefill ? String(prefill) : '', transactionType: 'monthly', paymentMethod: '', paidAt: todayISO() });
     setRecordError('');
     setRecordSuccess(null);
-    if (!timelines[s.id]) {
+    setFeeConfirming(false);
+    setAdvanceConfirming(false);
+    if (timelines[s.id] === undefined && !timelineLoading[s.id]) {
+      setTimelineLoading((prev) => ({ ...prev, [s.id]: true }));
       try {
         const tl = await getPaymentTimeline(s.id);
         setTimelines((prev) => ({ ...prev, [s.id]: tl }));
       } catch (e) {
         setRecordError(e.message || String(e));
+      } finally {
+        setTimelineLoading((prev) => ({ ...prev, [s.id]: false }));
       }
     }
   }
@@ -283,13 +308,168 @@ export default function Payments() {
   function closeModal() {
     setModalStudent(null);
     setRecordSuccess(null);
+    setFeeConfirming(false);
+    setAdvanceConfirming(false);
+  }
+
+  function toggleSelect(id) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    const ids = displayStudents.map((s) => s.id);
+    const allSelected = ids.length > 0 && ids.every((id) => selectedIds.has(id));
+    if (allSelected) {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        ids.forEach((id) => next.delete(id));
+        return next;
+      });
+    } else {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        ids.forEach((id) => next.add(id));
+        return next;
+      });
+    }
+  }
+
+  function clearSelection() {
+    setSelectedIds(new Set());
+  }
+
+  function openBulkModal() {
+    if (selectedIds.size === 0) {
+      setBulkError(t('payments:bulkNoSelection'));
+      setBulkOpen(true);
+      return;
+    }
+    const selected = activeStudents.filter((s) => selectedIds.has(s.id));
+    const fees = [...new Set(selected.map((s) => s.monthly_fee))];
+    if (fees.length > 1) {
+      setBulkError(t('payments:bulkIncompatibleFees', { fees: fees.map((f) => formatUZS(f)).join(', ') }));
+      setBulkOpen(true);
+      setBulkResults(null);
+      return;
+    }
+    const fee = fees[0] || '';
+    setBulkForm({ amount: fee ? String(fee) : '', transactionType: 'monthly', paymentMethod: '', paidAt: todayISO() });
+    setBulkError('');
+    setBulkResults(null);
+    setBulkFeeConfirming(false);
+    setBulkAdvanceConfirming(false);
+    setBulkOpen(true);
+  }
+
+  function closeBulkModal() {
+    setBulkOpen(false);
+    setBulkError('');
+    setBulkResults(null);
+    setBulkFeeConfirming(false);
+    setBulkAdvanceConfirming(false);
+  }
+
+  async function handleBulkPayment(e) {
+    e.preventDefault();
+    if (selectedIds.size === 0) {
+      setBulkError(t('payments:bulkNoSelection'));
+      return;
+    }
+    const selected = activeStudents.filter((s) => selectedIds.has(s.id));
+    const fees = [...new Set(selected.map((s) => s.monthly_fee))];
+    if (fees.length > 1) {
+      setBulkError(t('payments:bulkIncompatibleFees', { fees: fees.map((f) => formatUZS(f)).join(', ') }));
+      return;
+    }
+    if (!bulkForm.amount) {
+      setBulkError(t('payments:correctionNotesRequired'));
+      return;
+    }
+    if (bulkForm.paidAt && bulkForm.paidAt > todayISO()) {
+      setBulkError(t('payments:paymentDateFuture'));
+      return;
+    }
+    const entered = Number(bulkForm.amount);
+    const expectedFee = Number(fees[0]);
+    if (Number.isFinite(expectedFee) && entered !== expectedFee && !bulkFeeConfirming) {
+      setBulkError(t('payments:feeMismatchConfirm', { entered: formatUZS(entered), expected: formatUZS(expectedFee) }));
+      setBulkFeeConfirming(true);
+      return;
+    }
+    const advanceStudents = selected.filter((s) => {
+      const st = newStatuses[s.id];
+      return st?.paid_through_date && st.status === 'paid' && daysFromToday(st.paid_through_date) > DUE_SOON_DAYS;
+    });
+    if (advanceStudents.length > 0 && !bulkAdvanceConfirming) {
+      const details = advanceStudents.slice(0, 3).map((s) => {
+        const st = newStatuses[s.id];
+        const next = nextBillingDateJS(st.paid_through_date, s.payment_deadline);
+        return t('payments:bulkAdvanceWarning', { name: s.real_name, current: formatDueDate(st.paid_through_date), next: formatDueDate(next) });
+      }).join(' | ');
+      setBulkError(details + ' — ' + t('payments:bulkConfirm'));
+      setBulkAdvanceConfirming(true);
+      return;
+    }
+    setBulkRecording(true);
+    setBulkError('');
+    setBulkResults(null);
+    const results = { success: [], failed: [], cancelled: [] };
+    for (const s of selected) {
+      const st = newStatuses[s.id];
+      if (st?.paid_through_date && st.status === 'paid' && daysFromToday(st.paid_through_date) > DUE_SOON_DAYS && !bulkAdvanceConfirming) {
+        results.cancelled.push({ id: s.id, name: s.real_name, paidThrough: st.paid_through_date });
+        continue;
+      }
+      try {
+        const newDate = await recordPayment({
+          studentId: s.id,
+          amount: entered,
+          transactionType: bulkForm.transactionType,
+          paymentMethod: bulkForm.paymentMethod || null,
+          paidAt: bulkForm.paidAt || undefined,
+          createdBy: session.user.id,
+        });
+        results.success.push({ id: s.id, name: s.real_name, newDate });
+        const [st2, tl] = await Promise.all([getStudentPaymentStatus(s.id), getPaymentTimeline(s.id)]);
+        setNewStatuses((prev) => ({ ...prev, [s.id]: st2 }));
+        setTimelines((prev) => ({ ...prev, [s.id]: tl }));
+      } catch (err) {
+        results.failed.push({ id: s.id, name: s.real_name, error: err.message || String(err) });
+      }
+    }
+    setBulkResults(results);
+    setBulkRecording(false);
+    setBulkFeeConfirming(false);
+    setBulkAdvanceConfirming(false);
+    if (results.success.length > 0 && results.failed.length === 0) {
+      // keep selection but show success
+    }
   }
 
   async function handleRecordPayment(e, studentId) {
     e.preventDefault();
     if (!recordForm.amount) return;
     if (recordForm.paidAt && recordForm.paidAt > todayISO()) {
-      setRecordError('Payment date cannot be in the future.');
+      setRecordError(t('payments:paymentDateFuture'));
+      return;
+    }
+    const entered = Number(recordForm.amount);
+    const expectedFee = Number(modalStudent?.monthly_fee);
+    if (Number.isFinite(expectedFee) && entered !== expectedFee && !feeConfirming) {
+      setRecordError(t('payments:feeMismatchConfirm', { entered: formatUZS(entered), expected: formatUZS(expectedFee) }));
+      setFeeConfirming(true);
+      return;
+    }
+    const st = newStatuses[studentId];
+    if (st?.paid_through_date && st.status === 'paid' && daysFromToday(st.paid_through_date) > DUE_SOON_DAYS && !advanceConfirming) {
+      const next = nextBillingDateJS(st.paid_through_date, modalStudent.payment_deadline);
+      setRecordError(t('payments:advanceConfirm', { current: formatDueDate(st.paid_through_date), next: formatDueDate(next) }));
+      setAdvanceConfirming(true);
       return;
     }
     setRecording(true);
@@ -298,17 +478,19 @@ export default function Payments() {
     try {
       await recordPayment({
         studentId,
-        amount: Number(recordForm.amount),
+        amount: entered,
         transactionType: recordForm.transactionType,
         paymentMethod: recordForm.paymentMethod || null,
         paidAt: recordForm.paidAt || undefined,
         createdBy: session.user.id,
       });
       setRecordForm({ amount: '', transactionType: 'monthly', paymentMethod: '', paidAt: todayISO() });
-      const [st, tl] = await Promise.all([getStudentPaymentStatus(studentId), getPaymentTimeline(studentId)]);
-      setNewStatuses((prev) => ({ ...prev, [studentId]: st }));
+      setFeeConfirming(false);
+      setAdvanceConfirming(false);
+      const [st2, tl] = await Promise.all([getStudentPaymentStatus(studentId), getPaymentTimeline(studentId)]);
+      setNewStatuses((prev) => ({ ...prev, [studentId]: st2 }));
       setTimelines((prev) => ({ ...prev, [studentId]: tl }));
-      setRecordSuccess({ paidThroughDate: st.paid_through_date });
+      setRecordSuccess({ paidThroughDate: st2.paid_through_date });
     } catch (e) {
       setRecordError(e.message || String(e));
     } finally {
@@ -316,12 +498,74 @@ export default function Payments() {
     }
   }
 
+  function escapeCsv(val) {
+    const s = String(val ?? '');
+    if (s.includes(',') || s.includes('"') || s.includes('\n')) return `"${s.replace(/"/g, '""')}"`;
+    return s;
+  }
+
+  function handleExportCsv() {
+    if (exporting) return;
+    setExportError('');
+    if (displayStudents.length === 0) {
+      setExportError(t('payments:exportEmpty'));
+      return;
+    }
+    setExporting(true);
+    try {
+      const headers = [
+        t('payments:csvStudentName'),
+        t('payments:csvLevel'),
+        t('payments:csvMonthlyFee'),
+        t('payments:csvStatus'),
+        t('payments:csvPaidThrough'),
+        t('payments:csvNextDue'),
+        t('payments:csvOutstanding'),
+        t('payments:csvLastPayment'),
+      ];
+      const rows = displayStudents.map((s) => {
+        const st = newStatuses[s.id];
+        const paidThrough = st?.paid_through_date ? formatDueDate(st.paid_through_date) : '';
+        const nextDue = st?.next_due_date ? formatDueDate(st.next_due_date) : st?.current_period_end ? formatDueDate(st.current_period_end) : '';
+        const outstanding = st?.outstanding != null ? formatUZS(st.outstanding) : '';
+        const lastTx = timelines[s.id]?.[0];
+        const lastPayment = lastTx ? `${formatDueDate(lastTx.paid_at?.slice(0, 10))} ${formatUZS(lastTx.amount)}` : '';
+        const statusLabel = st?.status ?? classifyPayment(st, s.monthly_fee, t, locale).kind;
+        return [
+          s.real_name,
+          s.level,
+          formatUZS(s.monthly_fee),
+          statusLabel,
+          paidThrough,
+          nextDue,
+          outstanding,
+          lastPayment,
+        ].map(escapeCsv).join(',');
+      });
+      const csv = [headers.map(escapeCsv).join(','), ...rows].join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `payments-${todayISO()}.csv`;
+      a.setAttribute('aria-label', t('payments:exportCsv'));
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setExportError(t('payments:exportError'));
+    } finally {
+      setExporting(false);
+    }
+  }
+
   if (!isAdmin) {
     return (
       <div className="rounded-xl bg-white p-10 text-center shadow-card">
         <ShieldAlert className="mx-auto mb-3 h-10 w-10 text-inactive" />
-        <p className="font-display text-lg font-semibold text-ink">Administrators only</p>
-        <p className="mt-1 text-sm text-ink/50">Payments include financial information.</p>
+        <p className="font-display text-lg font-semibold text-ink">{t('payments:administratorsOnly')}</p>
+        <p className="mt-1 text-sm text-ink/50">{t('payments:administratorsOnlyHint')}</p>
       </div>
     );
   }
@@ -329,14 +573,31 @@ export default function Payments() {
   return (
     <div>
       <header className="mb-4">
-        <h1 className="font-display text-2xl font-bold text-ink">Payments</h1>
-        <p className="mt-1 text-sm text-ink/50">Track who's paid, due, or overdue - amounts in UZS.</p>
+        <h1 className="font-display text-2xl font-bold text-ink">{t('payments:title')}</h1>
+        <p className="mt-1 text-sm text-ink/50">{t('payments:subtitle')}</p>
       </header>
 
       {error && <div className="mb-4 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{error}</div>}
       {recordError && (
         <div className="mb-4 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{recordError}</div>
       )}
+      {exportError && <div className="mb-4 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{exportError}</div>}
+
+      <div className="mb-3 flex flex-wrap gap-2 rounded-xl bg-white p-3 shadow-card">
+        <span className="rounded-full bg-active/10 px-3 py-1 text-xs font-semibold text-active">{t('payments:summaryPaid', { count: summaryCounts.paid })}</span>
+        <span className="rounded-full bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-700">{t('payments:summaryDueSoon', { count: summaryCounts.due_soon })}</span>
+        <span className="rounded-full bg-inactive/10 px-3 py-1 text-xs font-semibold text-inactive">{t('payments:summaryOverdue', { count: summaryCounts.overdue })}</span>
+        <span className="rounded-full bg-levelA/10 px-3 py-1 text-xs font-semibold text-levelA">{t('payments:summaryNoPayment', { count: summaryCounts.no_payment })}</span>
+        <button
+          onClick={handleExportCsv}
+          disabled={exporting || displayStudents.length === 0}
+          aria-label={t('payments:exportCsv')}
+          className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-semibold text-ink shadow-sm border border-ink/10 hover:bg-ink/5 disabled:opacity-50 min-h-[28px]"
+        >
+          <Download size={14} aria-hidden="true" />
+          {exporting ? t('payments:exporting') : t('payments:exportCsv')}
+        </button>
+      </div>
 
       <div className="mb-3 flex flex-col gap-2 sm:flex-row">
         <div className="relative flex-1">
@@ -344,20 +605,21 @@ export default function Payments() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search name..."
+            placeholder={t('payments:searchPlaceholder')}
             className="w-full rounded-lg border border-ink/10 bg-white py-2 pl-9 pr-3 text-sm shadow-sm focus:border-brand-500"
+            aria-label={t('payments:searchPlaceholder')}
           />
         </div>
-        <select value={level} onChange={(e) => setLevel(e.target.value)} className="input sm:w-32">
-          <option value="">All levels</option>
+        <select value={level} onChange={(e) => setLevel(e.target.value)} className="input sm:w-32" aria-label={t('payments:allLevels')}>
+          <option value="">{t('payments:allLevels')}</option>
           {LEVELS.map((lvl) => (
-            <option key={lvl} value={lvl}>Level {lvl}</option>
+            <option key={lvl} value={lvl}>{t('payments:levelOption', { level: lvl })}</option>
           ))}
         </select>
-        <select value={sortKey} onChange={(e) => setSortKey(e.target.value)} className="input sm:w-48">
+        <select value={sortKey} onChange={(e) => setSortKey(e.target.value)} className="input sm:w-48" aria-label={t('payments:sortLabel', { label: '' })}>
           {SORT_OPTIONS.map((o) => (
             <option key={o.key} value={o.key}>
-              Sort: {o.label}
+              {t('payments:sortLabel', { label: o.label })}
             </option>
           ))}
         </select>
@@ -368,7 +630,8 @@ export default function Payments() {
           <button
             key={f.key}
             onClick={() => setStatusFilter(f.key)}
-            className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold ${
+            aria-label={f.label}
+            className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold min-h-[32px] ${
               statusFilter === f.key ? 'bg-brand-600 text-white' : 'bg-white text-ink/60 shadow-sm'
             }`}
           >
@@ -377,17 +640,51 @@ export default function Payments() {
         ))}
       </div>
 
+      <div className="mb-3 flex flex-wrap items-center gap-2 rounded-xl bg-white p-3 shadow-card">
+        <label className="flex items-center gap-2 text-xs font-semibold text-ink cursor-pointer">
+          <input
+            type="checkbox"
+            checked={displayStudents.length > 0 && displayStudents.every((s) => selectedIds.has(s.id))}
+            onChange={toggleSelectAll}
+            className="h-4 w-4 rounded border-ink/20"
+            aria-label={t('payments:selectAll')}
+          />
+          {t('payments:selectAll')}
+        </label>
+        <span className="text-xs text-ink/60">{t('payments:selectedCount', { count: selectedIds.size })}</span>
+        {selectedIds.size > 0 && (
+          <button onClick={clearSelection} className="text-xs font-semibold text-brand-700 hover:underline min-h-[28px] px-2" aria-label={t('payments:clearSelection')}>
+            {t('payments:clearSelection')}
+          </button>
+        )}
+        <button
+          onClick={openBulkModal}
+          disabled={selectedIds.size === 0}
+          aria-label={t('payments:bulkRecordPayment', { count: selectedIds.size })}
+          className="ml-auto rounded-full bg-brand-600 px-4 py-1.5 text-xs font-semibold text-white disabled:opacity-50 min-h-[32px]"
+        >
+          {t('payments:bulkRecordPayment', { count: selectedIds.size })}
+        </button>
+      </div>
+
       <section className="mb-6">
         {displayStudents.length === 0 ? (
-          <div className="rounded-xl bg-white p-6 text-center text-sm text-ink/50 shadow-card">No students match this filter.</div>
+          <div className="rounded-xl bg-white p-6 text-center text-sm text-ink/50 shadow-card">{t('payments:noStudentsMatch')}</div>
         ) : (
           <div className="space-y-2">
             {displayStudents.map((s) => {
               const st = newStatuses[s.id];
-              const { deadlineLine, statusLine, tone } = classifyPayment(st, s.monthly_fee);
+              const { deadlineLine, statusLine, tone } = classifyPayment(st, s.monthly_fee, t, locale);
               return (
-                <div key={s.id} className="flex items-center justify-between gap-3 rounded-xl bg-white p-3 shadow-card">
-                  <div className="min-w-0">
+                <div key={s.id} className="flex items-center gap-3 rounded-xl bg-white p-3 shadow-card">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(s.id)}
+                    onChange={() => toggleSelect(s.id)}
+                    className="h-4 w-4 rounded border-ink/20 flex-shrink-0"
+                    aria-label={`Select ${s.real_name}`}
+                  />
+                  <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <p className="truncate font-semibold text-ink">{s.real_name}</p>
                       <LevelBadge level={s.level} />
@@ -401,19 +698,21 @@ export default function Payments() {
                   <div className="flex flex-shrink-0 items-center gap-1">
                     <button
                       onClick={() => openModal(s, 'view')}
-                      title="View payment timeline"
-                      className="rounded-lg p-1.5 text-ink/40 hover:bg-ink/5 hover:text-ink"
+                      title={t('payments:viewTimeline')}
+                      aria-label={t('payments:viewTimeline')}
+                      className="rounded-lg p-2 text-ink/40 hover:bg-ink/5 hover:text-ink min-h-[36px] min-w-[36px] flex items-center justify-center"
                     >
                       <History size={16} />
                     </button>
-                    <Link to="/chat" title="Contact student" className="rounded-lg p-1.5 text-ink/40 hover:bg-ink/5 hover:text-ink">
+                    <Link to="/chat" title={t('payments:contactStudent')} aria-label={t('payments:contactStudent')} className="rounded-lg p-2 text-ink/40 hover:bg-ink/5 hover:text-ink min-h-[36px] min-w-[36px] flex items-center justify-center">
                       <MessageSquare size={16} />
                     </Link>
                     <button
                       onClick={() => openModal(s, 'record')}
-                      className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white"
+                      aria-label={t('payments:recordPaymentButton')}
+                      className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white min-h-[32px]"
                     >
-                      Record payment
+                      {t('payments:recordPaymentButton')}
                     </button>
                   </div>
                 </div>
@@ -428,30 +727,30 @@ export default function Payments() {
           <div className="max-h-[85vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <div className="mb-4 flex items-start justify-between">
               <h2 className="font-display text-lg font-bold text-ink">{modalStudent.real_name}</h2>
-              <button onClick={closeModal} className="rounded-md p-1 text-ink/40 hover:bg-ink/5 hover:text-ink">
+              <button onClick={closeModal} aria-label="Close" className="rounded-md p-2 text-ink/40 hover:bg-ink/5 hover:text-ink min-h-[36px] min-w-[36px] flex items-center justify-center">
                 <X size={18} />
               </button>
             </div>
 
             {(() => {
               const st = newStatuses[modalStudent.id];
-              const { statusLine, tone } = classifyPayment(st, modalStudent.monthly_fee);
+              const { statusLine, tone } = classifyPayment(st, modalStudent.monthly_fee, t, locale);
               return (
                 <div className="mb-4 grid grid-cols-2 gap-3 rounded-lg bg-paper p-3 text-sm">
                   <div className="col-span-2">
-                    <p className="text-xs text-ink/50">Status</p>
+                    <p className="text-xs text-ink/50">{t('payments:statusLabel')}</p>
                     <div className="mt-0.5 flex items-center gap-1.5">
                       <span className={`h-2 w-2 flex-shrink-0 rounded-full ${STATUS_DOT[tone]}`} />
                       <span className={`font-semibold ${STATUS_TEXT[tone]}`}>{statusLine}</span>
                     </div>
                   </div>
                   <div>
-                    <p className="text-xs text-ink/50">Monthly fee</p>
+                    <p className="text-xs text-ink/50">{t('payments:monthlyFeeLabel')}</p>
                     <p className="font-semibold text-ink">{formatUZS(modalStudent.monthly_fee)}</p>
                   </div>
                   {st?.current_period_end && (
                     <div>
-                      <p className="text-xs text-ink/50">Payment deadline</p>
+                      <p className="text-xs text-ink/50">{t('payments:paymentDeadlineLabel')}</p>
                       <p className="font-semibold text-ink">{formatDueDate(st.current_period_end)}</p>
                     </div>
                   )}
@@ -461,43 +760,47 @@ export default function Payments() {
 
             {recordSuccess && (
               <div className="mb-3 rounded-lg bg-active/10 px-3 py-2 text-sm text-active">
-                <p className="font-semibold">✓ Payment recorded successfully.</p>
+                <p className="font-semibold">{t('payments:paymentRecorded')}</p>
                 {recordSuccess.paidThroughDate && (
-                  <p className="mt-0.5 text-xs">Covered through: {formatDueDate(recordSuccess.paidThroughDate)}</p>
+                  <p className="mt-0.5 text-xs">{t('payments:coveredThrough', { date: formatDueDate(recordSuccess.paidThroughDate) })}</p>
                 )}
               </div>
             )}
 
             {modalMode === 'record' ? (
               <>
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink/40">Record Payment</p>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink/40">{t('payments:recordPaymentHeading')}</p>
                 <form onSubmit={(e) => handleRecordPayment(e, modalStudent.id)} className="space-y-3">
                   <div>
-                    <label className="block text-xs text-ink/50">Amount</label>
+                    <label className="block text-xs text-ink/50">{t('payments:amountLabel')}</label>
                     <input
                       type="number"
                       className="input w-full"
                       value={recordForm.amount}
-                      onChange={(e) => setRecordForm({ ...recordForm, amount: e.target.value })}
+                      onChange={(e) => { setRecordForm({ ...recordForm, amount: e.target.value }); setFeeConfirming(false); }}
+                      aria-label={t('payments:amountLabel')}
                     />
+                    <p className="mt-1 text-[11px] text-ink/40">{t('payments:monthlyFeeLabel')}: {formatUZS(modalStudent.monthly_fee)}</p>
                   </div>
                   <div>
-                    <label className="block text-xs text-ink/50">Payment date</label>
+                    <label className="block text-xs text-ink/50">{t('payments:paymentDateLabel')}</label>
                     <input
                       type="date"
                       className="input w-full"
                       value={recordForm.paidAt}
                       max={todayISO()}
                       onChange={(e) => setRecordForm({ ...recordForm, paidAt: e.target.value })}
+                      aria-label={t('payments:paymentDateLabel')}
                     />
                   </div>
                   <div className="flex gap-2">
                     <div className="flex-1">
-                      <label className="block text-xs text-ink/50">Type</label>
+                      <label className="block text-xs text-ink/50">{t('payments:typeLabel')}</label>
                       <select
                         className="input w-full"
                         value={recordForm.transactionType}
                         onChange={(e) => setRecordForm({ ...recordForm, transactionType: e.target.value })}
+                        aria-label={t('payments:typeLabel')}
                       >
                         {TRANSACTION_TYPES.map((t) => (
                           <option key={t} value={t}>
@@ -507,11 +810,12 @@ export default function Payments() {
                       </select>
                     </div>
                     <div className="flex-1">
-                      <label className="block text-xs text-ink/50">Method</label>
+                      <label className="block text-xs text-ink/50">{t('payments:methodLabel')}</label>
                       <select
                         className="input w-full"
                         value={recordForm.paymentMethod}
                         onChange={(e) => setRecordForm({ ...recordForm, paymentMethod: e.target.value })}
+                        aria-label={t('payments:methodLabel')}
                       >
                         <option value="">-</option>
                         {PAYMENT_METHODS.map((m) => (
@@ -522,61 +826,79 @@ export default function Payments() {
                       </select>
                     </div>
                   </div>
-                  {recordError && <p className="text-xs text-inactive">{recordError}</p>}
+                  {recordError && <p className="text-xs text-inactive" role="alert">{recordError}</p>}
                   <button
                     type="submit"
                     disabled={recording}
-                    className="w-full rounded-lg bg-brand-600 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                    aria-label={t('payments:savePayment')}
+                    className="w-full rounded-lg bg-brand-600 py-2 text-sm font-semibold text-white disabled:opacity-50 min-h-[40px]"
                   >
-                    {recording ? 'Saving…' : 'Save payment'}
+                    {recording ? t('payments:saving') : t('payments:savePayment')}
                   </button>
                 </form>
               </>
             ) : (
               <button
                 onClick={() => setModalMode('record')}
-                className="w-full rounded-lg bg-brand-500/10 py-2 text-sm font-semibold text-brand-700"
+                aria-label={t('payments:recordPaymentCta')}
+                className="w-full rounded-lg bg-brand-500/10 py-2 text-sm font-semibold text-brand-700 min-h-[40px]"
               >
-                Record a payment
+                {t('payments:recordPaymentCta')}
               </button>
             )}
 
             <div className="mt-5 border-t border-ink/5 pt-4">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink/40">Payment Timeline</p>
-              <div className="max-h-56 space-y-2 overflow-y-auto">
-                {(timelines[modalStudent.id] || []).map((tx) => {
-                  const isCorrection = tx.transaction_type === 'correction';
-                  return (
-                    <div
-                      key={tx.id}
-                      className={`rounded-lg border p-2 ${isCorrection ? 'border-inactive/30 bg-inactive/5' : 'border-ink/5'}`}
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink/40">{t('payments:paymentTimeline')}</p>
+              {timelineLoading[modalStudent.id] ? (
+                <p className="py-4 text-center text-sm text-ink/40">{t('payments:timelineLoading')}</p>
+              ) : (
+                <>
+                  <div className="max-h-56 space-y-2 overflow-y-auto">
+                    {(timelines[modalStudent.id] || []).slice(0, timelineExpanded[modalStudent.id] ? undefined : TIMELINE_INITIAL_LIMIT).map((tx) => {
+                      const isCorrection = tx.transaction_type === 'correction';
+                      return (
+                        <div
+                          key={tx.id}
+                          className={`rounded-lg border p-2 ${isCorrection ? 'border-inactive/30 bg-inactive/5' : 'border-ink/5'}`}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-xs font-semibold text-ink">{formatDueDate(tx.paid_at?.slice(0, 10))}</p>
+                            {!isCorrection && (
+                              <button
+                                onClick={() => openCorrection(tx)}
+                                aria-label={t('payments:createCorrection')}
+                                className="text-[11px] font-semibold text-brand-700 hover:underline min-h-[28px] px-2"
+                              >
+                                {t('payments:createCorrection')}
+                              </button>
+                            )}
+                          </div>
+                          <p className={`mt-0.5 text-xs font-semibold ${isCorrection ? 'text-inactive' : 'text-ink/70'}`}>
+                            {tx.amount > 0 ? '+' : ''}
+                            {formatUZS(tx.amount)} {TRANSACTION_TYPE_LABELS[tx.transaction_type] || (isCorrection ? t('payments:correction') : tx.transaction_type)}
+                            {tx.payment_method ? ` · ${tx.payment_method}` : ''}
+                          </p>
+                          {isCorrection && tx.notes && <p className="mt-0.5 text-[11px] text-ink/60">{t('payments:reasonLabel')}: {tx.notes}</p>}
+                          <p className="mt-0.5 text-[11px] text-ink/40">
+                            {t('payments:createdOn', { date: formatDueDate(tx.created_at?.slice(0, 10)) })}
+                            {tx.created_by ? ` · ${adminNames[tx.created_by] || t('payments:adminFallback')}` : tx.source === 'migration' ? ` · ${t('payments:importedFromPrevious')}` : ''}
+                          </p>
+                        </div>
+                      );
+                    })}
+                    {timelines[modalStudent.id]?.length === 0 && <p className="text-xs text-ink/40">{t('payments:noPaymentsYet')}</p>}
+                  </div>
+                  {(timelines[modalStudent.id]?.length || 0) > TIMELINE_INITIAL_LIMIT && (
+                    <button
+                      onClick={() => setTimelineExpanded((prev) => ({ ...prev, [modalStudent.id]: !prev[modalStudent.id] }))}
+                      aria-label={timelineExpanded[modalStudent.id] ? t('payments:timelineShowLess') : t('payments:timelineShowAll', { count: timelines[modalStudent.id].length })}
+                      className="mt-2 w-full rounded-lg bg-white py-2 text-xs font-semibold text-ink shadow-sm border border-ink/10 hover:bg-ink/5 min-h-[36px]"
                     >
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-xs font-semibold text-ink">{formatDueDate(tx.paid_at?.slice(0, 10))}</p>
-                        {!isCorrection && (
-                          <button
-                            onClick={() => openCorrection(tx)}
-                            className="text-[11px] font-semibold text-brand-700 hover:underline"
-                          >
-                            Create Correction
-                          </button>
-                        )}
-                      </div>
-                      <p className={`mt-0.5 text-xs font-semibold ${isCorrection ? 'text-inactive' : 'text-ink/70'}`}>
-                        {tx.amount > 0 ? '+' : ''}
-                        {formatUZS(tx.amount)} {TRANSACTION_TYPE_LABELS[tx.transaction_type] || (isCorrection ? 'Correction' : tx.transaction_type)}
-                        {tx.payment_method ? ` · ${tx.payment_method}` : ''}
-                      </p>
-                      {isCorrection && tx.notes && <p className="mt-0.5 text-[11px] text-ink/60">Reason: {tx.notes}</p>}
-                      <p className="mt-0.5 text-[11px] text-ink/40">
-                        Created {formatDueDate(tx.created_at?.slice(0, 10))}
-                        {tx.created_by ? ` · ${adminNames[tx.created_by] || 'Admin'}` : tx.source === 'migration' ? ' · Imported from previous system' : ''}
-                      </p>
-                    </div>
-                  );
-                })}
-                {timelines[modalStudent.id]?.length === 0 && <p className="text-xs text-ink/40">No payments recorded yet.</p>}
-              </div>
+                      {timelineExpanded[modalStudent.id] ? t('payments:timelineShowLess') : t('payments:timelineShowAll', { count: timelines[modalStudent.id].length })}
+                    </button>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -586,21 +908,21 @@ export default function Payments() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={closeCorrection}>
           <div className="w-full max-w-sm rounded-xl bg-white p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <div className="mb-3 flex items-center justify-between">
-              <p className="font-display text-base font-semibold text-ink">Create Correction</p>
-              <button onClick={closeCorrection}>
+              <p className="font-display text-base font-semibold text-ink">{t('payments:correctionTitle')}</p>
+              <button onClick={closeCorrection} aria-label="Close" className="rounded-md p-2 text-ink/40 hover:bg-ink/5 min-h-[36px] min-w-[36px] flex items-center justify-center">
                 <X size={18} className="text-ink/40" />
               </button>
             </div>
 
             <div className="mb-3 rounded-lg bg-cloud/60 p-3 text-xs text-ink/70">
-              <p className="font-semibold text-ink">Correction for:</p>
+              <p className="font-semibold text-ink">{t('payments:correctionFor')}</p>
               <p>{modalStudent?.real_name}</p>
-              <p>Payment: {formatUZS(correctionTx.amount)}</p>
-              <p>Date: {formatDueDate(correctionTx.paid_at?.slice(0, 10))}</p>
-              <p>Transaction ID: {correctionTx.id}</p>
+              <p>{t('payments:paymentLabel', { amount: formatUZS(correctionTx.amount) })}</p>
+              <p>{t('payments:dateLabel', { date: formatDueDate(correctionTx.paid_at?.slice(0, 10)) })}</p>
+              <p>{t('payments:transactionIdLabel', { id: correctionTx.id })}</p>
             </div>
 
-            <label className="block text-xs text-ink/50">Correction amount</label>
+            <label className="block text-xs text-ink/50">{t('payments:correctionAmountLabel')}</label>
             <input
               type="number"
               className="input mb-3 w-full"
@@ -609,13 +931,15 @@ export default function Payments() {
                 setCorrectionAmount(e.target.value);
                 setCorrectionConfirming(false);
               }}
+              aria-label={t('payments:correctionAmountLabel')}
             />
 
-            <label className="block text-xs text-ink/50">Reason</label>
+            <label className="block text-xs text-ink/50">{t('payments:reasonLabel')}</label>
             <select
               className="input mb-3 w-full"
               value={correctionReason}
               onChange={(e) => setCorrectionReason(e.target.value)}
+              aria-label={t('payments:reasonLabel')}
             >
               {CORRECTION_REASONS.map((r) => (
                 <option key={r} value={r}>
@@ -624,27 +948,133 @@ export default function Payments() {
               ))}
             </select>
 
-            <label className="block text-xs text-ink/50">Notes {correctionReason === 'Other' ? '(required)' : ''}</label>
+            <label className="block text-xs text-ink/50">{t('payments:notesLabel')} {correctionReason === 'Other' ? t('payments:notesRequired') : ''}</label>
             <textarea
               className="input mb-3 w-full"
               rows={2}
               value={correctionNotes}
               onChange={(e) => setCorrectionNotes(e.target.value)}
+              aria-label={t('payments:notesLabel')}
             />
 
             <p className="mb-3 text-xs text-ink/50">
-              You are creating a correction transaction. The original payment will remain unchanged.
+              {t('payments:correctionHint')}
             </p>
 
-            {correctionError && <p className="mb-2 text-xs text-inactive">{correctionError}</p>}
+            {correctionError && <p className="mb-2 text-xs text-inactive" role="alert">{correctionError}</p>}
 
             <button
               onClick={submitCorrection}
               disabled={correctionSaving}
-              className="w-full rounded-lg bg-inactive py-2 text-sm font-semibold text-white disabled:opacity-50"
+              aria-label={correctionSaving ? t('payments:saving') : correctionConfirming ? t('payments:confirmLargerCorrection') : t('payments:createCorrectionButton')}
+              className="w-full rounded-lg bg-inactive py-2 text-sm font-semibold text-white disabled:opacity-50 min-h-[40px]"
             >
-              {correctionSaving ? 'Saving…' : correctionConfirming ? 'Confirm larger correction' : 'Create Correction'}
+              {correctionSaving ? t('payments:saving') : correctionConfirming ? t('payments:confirmLargerCorrection') : t('payments:createCorrectionButton')}
             </button>
+          </div>
+        </div>
+      )}
+
+      {bulkOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={closeBulkModal}>
+          <div className="max-h-[85vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-4 flex items-start justify-between">
+              <div>
+                <h2 className="font-display text-lg font-bold text-ink">{t('payments:bulkTitle')}</h2>
+                <p className="text-sm text-ink/50">{t('payments:bulkSubtitle')}</p>
+              </div>
+              <button onClick={closeBulkModal} aria-label="Close" className="rounded-md p-2 text-ink/40 hover:bg-ink/5 min-h-[36px] min-w-[36px] flex items-center justify-center">
+                <X size={18} />
+              </button>
+            </div>
+            {activeStudents.filter((s) => selectedIds.has(s.id)).length === 0 ? (
+              <p className="text-sm text-ink/50">{t('payments:bulkNoSelection')}</p>
+            ) : (
+              <>
+                <div className="mb-3 rounded-lg bg-paper p-3 text-xs">
+                  <p className="font-semibold text-ink">{t('payments:selectedCount', { count: selectedIds.size })}</p>
+                  <ul className="mt-1 max-h-32 overflow-y-auto space-y-1">
+                    {activeStudents.filter((s) => selectedIds.has(s.id)).map((s) => {
+                      const st = newStatuses[s.id];
+                      const next = st?.paid_through_date ? nextBillingDateJS(st.paid_through_date, s.payment_deadline) : null;
+                      return (
+                        <li key={s.id} className="flex justify-between gap-2">
+                          <span>{s.real_name} · Level {s.level} · {formatUZS(s.monthly_fee)}</span>
+                          <span className="text-ink/60">{st?.paid_through_date ? `${formatDueDate(st.paid_through_date)} → ${next ? formatDueDate(next) : ''}` : ''}</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+                {bulkResults ? (
+                  <div className="space-y-2">
+                    <p className="font-semibold text-ink">{t('payments:bulkResultsTitle')}</p>
+                    <p className="text-sm text-active">{t('payments:bulkSuccess', { count: bulkResults.success.length })}</p>
+                    {bulkResults.success.length > 0 && (
+                      <ul className="text-xs text-active list-disc pl-4">
+                        {bulkResults.success.map((r) => (
+                          <li key={r.id}>{r.name} → {r.newDate ? formatDueDate(r.newDate) : ''}</li>
+                        ))}
+                      </ul>
+                    )}
+                    <p className="text-sm text-inactive">{t('payments:bulkFailed', { count: bulkResults.failed.length })}</p>
+                    {bulkResults.failed.length > 0 && (
+                      <ul className="text-xs text-inactive list-disc pl-4">
+                        {bulkResults.failed.map((r) => (
+                          <li key={r.id}>{r.name}: {r.error}</li>
+                        ))}
+                      </ul>
+                    )}
+                    {bulkResults.cancelled.length > 0 && (
+                      <>
+                        <p className="text-sm text-amber-700">{t('payments:bulkCancelled', { count: bulkResults.cancelled.length })}</p>
+                        <ul className="text-xs text-amber-700 list-disc pl-4">
+                          {bulkResults.cancelled.map((r) => (
+                            <li key={r.id}>{r.name} — {t('payments:bulkCancelledReason', { date: formatDueDate(r.paidThrough) })}</li>
+                          ))}
+                        </ul>
+                      </>
+                    )}
+                    <button onClick={closeBulkModal} className="w-full rounded-lg bg-brand-600 py-2 text-sm font-semibold text-white min-h-[40px]">{t('payments:bulkClose')}</button>
+                  </div>
+                ) : (
+                  <form onSubmit={handleBulkPayment} className="space-y-3">
+                    <div>
+                      <label className="block text-xs text-ink/50">{t('payments:amountLabel')}</label>
+                      <input type="number" className="input w-full" value={bulkForm.amount} onChange={(e) => { setBulkForm({ ...bulkForm, amount: e.target.value }); setBulkFeeConfirming(false); }} aria-label={t('payments:amountLabel')} />
+                      <p className="mt-1 text-[11px] text-ink/40">{t('payments:csvMonthlyFee')}: {[...new Set(activeStudents.filter((s) => selectedIds.has(s.id)).map((s) => s.monthly_fee))].map((f) => formatUZS(f)).join(', ')}</p>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-ink/50">{t('payments:paymentDateLabel')}</label>
+                      <input type="date" className="input w-full" value={bulkForm.paidAt} max={todayISO()} onChange={(e) => setBulkForm({ ...bulkForm, paidAt: e.target.value })} aria-label={t('payments:paymentDateLabel')} />
+                    </div>
+                    <div className="flex gap-2">
+                      <div className="flex-1">
+                        <label className="block text-xs text-ink/50">{t('payments:typeLabel')}</label>
+                        <select className="input w-full" value={bulkForm.transactionType} onChange={(e) => setBulkForm({ ...bulkForm, transactionType: e.target.value })} aria-label={t('payments:typeLabel')}>
+                          {TRANSACTION_TYPES.map((tr) => (
+                            <option key={tr} value={tr}>{tr}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="flex-1">
+                        <label className="block text-xs text-ink/50">{t('payments:methodLabel')}</label>
+                        <select className="input w-full" value={bulkForm.paymentMethod} onChange={(e) => setBulkForm({ ...bulkForm, paymentMethod: e.target.value })} aria-label={t('payments:methodLabel')}>
+                          <option value="">-</option>
+                          {PAYMENT_METHODS.map((m) => (
+                            <option key={m} value={m}>{m}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    {bulkError && <p className="text-xs text-inactive" role="alert">{bulkError}</p>}
+                    <button type="submit" disabled={bulkRecording} aria-label={t('payments:bulkConfirm')} className="w-full rounded-lg bg-brand-600 py-2 text-sm font-semibold text-white disabled:opacity-50 min-h-[40px]">
+                      {bulkRecording ? t('payments:saving') : t('payments:bulkConfirm')}
+                    </button>
+                  </form>
+                )}
+              </>
+            )}
           </div>
         </div>
       )}
