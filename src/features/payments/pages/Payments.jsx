@@ -1,5 +1,5 @@
 // Payments.jsx
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Search, ShieldAlert, X, History, MessageSquare, Download } from 'lucide-react';
@@ -14,6 +14,7 @@ import {
   getStudentPaymentStatus,
   getAdminBatchPaymentStatus,
   getMonthlyPaymentCollection,
+  getPaymentCollectionSummary,
   getPaymentTimeline,
   recordPayment,
   createCorrection,
@@ -104,6 +105,19 @@ export default function Payments() {
     const d = new Date();
     return { year: d.getFullYear(), month: d.getMonth() + 1 };
   }, []);
+  // Inclusive [from, to] range for the current calendar month, same shape
+  // Dashboard.jsx uses for getPaymentCollectionSummary.
+  const monthRange = useMemo(() => {
+    const pad = (n) => String(n).padStart(2, '0');
+    const last = new Date(currentMonth.year, currentMonth.month, 0).getDate();
+    return {
+      from: `${currentMonth.year}-${pad(currentMonth.month)}-01`,
+      to: `${currentMonth.year}-${pad(currentMonth.month)}-${pad(last)}`,
+    };
+  }, [currentMonth]);
+  // Raw transaction rows for the current month (existing authoritative
+  // source). Aggregated below into per-student nets.
+  const [monthTxns, setMonthTxns] = useState([]);
   const [modalStudent, setModalStudent] = useState(null);
   const [modalMode, setModalMode] = useState('record');
   const [timelines, setTimelines] = useState({});
@@ -164,20 +178,25 @@ export default function Payments() {
       .catch(() => {});
   }, [isAdmin]);
 
+  // Refreshes everything the Overview derives from the ledger: the cash
+  // total and the per-student monthly nets. Called on mount and after
+  // every successful write (record/bulk/correction) so counts update
+  // without a full page reload.
+  const refreshMonthCollection = useCallback(() => {
+    if (!isAdmin) return Promise.resolve();
+    return Promise.all([
+      getMonthlyPaymentCollection(currentMonth.year, currentMonth.month)
+        .then((row) => setCashCollected(Number(row?.total_collected || 0)))
+        .catch(() => setCashCollected(0)),
+      getPaymentCollectionSummary(monthRange.from, monthRange.to)
+        .then((rows) => setMonthTxns(rows || []))
+        .catch(() => setMonthTxns([])),
+    ]).then(() => {});
+  }, [isAdmin, currentMonth, monthRange]);
+
   useEffect(() => {
-    if (!isAdmin) return;
-    let cancelled = false;
-    getMonthlyPaymentCollection(currentMonth.year, currentMonth.month)
-      .then((row) => {
-        if (!cancelled) setCashCollected(Number(row?.total_collected || 0));
-      })
-      .catch(() => {
-        if (!cancelled) setCashCollected(0);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [isAdmin, currentMonth]);
+    refreshMonthCollection();
+  }, [refreshMonthCollection]);
 
   function openCorrection(tx) {
     setCorrectionTx(tx);
@@ -227,6 +246,7 @@ export default function Payments() {
       setNewStatuses((prev) => ({ ...prev, [studentId]: st }));
       setTimelines((prev) => ({ ...prev, [studentId]: tl }));
       setCorrectionTx(null);
+      refreshMonthCollection();
     } catch (e) {
       setCorrectionError(e.message || String(e));
     } finally {
@@ -299,6 +319,19 @@ export default function Payments() {
     return c;
   }, [filteredStudents, newStatuses, t, locale]);
 
+  // Per-student net for the current collection month, aggregated from the
+  // authoritative transaction rows. Corrections naturally net out
+  // duplicates (Asadbek/Ziyoda) and net-zero test rows (Dave), so a
+  // monthly payer is simply net > 0. Membership is always intersected
+  // with the roster lists below, so inactive/unknown ids never count.
+  const payerNetById = useMemo(() => {
+    const m = new Map();
+    for (const tx of monthTxns) {
+      m.set(tx.student_id, (m.get(tx.student_id) || 0) + Number(tx.amount || 0));
+    }
+    return m;
+  }, [monthTxns]);
+
   const overview = useMemo(() => {
     const total = filteredStudents.length;
     let paid = 0;
@@ -307,11 +340,14 @@ export default function Payments() {
     // (getMonthlyPaymentCollection). It must NOT be the sum of covered
     // students' monthly fees - that double-counts advance/older payments.
     const collected = cashCollected ?? 0;
+    // Students Paid = monthly payers (net > 0 in the current collection
+    // month), NOT coverage status. A student covered through October by an
+    // older payment counts only if they also transacted this month.
+    const isMonthPayer = (id) => (payerNetById.get(id) || 0) > 0;
     for (const s of filteredStudents) {
       const fee = feeForStudent(s);
       expectedTotal += fee;
-      const kind = classifyPayment(newStatuses[s.id], s.monthly_fee, t, locale).kind;
-      if (kind === 'paid') {
+      if (isMonthPayer(s.id)) {
         paid += 1;
       }
     }
@@ -328,8 +364,7 @@ export default function Payments() {
       for (const s of studentsInGroup) {
         const fee = feeForStudent(s);
         gExpected += fee;
-        const kind = classifyPayment(newStatuses[s.id], s.monthly_fee, t, locale).kind;
-        if (kind === 'paid') {
+        if ((payerNetById.get(s.id) || 0) > 0) {
           gPaid += 1;
           gCollected += fee;
         }
@@ -347,7 +382,7 @@ export default function Payments() {
       };
     });
     return { total, paid, remaining, expectedTotal, collected, remainingAmount, paidPct, remainingPct, groups };
-  }, [filteredStudents, searchFilteredStudents, newStatuses, cashCollected, t, locale]);
+  }, [filteredStudents, searchFilteredStudents, payerNetById, cashCollected]);
 
   function sortByKey(list, statuses, sortKey) {
     const withStatus = [...list];
@@ -534,6 +569,7 @@ export default function Payments() {
     setBulkRecording(false);
     setBulkFeeConfirming(false);
     setBulkAdvanceConfirming(false);
+    if (results.success.length > 0) refreshMonthCollection();
     if (results.success.length > 0 && results.failed.length === 0) {
       // keep selection but show success
     }
@@ -579,6 +615,7 @@ export default function Payments() {
       setNewStatuses((prev) => ({ ...prev, [studentId]: st2 }));
       setTimelines((prev) => ({ ...prev, [studentId]: tl }));
       setRecordSuccess({ paidThroughDate: st2.paid_through_date });
+      refreshMonthCollection();
     } catch (e) {
       setRecordError(e.message || String(e));
     } finally {
