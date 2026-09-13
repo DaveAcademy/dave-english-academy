@@ -13,6 +13,7 @@ import { DUE_SOON_DAYS, TIMELINE_INITIAL_LIMIT } from '../config';
 import {
   getStudentPaymentStatus,
   getAdminBatchPaymentStatus,
+  getMonthlyPaymentCollection,
   getPaymentTimeline,
   recordPayment,
   createCorrection,
@@ -95,6 +96,14 @@ export default function Payments() {
   );
 
   const [newStatuses, setNewStatuses] = useState({});
+  // Actual cash received in the current calendar month (transaction-based
+  // collection, not covered-fee sums). Null while loading; formatUZS(null)
+  // renders 0, replaced by the real total once the RPC resolves.
+  const [cashCollected, setCashCollected] = useState(null);
+  const currentMonth = useMemo(() => {
+    const d = new Date();
+    return { year: d.getFullYear(), month: d.getMonth() + 1 };
+  }, []);
   const [modalStudent, setModalStudent] = useState(null);
   const [modalMode, setModalMode] = useState('record');
   const [timelines, setTimelines] = useState({});
@@ -154,6 +163,21 @@ export default function Payments() {
       .then((rows) => setAdminNames(Object.fromEntries(rows.map((r) => [r.id, r.full_name]))))
       .catch(() => {});
   }, [isAdmin]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    let cancelled = false;
+    getMonthlyPaymentCollection(currentMonth.year, currentMonth.month)
+      .then((row) => {
+        if (!cancelled) setCashCollected(Number(row?.total_collected || 0));
+      })
+      .catch(() => {
+        if (!cancelled) setCashCollected(0);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isAdmin, currentMonth]);
 
   function openCorrection(tx) {
     setCorrectionTx(tx);
@@ -279,15 +303,16 @@ export default function Payments() {
     const total = filteredStudents.length;
     let paid = 0;
     let expectedTotal = 0;
-    let collected = 0;
+    // Total Collected = actual cash received in the current calendar month
+    // (getMonthlyPaymentCollection). It must NOT be the sum of covered
+    // students' monthly fees - that double-counts advance/older payments.
+    const collected = cashCollected ?? 0;
     for (const s of filteredStudents) {
       const fee = feeForStudent(s);
       expectedTotal += fee;
       const kind = classifyPayment(newStatuses[s.id], s.monthly_fee, t, locale).kind;
-      const isPaid = kind === 'paid';
-      if (isPaid) {
+      if (kind === 'paid') {
         paid += 1;
-        collected += fee;
       }
     }
     const remaining = Math.max(0, total - paid);
@@ -322,7 +347,7 @@ export default function Payments() {
       };
     });
     return { total, paid, remaining, expectedTotal, collected, remainingAmount, paidPct, remainingPct, groups };
-  }, [filteredStudents, searchFilteredStudents, newStatuses, t, locale]);
+  }, [filteredStudents, searchFilteredStudents, newStatuses, cashCollected, t, locale]);
 
   function sortByKey(list, statuses, sortKey) {
     const withStatus = [...list];
