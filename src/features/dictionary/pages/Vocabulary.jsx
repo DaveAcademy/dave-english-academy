@@ -14,7 +14,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Upload, Plus, Pencil, Trash2, X, Search, ImagePlus, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
 import { useAcademy } from '../../../lib/AcademyDataContext';
 import { LevelBadge } from '../../../components/Badge';
-import { uploadAttachment, getAttachmentUrl } from '../../../lib/db';
+import { getAttachmentUrl } from '../../../lib/db';
 import {
   listLessonVocabulary,
   bulkCreateVocabularyItems,
@@ -55,7 +55,7 @@ export default function Vocabulary() {
   const [importResult, setImportResult] = useState(null);
 
   // ---------- single-word popup (add or edit) ----------
-  const [wordModal, setWordModal] = useState(null); // null | { mode: 'create' | 'edit', form, editingId, file, removeImage }
+  const [wordModal, setWordModal] = useState(null); // null | { mode: 'create' | 'edit', form, editingId }
 
   const refresh = useCallback(async (id) => {
     if (!id) {
@@ -103,15 +103,13 @@ export default function Vocabulary() {
 
   // ---------- single-word popup ----------
 
-  const openCreateModal = () => setWordModal({ mode: 'create', form: EMPTY_WORD_FORM, editingId: null, file: null, removeImage: false });
+  const openCreateModal = () => setWordModal({ mode: 'create', form: EMPTY_WORD_FORM, editingId: null });
 
   const openEditModal = (word) =>
     setWordModal({
       mode: 'edit',
       form: { english: word.english, uzbek: word.uzbek, example: word.example || '', pronunciation: word.pronunciation || '' },
       editingId: word.id,
-      file: null,
-      removeImage: false,
     });
 
   const closeModal = () => setWordModal(null);
@@ -133,20 +131,9 @@ export default function Vocabulary() {
       };
 
       if (editingId) {
-        let payload = basePayload;
-        if (wordModal.file) {
-          const uploaded = await uploadAttachment(wordModal.file, `vocabulary-images/${activeLessonId}`);
-          payload = { ...payload, image_path: uploaded.path, image_name: uploaded.name };
-        } else if (wordModal.removeImage) {
-          payload = { ...payload, image_path: null, image_name: null };
-        }
-        await updateVocabularyItem(editingId, payload);
+        await updateVocabularyItem(editingId, basePayload);
       } else {
-        const record = await createVocabularyItem({ ...basePayload, lesson_id: activeLessonId, display_order: words.length });
-        if (wordModal.file) {
-          const uploaded = await uploadAttachment(wordModal.file, `vocabulary-images/${activeLessonId}`);
-          await updateVocabularyItem(record.id, { image_path: uploaded.path, image_name: uploaded.name });
-        }
+        await createVocabularyItem({ ...basePayload, lesson_id: activeLessonId, display_order: words.length });
       }
       closeModal();
       await refresh(activeLessonId);
@@ -359,16 +346,6 @@ export default function Vocabulary() {
                 onChange={(e) => setWordModal({ ...wordModal, form: { ...wordModal.form, pronunciation: e.target.value } })}
                 className="input w-full"
               />
-              <label className="flex cursor-pointer items-center gap-1.5 text-xs font-semibold text-ink/60 hover:text-ink">
-                <ImagePlus size={14} />
-                {wordModal.file ? wordModal.file.name : 'Attach image (optional)'}
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => setWordModal({ ...wordModal, file: e.target.files?.[0] || null, removeImage: false })}
-                />
-              </label>
             </div>
             <div className="mt-4 flex gap-2">
               <button

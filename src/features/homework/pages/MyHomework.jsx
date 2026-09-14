@@ -1,26 +1,25 @@
 // MyHomework.jsx - premium student homework portal
 // Preserves authoritative backend: useAcademy (level filter, homeworkStatus/homeworkSubmissionFiles/lessons),
-// storageBridge via uploadAttachment/getAttachmentUrl, submitMyHomeworkFiles/removeMyHomeworkSubmissionFile.
+// storageBridge via getAttachmentUrl (viewing existing files), removeMyHomeworkSubmissionFile.
 // Homework points remain MANUAL only (score/feedback rendered, never auto-awarded).
 // Adds: 6-stage status mapping, progress indicators, valid/invalid submission distinction,
 // premium empty state, 320px+ mobile, motion-safe animations, >=44px tap targets.
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  BookOpen, Download, Upload, MessageSquare, X, Image as ImageIcon,
+  BookOpen, Download, MessageSquare, X, Image as ImageIcon,
   Clock, CheckCircle2, AlertCircle, Award, FileText, Sparkles,
 } from 'lucide-react';
 import { useAcademy } from '../../../lib/AcademyDataContext';
-import { uploadAttachment, getAttachmentUrl } from '../../../lib/db';
+import { getAttachmentUrl } from '../../../lib/db';
 import LessonSectionTabs from '../../../components/lesson/LessonSectionTabs';
 import StatusPill from '../../../components/StatusPill';
 import ErrorBanner from '../../../components/ErrorBanner';
 import { SkeletonList } from '../../../components/Skeleton';
 
 const PILL_TONE = { graded: 'brand', awaitingGrading: 'success', notSubmitted: 'neutral' };
-const MAX_IMAGES = 5;
 
 // 6-stage journey labels — derived from authoritative fields (score/feedback/status/files)
 // without inventing new writes. Ranges kept read-only.
@@ -46,21 +45,10 @@ export default function MyHomework() {
   const { t } = useTranslation(['homework', 'common', 'portal']);
   const {
     students, homework, homeworkStatus, homeworkSubmissionFiles, lessons,
-    submitMyHomeworkFiles, removeMyHomeworkSubmissionFile, loading,
+    removeMyHomeworkSubmissionFile, loading,
   } = useAcademy();
   const { me } = useAcademy(); // single source, no fallback
-  const [submittingId, setSubmittingId] = useState(null);
   const [actionError, setActionError] = useState(null);
-  const [pendingByHomework, setPendingByHomework] = useState({});
-  const pendingRef = useRef(pendingByHomework);
-  pendingRef.current = pendingByHomework;
-
-  useEffect(
-    () => () => {
-      Object.values(pendingRef.current).forEach((items) => items.forEach((i) => URL.revokeObjectURL(i.previewUrl)));
-    },
-    []
-  );
 
   const myHomework = useMemo(() => {
     if (!me) return [];
@@ -97,58 +85,6 @@ export default function MyHomework() {
       if (url) window.open(url, '_blank', 'noopener');
       else setActionError(t('openFileFailed'));
     } catch { setActionError(t('openFileFailed')); }
-  };
-
-  const clearPending = (homeworkId) => {
-    setPendingByHomework((prev) => {
-      (prev[homeworkId] || []).forEach((i) => URL.revokeObjectURL(i.previewUrl));
-      const next = { ...prev };
-      delete next[homeworkId];
-      return next;
-    });
-  };
-
-  const handlePickFiles = (homeworkId, fileList) => {
-    const picked = Array.from(fileList || []).filter((f) => f.type.startsWith('image/'));
-    if (picked.length === 0) return;
-    const already = submittedFilesFor(homeworkId).length + (pendingByHomework[homeworkId] || []).length;
-    const room = Math.max(0, MAX_IMAGES - already);
-    const accepted = picked.slice(0, room);
-    if (accepted.length < picked.length) setActionError(t('maxImagesReached', { max: MAX_IMAGES }));
-    const withPreviews = accepted.map((file) => ({ file, previewUrl: URL.createObjectURL(file) }));
-    setPendingByHomework((prev) => ({ ...prev, [homeworkId]: [...(prev[homeworkId] || []), ...withPreviews] }));
-  };
-
-  const handleRemovePending = (homeworkId, index) => {
-    setPendingByHomework((prev) => {
-      const items = prev[homeworkId] || [];
-      const removed = items[index];
-      if (removed) URL.revokeObjectURL(removed.previewUrl);
-      return { ...prev, [homeworkId]: items.filter((_, i) => i !== index) };
-    });
-  };
-
-  const handleUploadPending = async (homeworkId) => {
-    const pending = pendingByHomework[homeworkId] || [];
-    if (pending.length === 0 || !me) return;
-    setSubmittingId(homeworkId);
-    setActionError(null);
-    const uploaded = [];
-    let uploadFailed = false;
-    for (const item of pending) {
-      try {
-        const result = await uploadAttachment(item.file, `homework-answers/${me.id}`);
-        uploaded.push({ fileUrl: result.path, fileName: result.name, fileType: result.type });
-      } catch { uploadFailed = true; break; }
-    }
-    if (uploaded.length > 0) {
-      try {
-        await submitMyHomeworkFiles(homeworkId, me.id, uploaded);
-        clearPending(homeworkId);
-        if (uploadFailed) setActionError(t('partialUploadFailed'));
-      } catch { setActionError(t('submitAnswerFailed')); }
-    } else setActionError(t('uploadFileFailed'));
-    setSubmittingId(null);
   };
 
   const handleRemoveSubmitted = async (id) => {
@@ -240,7 +176,7 @@ export default function MyHomework() {
           <div className="grid gap-0 border-t border-ink/5 bg-paper/60 sm:grid-cols-3">
             {[
               { n: '01', t2: 'Download', d: 'Open the lesson PDF' },
-              { n: '02', t2: 'Submit', d: 'Upload clear photos' },
+              { n: '02', t2: 'Submit', d: 'Complete your assignment' },
               { n: '03', t2: 'Feedback', d: 'Teacher points & notes' },
             ].map((s) => (
               <div key={s.n} className="px-6 py-4 text-center sm:border-r sm:border-ink/5 sm:last:border-0">
@@ -260,10 +196,8 @@ export default function MyHomework() {
               const pill = pillOf(status, h.id);
               const overdue = isOverdue(h.due_date);
               const lesson = lessonOf(h.lesson_id);
-              const pending = pendingByHomework[h.id] || [];
               const submittedFiles = submittedFilesFor(h.id);
               const hasSubmission = submittedFiles.length > 0 || Boolean(status.answer_file_url);
-              const roomLeft = Math.max(0, MAX_IMAGES - submittedFiles.length - pending.length);
               const journey = deriveJourney(status, hasSubmission, graded);
               const curIndex = JOURNEY_ORDER.indexOf(journey.key);
               const isValidSubmission = hasSubmission && submittedFiles.length > 0;
@@ -343,12 +277,12 @@ export default function MyHomework() {
                        </div>
                      )}
                      {/* Lesson PDF hint — make action explicit */}
-                     {lesson?.pdf_path && !graded && (
-                       <div className="mt-3 flex items-center gap-2 rounded-xl border border-brand-100 bg-brand-50 px-3 py-2.5">
-                         <FileText size={14} className="shrink-0 text-brand-600" />
-                         <p className="text-xs font-medium leading-relaxed text-brand-800">{t('portal:mpLessonPdfHint', { topic: lesson.topic })} — download the PDF, complete it by hand, then photograph every page.</p>
-                       </div>
-                     )}
+                      {lesson?.pdf_path && !graded && (
+                        <div className="mt-3 flex items-center gap-2 rounded-xl border border-brand-100 bg-brand-50 px-3 py-2.5">
+                          <FileText size={14} className="shrink-0 text-brand-600" />
+                          <p className="text-xs font-medium leading-relaxed text-brand-800">{t('portal:mpLessonPdfHint', { topic: lesson.topic })} — download the PDF and complete it by hand.</p>
+                        </div>
+                      )}
 
                     {/* status journey */}
                     <div className="mt-3 rounded-xl bg-ink/[0.02] px-3 py-2.5 ring-1 ring-ink/[0.04]">
@@ -392,21 +326,7 @@ export default function MyHomework() {
                        {hasSubmission && graded && <span className="text-ink/30">{t('portal:mpValidSubmission')}</span>}
                        {!hasSubmission && overdue && <span className="font-semibold text-inactive">{t('portal:mpDeadlinePassedInline')}</span>}
                      </div>
-                     {/* Photo quality guidance — compact, near upload */}
-                     {!graded && (
-                       <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5">
-                         <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-amber-800"><ImageIcon size={12} /> Photo tips — {t('portal:mpValidSubmission')}</p>
-                         <ul className="mt-1.5 grid gap-1 text-xs leading-relaxed text-amber-900/80 sm:grid-cols-2">
-                           <li>• Take clear, well-lit photos — avoid blur or shadows.</li>
-                           <li>• Show the whole page — answers must be readable.</li>
-                           <li>• Upload all pages of the completed lesson.</li>
-                           <li>• Handwritten work only — don&apos;t screenshot the PDF.</li>
-                           <li className="sm:col-span-2">• Up to {MAX_IMAGES} photos per homework — they stay together as one submission.</li>
-                         </ul>
-                       </div>
-                     )}
-
-                    {/* teacher feedback */}
+                      {/* teacher feedback */}
                     {graded && status.feedback && (
                       <div className="mt-3 rounded-xl border border-brand-100 bg-brand-50 px-3 py-3">
                         <p className="text-[11px] font-bold uppercase tracking-wide text-brand-700/70">{t('portal:teacherFeedbackLabel')}</p>
@@ -436,59 +356,15 @@ export default function MyHomework() {
                       </div>
                     )}
 
-                    {pending.length > 0 && (
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        {pending.map((item, i) => (
-                          <div key={item.previewUrl} className="relative h-20 w-20 overflow-hidden rounded-xl border border-ink/10 bg-white shadow-sm" style={{ animation: 'scaleIn 0.2s ease-out' }}>
-                            <img src={item.previewUrl} alt="" className="h-full w-full object-cover" />
-                            <button
-                              onClick={() => handleRemovePending(h.id, i)}
-                              aria-label={t('removeImage')}
-                              className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/70 text-white backdrop-blur hover:bg-black/80"
-                            >
-                              <X size={11} />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
                      <div className="mt-3 flex flex-wrap items-center gap-2">
-                       {h.file_url && (
-                         <button
-                           onClick={() => handleOpenFile(h.file_url)}
-                           className="inline-flex min-h-[44px] min-w-0 max-w-full items-center gap-1.5 rounded-xl border border-brand-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-brand-700 shadow-sm transition-colors hover:bg-brand-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-                         >
-                           <Download size={14} className="shrink-0" /> <span className="min-w-0 max-w-[52vw] truncate sm:max-w-[240px]">{h.file_name || t('homeworkFileDefault')}</span>
-                         </button>
-                       )}
-                       {!graded && roomLeft > 0 && (
-                         <label className="inline-flex min-h-[46px] cursor-pointer items-center gap-2 rounded-xl border-2 border-dashed border-brand-300 bg-brand-50 px-4 py-3 text-sm font-bold text-brand-700 shadow-sm transition-colors hover:border-brand-400 hover:bg-brand-100 focus-within:ring-2 focus-within:ring-brand-500">
-                           <Upload size={16} className="shrink-0" />
-                           Take photo / Choose images
-                           <span className="hidden text-xs font-medium text-brand-600 sm:inline">— up to {roomLeft} more</span>
-                           <input
-                             type="file"
-                             accept="image/*"
-                             capture="environment"
-                             multiple
-                             className="hidden"
-                             disabled={submittingId === h.id}
-                             onChange={(e) => { handlePickFiles(h.id, e.target.files); e.target.value = ''; }}
-                           />
-                         </label>
-                       )}
-                       {!graded && pending.length > 0 && (
-                         <button
-                           onClick={() => handleUploadPending(h.id)}
-                           disabled={submittingId === h.id}
-                           className="inline-flex min-h-[46px] items-center gap-2 rounded-xl bg-ink px-5 py-3 text-sm font-bold text-white shadow-sm transition-colors hover:bg-ink/90 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink"
-                         >
-                           <Upload size={14} />
-                           {submittingId === h.id ? t('uploading') : t('uploadImagesCount', { count: pending.length })}
-                           <span className="hidden text-xs font-normal text-white/70 sm:inline">— will be visible to teacher</span>
-                         </button>
-                       )}
+                        {h.file_url && (
+                          <button
+                            onClick={() => handleOpenFile(h.file_url)}
+                            className="inline-flex min-h-[44px] min-w-0 max-w-full items-center gap-1.5 rounded-xl border border-brand-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-brand-700 shadow-sm transition-colors hover:bg-brand-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                          >
+                            <Download size={14} className="shrink-0" /> <span className="min-w-0 max-w-[52vw] truncate sm:max-w-[240px]">{h.file_name || t('homeworkFileDefault')}</span>
+                          </button>
+                        )}
                       {status.answer_file_url && (
                         <button onClick={() => handleOpenFile(status.answer_file_url)} className="inline-flex min-h-[44px] items-center px-3 py-2.5 text-xs font-medium text-ink/50 hover:text-brand-600 hover:underline">
                           {t('viewMySubmission')}

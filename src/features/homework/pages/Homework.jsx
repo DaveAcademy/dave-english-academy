@@ -1,6 +1,6 @@
 // Homework.jsx
-// Admin/teacher view: create, edit, delete homework, attach/replace a
-// file, set a deadline, track status, and leave feedback. Students see
+// Admin/teacher view: create, edit, delete homework, set a deadline,
+// track status, and leave feedback. Students see
 // their own assignments on the separate portal page
 // src/pages/portal/MyHomework.jsx (same admin/portal split as Exams).
 
@@ -12,7 +12,6 @@ import { useAcademy } from '../../../lib/AcademyDataContext';
 import { LevelBadge } from '../../../components/Badge';
 import ConfirmDialog from '../../../components/ConfirmDialog';
 import {
-  uploadAttachment,
   getAttachmentUrl,
   listAllLessonWorkSubmissions,
   listLessonWorkSubmissionFilesForSubmissions,
@@ -40,11 +39,7 @@ export default function Homework() {
   } = useAcademy();
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
-  const [file, setFile] = useState(null);
-  const [removeFile, setRemoveFile] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState(null);
   const [selectedHomeworkId, setSelectedHomeworkId] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [deletingHomework, setDeletingHomework] = useState(null);
@@ -85,7 +80,6 @@ export default function Homework() {
 
   const sortedHomework = useMemo(() => [...homework].sort((a, b) => new Date(b.due_date) - new Date(a.due_date)), [homework]);
   const selected = sortedHomework.find((h) => h.id === selectedHomeworkId) || sortedHomework[0] || null;
-  const editingHomework = editingId ? homework.find((h) => h.id === editingId) : null;
 
   const activeStudents = useMemo(
     () => [...students].filter((s) => s.status === 'Active').sort((a, b) => a.real_name.localeCompare(b.real_name)),
@@ -223,9 +217,6 @@ export default function Homework() {
 
   const resetForm = () => {
     setForm(EMPTY_FORM);
-    setFile(null);
-    setRemoveFile(false);
-    setUploadError(null);
     setFormOpen(false);
     setEditingId(null);
   };
@@ -234,7 +225,6 @@ export default function Homework() {
     e.preventDefault();
     if (!form.title.trim()) return;
     setSaving(true);
-    setUploadError(null);
     try {
       const basePayload = {
         title: form.title,
@@ -245,36 +235,10 @@ export default function Homework() {
       };
 
       if (editingId) {
-        let payload = basePayload;
-        if (file) {
-          setUploading(true);
-          try {
-            const uploaded = await uploadAttachment(file, 'homework');
-            payload = { ...payload, file_url: uploaded.path, file_name: uploaded.name, file_type: uploaded.type };
-          } catch {
-            setUploadError(t('uploadFailedEdit'));
-            return;
-          } finally {
-            setUploading(false);
-          }
-        } else if (removeFile) {
-          payload = { ...payload, file_url: null, file_name: null, file_type: null };
-        }
-        await editHomework(editingId, payload);
+        await editHomework(editingId, basePayload);
       } else {
         const record = await addHomework(basePayload);
         setSelectedHomeworkId(record.id);
-        if (file) {
-          setUploading(true);
-          try {
-            const uploaded = await uploadAttachment(file, 'homework');
-            await editHomework(record.id, { file_url: uploaded.path, file_name: uploaded.name, file_type: uploaded.type });
-          } catch {
-            setUploadError(t('uploadFailedCreate'));
-          } finally {
-            setUploading(false);
-          }
-        }
       }
       resetForm();
     } finally {
@@ -291,9 +255,6 @@ export default function Homework() {
       due_date: hw.due_date,
       lesson_id: hw.lesson_id || '',
     });
-    setFile(null);
-    setRemoveFile(false);
-    setUploadError(null);
     setFormOpen(true);
   };
 
@@ -333,7 +294,6 @@ export default function Homework() {
       </header>
 
       {error && <div className="mb-4 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{error}</div>}
-      {uploadError && <div className="mb-4 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{uploadError}</div>}
 
       {formOpen && (
         <form onSubmit={handleCreate} className="mb-4 grid gap-3 rounded-xl bg-white p-4 shadow-card sm:grid-cols-2">
@@ -378,48 +338,13 @@ export default function Homework() {
               className="input"
             />
           </div>
-          <div className="flex flex-wrap items-center gap-2 sm:col-span-2">
-            <label className="flex cursor-pointer items-center gap-1.5 text-xs font-semibold text-ink/60 hover:text-ink">
-              <Paperclip size={14} />
-              {file ? file.name : editingHomework?.file_name && !removeFile ? t('replaceFile') : t('attachFileOptional')}
-              <input
-                type="file"
-                accept=".pdf,.doc,.docx,image/*"
-                className="hidden"
-                onChange={(e) => {
-                  const picked = e.target.files?.[0] || null;
-                  setFile(picked);
-                  if (picked) setRemoveFile(false);
-                }}
-              />
-            </label>
-            {editingHomework?.file_url && !file && !removeFile && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => handleOpenFile(editingHomework.file_url)}
-                  className="flex items-center gap-1 text-xs font-semibold text-brand-600 hover:underline"
-                >
-                  <Download size={13} /> {editingHomework.file_name || t('homeworkFileDefault')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRemoveFile(true)}
-                  className="flex items-center gap-1 text-xs font-semibold text-inactive hover:underline"
-                >
-                  <X size={13} /> {t('removeFile')}
-                </button>
-              </>
-            )}
-            {removeFile && <span className="text-xs font-semibold text-inactive">{t('fileWillBeRemoved')}</span>}
-          </div>
           <div className="flex gap-2 sm:col-span-2">
             <button
               type="submit"
               disabled={saving}
               className="flex-1 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
             >
-              {uploading ? t('uploading') : saving ? t('common:saving') : editingId ? t('common:saveChanges') : t('addHomework')}
+              {saving ? t('common:saving') : editingId ? t('common:saveChanges') : t('addHomework')}
             </button>
             {editingId && (
               <button type="button" onClick={resetForm} className="rounded-lg border border-ink/15 px-4 py-2.5 text-sm font-semibold text-ink/60">

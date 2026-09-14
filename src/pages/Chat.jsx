@@ -14,20 +14,20 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Send, Paperclip, Trash2, Search, ArrowLeft, Megaphone, Users, FileText, X, RotateCw } from 'lucide-react';
+import { Send, Paperclip, Trash2, Search, ArrowLeft, Megaphone, Users, FileText } from 'lucide-react';
 import { useAcademy } from '../lib/AcademyDataContext';
 import { useAuth } from '../lib/AuthContext';
 import { supabase } from '../lib/supabaseClient';
-import { uploadAttachmentWithProgress, getAttachmentUrl, listTeacherGroupAssignments } from '../lib/db';
+import { getAttachmentUrl, listTeacherGroupAssignments } from '../lib/db';
 import { LEVELS } from '../lib/levels';
 
-// Attachments are normalized to { url, name, type } whether they come
-// from the legacy single-attachment columns on messages (0009) or from
-// message_attachments (0047, used when a message has more than one file).
+// Attachments below are read-only: existing message attachments are
+// still viewable (legacy single-attachment columns on messages (0009) or
+// message_attachments (0047)), but the composer no longer accepts new
+// files - text only.
 const isImageAttachment = (a) => (a.type || '').startsWith('image/');
 const isPdfAttachment = (a) => a.type === 'application/pdf' || (a.name || '').toLowerCase().endsWith('.pdf');
 
-const MAX_ATTACHMENTS = 5;
 const DISCUSSION_KEY = { lesson: 'discussionLesson', homework: 'discussionHomework', exam: 'discussionExam', certificate: 'discussionCertificate' };
 
 function initials(label) {
@@ -53,7 +53,7 @@ export default function Chat() {
   const { profile, role } = useAuth();
   const {
     students, lessons, homework, exams, certificates,
-    messages, messageReads, messageAttachments, addMessage, addMessageAttachments, removeMessage, markRead,
+    messages, messageReads, messageAttachments, addMessage, removeMessage, markRead,
     setActiveConversationView, error,
   } = useAcademy();
   const [searchParams] = useSearchParams();
@@ -88,10 +88,8 @@ export default function Chat() {
 
   const [search, setSearch] = useState('');
   const [body, setBody] = useState('');
-  const [files, setFiles] = useState([]);
   const [sending, setSending] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(null);
-  const [uploadError, setUploadError] = useState(null);
+  const [sendError, setSendError] = useState(null);
   const [imageUrls, setImageUrls] = useState({});
   const [teacherProfiles, setTeacherProfiles] = useState([]);
   const [adminProfiles, setAdminProfiles] = useState([]);
@@ -335,41 +333,16 @@ export default function Chat() {
   const handleSend = useCallback(
     async (e) => {
       e?.preventDefault();
-      if (!body.trim() && files.length === 0) return;
+      if (!body.trim()) return;
       if (!isContextView && !activeConversation) return;
       setSending(true);
-      setUploadError(null);
+      setSendError(null);
       try {
-        let attachment = {};
-        let extraAttachments = [];
-        if (files.length === 1) {
-          // Single attachment keeps using the legacy columns on messages
-          // itself (0009) - unchanged from before multi-attachment support.
-          setUploadProgress(0);
-          const uploaded = await uploadAttachmentWithProgress(files[0], 'chat', setUploadProgress);
-          attachment = { attachment_url: uploaded.path, attachment_name: uploaded.name, attachment_type: uploaded.type };
-        } else if (files.length > 1) {
-          // First file keeps the legacy columns (so the message row still
-          // satisfies messages_body_or_attachment even with no caption
-          // text); the rest go to message_attachments.
-          setUploadProgress(0);
-          for (let i = 0; i < files.length; i++) {
-            const uploaded = await uploadAttachmentWithProgress(files[i], 'chat', (pct) => {
-              setUploadProgress(Math.round((i * 100 + pct) / files.length));
-            });
-            if (i === 0) {
-              attachment = { attachment_url: uploaded.path, attachment_name: uploaded.name, attachment_type: uploaded.type };
-            } else {
-              extraAttachments.push(uploaded);
-            }
-          }
-        }
         const payload = {
           sender_id: profile.id,
           sender_name: profile.full_name || profile.email,
           scope: isContextView ? 'context' : activeConversation.kind,
-          body: body.trim() || null,
-          ...attachment,
+          body: body.trim(),
         };
         if (isContextView) {
           payload.context_type = contextType;
@@ -379,20 +352,15 @@ export default function Chat() {
         } else if (activeConversation.kind === 'level') {
           payload.level = activeConversation.level;
         }
-        const record = await addMessage(payload);
-        if (extraAttachments.length > 0) {
-          await addMessageAttachments(record.id, extraAttachments);
-        }
+        await addMessage(payload);
         setBody('');
-        setFiles([]);
-        setUploadProgress(null);
       } catch (err) {
-        setUploadError(err.message || t('chat:uploadFailed'));
+        setSendError(err.message || t('chat:sendFailed'));
       } finally {
         setSending(false);
       }
     },
-    [body, files, profile, isContextView, contextType, contextId, activeConversation, addMessage, addMessageAttachments, t]
+    [body, profile, isContextView, contextType, contextId, activeConversation, addMessage, t]
   );
 
   const handleOpenAttachment = async (path) => {
@@ -524,71 +492,25 @@ export default function Chat() {
             placeholder={t('chat:writeMessage')}
             className="input resize-none"
           />
-          {uploadError && (
+          {sendError && (
             <div className="flex items-center justify-between gap-2 rounded-lg border border-inactive/30 bg-inactive/5 px-3 py-2 text-xs text-inactive">
-              <span className="truncate">{uploadError}</span>
+              <span className="truncate">{sendError}</span>
               <button
                 type="button"
                 onClick={() => handleSend()}
                 className="flex flex-shrink-0 items-center gap-1 font-semibold hover:underline"
               >
-                <RotateCw size={12} /> {t('chat:retry')}
+                {t('chat:retry')}
               </button>
             </div>
           )}
-          {sending && files.length > 0 && uploadProgress !== null && (
-            <div className="space-y-1">
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-paper">
-                <div className="h-full rounded-full bg-brand-500 transition-all" style={{ width: `${uploadProgress}%` }} />
-              </div>
-              <p className="text-[10px] text-ink/40">{t('chat:uploadingProgress', { percent: uploadProgress })}</p>
-            </div>
-          )}
-          {files.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {files.map((f, i) => (
-                <span key={`${f.name}-${i}`} className="flex items-center gap-1 rounded-full bg-paper px-2 py-1 text-[11px] text-ink/60">
-                  {f.name}
-                  {!sending && (
-                    <button
-                      type="button"
-                      onClick={() => setFiles((prev) => prev.filter((_, idx) => idx !== i))}
-                      aria-label={t('chat:removeAttachment')}
-                    >
-                      <X size={11} />
-                    </button>
-                  )}
-                </span>
-              ))}
-            </div>
-          )}
           <div className="flex items-center justify-between gap-2">
-            <label
-              className={`flex items-center gap-1.5 text-xs font-semibold text-ink/50 hover:text-ink ${
-                files.length >= MAX_ATTACHMENTS ? 'pointer-events-none opacity-40' : 'cursor-pointer'
-              }`}
-            >
-              <Paperclip size={14} />
-              {files.length > 0 ? t('chat:attachmentsCount', { count: files.length, max: MAX_ATTACHMENTS }) : t('chat:attachImageOrPdf')}
-              <input
-                type="file"
-                accept="image/*,application/pdf"
-                multiple
-                className="hidden"
-                onChange={(e) => {
-                  const picked = Array.from(e.target.files || []);
-                  if (picked.length > 0) setFiles((prev) => [...prev, ...picked].slice(0, MAX_ATTACHMENTS));
-                  setUploadError(null);
-                  e.target.value = '';
-                }}
-              />
-            </label>
             <button
               type="submit"
-              disabled={sending || (!body.trim() && files.length === 0)}
+              disabled={sending || !body.trim()}
               className="ml-auto flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
             >
-              <Send size={15} /> {sending ? (files.length > 0 ? t('chat:uploadingMessage') : t('chat:sendingMessage')) : t('chat:send')}
+              <Send size={15} /> {sending ? t('chat:sendingMessage') : t('chat:send')}
             </button>
           </div>
         </>

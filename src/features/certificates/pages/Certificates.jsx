@@ -9,7 +9,7 @@ import { LevelBadge } from '../../../components/Badge';
 import { LEVELS } from '../../../lib/levels';
 import ConfirmDialog from '../../../components/ConfirmDialog';
 import { downloadCertificatePdf, printCertificatePdf, pickCertificateTemplate, VECTOR_TEMPLATE_KEYS } from '../../../utils/pdf';
-import { uploadAttachment, getAttachmentUrl } from '../../../lib/db';
+import { getAttachmentUrl } from '../../../lib/db';
 
 const EMPTY_FORM = { studentId: '', title: '' };
 
@@ -20,7 +20,6 @@ export default function Certificates() {
   const isAdmin = role === 'administrator';
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
-  const [uploadingKey, setUploadingKey] = useState(null);
 
   const [filters, setFilters] = useState({ search: '', level: '', studentId: '', type: '' });
   const [editingId, setEditingId] = useState(null);
@@ -160,17 +159,6 @@ export default function Certificates() {
     }
   };
 
-  const handleTemplateUpload = async (key, file) => {
-    if (!file) return;
-    setUploadingKey(key);
-    try {
-      const uploaded = await uploadAttachment(file, 'certificate-template');
-      await updateCertificateTemplate(key, { file_url: uploaded.path, file_name: uploaded.name });
-    } finally {
-      setUploadingKey(null);
-    }
-  };
-
   const handleToggleShowTitle = async (key, checked) => {
     await updateCertificateTemplate(key, { show_title_overlay: checked });
   };
@@ -193,8 +181,8 @@ export default function Certificates() {
           </div>
           <p className="mb-3 text-xs text-ink/50">
             Student of the Week/Month must each use their own official PDF template - there is no fallback design for them, so
-            generating one of those certificates before its template is uploaded here shows an error instead. Any other certificate
-            type uses the plain built-in design when nothing is uploaded.
+            generating one of those certificates before its template is set shows an error instead. Any other certificate
+            type uses the plain built-in design when no template is set.
           </p>
           <div className="space-y-2">
             {certificateTemplates.map((tpl) => (
@@ -215,16 +203,6 @@ export default function Certificates() {
                     Show award title text
                   </label>
                 )}
-                <label className="flex flex-shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-xs font-semibold text-brand-600 hover:bg-brand-50">
-                  <ImageIcon size={13} /> {uploadingKey === tpl.key ? 'Uploading...' : tpl.file_url ? 'Replace file' : 'Upload file'}
-                  <input
-                    type="file"
-                    accept={VECTOR_TEMPLATE_KEYS.has(tpl.key) ? 'image/*,application/pdf' : 'image/*'}
-                    className="hidden"
-                    disabled={!!uploadingKey}
-                    onChange={(e) => handleTemplateUpload(tpl.key, e.target.files?.[0])}
-                  />
-                </label>
               </div>
             ))}
           </div>

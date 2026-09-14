@@ -1,6 +1,6 @@
 // Exams.jsx
-// Admin/teacher view: create, edit, delete exams, attach/replace a file,
-// set a deadline, and enter scores. Students see their own assigned exams
+// Admin/teacher view: create, edit, delete exams, set a deadline, and
+// enter scores. Students see their own assigned exams
 // on the separate portal page src/pages/portal/MyExams.jsx (RLS-backed,
 // not a filtered version of this page - same structural split the rest of
 // the app already uses between admin/teacher pages and the student portal).
@@ -8,11 +8,11 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Plus, FileCheck2, Pencil, Trash2, Paperclip, MessageSquare, Download, X, CheckCircle2 } from 'lucide-react';
+import { Plus, FileCheck2, Pencil, Trash2, MessageSquare, Download, CheckCircle2 } from 'lucide-react';
 import { useAcademy } from '../../../lib/AcademyDataContext';
 import { LevelBadge } from '../../../components/Badge';
 import ConfirmDialog from '../../../components/ConfirmDialog';
-import { uploadAttachment, getAttachmentUrl } from '../../../lib/db';
+import { getAttachmentUrl } from '../../../lib/db';
 import { LEVELS } from '../../../lib/levels';
 import ExamGradingRoster from '../components/ExamGradingRoster';
 import ExamResultsView from '../components/ExamResultsView';
@@ -35,11 +35,7 @@ export default function Exams() {
   const { students, exams, examScores, lessons, addExam, editExam, removeExam, setExamScoreForStudent, error } = useAcademy();
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
-  const [file, setFile] = useState(null);
-  const [removeFile, setRemoveFile] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState(null);
   const [selectedExamId, setSelectedExamId] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [deletingExam, setDeletingExam] = useState(null);
@@ -48,7 +44,6 @@ export default function Exams() {
 
   const sortedExams = useMemo(() => [...exams].sort((a, b) => new Date(b.exam_date) - new Date(a.exam_date)), [exams]);
   const selectedExam = sortedExams.find((e) => e.id === selectedExamId) || sortedExams[0] || null;
-  const editingExam = editingId ? exams.find((e) => e.id === editingId) : null;
 
   // exam_date is a plain `date` column (no time-of-day), always compared as
   // local calendar days - same "compare local calendar days" pattern already
@@ -200,9 +195,6 @@ export default function Exams() {
 
   const resetForm = () => {
     setForm(EMPTY_FORM);
-    setFile(null);
-    setRemoveFile(false);
-    setUploadError(null);
     setFormOpen(false);
     setEditingId(null);
   };
@@ -211,7 +203,6 @@ export default function Exams() {
     e.preventDefault();
     if (!form.title.trim()) return;
     setSaving(true);
-    setUploadError(null);
     try {
       const basePayload = {
         title: form.title,
@@ -225,36 +216,10 @@ export default function Exams() {
       };
 
       if (editingId) {
-        let payload = basePayload;
-        if (file) {
-          setUploading(true);
-          try {
-            const uploaded = await uploadAttachment(file, 'exams');
-            payload = { ...payload, file_url: uploaded.path, file_name: uploaded.name, file_type: uploaded.type };
-          } catch {
-            setUploadError(t('uploadFailedEdit'));
-            return;
-          } finally {
-            setUploading(false);
-          }
-        } else if (removeFile) {
-          payload = { ...payload, file_url: null, file_name: null, file_type: null };
-        }
-        await editExam(editingId, payload);
+        await editExam(editingId, basePayload);
       } else {
         const record = await addExam(basePayload);
         setSelectedExamId(record.id);
-        if (file) {
-          setUploading(true);
-          try {
-            const uploaded = await uploadAttachment(file, 'exams');
-            await editExam(record.id, { file_url: uploaded.path, file_name: uploaded.name, file_type: uploaded.type });
-          } catch {
-            setUploadError(t('uploadFailedCreate'));
-          } finally {
-            setUploading(false);
-          }
-        }
       }
       resetForm();
     } finally {
@@ -274,9 +239,6 @@ export default function Exams() {
       exam_type: exam.exam_type || 'Written',
       lesson_id: exam.lesson_id || '',
     });
-    setFile(null);
-    setRemoveFile(false);
-    setUploadError(null);
     setFormOpen(true);
   };
 
@@ -400,7 +362,6 @@ export default function Exams() {
       </header>
 
       {error && <div className="mb-4 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{error}</div>}
-      {uploadError && <div className="mb-4 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{uploadError}</div>}
 
       {formOpen && (
         <form onSubmit={handleCreate} className="mb-4 grid gap-3 rounded-xl bg-white p-4 shadow-card sm:grid-cols-2">
@@ -465,48 +426,13 @@ export default function Exams() {
               className="input"
             />
           </div>
-          <div className="flex flex-wrap items-center gap-2 sm:col-span-2">
-            <label className="flex cursor-pointer items-center gap-1.5 text-xs font-semibold text-ink/60 hover:text-ink">
-              <Paperclip size={14} />
-              {file ? file.name : editingExam?.file_name && !removeFile ? t('replaceFile') : t('attachFile')}
-              <input
-                type="file"
-                accept=".pdf,.doc,.docx,image/*"
-                className="hidden"
-                onChange={(e) => {
-                  const picked = e.target.files?.[0] || null;
-                  setFile(picked);
-                  if (picked) setRemoveFile(false);
-                }}
-              />
-            </label>
-            {editingExam?.file_url && !file && !removeFile && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => handleOpenFile(editingExam.file_url)}
-                  className="flex items-center gap-1 text-xs font-semibold text-brand-600 hover:underline"
-                >
-                  <Download size={13} /> {editingExam.file_name || t('examFileDefault')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRemoveFile(true)}
-                  className="flex items-center gap-1 text-xs font-semibold text-inactive hover:underline"
-                >
-                  <X size={13} /> {t('removeFile')}
-                </button>
-              </>
-            )}
-            {removeFile && <span className="text-xs font-semibold text-inactive">{t('fileWillBeRemoved')}</span>}
-          </div>
           <div className="flex gap-2 sm:col-span-2">
             <button
               type="submit"
               disabled={saving}
               className="flex-1 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
             >
-              {uploading ? t('uploading') : saving ? t('common:saving') : editingId ? t('common:saveChanges') : t('addExam')}
+              {saving ? t('common:saving') : editingId ? t('common:saveChanges') : t('addExam')}
             </button>
             {editingId && (
               <button type="button" onClick={resetForm} className="rounded-lg border border-ink/15 px-4 py-2.5 text-sm font-semibold text-ink/60">

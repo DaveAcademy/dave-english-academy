@@ -1,17 +1,17 @@
 // MyExams.jsx - premium exam portal
-// Preserves: useAcademy (level filter, exams/examScores), uploadAttachment/getAttachmentUrl, submitMyExamAnswer,
+// Preserves: useAcademy (level filter, exams/examScores), getAttachmentUrl (viewing existing files),
 // LessonSectionTabs, real exam data only (me.level), no auto-scoring.
 // Adds: upcoming highlight, countdown, preparation status, previous scores hierarchy, clear CTA, mobile, animations.
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  FileCheck2, Download, Upload, MessageSquare, Clock, Award, CalendarDays,
+  FileCheck2, Download, MessageSquare, Clock, Award, CalendarDays,
   TrendingUp, AlertTriangle, Timer, Sparkles,
 } from 'lucide-react';
 import { useAcademy } from '../../../lib/AcademyDataContext';
-import { uploadAttachment, getAttachmentUrl } from '../../../lib/db';
+import { getAttachmentUrl } from '../../../lib/db';
 import LessonSectionTabs from '../../../components/lesson/LessonSectionTabs';
 import { examTypeIcon } from '../../../utils/examLabel';
 import { formatDateOnly } from '../../../utils/date';
@@ -39,8 +39,7 @@ function countdownLabel(targetDateStr, t) {
 export default function MyExams() {
   const { t, i18n } = useTranslation(['exams', 'common', 'portal']);
   const dateLocale = i18n.language === 'uz' ? 'uz' : 'en-US';
-  const { me, students, exams, examScores, submitMyExamAnswer, loading } = useAcademy();
-  const [submittingId, setSubmittingId] = useState(null);
+  const { me, students, exams, examScores, loading } = useAcademy();
   const [actionError, setActionError] = useState(null);
 
   const myExams = useMemo(() => {
@@ -86,18 +85,6 @@ export default function MyExams() {
       if (url) window.open(url, '_blank', 'noopener');
       else setActionError(t('openFileFailed'));
     } catch { setActionError(t('openFileFailed')); }
-  };
-
-  const handleUpload = async (examId, file) => {
-    if (!file || !me) return;
-    setSubmittingId(examId);
-    setActionError(null);
-    let uploaded;
-    try { uploaded = await uploadAttachment(file, `exam-answers/${me.id}`); }
-    catch { setActionError(t('uploadFileFailed')); setSubmittingId(null); return; }
-    try { await submitMyExamAnswer(examId, me.id, { fileUrl: uploaded.path, fileName: uploaded.name }); }
-    catch { setActionError(t('submitAnswerFailed')); }
-    finally { setSubmittingId(null); }
   };
 
   const upcomingExams = useMemo(() => myExams.filter(isUpcoming), [myExams]);
@@ -319,13 +306,6 @@ export default function MyExams() {
                           <button onClick={() => handleOpenFile(e.file_url)} className="inline-flex min-h-[44px] min-w-0 max-w-full items-center gap-1.5 rounded-xl border border-brand-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-brand-700 shadow-sm hover:bg-brand-50">
                             <Download size={14} className="shrink-0" /> <span className="min-w-0 max-w-[52vw] truncate sm:max-w-[220px]">{e.file_name || t('examFileDefault')}</span>
                           </button>
-                        )}
-                        {e.exam_type !== 'Oral' && !graded && (
-                          <label className="inline-flex min-h-[44px] cursor-pointer items-center gap-1.5 rounded-xl border border-ink/10 bg-white px-3.5 py-2.5 text-xs font-semibold text-ink/70 shadow-sm hover:bg-ink/5">
-                            <Upload size={14} />
-                            {submittingId === e.id ? t('uploading') : result?.answer_file_name ? t('replaceMyAnswer') : t('uploadMyAnswer')}
-                            <input type="file" accept=".pdf,.doc,.docx,image/*" className="hidden" disabled={submittingId === e.id} onChange={(ev) => handleUpload(e.id, ev.target.files?.[0])} />
-                          </label>
                         )}
                         {e.exam_type !== 'Oral' && result?.answer_file_url && (
                           <button onClick={() => handleOpenFile(result.answer_file_url)} className="inline-flex min-h-[44px] items-center px-3 py-2.5 text-xs font-medium text-ink/50 hover:text-brand-600 hover:underline">

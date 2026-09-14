@@ -2,10 +2,10 @@
 
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Pencil, Trash2, MessageSquare, MessageSquareOff, Paperclip, Download, X, Clock } from 'lucide-react';
+import { Plus, Pencil, Trash2, MessageSquare, MessageSquareOff, Download, Clock } from 'lucide-react';
 import { useAcademy } from '../../../lib/AcademyDataContext';
 import { LevelBadge } from '../../../components/Badge';
-import { uploadAttachment, getAttachmentUrl } from '../../../lib/db';
+import { getAttachmentUrl } from '../../../lib/db';
 import { LEVELS } from '../../../lib/levels';
 
 const EMPTY_FORM = { topic: '', group_name: '', level: 'A', discussion_enabled: false };
@@ -17,11 +17,7 @@ export default function Lessons() {
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [editingId, setEditingId] = useState(null);
-  const [file, setFile] = useState(null);
-  const [removePdf, setRemovePdf] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState(null);
   const [selectedLessonId, setSelectedLessonId] = useState(null);
   const [search, setSearch] = useState('');
   const [scopeFilter, setScopeFilter] = useState('all'); // all | curriculum | legacy
@@ -78,13 +74,9 @@ export default function Lessons() {
   // does not re-sort by id/created_at.
   const sortedLessons = useMemo(() => filteredRows.filter((row) => row.kind === 'lesson').map((row) => row.lesson), [filteredRows]);
   const selectedLesson = sortedLessons.find((l) => l.id === selectedLessonId) || sortedLessons[0] || null;
-  const editingLesson = editingId ? lessons.find((l) => l.id === editingId) : null;
 
   const resetForm = () => {
     setForm(EMPTY_FORM);
-    setFile(null);
-    setRemovePdf(false);
-    setUploadError(null);
     setFormOpen(false);
     setEditingId(null);
   };
@@ -97,9 +89,6 @@ export default function Lessons() {
       level: lesson.level || 'A',
       discussion_enabled: !!lesson.discussion_enabled,
     });
-    setFile(null);
-    setRemovePdf(false);
-    setUploadError(null);
     setFormOpen(true);
   };
 
@@ -107,7 +96,6 @@ export default function Lessons() {
     e.preventDefault();
     if (!form.topic.trim()) return;
     setSaving(true);
-    setUploadError(null);
     try {
       const basePayload = {
         topic: form.topic,
@@ -120,22 +108,7 @@ export default function Lessons() {
         // scheduled_at is intentionally left out of the edit payload - it's
         // no longer surfaced in this UI, and existing values (real or
         // otherwise) are left exactly as they are.
-        let payload = basePayload;
-        if (file) {
-          setUploading(true);
-          try {
-            const uploaded = await uploadAttachment(file, `lesson-pdfs/${editingId}`);
-            payload = { ...payload, pdf_path: uploaded.path, pdf_name: uploaded.name };
-          } catch {
-            setUploadError('Could not upload the PDF. Lesson changes were not saved - please try again.');
-            return;
-          } finally {
-            setUploading(false);
-          }
-        } else if (removePdf) {
-          payload = { ...payload, pdf_path: null, pdf_name: null };
-        }
-        await editLesson(editingId, payload);
+        await editLesson(editingId, basePayload);
       } else {
         // lessons.scheduled_at is still a NOT NULL column (see 0005) and
         // this task deliberately avoids a migration to relax that, so
@@ -146,17 +119,6 @@ export default function Lessons() {
         // value is filler.
         const record = await addLesson({ ...basePayload, scheduled_at: new Date().toISOString() });
         setSelectedLessonId(record.id);
-        if (file) {
-          setUploading(true);
-          try {
-            const uploaded = await uploadAttachment(file, `lesson-pdfs/${record.id}`);
-            await editLesson(record.id, { pdf_path: uploaded.path, pdf_name: uploaded.name });
-          } catch {
-            setUploadError('Lesson was created, but the PDF failed to upload. Open "Edit" on it to try again.');
-          } finally {
-            setUploading(false);
-          }
-        }
       }
       resetForm();
     } finally {
@@ -254,7 +216,6 @@ export default function Lessons() {
       </div>
 
       {error && <div className="mb-4 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{error}</div>}
-      {uploadError && <div className="mb-4 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{uploadError}</div>}
 
       {formOpen && (
         <form onSubmit={handleSubmit} className="mb-4 grid gap-3 rounded-xl bg-white p-4 shadow-card sm:grid-cols-2">
@@ -286,49 +247,13 @@ export default function Lessons() {
             Allow students to discuss this lesson in Messages
           </label>
 
-          <div className="flex flex-wrap items-center gap-2 sm:col-span-2">
-            <label className="flex cursor-pointer items-center gap-1.5 text-xs font-semibold text-ink/60 hover:text-ink">
-              <Paperclip size={14} />
-              {file ? file.name : editingLesson?.pdf_name && !removePdf ? 'Replace PDF' : 'Attach PDF'}
-              <input
-                type="file"
-                accept="application/pdf,.pdf"
-                className="hidden"
-                onChange={(e) => {
-                  const picked = e.target.files?.[0] || null;
-                  setFile(picked);
-                  if (picked) setRemovePdf(false);
-                }}
-              />
-            </label>
-            {editingLesson?.pdf_path && !file && !removePdf && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => handleOpenPdf(editingLesson.pdf_path)}
-                  className="flex items-center gap-1 text-xs font-semibold text-brand-600 hover:underline"
-                >
-                  <Download size={13} /> {editingLesson.pdf_name || 'Current PDF'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRemovePdf(true)}
-                  className="flex items-center gap-1 text-xs font-semibold text-inactive hover:underline"
-                >
-                  <X size={13} /> Remove PDF
-                </button>
-              </>
-            )}
-            {removePdf && <span className="text-xs font-semibold text-inactive">PDF will be removed on save</span>}
-          </div>
-
           <div className="flex gap-2 sm:col-span-2">
             <button
               type="submit"
               disabled={saving}
               className="flex-1 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
             >
-              {uploading ? 'Uploading PDF...' : saving ? 'Saving...' : editingId ? 'Save changes' : 'Add lesson'}
+              {saving ? 'Saving...' : editingId ? 'Save changes' : 'Add lesson'}
             </button>
             {editingId && (
               <button type="button" onClick={resetForm} className="rounded-lg border border-ink/15 px-4 py-2.5 text-sm font-semibold text-ink/60">
@@ -398,11 +323,11 @@ export default function Lessons() {
                   {l.level && <LevelBadge level={l.level} />}
                   {l.discussion_enabled && <span className="rounded-full bg-active/20 px-1.5 py-0.5 text-[10px] font-bold">Discussion on</span>}
                   {l.pdf_path ? (
-                    <span className="rounded-full bg-active/20 px-1.5 py-0.5 text-[10px] font-bold">=ƒôä PDF attached</span>
+                    <span className="rounded-full bg-active/20 px-1.5 py-0.5 text-[10px] font-bold">=ï¿½ï¿½ï¿½ PDF attached</span>
                   ) : (
-                    <span className="rounded-full bg-inactive/20 px-1.5 py-0.5 text-[10px] font-bold">GÜán+Å No PDF</span>
+                    <span className="rounded-full bg-inactive/20 px-1.5 py-0.5 text-[10px] font-bold">Gï¿½ï¿½n+ï¿½ No PDF</span>
                   )}
-                  <span className="rounded-full bg-ink/10 px-1.5 py-0.5 text-[10px] font-bold">=ƒôÜ {l.vocabulary_count} words</span>
+                  <span className="rounded-full bg-ink/10 px-1.5 py-0.5 text-[10px] font-bold">=ï¿½ï¿½ï¿½ {l.vocabulary_count} words</span>
                 </div>
               </Link>
               <div className="flex flex-shrink-0 items-center gap-1">

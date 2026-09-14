@@ -6,8 +6,8 @@
 // AuthContext's role, so the two views can never drift out of sync.
 //
 // Deliberately reuses existing data/RLS instead of duplicating it:
-// - PDF: same uploadAttachment/getAttachmentUrl + editLesson pattern as
-//   Lessons.jsx/MyLessons.jsx.
+// - PDF: same getAttachmentUrl + editLesson pattern as
+//   Lessons.jsx/MyLessons.jsx (viewing only - no uploads in this UI).
 // - Homework/Quiz: create/edit/submit happen here, scoped to this lesson's
 //   items only. Per-student grading rosters stay on the existing
 //   /homework and /exams pages (linked out) rather than re-implementing
@@ -25,7 +25,7 @@ import { useTranslation } from 'react-i18next';
 import {
   ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight, Download, FileCheck2,
   FileText, Languages, List, BookOpen, Image as ImageIcon, Pencil, PlayCircle, Plus, RotateCcw,
-  StickyNote, Trash2, Upload, X,
+  StickyNote, Trash2, X,
 } from 'lucide-react';
 import {
   LESSON_STATUS, teacherPaceFor, lessonCapFor, progressByLessonNumber, lessonStatusFor, lockReasonFor,
@@ -36,9 +36,9 @@ import { LevelBadge } from '../../../components/Badge';
 import ConfirmDialog from '../../../components/ConfirmDialog';
 import PdfViewer from '../../../components/PdfViewer';
 import {
-  uploadAttachment, getAttachmentUrl, listLessonVocabulary,
-  getMyLessonWorkSubmission, createLessonWorkSubmission, listLessonWorkSubmissionFiles,
-  addLessonWorkSubmissionFile, deleteLessonWorkSubmissionFile,
+  getAttachmentUrl, listLessonVocabulary,
+  getMyLessonWorkSubmission, listLessonWorkSubmissionFiles,
+  deleteLessonWorkSubmissionFile,
   listLessonWorkSubmissionsForLesson, listLessonWorkSubmissionFilesForSubmissions,
   markLessonWorkReviewed, awardLessonWorkPoints, listPointCategories,
 } from '../../../lib/db';
@@ -91,8 +91,8 @@ export default function LessonHub() {
   const navigate = useNavigate();
   const {
     lessons, students, me, editLesson, curriculumProgress, lessonProgress, setLessonProgress,
-    homework, homeworkStatus, homeworkSubmissionFiles, addHomework, editHomework, removeHomework, submitMyHomeworkFiles, setHomeworkStatusForStudent,
-    exams, examScores, addExam, editExam, removeExam, submitMyExamAnswer, setExamScoreForStudent,
+    homework, homeworkStatus, homeworkSubmissionFiles, addHomework, editHomework, removeHomework, setHomeworkStatusForStudent,
+    exams, examScores, addExam, editExam, removeExam, setExamScoreForStudent,
   } = useAcademy();
 
   const lesson = lessons.find((l) => l.id === lessonId);
@@ -138,28 +138,10 @@ export default function LessonHub() {
   const nextLesson = navIndex >= 0 && navIndex < navLessons.length - 1 ? navLessons[navIndex + 1] : null;
   const goToLesson = (l) => navigate(isStudent ? `/my-lessons/${l.id}` : `/lessons/${l.id}`);
 
-  // --- PDF ---
-  const [pdfFile, setPdfFile] = useState(null);
-  const [pdfUploading, setPdfUploading] = useState(false);
-  const [pdfError, setPdfError] = useState(null);
+  // --- PDF (viewing only) ---
   const [viewPdf, setViewPdf] = useState(null);
 
   const handleOpenPdf = () => setViewPdf(lesson);
-
-  const handlePdfPick = async (file) => {
-    if (!file) return;
-    setPdfUploading(true);
-    setPdfError(null);
-    try {
-      const uploaded = await uploadAttachment(file, `lesson-pdfs/${lessonId}`);
-      await editLesson(lessonId, { pdf_path: uploaded.path, pdf_name: uploaded.name });
-    } catch {
-      setPdfError('Could not upload the PDF - please try again.');
-    } finally {
-      setPdfUploading(false);
-      setPdfFile(null);
-    }
-  };
 
   const handlePdfRemove = async () => {
     await editLesson(lessonId, { pdf_path: null, pdf_name: null });
@@ -175,7 +157,6 @@ export default function LessonHub() {
   const [hwEditingId, setHwEditingId] = useState(null);
   const [hwSaving, setHwSaving] = useState(false);
   const [deletingHomework, setDeletingHomework] = useState(null);
-  const [hwUploading, setHwUploading] = useState(null); // homework id currently uploading
 
   const startHwEdit = (h) => {
     setHwEditingId(h.id);
@@ -207,16 +188,6 @@ export default function LessonHub() {
   const myHwStatus = (homeworkId) => homeworkStatus.find((s) => s.homework_id === homeworkId && s.student_id === me?.id);
   const myHwFilesCount = (homeworkId) =>
     homeworkSubmissionFiles.filter((f) => f.homework_id === homeworkId && f.student_id === me?.id).length;
-  const handleHwFilePick = async (homeworkId, file) => {
-    if (!file || !me) return;
-    setHwUploading(homeworkId);
-    try {
-      const uploaded = await uploadAttachment(file, `homework-answers/${me.id}`);
-      await submitMyHomeworkFiles(homeworkId, me.id, [{ fileUrl: uploaded.path, fileName: uploaded.name, fileType: uploaded.type }]);
-    } finally {
-      setHwUploading(null);
-    }
-  };
 
   // --- Quiz (exams scoped to this lesson) ---
   const lessonQuizzes = useMemo(
@@ -228,7 +199,6 @@ export default function LessonHub() {
   const [quizEditingId, setQuizEditingId] = useState(null);
   const [quizSaving, setQuizSaving] = useState(false);
   const [deletingQuiz, setDeletingQuiz] = useState(null);
-  const [quizUploading, setQuizUploading] = useState(null);
 
   const startQuizEdit = (ex) => {
     setQuizEditingId(ex.id);
@@ -265,16 +235,6 @@ export default function LessonHub() {
     setDeletingQuiz(null);
   };
   const myQuizScore = (examId) => examScores.find((s) => s.exam_id === examId && s.student_id === me?.id);
-  const handleQuizFilePick = async (examId, file) => {
-    if (!file || !me) return;
-    setQuizUploading(examId);
-    try {
-      const uploaded = await uploadAttachment(file, `exam-answers/${me.id}`);
-      await submitMyExamAnswer(examId, me.id, { fileUrl: uploaded.path, fileName: uploaded.name });
-    } finally {
-      setQuizUploading(null);
-    }
-  };
 
   // --- Vocabulary preview ---
   const [vocabWords, setVocabWords] = useState([]);
@@ -375,21 +335,14 @@ export default function LessonHub() {
     setLessonProgress(me.id, lesson.id, { status: 'in_progress', completed_at: null });
   };
 
-  // --- Lesson work submission (Phase 1 foundation) -----------------------
-  // Deliberately independent of lesson progress above: uploading/submitting
-  // work never calls setLessonProgress, and Mark completed/in progress
-  // never touch this state. See migration 0103 / storageBridge.js.
-  const MAX_WORK_IMAGES = 5;
+  // --- Lesson work submission (read-only in this UI) --------------------
+  // The student's own submission status, files, feedback, and points stay
+  // visible here; new image uploads were removed, so this never writes.
+  // See migration 0103 / storageBridge.js.
   const [workSubmission, setWorkSubmission] = useState(null);
   const [workFiles, setWorkFiles] = useState([]);
   const [workLoading, setWorkLoading] = useState(false);
-  const [workPending, setWorkPending] = useState([]); // { file, previewUrl }[]
-  const [workUploading, setWorkUploading] = useState(false);
   const [workError, setWorkError] = useState(null);
-  const workPendingRef = useRef(workPending);
-  workPendingRef.current = workPending;
-
-  useEffect(() => () => workPendingRef.current.forEach((i) => URL.revokeObjectURL(i.previewUrl)), []);
 
   useEffect(() => {
     if (!isStudent || !me || !lesson) return;
@@ -417,25 +370,6 @@ export default function LessonHub() {
     };
   }, [isStudent, me, lesson]);
 
-  const handlePickWorkFiles = (fileList) => {
-    const picked = Array.from(fileList || []).filter((f) => f.type.startsWith('image/'));
-    if (picked.length === 0) return;
-    const already = workFiles.length + workPending.length;
-    const room = Math.max(0, MAX_WORK_IMAGES - already);
-    const accepted = picked.slice(0, room);
-    if (accepted.length < picked.length) setWorkError(`You can upload up to ${MAX_WORK_IMAGES} images.`);
-    else setWorkError(null);
-    setWorkPending((prev) => [...prev, ...accepted.map((file) => ({ file, previewUrl: URL.createObjectURL(file) }))]);
-  };
-
-  const handleRemoveWorkPending = (index) => {
-    setWorkPending((prev) => {
-      const removed = prev[index];
-      if (removed) URL.revokeObjectURL(removed.previewUrl);
-      return prev.filter((_, i) => i !== index);
-    });
-  };
-
   const handleRemoveWorkFile = async (id) => {
     setWorkError(null);
     try {
@@ -443,37 +377,6 @@ export default function LessonHub() {
       setWorkFiles((prev) => prev.filter((f) => f.id !== id));
     } catch {
       setWorkError('Could not remove that image.');
-    }
-  };
-
-  const handleSubmitWork = async () => {
-    if (!isStudent || !me || !lesson || workPending.length === 0) return;
-    setWorkUploading(true);
-    setWorkError(null);
-    try {
-      let submission = workSubmission;
-      if (!submission) {
-        submission = await createLessonWorkSubmission(me.id, lesson.id);
-        setWorkSubmission(submission);
-      }
-      const uploaded = [];
-      let position = workFiles.length;
-      for (const item of workPending) {
-        const result = await uploadAttachment(item.file, `lesson-work/${me.id}`);
-        const row = await addLessonWorkSubmissionFile(submission.id, me.id, {
-          fileUrl: result.path,
-          fileName: result.name,
-          position: position++,
-        });
-        uploaded.push(row);
-      }
-      workPending.forEach((i) => URL.revokeObjectURL(i.previewUrl));
-      setWorkPending([]);
-      setWorkFiles((prev) => [...prev, ...uploaded]);
-    } catch {
-      setWorkError('Could not submit your work. Please try again.');
-    } finally {
-      setWorkUploading(false);
     }
   };
 
@@ -690,7 +593,6 @@ export default function LessonHub() {
 
       {/* PDF */}
       <HubCard icon={FileText} title={t('hubPdfTitle')}>
-        {pdfError && <p className="mb-2 text-xs font-semibold text-inactive">{pdfError}</p>}
         <div className="flex flex-wrap items-center gap-2">
           {lesson.pdf_path ? (
             <button
@@ -702,25 +604,10 @@ export default function LessonHub() {
           ) : (
             <p className="text-sm text-ink/40">{t('hubNoPdf')}</p>
           )}
-          {!isStudent && (
-            <>
-              <label className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-semibold text-ink/60 hover:bg-ink/5">
-                <Upload size={13} />
-                {pdfUploading ? 'Uploading...' : lesson.pdf_path ? 'Replace PDF' : 'Upload PDF'}
-                <input
-                  type="file"
-                  accept="application/pdf"
-                  className="hidden"
-                  disabled={pdfUploading}
-                  onChange={(e) => handlePdfPick(e.target.files?.[0] || null)}
-                />
-              </label>
-              {lesson.pdf_path && (
-                <button onClick={handlePdfRemove} className="flex items-center gap-1 text-xs font-semibold text-inactive hover:underline">
-                  <X size={13} /> Remove
-                </button>
-              )}
-            </>
+          {!isStudent && lesson.pdf_path && (
+            <button onClick={handlePdfRemove} className="flex items-center gap-1 text-xs font-semibold text-inactive hover:underline">
+              <X size={13} /> Remove
+            </button>
           )}
         </div>
       </HubCard>
@@ -777,51 +664,6 @@ export default function LessonHub() {
                       )}
                     </div>
                   ))}
-                </div>
-              )}
-
-              {workPending.length > 0 && (
-                <div className="mb-3 flex flex-wrap gap-2">
-                  {workPending.map((item, i) => (
-                    <div key={item.previewUrl} className="group relative h-20 w-20 overflow-hidden rounded-lg border border-ink/10">
-                      <img src={item.previewUrl} alt="" className="h-full w-full object-cover" />
-                      <button
-                        onClick={() => handleRemoveWorkPending(i)}
-                        className="absolute right-0.5 top-0.5 rounded bg-white/90 p-0.5 text-inactive opacity-0 group-hover:opacity-100"
-                        aria-label={t('hubRemoveSelectedImage')}
-                      >
-                        <X size={12} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {workSubmission?.status !== 'reviewed' && (
-                <div className="flex flex-wrap items-center gap-2">
-                  <label className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-semibold text-ink/60 hover:bg-ink/5">
-                    <Upload size={13} /> {t('hubSelectImages')}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      className="hidden"
-                      disabled={workFiles.length + workPending.length >= MAX_WORK_IMAGES}
-                      onChange={(e) => {
-                        handlePickWorkFiles(e.target.files);
-                        e.target.value = '';
-                      }}
-                    />
-                  </label>
-                  {workPending.length > 0 && (
-                    <button
-                      onClick={handleSubmitWork}
-                      disabled={workUploading}
-                      className="flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
-                    >
-                      {workUploading ? t('hubSubmitting') : t('hubSubmit')}
-                    </button>
-                  )}
                 </div>
               )}
             </>
@@ -923,18 +765,6 @@ export default function LessonHub() {
                         {graded ? t('hubHwGraded') : myHwFilesCount(h.id) > 0 ? t('hubHwAwaitingGrading') : t('hubHwNotSubmitted')}
                       </span>
                       {status?.feedback && <span className="text-xs text-ink/60">{status.feedback}</span>}
-                      {!graded && (
-                        <label className="flex cursor-pointer items-center gap-1 text-xs font-semibold text-brand-600 hover:underline">
-                          <Upload size={12} /> {hwUploading === h.id ? t('hubUploading') : t('hubSubmit')}
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            disabled={hwUploading === h.id}
-                            onChange={(e) => handleHwFilePick(h.id, e.target.files?.[0] || null)}
-                          />
-                        </label>
-                      )}
                     </div>
                   )}
                 </div>
@@ -1070,17 +900,6 @@ export default function LessonHub() {
                         {graded ? t('hubQuizCompleted') : result?.answer_file_url ? t('hubQuizAwaitingGrading') : t('hubQuizAvailable')}
                       </span>
                       {result?.feedback && <span className="text-xs text-ink/60">{result.feedback}</span>}
-                      {!graded && (
-                        <label className="flex cursor-pointer items-center gap-1 text-xs font-semibold text-brand-600 hover:underline">
-                          <Upload size={12} /> {quizUploading === ex.id ? t('hubUploading') : t('hubStartQuiz')}
-                          <input
-                            type="file"
-                            className="hidden"
-                            disabled={quizUploading === ex.id}
-                            onChange={(e) => handleQuizFilePick(ex.id, e.target.files?.[0] || null)}
-                          />
-                        </label>
-                      )}
                     </div>
                   )}
                 </div>

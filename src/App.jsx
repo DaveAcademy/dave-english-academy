@@ -198,7 +198,10 @@ function RoutedContent({ isStudent }) {
             <Route path="/reports" element={<Reports />} />
             <Route path="/ai-assistant" element={<AiAssistant />} />
             <Route path="/chat" element={<Chat />} />
-            <Route path="/files" element={<FileManager />} />
+            {/* File Manager hidden - the page is an upload/manage library with
+                no upload-free purpose. Route disabled; page, client, and
+                backend kept intact for later restore. Uncomment to re-expose. */}
+            {/* <Route path="/files" element={<FileManager />} /> */}
             <Route path="/settings" element={<Settings />} />
           </Routes>
         )}
