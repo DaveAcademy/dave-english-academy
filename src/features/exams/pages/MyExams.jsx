@@ -44,8 +44,10 @@ export default function MyExams() {
 
   const myExams = useMemo(() => {
     if (!me) return [];
-    return [...exams].filter((e) => !e.level || e.level === me.level).sort((a, b) => new Date(b.exam_date) - new Date(a.exam_date));
-  }, [exams, me]);
+    return [...exams]
+      .filter((e) => !e.level || e.level === me.level || examScores.some((s) => s.exam_id === e.id && s.student_id === me.id))
+      .sort((a, b) => new Date(b.exam_date) - new Date(a.exam_date));
+  }, [exams, me, examScores]);
 
   const scoreFor = (examId) => examScores.find((s) => s.exam_id === examId && s.student_id === me?.id);
 

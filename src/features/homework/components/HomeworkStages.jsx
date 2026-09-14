@@ -149,7 +149,7 @@ export function HomeworkStages({ homeworkId, lessonId, isStudent, me, t }) {
           </div>
         ))}
       </div>
-      )
+      ))
 
     const stageClassName = (
       'rounded-xl border bg-white p-4 shadow-card transition-all duration-300 ' +
@@ -210,12 +210,11 @@ export function HomeworkStages({ homeworkId, lessonId, isStudent, me, t }) {
                     </div>
                   </div>
                 ))}
-              </div>
-            )}
+</div>
+            ))}
         </div>
           )}
-      </div>
-    );
+      );
     });
 
   return (

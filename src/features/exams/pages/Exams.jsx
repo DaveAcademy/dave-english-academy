@@ -85,6 +85,7 @@ export default function Exams() {
   const eligibleStudentsFor = (exam) => {
     const examDay = toLocalDay(exam.exam_date);
     return students.filter((s) => {
+      if (examScores.some((sc) => sc.exam_id === exam.id && sc.student_id === s.id)) return true;
       if (exam.level && s.level !== exam.level) return false;
       if (examDay) {
         const joinDay = toLocalDay(s.join_date);
