@@ -76,21 +76,21 @@ export default function GameResults() {
   const [overall, setOverall] = useState([]);
   const [byGame, setByGame] = useState([]);
   const [levels, setLevels] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingLifetime, setLoadingLifetime] = useState(true);
+  const [loadingPeriod, setLoadingPeriod] = useState(true);
   const [error, setError] = useState('');
   const [period, setPeriod] = useState('all_time');
+  const loading = loadingLifetime || loadingPeriod;
 
+  // Lifetime per-game data: loaded once, does not depend on period.
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
     Promise.all([
-      getGamePeriodLeaderboard(period),
       getGamePointsLeaderboard(),
       getGameLevelLeaderboard(),
     ])
-      .then(([periodRows, byGameRows, levelRows]) => {
+      .then(([byGameRows, levelRows]) => {
         if (cancelled) return;
-        setOverall(periodRows || []);
         setByGame(byGameRows || []);
         setLevels(levelRows || []);
       })
@@ -98,7 +98,27 @@ export default function GameResults() {
         if (!cancelled) setError('Could not load game results. Please try again.');
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) setLoadingLifetime(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Period-filtered overall leaderboard: re-fetches when period changes.
+  useEffect(() => {
+    let cancelled = false;
+    setLoadingPeriod(true);
+    getGamePeriodLeaderboard(period)
+      .then((rows) => {
+        if (cancelled) return;
+        setOverall(rows || []);
+      })
+      .catch(() => {
+        if (!cancelled) setError('Could not load game results. Please try again.');
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingPeriod(false);
       });
     return () => {
       cancelled = true;
