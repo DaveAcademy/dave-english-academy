@@ -8,7 +8,15 @@ import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Trophy, Crown, Medal, ArrowUp, ArrowDown, Minus, RefreshCw, AlertCircle } from 'lucide-react';
 import { useAcademy } from '../../../lib/AcademyDataContext';
-import { getGroupLeaderboard, getRecognitionAwards, getStudentRankingSummary, getMyPointHistory } from '../../../lib/db';
+import {
+  getGroupLeaderboard,
+  getRecognitionAwards,
+  getStudentRankingSummary,
+  getMyPointHistory,
+  listClassGroups,
+  getWeeklyClassLeaderboard,
+  getMonthlyClassLeaderboard,
+} from '../../../lib/db';
 import { formatMonthDay } from '../../../utils/date';
 import { SkeletonList, SkeletonCard } from '../../../shared/components/Skeleton';
 
@@ -68,6 +76,8 @@ export default function MyRanking() {
   const [period, setPeriod] = useState('month');
   const [leaderboard, setLeaderboard] = useState(null);
   const [leaderboardError, setLeaderboardError] = useState(false);
+  const [groupId, setGroupId] = useState(null); // student's class_group, resolved from level (+ group_name)
+  const [refreshKey, setRefreshKey] = useState(0);
   const [awards, setAwards] = useState(null);
   const [summary, setSummary] = useState(null);
   const [pointHistory, setPointHistory] = useState(null);
@@ -84,17 +94,78 @@ export default function MyRanking() {
     return () => { cancelled = true; };
   }, [me?.id]);
 
-  // Leaderboard: level-scoped, period-specific (the authoritative ranking)
+  // Resolve the student's class_group — the same scope Admin Rankings uses
+  // for its Week/Month view (one group per level today; matched by
+  // group_name when a level ever has more than one).
   useEffect(() => {
     if (!me?.level) return undefined;
     let cancelled = false;
+    setGroupId(null);
+    listClassGroups(me.level)
+      .then((groups) => {
+        if (cancelled) return;
+        const rows = groups || [];
+        if (rows.length === 0) {
+          setGroupId(null);
+          return;
+        }
+        if (rows.length === 1) {
+          setGroupId(String(rows[0].id));
+          return;
+        }
+        const match = me.group_name ? rows.find((g) => g.name === me.group_name) : null;
+        setGroupId(match ? String(match.id) : String(rows[0].id));
+      })
+      .catch(() => {
+        if (!cancelled) setGroupId(null);
+      });
+    return () => { cancelled = true; };
+  }, [me?.level, me?.group_name]);
+
+  // Leaderboard: the same underlying calculation Admin Rankings uses.
+  // - all_time: get_group_leaderboard(level, 'all_time') — identical call.
+  // - week/month: get_weekly/monthly_class_leaderboard(groupId) — the exact
+  //   class_session-backed RPCs Admin's Week/Month matrix reads, collapsed
+  //   from long-form (one row per student per session) to one row per
+  //   student using the RPC's own totals/ranks (never recomputed here).
+  useEffect(() => {
+    if (!me?.level) return undefined;
+    if (period !== 'all_time' && !groupId) return undefined;
+    let cancelled = false;
     setLeaderboard(null);
     setLeaderboardError(false);
-    getGroupLeaderboard(me.level, period)
+    const load = async () => {
+      if (period === 'all_time') {
+        return getGroupLeaderboard(me.level, period);
+      }
+      const rows =
+        period === 'week'
+          ? await getWeeklyClassLeaderboard(groupId, null)
+          : await getMonthlyClassLeaderboard(groupId, null);
+      if (!rows || rows.length === 0) return [];
+      const totalKey = period === 'week' ? 'week_total' : 'month_total';
+      const rankKey = period === 'week' ? 'week_rank' : 'month_rank';
+      const byStudent = new Map();
+      for (const r of rows) {
+        if (!byStudent.has(r.student_id)) {
+          byStudent.set(r.student_id, {
+            student_id: r.student_id,
+            real_name: r.real_name,
+            english_name: r.english_name ?? null,
+            points: Number(r[totalKey]),
+            rank: r[rankKey],
+            attendance_rate: null,
+            rank_change: null,
+          });
+        }
+      }
+      return [...byStudent.values()].sort((a, b) => a.rank - b.rank);
+    };
+    load()
       .then((rows) => { if (!cancelled) setLeaderboard(rows || []); })
       .catch(() => { if (!cancelled) { setLeaderboard([]); setLeaderboardError(true); } });
     return () => { cancelled = true; };
-  }, [me?.level, period]);
+  }, [me?.level, groupId, period, refreshKey]);
 
   useEffect(() => {
     if (!me) return undefined;
@@ -278,9 +349,7 @@ export default function MyRanking() {
                 onClick={() => {
                   setLeaderboard(null);
                   setLeaderboardError(false);
-                  getGroupLeaderboard(me.level, period)
-                    .then((rows) => setLeaderboard(rows || []))
-                    .catch(() => { setLeaderboard([]); setLeaderboardError(true); });
+                  setRefreshKey((k) => k + 1);
                 }}
                 className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-ink px-4 py-1.5 text-xs font-bold text-white hover:bg-ink/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
               >
