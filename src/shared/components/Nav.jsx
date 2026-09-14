@@ -63,8 +63,10 @@ const NAV_ITEMS = [
   // just not exposed. Uncomment to re-enable admin navigation.
   // { to: '/reports', label: 'reports', shortLabel: 'reportsShort', Icon: BarChart3, adminOnly: true, section: 'results' },
   { to: '/dictionary-admin', label: 'dictionaryAdmin', shortLabel: 'dictionaryAdminShort', Icon: BookMarked, section: 'tools' },
-  { to: '/ai-assistant', label: 'aiAssistant', shortLabel: 'aiAssistantShort', Icon: Sparkles, section: 'tools' },
-  { to: '/chat', label: 'messages', shortLabel: 'messagesShort', Icon: MessageSquare, section: 'tools' },
+  // AI Assistant temporarily hidden from staff nav - page, client, and
+  // backend kept intact for later restore. Uncomment to re-expose.
+  // { to: '/ai-assistant', label: 'aiAssistant', shortLabel: 'aiAssistantShort', Icon: Sparkles, section: 'tools' },
+  // { to: '/chat', label: 'messages', shortLabel: 'messagesShort', Icon: MessageSquare, section: 'tools' },
   // Files temporarily hidden from nav (2026-08-21) - feature kept intact,
   // just not exposed. Uncomment to re-enable admin navigation.
   // { to: '/files', label: 'files', shortLabel: 'filesShort', Icon: FolderOpen, adminOnly: true, section: 'tools' },

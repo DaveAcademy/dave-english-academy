@@ -172,8 +172,10 @@ function RoutedContent({ isStudent }) {
             <Route path="/pet-collection" element={<PetCollection />} />
             <Route path="/my-certificates" element={<MyCertificates />} />
             <Route path="/my-ranking" element={<MyRanking />} />
-            <Route path="/ai-assistant" element={<AiAssistant />} />
-            <Route path="/chat" element={<Chat />} />
+            {/* AI Assistant hidden from normal navigation - page, client, and
+                backend kept intact for later restore. Uncomment to re-expose. */}
+            {/* <Route path="/ai-assistant" element={<AiAssistant />} /> */}
+            {/* <Route path="/chat" element={<Chat />} /> */}
             <Route path="/settings" element={<Settings />} />
           </Routes>
         ) : (
@@ -196,8 +198,10 @@ function RoutedContent({ isStudent }) {
             <Route path="/dictionary-admin" element={<DictionaryAdmin />} />
             <Route path="/recognition" element={<Recognition />} />
             <Route path="/reports" element={<Reports />} />
-            <Route path="/ai-assistant" element={<AiAssistant />} />
-            <Route path="/chat" element={<Chat />} />
+            {/* AI Assistant hidden from normal navigation - page, client, and
+                backend kept intact for later restore. Uncomment to re-expose. */}
+            {/* <Route path="/ai-assistant" element={<AiAssistant />} /> */}
+            {/* <Route path="/chat" element={<Chat />} /> */}
             {/* File Manager hidden - the page is an upload/manage library with
                 no upload-free purpose. Route disabled; page, client, and
                 backend kept intact for later restore. Uncomment to re-expose. */}

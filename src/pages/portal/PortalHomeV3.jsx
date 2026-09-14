@@ -298,7 +298,7 @@ export default function PortalHomeV3() {
     { to: '/my-homework', label: t('nav:myHomeworkFull'), Icon: BookOpen },
     { to: '/my-exams', label: t('nav:myExamsFull'), Icon: FileCheck2 },
     { to: '/my-certificates', label: t('nav:certificates'), Icon: Award },
-    { to: '/chat', label: t('nav:messages'), Icon: MessageSquare },
+    // { to: '/chat', label: t('nav:messages'), Icon: MessageSquare },
   ];
 
   // Tashkent greeting — re-evaluated every 15s via useLocalClock (interval is inside the hook)
