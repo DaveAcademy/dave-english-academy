@@ -100,6 +100,7 @@ export function useAcademyData() {
   const [messageAttachments, setMessageAttachments] = useState([]);
   const [files, setFiles] = useState([]);
   const [groups, setGroups] = useState([]);
+  const [levelLabels, setLevelLabels] = useState({}); // { A: 'Level A', ... } - admin-renamable display names
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [lessonProgress, setLessonProgressState] = useState([]);
@@ -193,6 +194,15 @@ export function useAcademyData() {
         // surfacing the shared error banner over the whole app for
         // what's likely just a migration not being applied yet in this
         // environment.
+      }
+      // Level display labels live in their own isolated fetch: the
+      // level_labels table may not exist yet where the migration hasn't
+      // been applied, and that must not disturb anything above.
+      try {
+        const rows = await db.listLevelLabels();
+        setLevelLabels(Object.fromEntries((rows || []).map((r) => [r.level, r.label])));
+      } catch {
+        // leave the {} default - every display falls back to Level X
       }
     })();
   }, []);
@@ -887,6 +897,23 @@ export function useAcademyData() {
     }
   }, []);
 
+  // Admin-only rename of a level's on-screen label. The level key itself
+  // is untouched - row identity is the key, so students, payments,
+  // rankings, and lesson progress stay attached. Server-side RLS
+  // (level_labels_admin_all) rejects non-admin writes regardless of UI.
+  const renameLevelLabel = useCallback(async (level, label) => {
+    const clean = String(label || '').trim();
+    if (!clean) throw new Error('Name cannot be empty.');
+    try {
+      const record = await db.saveLevelLabel(level, clean);
+      setLevelLabels((prev) => ({ ...prev, [record.level]: record.label }));
+      return record;
+    } catch (e) {
+      setError('Could not rename this level. Please try again.');
+      throw e;
+    }
+  }, []);
+
   const addMessage = useCallback(async (data) => {
     try {
       const record = await db.sendMessage(data);
@@ -1015,6 +1042,8 @@ export function useAcademyData() {
     messageAttachments,
     files,
     groups,
+    levelLabels,
+    renameLevelLabel,
     loading,
     error,
     setError,

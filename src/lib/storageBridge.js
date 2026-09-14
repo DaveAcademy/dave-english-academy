@@ -1977,6 +1977,30 @@ export async function deleteGroup(id) {
   return true;
 }
 
+// ---------- Level display labels ----------
+// Admin-renamable on-screen names for levels (migration
+// 20260930000001_level_labels). The level key itself is never renamed -
+// this only maps key -> label for display. Returns [{ level, label }];
+// callers build the lookup they need. Missing table (migration not
+// applied yet) surfaces as an error for the caller to swallow in
+// isolation.
+
+export async function listLevelLabels() {
+  const { data, error } = await supabase.from('level_labels').select('level, label');
+  if (error) throw error;
+  return data || [];
+}
+
+export async function saveLevelLabel(level, label) {
+  const { data, error } = await supabase
+    .from('level_labels')
+    .upsert({ level, label, updated_at: new Date().toISOString() }, { onConflict: 'level' })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
 // ---------- Homework bulk operations (Phase 2) ----------
 
 export async function setHomeworkStatusBulk(homeworkId, updates) {
