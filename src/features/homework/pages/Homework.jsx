@@ -9,6 +9,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Plus, BookOpen, Pencil, Trash2, Paperclip, MessageSquare, Download, X, Image as ImageIcon, ExternalLink, ChevronDown, ChevronRight } from 'lucide-react';
 import { useAcademy } from '../../../lib/AcademyDataContext';
+import { useAuth } from '../../../lib/AuthContext';
 import { LevelBadge } from '../../../components/Badge';
 import ConfirmDialog from '../../../components/ConfirmDialog';
 import {
@@ -40,6 +41,7 @@ const {
     awardHomeworkPointsBulkForStudent,
     error,
   } = useAcademy();
+  const { profile } = useAuth();
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
