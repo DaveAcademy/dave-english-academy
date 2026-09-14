@@ -36,8 +36,10 @@ const PORTAL_NAV_ITEMS = [
   { to: '/pet-collection', label: 'petCollection', shortLabel: 'petCollectionShort', Icon: PawPrint },
   { to: '/my-certificates', label: 'certificates', shortLabel: 'certificatesShort', Icon: Award },
   { to: '/my-ranking', label: 'ranking', shortLabel: 'rankingsShort', Icon: Trophy },
-  { to: '/ai-assistant', label: 'aiAssistant', shortLabel: 'aiAssistantShort', Icon: Sparkles },
-  { to: '/chat', label: 'messages', shortLabel: 'messagesShort', Icon: MessageSquare },
+  // AI Assistant temporarily hidden from student nav - page, client, and
+  // backend kept intact for later restore. Uncomment to re-expose.
+  // { to: '/ai-assistant', label: 'aiAssistant', shortLabel: 'aiAssistantShort', Icon: Sparkles },
+  // { to: '/chat', label: 'messages', shortLabel: 'messagesShort', Icon: MessageSquare },
   { to: '/settings', label: 'settings', shortLabel: 'settingsShort', Icon: Settings },
 ];
 
