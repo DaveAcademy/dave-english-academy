@@ -1,5 +1,5 @@
 // Payments.jsx
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Search, ShieldAlert, X, History, MessageSquare, Download } from 'lucide-react';
@@ -13,6 +13,8 @@ import { DUE_SOON_DAYS, TIMELINE_INITIAL_LIMIT } from '../config';
 import {
   getStudentPaymentStatus,
   getAdminBatchPaymentStatus,
+  getMonthlyPaymentCollection,
+  getPaymentCollectionSummary,
   getPaymentTimeline,
   recordPayment,
   createCorrection,
@@ -20,6 +22,14 @@ import {
   TRANSACTION_TYPES,
   PAYMENT_METHODS,
 } from '../../../lib/storageBridge';
+
+const GROUP_PRICING = { A: 200000, A1: 200000, B: 250000, C: 250000 };
+
+function feeForStudent(s) {
+  const raw = Number(s.monthly_fee);
+  if (Number.isFinite(raw) && raw > 0) return raw;
+  return GROUP_PRICING[s.level] || 0;
+}
 
 const CORRECTION_REASONS = ['Duplicate payment', 'Wrong amount entered', 'Wrong student', 'Other'];
 
@@ -87,6 +97,27 @@ export default function Payments() {
   );
 
   const [newStatuses, setNewStatuses] = useState({});
+  // Actual cash received in the current calendar month (transaction-based
+  // collection, not covered-fee sums). Null while loading; formatUZS(null)
+  // renders 0, replaced by the real total once the RPC resolves.
+  const [cashCollected, setCashCollected] = useState(null);
+  const currentMonth = useMemo(() => {
+    const d = new Date();
+    return { year: d.getFullYear(), month: d.getMonth() + 1 };
+  }, []);
+  // Inclusive [from, to] range for the current calendar month, same shape
+  // Dashboard.jsx uses for getPaymentCollectionSummary.
+  const monthRange = useMemo(() => {
+    const pad = (n) => String(n).padStart(2, '0');
+    const last = new Date(currentMonth.year, currentMonth.month, 0).getDate();
+    return {
+      from: `${currentMonth.year}-${pad(currentMonth.month)}-01`,
+      to: `${currentMonth.year}-${pad(currentMonth.month)}-${pad(last)}`,
+    };
+  }, [currentMonth]);
+  // Raw transaction rows for the current month (existing authoritative
+  // source). Aggregated below into per-student nets.
+  const [monthTxns, setMonthTxns] = useState([]);
   const [modalStudent, setModalStudent] = useState(null);
   const [modalMode, setModalMode] = useState('record');
   const [timelines, setTimelines] = useState({});
@@ -147,6 +178,26 @@ export default function Payments() {
       .catch(() => {});
   }, [isAdmin]);
 
+  // Refreshes everything the Overview derives from the ledger: the cash
+  // total and the per-student monthly nets. Called on mount and after
+  // every successful write (record/bulk/correction) so counts update
+  // without a full page reload.
+  const refreshMonthCollection = useCallback(() => {
+    if (!isAdmin) return Promise.resolve();
+    return Promise.all([
+      getMonthlyPaymentCollection(currentMonth.year, currentMonth.month)
+        .then((row) => setCashCollected(Number(row?.total_collected || 0)))
+        .catch(() => setCashCollected(0)),
+      getPaymentCollectionSummary(monthRange.from, monthRange.to)
+        .then((rows) => setMonthTxns(rows || []))
+        .catch(() => setMonthTxns([])),
+    ]).then(() => {});
+  }, [isAdmin, currentMonth, monthRange]);
+
+  useEffect(() => {
+    refreshMonthCollection();
+  }, [refreshMonthCollection]);
+
   function openCorrection(tx) {
     setCorrectionTx(tx);
     setCorrectionAmount(String(-Math.abs(tx.amount)));
@@ -195,6 +246,7 @@ export default function Payments() {
       setNewStatuses((prev) => ({ ...prev, [studentId]: st }));
       setTimelines((prev) => ({ ...prev, [studentId]: tl }));
       setCorrectionTx(null);
+      refreshMonthCollection();
     } catch (e) {
       setCorrectionError(e.message || String(e));
     } finally {
@@ -231,20 +283,26 @@ export default function Payments() {
     };
   }, [isAdmin, activeStudents]);
 
-  const filteredStudents = useMemo(() => {
+  const searchFilteredStudents = useMemo(() => {
     let list = activeStudents;
     if (search.trim()) {
       const q = search.trim().toLowerCase();
       list = list.filter((s) => s.real_name.toLowerCase().includes(q) || (s.english_name || '').toLowerCase().includes(q));
     }
-    if (level) list = list.filter((s) => s.level === level);
     return list;
-  }, [activeStudents, search, level]);
+  }, [activeStudents, search]);
+
+  const filteredStudents = useMemo(() => {
+    if (!level) return searchFilteredStudents;
+    return searchFilteredStudents.filter((s) => s.level === level);
+  }, [searchFilteredStudents, level]);
 
   function matchesStatusFilter(st, filterKey, monthlyFee) {
     if (filterKey === 'all') return true;
     if (!st) return false;
-    return classifyPayment(st, monthlyFee, t, locale).kind === filterKey;
+    const kind = classifyPayment(st, monthlyFee, t, locale).kind;
+    if (filterKey === 'unpaid') return kind !== 'paid' && kind !== 'loading';
+    return kind === filterKey;
   }
 
   const displayStudents = useMemo(() => {
@@ -260,6 +318,71 @@ export default function Payments() {
     }
     return c;
   }, [filteredStudents, newStatuses, t, locale]);
+
+  // Per-student net for the current collection month, aggregated from the
+  // authoritative transaction rows. Corrections naturally net out
+  // duplicates (Asadbek/Ziyoda) and net-zero test rows (Dave), so a
+  // monthly payer is simply net > 0. Membership is always intersected
+  // with the roster lists below, so inactive/unknown ids never count.
+  const payerNetById = useMemo(() => {
+    const m = new Map();
+    for (const tx of monthTxns) {
+      m.set(tx.student_id, (m.get(tx.student_id) || 0) + Number(tx.amount || 0));
+    }
+    return m;
+  }, [monthTxns]);
+
+  const overview = useMemo(() => {
+    const total = filteredStudents.length;
+    let paid = 0;
+    let expectedTotal = 0;
+    // Total Collected = actual cash received in the current calendar month
+    // (getMonthlyPaymentCollection). It must NOT be the sum of covered
+    // students' monthly fees - that double-counts advance/older payments.
+    const collected = cashCollected ?? 0;
+    // Students Paid = monthly payers (net > 0 in the current collection
+    // month), NOT coverage status. A student covered through October by an
+    // older payment counts only if they also transacted this month.
+    const isMonthPayer = (id) => (payerNetById.get(id) || 0) > 0;
+    for (const s of filteredStudents) {
+      const fee = feeForStudent(s);
+      expectedTotal += fee;
+      if (isMonthPayer(s.id)) {
+        paid += 1;
+      }
+    }
+    const remaining = Math.max(0, total - paid);
+    const remainingAmount = Math.max(0, expectedTotal - collected);
+    const paidPct = total > 0 ? Math.round((paid / total) * 100) : 0;
+    const remainingPct = total > 0 ? 100 - paidPct : 0;
+    const groups = LEVELS.map((lvl) => {
+      const studentsInGroup = searchFilteredStudents.filter((s) => s.level === lvl);
+      const gTotal = studentsInGroup.length;
+      let gPaid = 0;
+      let gExpected = 0;
+      let gCollected = 0;
+      for (const s of studentsInGroup) {
+        const fee = feeForStudent(s);
+        gExpected += fee;
+        if ((payerNetById.get(s.id) || 0) > 0) {
+          gPaid += 1;
+          gCollected += fee;
+        }
+      }
+      const gRemaining = Math.max(0, gTotal - gPaid);
+      const pct = gTotal > 0 ? Math.round((gPaid / gTotal) * 100) : 0;
+      return {
+        level: lvl,
+        total: gTotal,
+        paid: gPaid,
+        remaining: gRemaining,
+        expected: gExpected,
+        collected: gCollected,
+        pct,
+      };
+    });
+    return { total, paid, remaining, expectedTotal, collected, remainingAmount, paidPct, remainingPct, groups };
+  }, [filteredStudents, searchFilteredStudents, payerNetById, cashCollected]);
 
   function sortByKey(list, statuses, sortKey) {
     const withStatus = [...list];
@@ -446,6 +569,7 @@ export default function Payments() {
     setBulkRecording(false);
     setBulkFeeConfirming(false);
     setBulkAdvanceConfirming(false);
+    if (results.success.length > 0) refreshMonthCollection();
     if (results.success.length > 0 && results.failed.length === 0) {
       // keep selection but show success
     }
@@ -491,6 +615,7 @@ export default function Payments() {
       setNewStatuses((prev) => ({ ...prev, [studentId]: st2 }));
       setTimelines((prev) => ({ ...prev, [studentId]: tl }));
       setRecordSuccess({ paidThroughDate: st2.paid_through_date });
+      refreshMonthCollection();
     } catch (e) {
       setRecordError(e.message || String(e));
     } finally {
@@ -582,6 +707,117 @@ export default function Payments() {
         <div className="mb-4 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{recordError}</div>
       )}
       {exportError && <div className="mb-4 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{exportError}</div>}
+
+      {/* Payment Overview — premium, compact, analytics-only, same authoritative source (newStatuses + feeForStudent) */}
+      <section aria-label={t('payments:overviewTitle')} className="mb-4">
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <h2 className="text-[11px] font-bold uppercase tracking-widest text-ink/40">{t('payments:overviewTitle')}</h2>
+          <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-ink/50 shadow-sm border border-ink/5">
+            {level ? t('payments:overviewScopeLevel', { level }) : t('payments:overviewScopeAll')} · {overview.total}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Total Collected */}
+          <div className="rounded-xl border border-ink/[0.06] bg-white p-4 shadow-card">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-ink/40">{t('payments:overviewTotalCollected')}</p>
+            <p className="mt-1.5 font-display text-[17px] font-bold leading-none tracking-tight text-ink">{formatUZS(overview.collected)}</p>
+            <p className="mt-1 text-xs font-medium text-ink/50">{t('payments:overviewCollectedHint')}</p>
+            <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-ink/[0.06]">
+              <div className="h-full rounded-full bg-active transition-all" style={{ width: `${overview.total ? overview.paidPct : 0}%` }} />
+            </div>
+            <p className="mt-1.5 text-[11px] text-ink/40">{overview.paid} / {overview.total} · {overview.paidPct}%</p>
+          </div>
+
+          {/* Remaining Amount */}
+          <div className="rounded-xl border border-ink/[0.06] bg-white p-4 shadow-card">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-ink/40">{t('payments:overviewRemainingAmount')}</p>
+            <p className="mt-1.5 font-display text-[17px] font-bold leading-none tracking-tight text-ink">{formatUZS(overview.remainingAmount)}</p>
+            <p className="mt-1 text-xs font-medium text-ink/50">{t('payments:overviewRemainingHint')}</p>
+            <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-ink/[0.06]">
+              <div className="h-full rounded-full bg-inactive/70 transition-all" style={{ width: `${overview.total ? overview.remainingPct : 0}%` }} />
+            </div>
+            <p className="mt-1.5 text-[11px] text-ink/40">{overview.remaining} · {overview.remainingPct}%</p>
+          </div>
+
+          {/* Students Paid */}
+          <button
+            type="button"
+            onClick={() => setStatusFilter((prev) => (prev === 'paid' ? 'all' : 'paid'))}
+            aria-label={t('payments:overviewPaidFilterHint')}
+            className={`rounded-xl border bg-white p-4 text-left shadow-card transition-colors hover:bg-ink/[0.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 ${statusFilter === 'paid' ? 'border-brand-200 ring-1 ring-brand-500/20 bg-brand-50/30' : 'border-ink/[0.06]'}`}
+          >
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-ink/40">{t('payments:overviewStudentsPaid')}</p>
+            <p className="mt-1.5 font-display text-[17px] font-bold leading-none tracking-tight text-ink">
+              {overview.total > 0 ? t('payments:overviewPaidFraction', { paid: overview.paid, total: overview.total }) : t('payments:overviewNoStudents')}
+            </p>
+            <p className="mt-1 text-xs font-medium text-active">{t('payments:overviewPaidPercent', { percent: overview.paidPct })}</p>
+            <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-ink/[0.06]">
+              <div className="h-full rounded-full bg-active transition-all" style={{ width: `${overview.paidPct}%` }} />
+            </div>
+            <p className="mt-1.5 text-[11px] font-medium text-ink/40">{t('payments:overviewClickToFilter', { label: t('payments:filterPaid') })}</p>
+          </button>
+
+          {/* Students Remaining */}
+          <button
+            type="button"
+            onClick={() => setStatusFilter((prev) => (prev === 'unpaid' ? 'all' : 'unpaid'))}
+            aria-label={t('payments:overviewRemainingFilterHint')}
+            className={`rounded-xl border bg-white p-4 text-left shadow-card transition-colors hover:bg-ink/[0.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 ${statusFilter === 'unpaid' ? 'border-brand-200 ring-1 ring-brand-500/20 bg-brand-50/30' : 'border-ink/[0.06]'}`}
+          >
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-ink/40">{t('payments:overviewStudentsRemaining')}</p>
+            <p className="mt-1.5 font-display text-[17px] font-bold leading-none tracking-tight text-ink">
+              {overview.total > 0 ? t('payments:overviewRemainingCount', { count: overview.remaining }) : t('payments:overviewNoStudents')}
+            </p>
+            <p className="mt-1 text-xs font-medium text-inactive">{t('payments:overviewRemainingPercent', { percent: overview.remainingPct })}</p>
+            <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-ink/[0.06]">
+              <div className="h-full rounded-full bg-inactive transition-all" style={{ width: `${overview.remainingPct}%` }} />
+            </div>
+            <p className="mt-1.5 text-[11px] font-medium text-ink/40">{t('payments:overviewClickToFilter', { label: t('payments:filterOverdue') })}</p>
+          </button>
+        </div>
+
+        {/* Group Summary */}
+        <div className="mt-3">
+          <div className="mb-2 flex items-center gap-2">
+            <h3 className="text-[11px] font-bold uppercase tracking-widest text-ink/40">{t('payments:overviewGroupTitle')}</h3>
+            <span className="h-px flex-1 bg-ink/[0.06]" aria-hidden="true" />
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {overview.groups.map((g) => {
+              const isActive = level === g.level;
+              const pct = g.pct;
+              return (
+                <button
+                  key={g.level}
+                  type="button"
+                  onClick={() => setLevel((prev) => (prev === g.level ? '' : g.level))}
+                  aria-label={t('payments:overviewClickToFilter', { label: `Level ${g.level}` })}
+                  className={`rounded-xl border p-3 text-left shadow-card transition-colors hover:bg-ink/[0.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 ${isActive ? 'border-brand-200 bg-brand-50/40 ring-1 ring-brand-500/15' : 'border-ink/[0.06] bg-white'}`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-bold leading-none ${g.level === 'A' ? 'bg-levelA/10 text-levelA border-levelA/20' : g.level === 'A1' ? 'bg-levelA1/10 text-levelA1 border-levelA1/20' : g.level === 'B' ? 'bg-levelB/10 text-levelB border-levelB/20' : 'bg-levelC/10 text-levelC border-levelC/20'}`}>
+                      Level {g.level}
+                    </span>
+                    <span className={`text-[11px] font-semibold ${pct === 100 ? 'text-active' : pct >= 50 ? 'text-ink/60' : 'text-inactive'}`}>{pct}%</span>
+                  </div>
+                  <p className="mt-2.5 text-sm font-bold leading-none text-ink">{t('payments:overviewGroupPaid', { paid: g.paid, total: g.total })}</p>
+                  <p className="mt-1 text-xs text-ink/50">{t('payments:overviewGroupRemaining', { count: g.remaining })}</p>
+                  <p className="mt-2 truncate text-[11px] font-medium leading-tight text-ink/60">
+                    {formatUZS(g.collected)} <span className="text-ink/30">/</span> {formatUZS(g.expected)}
+                  </p>
+                  <div className="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-ink/[0.06]">
+                    <div
+                      className={`h-full rounded-full transition-all ${g.level === 'A' ? 'bg-levelA' : g.level === 'A1' ? 'bg-levelA1' : g.level === 'B' ? 'bg-levelB' : 'bg-levelC'}`}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </section>
 
       <div className="mb-3 flex flex-wrap gap-2 rounded-xl bg-white p-3 shadow-card">
         <span className="rounded-full bg-active/10 px-3 py-1 text-xs font-semibold text-active">{t('payments:summaryPaid', { count: summaryCounts.paid })}</span>

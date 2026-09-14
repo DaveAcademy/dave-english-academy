@@ -25,7 +25,7 @@ const STATUS_OPTIONS = ['Assigned', 'Submitted', 'Graded'];
 export default function Homework() {
   const { t } = useTranslation(['homework', 'common']);
   const statusLabels = { Assigned: t('statusAssigned'), Submitted: t('statusSubmitted'), Graded: t('statusGraded') };
-  const {
+const {
     students,
     homework,
     homeworkStatus,
@@ -35,6 +35,9 @@ export default function Homework() {
     editHomework,
     removeHomework,
     setHomeworkStatusForStudent,
+    awardHomeworkPointsForStudent,
+    setHomeworkStatusBulkForStudent,
+    awardHomeworkPointsBulkForStudent,
     error,
   } = useAcademy();
   const [formOpen, setFormOpen] = useState(false);
@@ -435,13 +438,18 @@ export default function Homework() {
               </Link>
             </div>
           </div>
-          <HomeworkGradingRoster
+<HomeworkGradingRoster
+            homeworkId={selected.id}
+            awardedBy={profile?.id || null}
             students={filteredStudents}
             statusOf={statusOf}
             filesOf={filesOf}
             gradingStateOf={gradingStateOf}
             onOpenFile={handleOpenFile}
-            onSetStatus={(studentId, status, score, feedback) => setHomeworkStatusForStudent(selected.id, studentId, status, score, feedback)}
+            onSetStatus={(studentId, status, score, feedback, submissionQuality) => setHomeworkStatusForStudent(selected.id, studentId, status, score, feedback, submissionQuality)}
+            onSetStatusBulk={(homeworkId, updates) => setHomeworkStatusBulkForStudent(homeworkId, updates)}
+            onAwardPoints={(studentId, score, feedback) => awardHomeworkPointsForStudent(selected.id, studentId, score, feedback || 'Homework points awarded by teacher', profile?.id || null)}
+            onAwardPointsBulk={(homeworkId, studentIds, points, reason, awardedBy) => awardHomeworkPointsBulkForStudent(homeworkId, studentIds, points, reason, awardedBy)}
             statusLabels={statusLabels}
             t={t}
           />

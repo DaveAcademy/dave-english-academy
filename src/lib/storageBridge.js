@@ -905,11 +905,11 @@ export async function listHomeworkStatus() {
   return data;
 }
 
-export async function setHomeworkStatus(homeworkId, studentId, status, score = null, feedback = null) {
-  const { error } = await supabase
+export async function setHomeworkStatus(homeworkId, studentId, status, score = null, feedback = null, submissionQuality = null) {
+  const { data, error } = await supabase
     .from('homework_status')
     .upsert(
-      { homework_id: homeworkId, student_id: studentId, status, score, feedback },
+      { homework_id: homeworkId, student_id: studentId, status, score, feedback, submission_quality: submissionQuality },
       { onConflict: 'homework_id,student_id' }
     );
   if (error) throw error;
@@ -1975,4 +1975,57 @@ export async function deleteGroup(id) {
   const { error } = await supabase.from('groups').delete().eq('id', id);
   if (error) throw error;
   return true;
+}
+
+// ---------- Homework bulk operations (Phase 2) ----------
+
+export async function setHomeworkStatusBulk(homeworkId, updates) {
+  const success = [];
+  const failed = [];
+  const results = await Promise.allSettled(
+    updates.map(async (u) => {
+      const { data, error } = await supabase
+        .from('homework_status')
+        .update({
+          status: u.status,
+          score: u.score,
+          feedback: u.feedback,
+          submission_quality: u.submissionQuality,
+        })
+        .eq('homework_id', homeworkId)
+        .eq('student_id', u.studentId);
+      if (error) throw new Error(error.message);
+      success.push(u.studentId);
+    })
+  );
+  results.forEach((r, i) => {
+    if (r.status === 'rejected') {
+      failed.push({ studentId: updates[i].studentId, error: r.reason?.message || String(r.reason) });
+    }
+  });
+  return { success, failed };
+}
+
+export async function awardHomeworkPointsBulk(homeworkId, studentIds, points, reason, awardedBy) {
+  const success = [];
+  const failed = [];
+  const results = await Promise.allSettled(
+    studentIds.map(async (sid) => {
+      const { data, error } = await supabase.rpc('award_homework_points', {
+        p_homework_id: homeworkId,
+        p_student_id: sid,
+        p_points: points,
+        p_reason: reason,
+        p_awarded_by: awardedBy,
+      });
+      if (error) throw new Error(error.message);
+      success.push(sid);
+    })
+  );
+  results.forEach((r, i) => {
+    if (r.status === 'rejected') {
+      failed.push({ studentId: studentIds[i], error: r.reason?.message || String(r.reason) });
+    }
+  });
+  return { success, failed };
 }
