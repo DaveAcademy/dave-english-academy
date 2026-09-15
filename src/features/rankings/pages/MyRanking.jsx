@@ -1,8 +1,7 @@
-// MyRanking.jsx — 10/10 ranking experience
-// Hierarchy: YOUR RANK hero → LEADERBOARD (dominant) → YOUR LESSON POINTS
-// - Achievements intentionally absent (per product rule)
-// - Uses authoritative RPCs only: get_group_leaderboard, get_student_ranking_summary,
-//   get_my_point_history, getRecognitionAwards. No client-side rank math.
+// MyRanking.jsx — Premium game-style Student Gaming Ranking
+// Hierarchy: HERO (YOUR RANK) → TOP 3 PODIUM → LEADERBOARD → YOUR POINTS LOG
+// Ranking data unchanged: same RPCs, same calculations, same rank logic.
+// Design overhaul only — premium game leaderboard feel.
 
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -34,6 +33,8 @@ const PERIOD_POINTS_KEY = {
   all_time: 'lifetime_points',
 };
 
+const LEVEL_COLORS = { A: 'bg-levelA', A1: 'bg-levelA1', B: 'bg-levelB', C: 'bg-levelC' };
+
 const AWARD_TYPE_INFO = {
   student_of_week: { icon: '⭐', key: 'awardStudentOfWeek' },
   student_of_month: { icon: '🏆', key: 'awardStudentOfMonth' },
@@ -56,13 +57,72 @@ function displayName(row) {
   return real;
 }
 
-function RankBadge({ rank }) {
-  // Top-3 get restrained medal treatment, rest numeric — compact for 320px
-  if (rank === 1) return <span className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-400 text-white shadow-sm ring-1 ring-amber-500/20" aria-hidden="true"><Crown size={14} /></span>;
-  if (rank === 2) return <span className="flex h-8 w-8 items-center justify-center rounded-full bg-ink/10 text-ink/70 shadow-sm ring-1 ring-ink/10" aria-hidden="true"><Medal size={14} /></span>;
-  if (rank === 3) return <span className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-600/15 text-amber-700 shadow-sm ring-1 ring-amber-600/15" aria-hidden="true"><Medal size={14} /></span>;
+function MedalsPodium({ leaderboard }) {
+  const top3 = leaderboard.slice(0, 3);
+  if (top3.length === 0) return null;
+
+  const positions = [1, 2, 3];
+  const positionLabels = ['1st', '2nd', '3rd'];
+  const positionColors = [
+    'from-amber-400 to-amber-500',
+    'from-gray-300 to-gray-400',
+    'from-amber-600 to-amber-700',
+  ];
+  const positionBorders = [
+    'border-amber-300/40',
+    'border-gray-300/40',
+    'border-amber-500/40',
+  ];
+  const positionBg = [
+    'bg-amber-50/60',
+    'bg-gray-50/60',
+    'bg-amber-50/40',
+  ];
+
   return (
-    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-ink/[0.06] text-xs font-bold tabular-nums text-ink/60 ring-1 ring-ink/[0.04]">
+    <div className="mb-6">
+      <p className="mb-3 px-1 text-[11px] font-bold uppercase tracking-[0.12em] text-ink/40">Top 3</p>
+      <div className="grid grid-cols-3 gap-3">
+        {positions.map((pos, idx) => {
+          const row = top3[idx];
+          if (!row) return (
+            <div key={pos} className="rounded-2xl border border-ink/[0.06] bg-white p-4 shadow-card opacity-40">
+              <div className="h-10 w-10 mx-auto rounded-full bg-ink/5" />
+              <div className="mt-3 h-3 w-16 rounded bg-ink/5 mx-auto" />
+              <div className="mt-2 h-3 w-12 rounded bg-ink/5 mx-auto" />
+            </div>
+          );
+          return (
+            <div
+              key={row.student_id}
+              className={`relative overflow-hidden rounded-2xl border ${positionBorders[idx]} ${positionBg[idx]} p-4 shadow-card transition-all hover:-translate-y-1`}
+            >
+              <div className={`absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r ${positionColors[idx]}`} aria-hidden="true" />
+              <div className="flex flex-col items-center text-center">
+                <div className={`flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-sm ring-2 ring-ink/[0.06]`}>
+                  {pos === 1 && <Crown size={18} className="text-amber-500" />}
+                  {pos === 2 && <Medal size={18} className="text-gray-500" />}
+                  {pos === 3 && <Medal size={18} className="text-amber-700" />}
+                </div>
+                <span className="mt-2 text-[10px] font-bold uppercase tracking-[0.1em] text-ink/40">{positionLabels[idx]}</span>
+                <span className="mt-0.5 truncate text-xs font-semibold text-ink">{displayName(row)}</span>
+                <span className="font-display text-lg font-extrabold text-ink">{formatPoints(row.points)}</span>
+                <span className="text-[10px] text-ink/40">pts</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function RankBadge({ rank }) {
+  if (rank === 1) return <span className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-400 text-white shadow-sm ring-2 ring-amber-500/20"><Crown size={15} /></span>;
+  if (rank === 2) return <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-200 text-gray-600 shadow-sm ring-2 ring-gray-300/30"><Medal size={15} /></span>;
+  if (rank === 3) return <span className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-600/15 text-amber-700 shadow-sm ring-2 ring-amber-600/20"><Medal size={15} /></span>;
+  return (
+    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-ink/[0.06] text-sm font-bold tabular-nums text-ink/50 ring-1 ring-ink/[0.04]">
       {rank}
     </span>
   );
@@ -76,14 +136,13 @@ export default function MyRanking() {
   const [period, setPeriod] = useState('month');
   const [leaderboard, setLeaderboard] = useState(null);
   const [leaderboardError, setLeaderboardError] = useState(false);
-  const [groupId, setGroupId] = useState(null); // student's class_group, resolved from level (+ group_name)
+  const [groupId, setGroupId] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [awards, setAwards] = useState(null);
   const [summary, setSummary] = useState(null);
   const [pointHistory, setPointHistory] = useState(null);
   const [pointHistoryError, setPointHistoryError] = useState(false);
 
-  // Summary: week/month/lifetime (period-agnostic, fetched once per student)
   useEffect(() => {
     if (!me?.id) return undefined;
     let cancelled = false;
@@ -94,9 +153,6 @@ export default function MyRanking() {
     return () => { cancelled = true; };
   }, [me?.id]);
 
-  // Resolve the student's class_group — the same scope Admin Rankings uses
-  // for its Week/Month view (one group per level today; matched by
-  // group_name when a level ever has more than one).
   useEffect(() => {
     if (!me?.level) return undefined;
     let cancelled = false;
@@ -105,29 +161,15 @@ export default function MyRanking() {
       .then((groups) => {
         if (cancelled) return;
         const rows = groups || [];
-        if (rows.length === 0) {
-          setGroupId(null);
-          return;
-        }
-        if (rows.length === 1) {
-          setGroupId(String(rows[0].id));
-          return;
-        }
+        if (rows.length === 0) { setGroupId(null); return; }
+        if (rows.length === 1) { setGroupId(String(rows[0].id)); return; }
         const match = me.group_name ? rows.find((g) => g.name === me.group_name) : null;
         setGroupId(match ? String(match.id) : String(rows[0].id));
       })
-      .catch(() => {
-        if (!cancelled) setGroupId(null);
-      });
+      .catch(() => { if (!cancelled) setGroupId(null); });
     return () => { cancelled = true; };
   }, [me?.level, me?.group_name]);
 
-  // Leaderboard: the same underlying calculation Admin Rankings uses.
-  // - all_time: get_group_leaderboard(level, 'all_time') — identical call.
-  // - week/month: get_weekly/monthly_class_leaderboard(groupId) — the exact
-  //   class_session-backed RPCs Admin's Week/Month matrix reads, collapsed
-  //   from long-form (one row per student per session) to one row per
-  //   student using the RPC's own totals/ranks (never recomputed here).
   useEffect(() => {
     if (!me?.level) return undefined;
     if (period !== 'all_time' && !groupId) return undefined;
@@ -192,18 +234,9 @@ export default function MyRanking() {
     return leaderboard.find((r) => r.student_id === me.id) || null;
   }, [leaderboard, me?.id]);
 
-  // Hero values: prefer leaderboard row (period-accurate), fall back to summary
   const heroRank = myRow?.rank ?? (summary ? summary[PERIOD_RANK_KEY[period]] ?? null : null);
   const heroPoints = myRow?.points ?? (summary ? summary[PERIOD_POINTS_KEY[period]] ?? null : null);
   const heroRankChange = myRow?.rank_change ?? null;
-
-  // Lesson points: compact recent history (ranking-relevant points only)
-  // get_my_point_history already returns newest first; limit to 8 to stay compact.
-  const lessonPoints = useMemo(() => {
-    if (!pointHistory) return null;
-    // Filter out baseline if you want pure earned points; but baseline is informative — keep but de-emphasize.
-    return pointHistory.slice(0, 8);
-  }, [pointHistory]);
 
   if (!me) {
     return (
@@ -218,17 +251,16 @@ export default function MyRanking() {
 
   return (
     <div className="mx-auto max-w-[880px]">
-      {/* Page header — lightweight, keeps focus on hero */}
       <header className="mb-4">
         <h1 className="font-display text-2xl font-bold tracking-tight text-ink">{t('portal:myRankingTitle')}</h1>
         <p className="mt-1 text-sm leading-relaxed text-ink/50">{t('portal:rankingSubtitle')}</p>
       </header>
 
-      {/* ── 1 · HERO: YOUR RANK ────────────────────────────────────────── */}
+      {/* ── HERO: YOUR RANK ─────────────────────────────────── */}
       <section aria-labelledby="your-rank-heading" className="mb-6">
         <h2 id="your-rank-heading" className="sr-only">Your Rank</h2>
         <div className="overflow-hidden rounded-[20px] border border-ink/[0.06] bg-white shadow-[0_2px_8px_rgba(27,36,48,0.04),0_8px_24px_rgba(27,36,48,0.06)]">
-          <div className="h-[3px] w-full bg-brand-500" aria-hidden="true" />
+          <div className="h-[3px] w-full bg-gradient-to-r from-brand-500 to-brand-400" aria-hidden="true" />
           {summary === null && leaderboard === null ? (
             <div className="px-5 py-6 sm:px-6">
               <div className="space-y-3">
@@ -245,47 +277,79 @@ export default function MyRanking() {
             </div>
           ) : (
             <div className="px-5 py-6 sm:flex sm:items-center sm:justify-between sm:gap-6 sm:px-6 sm:py-7">
-              {/* Left: rank + points */}
-              <div className="min-w-0 text-center sm:text-left">
-                <p className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-amber-700">
-                  <Trophy size={12} aria-hidden="true" /> {t('portal:yourRankLabel', { defaultValue: 'Your rank' })}
-                </p>
-                <div className="mt-3 flex items-baseline justify-center gap-3 sm:justify-start">
-                  <span className="font-display text-[44px] font-extrabold leading-none tracking-tight text-ink sm:text-[52px]" aria-label={`Rank ${heroRank ?? '—'}`}>
+              <div className="min-w-0 flex-1 text-center sm:text-left">
+                {/* Level badge + rank label */}
+                <div className="inline-flex items-center gap-2">
+                  <span className={`inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-white ${LEVEL_COLORS[me.level] || 'bg-ink'}`}>
+                    {me.level}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-amber-700">
+                    <Trophy size={11} aria-hidden="true" /> {t('portal:yourRankLabel', { defaultValue: 'Your Rank' })}
+                  </span>
+                </div>
+
+                <div className="mt-4 flex items-baseline justify-center gap-3 sm:justify-start">
+                  <span className="font-display text-[48px] font-extrabold leading-none tracking-tight text-ink sm:text-[56px]" aria-label={`Rank ${heroRank ?? '—'}`}>
                     #{heroRank ?? '—'}
                   </span>
-                  <span className="hidden h-8 w-px bg-ink/10 sm:block" aria-hidden="true" />
+                  <span className="hidden h-10 w-px bg-ink/10 sm:block" aria-hidden="true" />
                   <span className="text-left">
                     <span className="block font-display text-xl font-bold leading-none text-ink sm:text-2xl">{formatPoints(heroPoints)} <span className="text-sm font-semibold text-ink/40">{t('portal:points')}</span></span>
                     <span className="mt-1 block text-xs font-semibold uppercase tracking-wide text-ink/45">{t(`portal:period_${period}`)}</span>
                   </span>
                 </div>
-                {/* Movement — only when RPC provides a real delta; never invented */}
+
+                {/* Rank movement */}
                 {heroRankChange != null && heroRankChange !== 0 && (
-                  <p className={`mt-2 inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-bold ${heroRankChange > 0 ? 'border-active/15 bg-active/10 text-active' : 'border-inactive/15 bg-inactive/10 text-inactive'}`}>
+                  <div className={`mt-3 inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold ${heroRankChange > 0 ? 'border-active/15 bg-active/10 text-active' : 'border-inactive/15 bg-inactive/10 text-inactive'}`}>
                     {heroRankChange > 0 ? <ArrowUp size={12} aria-hidden="true" /> : <ArrowDown size={12} aria-hidden="true" />}
                     {heroRankChange > 0
                       ? t('portal:rankUp', { count: heroRankChange, defaultValue: `↑ ${heroRankChange} this period` })
                       : t('portal:rankDown', { count: Math.abs(heroRankChange), defaultValue: `↓ ${Math.abs(heroRankChange)} this period` })}
-                  </p>
+                  </div>
                 )}
                 {heroRankChange === 0 && (
-                  <p className="mt-2 inline-flex items-center gap-1 rounded-full border border-ink/10 bg-ink/[0.04] px-2.5 py-1 text-xs font-semibold text-ink/50">
+                  <div className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-ink/10 bg-ink/[0.04] px-3 py-1.5 text-xs font-semibold text-ink/50">
                     <Minus size={12} aria-hidden="true" /> {t('portal:rankSteady', { defaultValue: 'No change' })}
-                  </p>
+                  </div>
                 )}
-                <p className="mt-2 text-xs font-medium text-ink/40">
-                  {t('portal:levelLabelShort', { defaultValue: 'Level {{level}}', level: me.level })}
-                  {leaderboard && leaderboard.length > 0 ? ` · ${t('portal:mpLeaderboardStudents', { count: leaderboard.length, level: me.level })}` : ''}
-                </p>
+
+                {/* Level + student count */}
+                <div className="mt-3 flex items-center gap-1.5 justify-center sm:justify-start">
+                  <span className="flex h-2 w-2 rounded-full bg-active" aria-hidden="true" />
+                  <span className="text-xs font-medium text-ink/40">
+                    {t('portal:levelLabelShort', { defaultValue: 'Level {{level}}', level: me.level })}
+                    {leaderboard && leaderboard.length > 0 ? ` · ${leaderboard.length} players` : ''}
+                  </span>
+                </div>
               </div>
 
-              {/* Right: subtle context on desktop — not a competing card */}
+              {/* Right: Lifetime total + rank position bar */}
               <div className="mt-4 flex justify-center sm:mt-0 sm:flex-col sm:items-end sm:justify-center">
-                <div className="rounded-2xl border border-ink/[0.06] bg-paper px-4 py-3 text-center shadow-sm sm:min-w-[160px] sm:text-right">
+                <div className="rounded-2xl border border-ink/[0.06] bg-paper px-5 py-4 text-center shadow-sm sm:min-w-[170px]">
                   <p className="text-[11px] font-bold uppercase tracking-wide text-ink/40">{t('portal:totalPointsLabel')}</p>
-                  <p className="mt-0.5 font-display text-lg font-bold text-ink">{formatPoints(summary?.lifetime_points ?? myRow?.points)}</p>
-                  <p className="text-[11px] font-medium text-ink/40">{t('portal:rankingHeroHint', { defaultValue: 'All-time total' })}</p>
+                  <p className="mt-0.5 font-display text-xl font-bold text-ink">{formatPoints(summary?.lifetime_points ?? myRow?.points)}</p>
+                  <p className="mt-1 text-[11px] font-medium text-ink/40">{t('portal:rankingHeroHint', { defaultValue: 'All-time total' })}</p>
+                  {/* Progress bar showing rank position */}
+                  {leaderboard && leaderboard.length > 0 && heroRank != null && (
+                    <div className="mt-3">
+                      <div className="flex items-center justify-between text-[10px] text-ink/35">
+                        <span>#1</span>
+                        <span className="font-bold text-brand-600">Your position</span>
+                        <span>#{leaderboard.length}</span>
+                      </div>
+                      <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-ink/[0.06]">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-brand-500 to-brand-400 transition-all duration-700 ease-out"
+                          style={{ width: `${Math.max(2, (1 - (heroRank - 1) / Math.max(1, leaderboard.length - 1)) * 100)}%` }}
+                          role="progressbar"
+                          aria-valuenow={heroRank}
+                          aria-valuemin={1}
+                          aria-valuemax={leaderboard.length}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -293,13 +357,20 @@ export default function MyRanking() {
         </div>
       </section>
 
-      {/* ── 2 · LEADERBOARD (dominant) ─────────────────────────────────── */}
+      {/* ── TOP 3 PODIUM ────────────────────────────────────── */}
+      {leaderboard && leaderboard.length >= 3 && (
+        <section aria-labelledby="podium-heading" className="mb-6">
+          <h2 id="podium-heading" className="sr-only">Top 3 Players</h2>
+          <MedalsPodium leaderboard={leaderboard} />
+        </section>
+      )}
+
+      {/* ── LEADERBOARD ─────────────────────────────────────── */}
       <section aria-labelledby="leaderboard-heading" className="mb-6">
-        <div className="mb-2 flex flex-wrap items-end justify-between gap-3">
+        <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
           <h2 id="leaderboard-heading" className="font-display text-base font-bold tracking-tight text-ink">
             {t('portal:leaderboardTitle', { level: me.level })}
           </h2>
-          {/* Period tabs — clear, no invented categories; wraps at 320px */}
           <div role="tablist" aria-label={t('portal:rankingPeriodLabel', { defaultValue: 'Ranking period' })} className="flex flex-wrap gap-1.5">
             {PERIODS.map((p) => {
               const isActive = period === p;
@@ -321,11 +392,10 @@ export default function MyRanking() {
           </div>
         </div>
 
-        {/* Table chrome — compact header, not decorative */}
         <div className="overflow-hidden rounded-2xl border border-ink/[0.06] bg-white shadow-card">
-          <div className="grid grid-cols-[44px_1fr_auto] items-center gap-2 border-b border-ink/[0.06] bg-paper/60 px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-ink/40 sm:grid-cols-[52px_1fr_110px] sm:px-4" aria-hidden="true">
+          <div className="grid grid-cols-[40px_1fr_auto] items-center gap-2 border-b border-ink/[0.06] bg-paper/60 px-3 py-2.5 text-[10px] font-bold uppercase tracking-wide text-ink/40 sm:grid-cols-[48px_1fr_100px] sm:px-4" aria-hidden="true">
             <span className="text-center">Rank</span>
-            <span>Student</span>
+            <span>Player</span>
             <span className="text-right">Points</span>
           </div>
 
@@ -346,11 +416,7 @@ export default function MyRanking() {
               <p className="mx-auto mt-1 max-w-sm text-xs text-ink/50">{t('portal:rankingLoadFailedHint', { defaultValue: 'Check your connection and try again.' })}</p>
               <button
                 type="button"
-                onClick={() => {
-                  setLeaderboard(null);
-                  setLeaderboardError(false);
-                  setRefreshKey((k) => k + 1);
-                }}
+                onClick={() => { setLeaderboard(null); setLeaderboardError(false); setRefreshKey((k) => k + 1); }}
                 className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-ink px-4 py-1.5 text-xs font-bold text-white hover:bg-ink/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
               >
                 <RefreshCw size={12} aria-hidden="true" /> {t('common:tryAgain')}
@@ -366,35 +432,62 @@ export default function MyRanking() {
             <ol className="divide-y divide-ink/[0.04]" aria-label={t('portal:leaderboardTitle', { level: me.level })}>
               {leaderboard.map((row) => {
                 const isMe = me && row.student_id === me.id;
+                const isTop3 = row.rank <= 3;
                 return (
                   <li
                     key={row.student_id}
-                    className={`grid grid-cols-[44px_1fr_auto] items-center gap-2 px-3 py-2.5 transition-colors sm:grid-cols-[52px_1fr_110px] sm:px-4 sm:py-3 ${isMe ? 'relative bg-brand-50/80 ring-1 ring-brand-100' : 'bg-white hover:bg-paper/40'}`}
+                    className={`relative grid grid-cols-[40px_1fr_auto] items-center gap-2 px-3 py-2.5 transition-all sm:grid-cols-[48px_1fr_100px] sm:px-4 sm:py-3 ${
+                      isMe
+                        ? 'bg-brand-50/70 ring-1 ring-brand-200/60'
+                        : isTop3
+                          ? 'bg-amber-50/30'
+                          : 'bg-white hover:bg-paper/40'
+                    }`}
                     aria-current={isMe ? 'true' : undefined}
                   >
+                    {/* Left accent bar */}
                     {isMe && <span className="absolute inset-y-0 left-0 w-[3px] bg-brand-500" aria-hidden="true" />}
-                    {/* Rank */}
+                    {isTop3 && !isMe && <span className="absolute inset-y-0 left-0 w-[2px] bg-amber-400/50" aria-hidden="true" />}
+
+                    {/* Rank badge */}
                     <span className="flex justify-center" aria-label={`Rank ${row.rank}`}>
                       <RankBadge rank={row.rank} />
                     </span>
-                    {/* Student — real (English), truncated safely */}
+
+                    {/* Student info */}
                     <span className="min-w-0">
-                      <span className={`block truncate text-sm font-semibold leading-tight ${isMe ? 'text-ink' : 'text-ink'}`}>{displayName(row)}</span>
-                      <span className="flex flex-wrap items-center gap-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className={`block truncate text-sm font-semibold leading-tight ${isMe ? 'text-brand-700' : isTop3 ? 'text-ink' : 'text-ink'}`}>
+                          {displayName(row)}
+                        </span>
                         {isMe && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-ink px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+                          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-brand-600 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white">
                             You
                           </span>
                         )}
-                        {row.attendance_rate != null && (
-                          <span className="text-[11px] font-medium text-ink/40">{t('portal:attendanceRateLabel', { rate: row.attendance_rate })}</span>
+                        {isTop3 && !isMe && (
+                          <span className="shrink-0 text-[10px]" aria-hidden="true">
+                            {row.rank === 1 ? '🥇' : row.rank === 2 ? '🥈' : '🥉'}
+                          </span>
                         )}
-                      </span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                        {row.attendance_rate != null && (
+                          <span className="text-[10px] font-medium text-ink/40">{row.attendance_rate}%</span>
+                        )}
+                        {isMe && heroRankChange != null && heroRankChange !== 0 && (
+                          <span className={`inline-flex items-center gap-0.5 text-[10px] font-bold ${heroRankChange > 0 ? 'text-active' : 'text-inactive'}`}>
+                            {heroRankChange > 0 ? <ArrowUp size={10} /> : <ArrowDown size={10} />}
+                            {Math.abs(heroRankChange)}
+                          </span>
+                        )}
+                      </div>
                     </span>
-                    {/* Points — always visible, tabular */}
+
+                    {/* Points */}
                     <span className="text-right">
-                      <span className={`block text-sm font-bold tabular-nums leading-none ${isMe ? 'text-ink' : 'text-ink'}`}>{formatPoints(row.points)}</span>
-                      <span className="text-[11px] font-medium text-ink/35">{t('portal:points')}</span>
+                      <span className={`block text-sm font-bold tabular-nums leading-none ${isMe ? 'text-brand-700' : 'text-ink'}`}>{formatPoints(row.points)}</span>
+                      <span className="text-[10px] font-medium text-ink/35">pts</span>
                     </span>
                   </li>
                 );
@@ -407,10 +500,10 @@ export default function MyRanking() {
         )}
       </section>
 
-      {/* ── 3 · YOUR LESSON POINTS (compact, ranking-relevant) ─────────── */}
+      {/* ── YOUR POINTS LOG ─────────────────────────────────── */}
       <section aria-labelledby="lesson-points-heading" className="mb-6">
         <h2 id="lesson-points-heading" className="mb-2 font-display text-sm font-bold tracking-tight text-ink">
-          {t('portal:yourLessonPointsTitle', { defaultValue: 'Your lesson points' })}
+          {t('portal:yourLessonPointsTitle', { defaultValue: 'Your Points Log' })}
         </h2>
         <div className="overflow-hidden rounded-2xl border border-ink/[0.06] bg-white shadow-card">
           {pointHistory === null ? (
@@ -433,14 +526,14 @@ export default function MyRanking() {
                 <RefreshCw size={12} aria-hidden="true" /> {t('common:tryAgain')}
               </button>
             </div>
-          ) : lessonPoints.length === 0 ? (
+          ) : pointHistory.length === 0 ? (
             <div className="px-5 py-10 text-center">
               <p className="text-sm font-semibold text-ink">{t('portal:pointHistoryEmpty')}</p>
               <p className="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-ink/50">{t('portal:lessonPointsEmptyHint', { defaultValue: 'Points from class scores will appear here after your teacher records them.' })}</p>
             </div>
           ) : (
             <ul className="divide-y divide-ink/[0.04]">
-              {lessonPoints.map((row, idx) => {
+              {pointHistory.map((row, idx) => {
                 const pts = Number(row.points);
                 const isNeg = pts < 0;
                 return (
@@ -462,13 +555,13 @@ export default function MyRanking() {
               })}
             </ul>
           )}
+          {pointHistory && pointHistory.length > 8 && (
+            <p className="mt-2 px-1 text-xs text-ink/35">{t('portal:lessonPointsMore', { count: pointHistory.length - 8, defaultValue: `+{{count}} more in full history` })}</p>
+          )}
         </div>
-        {lessonPoints && lessonPoints.length > 0 && pointHistory.length > lessonPoints.length && (
-          <p className="mt-2 px-1 text-xs text-ink/35">{t('portal:lessonPointsMore', { count: pointHistory.length - lessonPoints.length, defaultValue: `+{{count}} more in full history` })}</p>
-        )}
       </section>
 
-      {/* ── 4 · Recognition (secondary, only when present) ─────────────── */}
+      {/* ── RECOGNITION (secondary, only when present) ──────── */}
       {awards && awards.length > 0 && (
         <section aria-labelledby="recognition-heading" className="mb-6">
           <h2 id="recognition-heading" className="mb-2 text-xs font-bold uppercase tracking-wide text-ink/40">{t('portal:recognitionTitle')}</h2>
