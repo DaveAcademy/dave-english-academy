@@ -12,7 +12,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { Gamepad2, PawPrint } from 'lucide-react';
+import { Gamepad2, PawPrint, Trophy, Crown, Medal, Target, Zap } from 'lucide-react';
 import { useAcademy } from '../../../lib/AcademyDataContext';
 import GameCard from '../components/GameCard';
 import GameLeaderboardBlock from '../components/GameLeaderboardBlock';
@@ -22,6 +22,54 @@ import { formatStudentDisplayName } from '../utils/gameRecordFormat';
 import SectionLabel from '../../../components/SectionLabel';
 
 const OVERALL_TOP_N = 10;
+
+function formatPoints(n) {
+  if (n == null || Number.isNaN(Number(n))) return '—';
+  return Number(n).toLocaleString('en-US');
+}
+
+function RankBadge({ rank }) {
+  if (rank === 1) return <span className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-400 text-white shadow-sm ring-2 ring-amber-500/20"><Crown size={15} /></span>;
+  if (rank === 2) return <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-200 text-gray-600 shadow-sm ring-2 ring-gray-300/30"><Medal size={15} /></span>;
+  if (rank === 3) return <span className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-600/15 text-amber-700 shadow-sm ring-2 ring-amber-600/20"><Medal size={15} /></span>;
+  return <span className="flex h-9 w-9 items-center justify-center rounded-full bg-ink/[0.06] text-sm font-bold tabular-nums text-ink/50 ring-1 ring-ink/[0.04]">{rank}</span>;
+}
+
+function OverallPodium({ top }) {
+  const top3 = top.slice(0, 3);
+  if (top3.length === 0) return null;
+  const labels = ['1st', '2nd', '3rd'];
+  const gradients = ['from-amber-400 to-amber-500', 'from-gray-300 to-gray-400', 'from-amber-600 to-amber-700'];
+  const borders = ['border-amber-300/40', 'border-gray-300/40', 'border-amber-500/40'];
+  const bgs = ['bg-amber-50/60', 'bg-gray-50/60', 'bg-amber-50/40'];
+  return (
+    <div className="mb-4">
+      <p className="mb-3 px-1 text-[11px] font-bold uppercase tracking-[0.12em] text-ink/40">Top 3</p>
+      <div className="grid grid-cols-3 gap-3">
+        {[0, 1, 2].map((idx) => {
+          const row = top3[idx];
+          if (!row) return <div key={idx} className="rounded-2xl border border-ink/[0.06] bg-white p-4 shadow-card opacity-40"><div className="h-10 w-10 mx-auto rounded-full bg-ink/5" /><div className="mt-3 h-3 w-16 rounded bg-ink/5 mx-auto" /><div className="mt-2 h-3 w-12 rounded bg-ink/5 mx-auto" /></div>;
+          return (
+            <div key={row.studentId} className={`relative overflow-hidden rounded-2xl border ${borders[idx]} ${bgs[idx]} p-4 shadow-card transition-all hover:-translate-y-1`}>
+              <div className={`absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r ${gradients[idx]}`} aria-hidden="true" />
+              <div className="flex flex-col items-center text-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-sm ring-2 ring-ink/[0.06]">
+                  {idx === 0 && <Crown size={18} className="text-amber-500" />}
+                  {idx === 1 && <Medal size={18} className="text-gray-500" />}
+                  {idx === 2 && <Medal size={18} className="text-amber-700" />}
+                </div>
+                <span className="mt-2 text-[10px] font-bold uppercase tracking-[0.1em] text-ink/40">{labels[idx]}</span>
+                <span className="mt-0.5 truncate text-xs font-semibold text-ink w-full">{row.name}</span>
+                <span className="font-display text-lg font-extrabold text-ink">{formatPoints(row.score)}</span>
+                <span className="text-[10px] text-ink/40">pts</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 // Ordered easiest to hardest (Dave's request, 2026-08-19). Family V
 // (vocabulary, docs/GAMING-SYSTEM.md) is untimed recognition -> untimed
@@ -282,31 +330,135 @@ export default function GameCenter() {
       </header>
 
       <div className="mb-6">
-        <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="font-display text-lg font-bold text-ink">{t('overallRankingTitle')}</h2>
-          <div className="flex gap-1 overflow-x-auto pb-1 sm:pb-0 -mx-1 px-1">
-            {['daily', 'weekly', 'monthly', 'all_time'].map((p) => (
-              <button
-                key={p}
-                type="button"
-                onClick={() => setPeriod(p)}
-                className={`whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-bold transition-colors sm:px-3 sm:text-xs ${
-                  period === p
-                    ? 'bg-brand-600 text-white shadow-sm'
-                    : 'bg-ink/5 text-ink/60 hover:bg-ink/10'
-                }`}
-              >
-                {t(`period_${p}`)}
-              </button>
-            ))}
+        <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
+          <h2 className="font-display text-lg font-bold tracking-tight text-ink">{t('overallRankingTitle')}</h2>
+          <div role="tablist" aria-label="Ranking period" className="flex gap-1.5 overflow-x-auto pb-1 sm:pb-0 -mx-1 px-1">
+            {['daily', 'weekly', 'monthly', 'all_time'].map((p) => {
+              const active = period === p;
+              return (
+                <button
+                  key={p}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setPeriod(p)}
+                  className={`whitespace-nowrap rounded-full px-3.5 py-1.5 text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 ${active ? 'bg-ink text-white shadow-sm' : 'border border-ink/[0.06] bg-white text-ink/60 shadow-card hover:border-ink/15 hover:text-ink'}`}
+                >
+                  {t(`period_${p}`)}
+                </button>
+              );
+            })}
           </div>
         </div>
+
         {loadingOverall ? (
-          <p className="py-4 text-center text-sm text-ink/40">{t('loading')}</p>
+          <div className="overflow-hidden rounded-[20px] border border-ink/[0.06] bg-white shadow-card">
+            <div className="h-[3px] w-full bg-gradient-to-r from-brand-500 to-brand-400" aria-hidden="true" />
+            <div className="px-5 py-6 sm:px-6">
+              <div className="space-y-3">
+                <div className="h-4 w-32 animate-pulse rounded bg-ink/5" />
+                <div className="h-10 w-24 animate-pulse rounded bg-ink/5" />
+                <div className="h-4 w-48 animate-pulse rounded bg-ink/5" />
+              </div>
+            </div>
+          </div>
         ) : overall && overall.top.length > 0 ? (
-          <GameLeaderboardBlock record={overall} isNewBest={false} />
+          <div className="space-y-4">
+            {/* Hero: Your Rank */}
+            <div className="overflow-hidden rounded-[20px] border border-ink/[0.06] bg-white shadow-[0_2px_8px_rgba(27,36,48,0.04),0_8px_24px_rgba(27,36,48,0.06)]">
+              <div className="h-[3px] w-full bg-gradient-to-r from-brand-500 to-brand-400" aria-hidden="true" />
+              {overall.myRank == null && overall.myBest == null ? (
+                <div className="px-5 py-8 text-center sm:px-6">
+                  <Trophy className="mx-auto text-ink/15" size={28} aria-hidden="true" />
+                  <p className="mt-2 text-sm font-semibold text-ink">{t('noRankingData')}</p>
+                  <p className="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-ink/50">{t('gameCenterSubtitle')}</p>
+                </div>
+              ) : (
+                <div className="px-5 py-6 sm:flex sm:items-center sm:justify-between sm:gap-6 sm:px-6 sm:py-7">
+                  <div className="min-w-0 flex-1 text-center sm:text-left">
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-amber-700">
+                      <Trophy size={11} aria-hidden="true" /> Your Rank
+                    </span>
+                    <div className="mt-4 flex items-baseline justify-center gap-3 sm:justify-start">
+                      <span className="font-display text-[48px] font-extrabold leading-none tracking-tight text-ink sm:text-[56px]" aria-label={`Rank ${overall.myRank ?? '—'}`}>#{overall.myRank ?? '—'}</span>
+                      <span className="hidden h-10 w-px bg-ink/10 sm:block" aria-hidden="true" />
+                      <span className="text-left">
+                        <span className="block font-display text-xl font-bold leading-none text-ink sm:text-2xl">{formatPoints(overall.myBest)} <span className="text-sm font-semibold text-ink/40">pts</span></span>
+                        <span className="mt-1 block text-xs font-semibold uppercase tracking-wide text-ink/45">{t(`period_${period}`)}</span>
+                      </span>
+                    </div>
+                    {overall.nextTarget ? (
+                      <div className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-50 px-3 py-1.5 text-xs font-bold text-brand-700">
+                        <Target size={12} aria-hidden="true" /> Next: {overall.nextTarget.name} · {formatPoints(overall.nextTarget.score)} ({formatPoints(overall.nextTarget.gap)} to go)
+                      </div>
+                    ) : overall.isRecordHolder ? (
+                      <div className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-700">
+                        <Crown size={12} aria-hidden="true" /> You are #1!
+                      </div>
+                    ) : null}
+                    <div className="mt-3 flex items-center justify-center gap-1.5 sm:justify-start">
+                      <span className="flex h-2 w-2 rounded-full bg-active" aria-hidden="true" />
+                      <span className="text-xs font-medium text-ink/40">{overall.top.length + (overall.rest?.length || 0)} players · {t(`period_${period}`)}</span>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex justify-center sm:mt-0 sm:flex-col sm:items-end">
+                    <div className="rounded-2xl border border-ink/[0.06] bg-paper px-5 py-4 text-center shadow-sm sm:min-w-[170px]">
+                      <p className="text-[11px] font-bold uppercase tracking-wide text-ink/40">Your Best</p>
+                      <p className="mt-0.5 font-display text-xl font-bold text-ink">{formatPoints(overall.myBest)}</p>
+                      <p className="mt-1 text-[11px] font-medium text-ink/40">All games combined</p>
+                      {overall.top.length > 0 && overall.myRank != null && (
+                        <div className="mt-3">
+                          <div className="flex items-center justify-between text-[10px] text-ink/35"><span>#1</span><span className="font-bold text-brand-600">Your position</span><span>#{overall.top.length + (overall.rest?.length || 0)}</span></div>
+                          <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-ink/[0.06]">
+                            <div className="h-full rounded-full bg-gradient-to-r from-brand-500 to-brand-400 transition-all duration-700" style={{ width: `${Math.max(2, (1 - (overall.myRank - 1) / Math.max(1, overall.top.length + (overall.rest?.length || 0) - 1)) * 100)}%` }} role="progressbar" aria-valuenow={overall.myRank} aria-valuemin={1} aria-valuemax={overall.top.length + (overall.rest?.length || 0)} />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {overall.top.length >= 3 && <OverallPodium top={overall.top} />}
+
+            <div className="overflow-hidden rounded-2xl border border-ink/[0.06] bg-white shadow-card">
+              <div className="grid grid-cols-[40px_1fr_auto] items-center gap-2 border-b border-ink/[0.06] bg-paper/60 px-3 py-2.5 text-[10px] font-bold uppercase tracking-wide text-ink/40 sm:grid-cols-[48px_1fr_100px] sm:px-4" aria-hidden="true">
+                <span className="text-center">Rank</span><span>Player</span><span className="text-right">Points</span>
+              </div>
+              <ol className="divide-y divide-ink/[0.04]">
+                {overall.top.map((row) => {
+                  const isMe = row.isMe;
+                  const isTop3 = row.rank <= 3;
+                  return (
+                    <li key={row.studentId} className={`relative grid grid-cols-[40px_1fr_auto] items-center gap-2 px-3 py-2.5 sm:grid-cols-[48px_1fr_100px] sm:px-4 sm:py-3 ${isMe ? 'bg-brand-50/70 ring-1 ring-brand-200/60' : isTop3 ? 'bg-amber-50/30' : 'bg-white hover:bg-paper/40'}`} aria-current={isMe ? 'true' : undefined}>
+                      {isMe && <span className="absolute inset-y-0 left-0 w-[3px] bg-brand-500" aria-hidden="true" />}
+                      {isTop3 && !isMe && <span className="absolute inset-y-0 left-0 w-[2px] bg-amber-400/50" aria-hidden="true" />}
+                      <span className="flex justify-center" aria-label={`Rank ${row.rank}`}><RankBadge rank={row.rank} /></span>
+                      <span className="min-w-0 flex items-center gap-2">
+                        <span className={`block truncate text-sm font-semibold leading-tight ${isMe ? 'text-brand-700' : 'text-ink'}`}>{row.name}</span>
+                        {isMe && <span className="inline-flex shrink-0 items-center rounded-full bg-brand-600 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white">You</span>}
+                        {isTop3 && !isMe && <span className="shrink-0 text-[10px]" aria-hidden="true">{row.rank === 1 ? '🥇' : row.rank === 2 ? '🥈' : '🥉'}</span>}
+                      </span>
+                      <span className="text-right"><span className={`block text-sm font-bold tabular-nums leading-none ${isMe ? 'text-brand-700' : 'text-ink'}`}>{formatPoints(row.score)}</span><span className="text-[10px] font-medium text-ink/35">pts</span></span>
+                    </li>
+                  );
+                })}
+              </ol>
+              {overall.rest?.length > 0 && (
+                <div className="border-t border-ink/[0.06] bg-white px-3 py-2 text-center sm:px-4">
+                  <span className="text-xs font-medium text-ink/40">+ {overall.rest.length} more players · {t('showAllPlayers', { count: overall.top.length + overall.rest.length })}</span>
+                </div>
+              )}
+            </div>
+            <p className="px-1 text-xs text-ink/35">Academy-wide ranking across all games · {t(`period_${period}`)}</p>
+          </div>
         ) : (
-          <p className="py-4 text-center text-sm text-ink/40">{t('noRankingData')}</p>
+          <div className="overflow-hidden rounded-2xl border border-ink/[0.06] bg-white p-8 text-center shadow-card">
+            <Trophy className="mx-auto text-ink/15" size={28} aria-hidden="true" />
+            <p className="mt-2 text-sm font-semibold text-ink">{t('noRankingData')}</p>
+            <p className="mx-auto mt-1 max-w-sm text-xs text-ink/50">Play some games to appear on the leaderboard.</p>
+          </div>
         )}
       </div>
 
