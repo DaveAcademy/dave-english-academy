@@ -29,6 +29,16 @@ import enSettings from '../locales/en/settings.json';
 import uzSettings from '../locales/uz/settings.json';
 import enChat from '../locales/en/chat.json';
 import uzChat from '../locales/uz/chat.json';
+import enLessons from '../locales/en/lessons.json';
+import uzLessons from '../locales/uz/lessons.json';
+import enGame from '../locales/en/game.json';
+import uzGame from '../locales/uz/game.json';
+import enDictionary from '../locales/en/dictionary.json';
+import uzDictionary from '../locales/uz/dictionary.json';
+import enGroups from '../locales/en/groups.json';
+import uzGroups from '../locales/uz/groups.json';
+import enPayments from '../locales/en/payments.json';
+import uzPayments from '../locales/uz/payments.json';
 
 const LANGUAGE_KEY = 'dave-academy-language';
 const storedLanguage = localStorage.getItem(LANGUAGE_KEY);
@@ -58,6 +68,11 @@ i18n.use(initReactI18next).init({
       portal: enPortal,
       settings: enSettings,
       chat: enChat,
+      lessons: enLessons,
+      game: enGame,
+      dictionary: enDictionary,
+      groups: enGroups,
+      payments: enPayments,
     },
     uz: {
       common: uzCommon,
@@ -71,6 +86,11 @@ i18n.use(initReactI18next).init({
       portal: uzPortal,
       settings: uzSettings,
       chat: uzChat,
+      lessons: uzLessons,
+      game: uzGame,
+      dictionary: uzDictionary,
+      groups: uzGroups,
+      payments: uzPayments,
     },
   },
   lng: storedLanguage || 'en',

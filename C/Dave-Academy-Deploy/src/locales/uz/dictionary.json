@@ -1,0 +1,17 @@
+{
+  "title": "Lug'at",
+  "subtitle": "Istalgan inglizcha yoki oʻzbekcha soʻzni qidiring.",
+  "searchPlaceholder": "Soʻz qidirish...",
+  "clearSearch": "Qidiruvni tozalash",
+  "pronunciation": "Talaffuz",
+  "example": "Misol",
+  "translation": "Tarjima",
+  "howToUse": "Qanday ishlatiladi",
+  "alsoMeans": "Yana quyidagini anglatadi",
+  "noResults": "Hech narsa topilmadi",
+  "noResultsHint": "Imlosini tekshiring yoki boshqa soʻz bilan urinib koʻring.",
+  "typeToSearch": "Lug'atdan qidirish uchun yozishni boshlang.",
+  "typeToSearchHint": "Inglizcha yoki oʻzbekcha qidiring.",
+  "searching": "Qidirilmoqda...",
+  "searchError": "Xatolik yuz berdi. Qayta urinib koʻring."
+}

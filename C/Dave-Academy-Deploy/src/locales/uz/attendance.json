@@ -1,0 +1,13 @@
+{
+  "title": "Davomat",
+  "subtitle": "Har bir faol o'quvchi uchun Keldi, Kechikdi yoki Kelmadi belgilang.",
+  "allTab": "Hammasi",
+  "date": "Sana",
+  "present": "Keldi",
+  "late": "Kechikdi",
+  "absent": "Kelmadi",
+  "noActiveStudentsInLevel": "{{level}} darajasida faol o'quvchilar yo'q",
+  "noActiveStudents": "Faol o'quvchilar yo'q",
+  "tryDifferentLevel": "Boshqa darajani tanlang yoki Hammasi bo'limiga qayting.",
+  "addActiveStudentsHint": "Davomatni boshlash uchun faol o'quvchilar qo'shing."
+}

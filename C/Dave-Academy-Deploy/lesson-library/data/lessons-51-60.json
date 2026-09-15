@@ -1,0 +1,329 @@
+{"lessons":[
+{
+  "n":51,"title":"Comparing Things","sub":"51-dars: Taqqoslash","icon":"⚖️","accent":"66bb6a","band":"preint","type":"normal",
+  "goals":[["⚖️ Compare two things: bigger, smaller, faster","Ikkita narsani taqqoslash"],["➕ Form comparatives with -er and 'more'","'-er' va 'more' bilan taqqoslash yasash"],["🧠 Use 'than' in comparisons","Taqqoslashda 'than'ni ishlatish"]],
+  "warmup":[["⚖️ Guess","Which is bigger: an elephant or a car? / Fil yoki mashina — qaysi katta?"],["🐘 Quick compare","Is a horse faster than a cow? / Ot sigirdan tezmi?"]],
+  "vocab":[
+    {"w":"bigger","p":"/BIG-ger/","u":"Kattaroq","i":"🐘","x":["An elephant is bigger than a cat.","Fil mushukdan katta."]},
+    {"w":"smaller","p":"/SMO-ler/","u":"Kichikroq","i":"🐜","x":["A mouse is smaller than a rabbit.","Sichqon quyondan kichik."]},
+    {"w":"faster","p":"/FAS-ter/","u":"Tezroq","i":"🏎️","x":["A car is faster than a bike.","Mashina velosipeddan tez."]},
+    {"w":"slower","p":"/SLO-ver/","u":"Sekinroq","i":"🐢","x":["A turtle is slower than a dog.","Toshbaqa itdan sekin."]},
+    {"w":"taller","p":"/TO-ler/","u":"Uzunroq (bo'y)","i":"🏀","x":["He is taller than his brother.","U akasidan uzun."]},
+    {"w":"cheaper","p":"/CHII-per/","u":"Arzonroq","i":"🏷️","x":["Apples are cheaper than meat.","Olma go'shtdan arzon."]},
+    {"w":"more expensive","p":"/mor ik-SPEN-siv/","u":"Qimmatroq","i":"💎","x":["A phone is more expensive than a book.","Telefon kitobdan qimmat."]},
+    {"w":"older","p":"/OHL-der/","u":"Kattaroq (yosh)","i":"👴","x":["My brother is older than me.","Akam mendan katta."]},
+    {"w":"younger","p":"/YUNG-ger/","u":"Yoshroq","i":"👶","x":["My sister is younger than me.","Singlim mendan yosh."]},
+    {"w":"than","p":"/than/","u":"-dan (taqqoslashda)","i":"🔗","x":["Summer is hotter than winter.","Yoz qishdan issiq."]}
+  ],
+  "grammar":{"rule":"Short adjectives: **-er + than** (big→bigger, fast→faster) · long: **more + adj + than** (more expensive)","uz":"Qisqa sifatlar -er, uzunlari 'more' oladi",
+    "ex":[["A bike is **faster than** a car? No — a car is **faster than** a bike.","Mashina velosipeddan tez."],["This phone is **more expensive than** that one.","Bu telefon anavadan qimmat."],["Summer is **hotter than** winter.","Yoz qishdan issiq."]],
+    "mistake":["Wrong: *more big*","Right: *bigger*","Qisqa sifatga 'more' qo'shilmagan."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["A giraffe is ___ (tall) than a horse.","Winter is ___ (cold) than summer.","A plane is ___ (fast) than a train.","My bag is ___ (heavy) than yours."]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Big","Bigger"],["Fast","Faster"],["Tall","Taller"],["Hot","Hotter"],["Expensive","More expensive"]]},
+    {"t":"circle","title":"Circle the Answer","items":["This film is ___ than that one. → a) more interesting b) interestinger c) most interesting"]},
+    {"t":"order","title":"Build the Sentence","items":["is / than / A / faster / car / a / bike / .","than / is / My / sister / younger / me / ."]}
+  ],
+  "reading":{"title":"Two Cities","passage":"Tashkent and Samarkand are two wonderful cities. Tashkent is bigger than Samarkand and it has more people. Samarkand is older — it is more than 2,700 years old! Tashkent is busier, with more cars and shops. Samarkand is quieter and more beautiful, with its blue domes. Food is cheaper in Samarkand. Both cities are beautiful in their own way.",
+    "qs":["Which city is bigger?","Which city is older?","Where is food cheaper?","Which city is quieter?"]},
+  "listening":{"title":"Which Is Better?","qs":["Which city is bigger?","Which phone is cheaper?","Which bag is heavier?"],
+    "script":"Listen. Tashkent is bigger than Fergana. This red phone costs three million som, but the blue phone is cheaper. This red bag is heavy, but the blue bag is heavier than the red one."},
+  "writing":{"title":"Compare Two Things","task":"Write 4 comparisons: '... is bigger/faster/more expensive than ...' about your town or things you know.","uz":"Shahringiz yoki bilgan narsalar haqida 4 taqqoslash yozing."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["Which is bigger, your town or Tashkent?","Tashkent is bigger."],["Who is taller, you or your partner?","I am taller."],["Is tea cheaper than coffee?","Yes, tea is cheaper."]]},
+    {"t":"mission","title":"Real-life Mission","body":"Compare 3 things in your home and tell your family. / Uyda 3 ta narsani taqqoslang."}
+  ],
+  "quiz":["Write the comparative: big → ______","Write the comparative: expensive → ______","Correct: 'more big' → ______","Translate: 'Mashina velosipeddan tez.' → ______"],
+  "homework":"Vocabulary: 10 comparison words 3× · Grammar: 6 comparative sentences · Reading: re-read 'Two Cities' · Speaking: compare your school and another school.",
+  "teacher":["Use real classroom objects for comparison practice.","Drill -er spelling rules: big→bigger (double g), hot→hotter.","Watch for 'more big' — explain short vs long adjectives.","Compare people students know — always a hit."]
+},
+{
+  "n":52,"title":"Free Time Activities","sub":"52-dars: Bo'sh vaqt mashg'ulotlari","icon":"🎨","accent":"ab47bc","band":"preint","type":"normal",
+  "goals":[["🎨 Talk about hobbies and free time","Bo'sh vaqt va qiziqishlar haqida gapirish"],["🎮 Use 'like/love/enjoy + -ing'","'like/love/enjoy + -ing'ni ishlatish"],["🕐 Say how often you do things","Qanchalik tez-tez qilishni aytish"]],
+  "warmup":[["🎨 My hobby","What do you like to do in your free time? / Bo'sh vaqtingizda nima qilasiz?"],["🎮 Quick poll","Raise your hand if you like playing games! / O'yin o'ynashni yaxshi ko'rasizmi?"]],
+  "vocab":[
+    {"w":"hobby","p":"/HO-bi/","u":"Qiziqish, mashg'ulot","i":"🎨","x":["My hobby is painting.","Mening mashg'ulotim rasm chizish."]},
+    {"w":"swim","p":"/swim/","u":"Suzmoq","i":"🏊","x":["I like swimming in summer.","Yozda suzishni yaxshi ko'raman."]},
+    {"w":"ride a bike","p":"/rayd a bayk/","u":"Velosipedda yurmoq","i":"🚴","x":["We ride our bikes on Sunday.","Yakshanba kuni velosipedda yuramiz."]},
+    {"w":"play games","p":"/pley geymz/","u":"O'yin o'ynamoq","i":"🎮","x":["I like playing games.","O'yin o'ynashni yaxshi ko'raman."]},
+    {"w":"watch movies","p":"/woch MU-vis/","u":"Kino ko'rmoq","i":"🎬","x":["We watch movies at home.","Uyda kino ko'ramiz."]},
+    {"w":"listen to music","p":"/LI-sn tu MYU-zik/","u":"Musiqa tinglamoq","i":"🎧","x":["I listen to music every day.","Har kuni musiqa tinglayman."]},
+    {"w":"draw","p":"/dro/","u":"Chizmoq","i":"🖍️","x":["She loves drawing pictures.","U rasm chizishni yaxshi ko'radi."]},
+    {"w":"read comics","p":"/riid KO-miks/","u":"Komiks o'qimoq","i":"📚","x":["He reads comics at night.","U kechasi komiks o'qiydi."]},
+    {"w":"walk the dog","p":"/wok the dog/","u":"Itni sayr qildirmoq","i":"🐕","x":["I walk the dog every evening.","Har oqshom itni sayr qildiraman."]},
+    {"w":"play chess","p":"/pley ches/","u":"Shaxmat o'ynamoq","i":"♟️","x":["My father and I play chess.","Dadam bilan shaxmat o'ynaymiz."]}
+  ],
+  "grammar":{"rule":"**like / love / enjoy + -ing** (I like playing games)","uz":"'like/love/enjoy' dan keyin fe'l -ing oladi",
+    "ex":[["I **like playing** chess.","Men shaxmat o'ynashni yaxshi ko'raman."],["She **loves listening** to music.","U musiqa tinglashni yaxshi ko'radi."],["He **enjoys walking** the dog.","U itni sayr qildirishni yoqtiradi."]],
+    "mistake":["Wrong: *I like play games.*","Right: *I like playing games.*","'like' dan keyin -ing."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["I like ___ (swim) in summer.","She loves ___ (listen) to music.","He enjoys ___ (play) chess.","We like ___ (watch) movies."]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Ride a bike","Velosiped"],["Play chess","Shaxmat"],["Walk the dog","Itni sayr qildirish"],["Swim","Suzish"]]},
+    {"t":"circle","title":"Circle the Answer","items":["I like ___ football. → a) play b) playing c) played"]},
+    {"t":"order","title":"Build the Sentence","items":["music / loves / She / listening / to / .","like / We / games / playing / ."]}
+  ],
+  "reading":{"title":"My Free Time","passage":"In my free time I like doing different things. I love reading comics and drawing pictures. On sunny days, I ride my bike with my cousin. I also enjoy playing chess with my father — but he always wins! In the evening, I like watching movies with my family. Sometimes we listen to music and sing together. What do you like doing in your free time?",
+    "qs":["What does the writer love doing?","Who does he ride his bike with?","Why does he like playing chess?","What does the family do in the evening?"]},
+  "listening":{"title":"What Do They Like?","qs":["What does John like doing?","What does Lily love doing?","What does Tom enjoy doing?"],
+    "script":"Listen. John likes riding his bike in the park. Lily loves reading comics and drawing. Tom enjoys playing football with his friends every weekend."},
+  "writing":{"title":"My Hobbies","task":"Write 5 sentences about your free time activities using like/love/enjoy.","uz":"Bo'sh vaqt mashg'ulotlaringiz haqida 5 gap yozing."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["What do you like doing?","I like playing games."],["What do you love doing?","I love swimming."],["Do you enjoy reading?","Yes, I do. / No, I don't."]]},
+    {"t":"mission","title":"Real-life Mission","body":"Ask 3 people about their hobbies. Report their answers. / 3 kishidan qiziqishini so'rang."}
+  ],
+  "quiz":["Fill: 'I like ___ (play) chess.'","Fill: 'She loves ___ (dance).'","Translate: 'Men suzishni yaxshi ko'raman.' → ______","Name 4 free time activities in English."],
+  "homework":"Vocabulary: 10 activities 3× · Grammar: 6 sentences with like/love/enjoy · Reading: re-read 'My Free Time' · Speaking: tell your family about your hobbies.",
+  "teacher":["Survey the class about hobbies — make a chart.","Drill like/love/enjoy + -ing with pictures.","Watch for 'I like play' — echo correct form.","This connects to L53 (invitations to do activities)."]
+},
+{
+  "n":53,"title":"Making Invitations","sub":"53-dars: Taklif qilish","icon":"📨","accent":"ff7043","band":"preint","type":"normal",
+  "goals":[["📨 Invite someone: 'Would you like to...?','Let's...'","Taklif qilish"],["✅ Accept invitations politely","Taklifni qabul qilish"],["❌ Decline invitations politely","Taklifni rad etish"]],
+  "warmup":[["📨 A party","Imagine a birthday party. Who will you invite? / Tug'ilgan kun — kimni taklif qilasiz?"],["🎉 Would you like...?","Teacher: 'Would you like to play a game?' / O'ynaysizmi?"]],
+  "vocab":[
+    {"w":"invite","p":"/in-VAYT/","u":"Taklif qilmoq","i":"📨","x":["I want to invite my friends.","Do'stlarimni taklif qilmoqchiman."]},
+    {"w":"party","p":"/PAR-ti/","u":"Ziyofat, bayram","i":"🎉","x":["We are having a party on Saturday.","Shanba kuni ziyofat qilamiz."]},
+    {"w":"meet","p":"/miit/","u":"Uchrashmoq","i":"🤝","x":["Let's meet at the park.","Bog'da uchrashaylik."]},
+    {"w":"join","p":"/joyn/","u":"Qo'shilmoq","i":"🙋","x":["Do you want to join us?","Bizga qo'shilasizmi?"]},
+    {"w":"come","p":"/kam/","u":"Kelmoq","i":"🚶","x":["Come to my house.","Uyimga keling."]},
+    {"w":"agree","p":"/a-GRI/","u":"Rozi bo'lmoq","i":"👍","x":["Yes, I agree.","Ha, roziman."]},
+    {"w":"sorry","p":"/SO-ri/","u":"Kechirasiz","i":"🙏","x":["I'm sorry, I can't come.","Kechirasiz, kela olmayman."]},
+    {"w":"free","p":"/fri/","u":"Bo'sh (vaqt)","i":"🕒","x":["Are you free on Friday?","Juma kuni bo'shmisiz?"]},
+    {"w":"busy","p":"/BI-zi/","u":"Band","i":"📋","x":["I'm busy on Saturday.","Shanba kuni bandman."]},
+    {"w":"sure","p":"/shur/","u":"Albatta, xo'p","i":"😊","x":["Sure, I'd love to!","Albatta, juda xohlayman!"]}
+  ],
+  "grammar":{"rule":"Invitations: **Would you like to...? / Let's... / Do you want to...?** · Accept: Yes, I'd love to · Decline: I'm sorry, I can't","uz":"Taklif: 'Would you like to...?', qabul: 'Yes, I'd love to'",
+    "ex":[["**Would you like to** come to my party?","Ziyofatimga kelasizmi?"],["**Let's** play football!","Futbol o'ynaylik!"],["I'm **sorry, I can't** — I'm busy.","Kechirasiz, kela olmayman — bandman."]],
+    "mistake":["Wrong: *Would you like come?*","Right: *Would you like to come?*","'to' sharti kerak."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["Would you like ___ come to my party? (to/for)","Let's ___ chess. (play/playing)","I'm sorry, I ___ come. (can't/don't)","Are you ___ on Friday? (free/busy)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Would you like to come?","Kelasizmi?"],["Let's meet","Uchrashaylik"],["I'd love to","Juda xohlayman"],["I'm sorry","Kechirasiz"]]},
+    {"t":"circle","title":"Circle the Answer","items":["Invite a friend to a party: → a) Would you like to come? b) Go away c) You must come!"]},
+    {"t":"order","title":"Build the Sentence","items":["like / Would / to / come / you / ?","Let's / football / play / !"]}
+  ],
+  "reading":{"title":"The Invitation","passage":"'Hi Aziz! Would you like to come to my birthday party on Saturday?' wrote Umid. Aziz smiled. 'Sure, I'd love to! What time?' 'At four o'clock,' Umid replied. 'But I'm sorry, my sister can't come — she is busy.' 'That's okay,' said Umid. 'Let's play football after the party!' Aziz agreed happily.",
+    "qs":["When is the party?","What time does it start?","Why can't Umid's sister come?","What will they do after the party?"]},
+  "listening":{"title":"The Phone Call","qs":["Who is calling?","What does she invite him to?","Can the boy come? Why?"],
+    "script":"Listen. 'Hello, this is Sara. Would you like to come to my house tomorrow? We're going to make pizza!' 'Sure, I'd love to!' 'Great! And would you like to invite your brother too?' 'I'm sorry, he can't — he has football practice.'"},
+  "writing":{"title":"Write an Invitation","task":"Write an invitation message to a friend: the event, the day, the time. Use 'Would you like to...?'.","uz":"Do'stingizga taklif yozing."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["Would you like to come to my party?","Sure, I'd love to!"],["Let's play football!","Great idea!"],["Are you free tomorrow?","Yes, I am. / Sorry, I'm busy."]]},
+    {"t":"mission","title":"Real-life Mission","body":"Invite someone to an activity this week in English. / Bu hafta kimnidir inglizcha taklif qiling."}
+  ],
+  "quiz":["Complete: 'Would you like ___ come?' (to/for)","Complete: 'Let's ___ a film.' (watch/watching)","How do you accept? → 'Yes, ___ love to.'","Translate: 'Kechirasiz, kela olmayman.' → ______"],
+  "homework":"Vocabulary: 10 invitation words 3× · Grammar: write an invitation + answer · Reading: re-read 'The Invitation' · Speaking: practice invitations with your family.",
+  "teacher":["Act out invitations with real party props.","Drill the polite forms; watch for 'Would you like come'.","Teach both accept and decline — students need both.","This feeds L54 workshop."]
+},
+{
+  "n":54,"title":"Weekend Plans Workshop","sub":"54-dars: Dam olish rejasi ustaxonasi","icon":"🗓️","accent":"26a69a","band":"preint","type":"workshop",
+  "goals":[["🗓️ Plan a weekend using 'going to'","'going to' bilan dam olishni rejalash"],["📨 Invite friends to join the plan","Do'stlarni taklif qilish"],["🗣️ Present your plan to the class","Rejani sinfga taqdim etish"]],
+  "warmup":[["💡 Ideas","Name 5 weekend activities. / 5 ta dam olish mashg'uloti ayting."],["📨 Invitation review","Quick drill: 'Would you like to...?' / Taklifni takrorlang."]],
+  "vocab":[
+    {"w":"plan","p":"/plan/","u":"Reja","i":"🗓️","x":["Let's make a plan.","Reja tuzaylik."]},
+    {"w":"picnic","p":"/PIK-nik/","u":"Sayil (piкnik)","i":"🧺","x":["We're going to have a picnic.","Sayil qilamiz."]},
+    {"w":"concert","p":"/KON-sert/","u":"Konsert","i":"🎵","x":["There is a concert on Sunday.","Yakshanba kuni konsert bor."]},
+    {"w":"ticket","p":"/TI-kit/","u":"Bilet","i":"🎫","x":["Let's buy tickets.","Bilet olaylik."]},
+    {"w":"together","p":"/tu-GE-ther/","u":"Birgalikda","i":"👫","x":["We'll go together.","Birga boramiz."]},
+    {"w":"decide","p":"/di-SAYD/","u":"Qaror qilmoq","i":"🧭","x":["Decide what to do.","Nima qilishni hal qiling."]}
+  ],
+  "practice":[
+    {"t":"task","title":"Build a Weekend Plan","items":["Choose a day: Saturday or Sunday. / Kun tanlang.","Choose 3 activities: picnic, museum, cinema, park, market... / 3 ta mashg'ulot tanlang.","Write times: 'At 10 we're going to...' / Vaqtlarni yozing.","Invite a partner: 'Would you like to join us?' / Juftingizni taklif qiling.","Present your plan to the class. / Rejani taqdim eting."]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Going to have a picnic","Sayil qilmoq"],["Going to buy tickets","Bilet olmoq"],["Going to visit","Tashrif buyurmoq"],["Together","Birgalikda"]]}
+  ],
+  "speaking":[
+    {"t":"talk","title":"My Weekend Plan","body":"Present your plan: 'On Saturday we're going to...' (5 sentences). / Rejangizni 5 gap bilan aytib bering."},
+    {"t":"partner","title":"Invite and Accept","body":"Invite your partner to your plan. They accept or decline politely. / Juftingizni taklif qiling — u qabul qilsin yoki rad etsin."},
+    {"t":"mission","title":"Vote","body":"Class votes for the best plan! / Sinf eng yaxshi rejaga ovoz bersin."}
+  ],
+  "quiz":["Fill: 'We're going to ___ a picnic.' (have/having)","Fill: 'Would you like ___ join us?' (to/-)","Translate: 'Birgalikda boramiz.' → ______","Name 2 weekend activities in English."],
+  "homework":"Write your perfect weekend plan (5 sentences with going to) and practice presenting it. / Ideal dam olish rejangizni yozing.",
+  "teacher":["Workshop: students plan in groups of 3.","Provide activity word banks and time phrases.","Encourage 'Would you like to join us?' in presentations.","Vote on the best plan — friendly competition."]
+},
+{
+  "n":55,"title":"Speaking Circle: My Free Time","sub":"55-dars: Suhbat doirasi — bo'sh vaqtim","icon":"🎤","accent":"7e57c2","band":"preint","type":"speaking",
+  "goals":[["🎤 Talk about hobbies fluently","Qiziqishlar haqida ravon gapirish"],["🕐 Say how often you do things","Qanchalik tez-tez qilishni aytish"],["👥 Discuss free-time habits with others","Bo'sh vaqt odatlari haqida suhbatlashish"]],
+  "warmup":[["🎨 Hobby show","Mime your hobby — students guess! / Qiziqishingizni imo bilan ko'rsating."],["🎮 Free-time words","Say 5 activities quickly. / 5 ta mashg'ulot ayting."]],
+  "vocab":[
+    {"w":"hobby","p":"/HO-bi/","u":"Qiziqish","i":"🎨","x":["What is your hobby?","Qiziqishingiz nima?"]},
+    {"w":"usually","p":"/YU-ju-a-li/","u":"Odatda","i":"📆","x":["I usually play games after school.","Odatda maktabdan keyin o'yin o'ynayman."]},
+    {"w":"sometimes","p":"/SAM-taymz/","u":"Ba'zan","i":"🌤️","x":["Sometimes I draw pictures.","Ba'zan rasm chizaman."]},
+    {"w":"every day","p":"/EV-ri day/","u":"Har kuni","i":"📅","x":["I walk the dog every day.","Har kuni itni sayr qildiraman."]},
+    {"w":"free time","p":"/fri taym/","u":"Bo'sh vaqt","i":"⏳","x":["I read in my free time.","Bo'sh vaqtimda o'qiyman."]},
+    {"w":"boring","p":"/BO-ring/","u":"Zerikarli","i":"😐","x":["That's boring!","Bu zerikarli!"]}
+  ],
+  "practice":[
+    {"t":"task","title":"Free Time Discussion Cards","items":["What is your favourite hobby? / Sevimli mashg'ulotingiz?","How often do you do it? / Qanchalik tez-tez qilasiz?","What do you do on Sundays? / Yakshanba kuni nima qilasiz?","Do you like watching movies? What kind? / Kino ko'rishni yoqtirasizmi?","Is there any hobby you want to try? / Qaysi mashg'ulotni sinab ko'rmoqchisiz?"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Usually","Odatda"],["Sometimes","Ba'zan"],["Every day","Har kuni"],["Boring","Zerikarli"]]}
+  ],
+  "speaking":[
+    {"t":"talk","title":"My Free Time","body":"Speak for 2 minutes about your free time: your favourite hobby, how often you do it, what you do at weekends. / Bo'sh vaqtingiz haqida 2 daqiqa gapiring."},
+    {"t":"partner","title":"Interview","table":[["What's your hobby?","I like drawing."],["How often do you play games?","Every day!"],["Do you like swimming?","Yes, I love it. / Not really."],["What do you want to try?","I want to try chess."]]},
+    {"t":"mission","title":"Active Listening","body":"Write 3 facts about your partner's free time. / Juftingiz haqida 3 fakt yozing."}
+  ],
+  "quiz":["Translate: 'Odatda maktabdan keyin o'ynayman.' → ______","Translate: 'Ba'zan rasm chizaman.' → ______","Fill: 'I like ___ (swim).'","Name 3 hobbies in English."],
+  "homework":"Write about your perfect free-time day (8-10 sentences). Practice speaking it. / Bo'sh vaqtingiz haqida yozing.",
+  "teacher":["Speaking circle: focus on fluency, not accuracy.","Keep turns short; everyone speaks.","Use the interview table for pair work.","Note any frequent errors to review next lesson."]
+},
+{
+  "n":56,"title":"My Weekend","sub":"56-dars: Mening dam olish kunim","icon":"🌞","accent":"ef5350","band":"preint","type":"normal",
+  "goals":[["🌞 Narrate last weekend in the past","O'tgan dam olish kunini aytib berish"],["🕰️ Combine regular and irregular pasts","Muntazam va noto'g'ri fe'llarni birlashtirish"],["🗣️ Write a short weekend story","Qisqa dam olish hikoyasi yozish"]],
+  "warmup":[["🌞 Last weekend","Tell one thing you did last weekend. / O'tgan dam olishda nima qildingiz?"],["🔄 Past review","went, saw, had, ate, played — make sentences! / O'tgan zamon gaplari tuzing."]],
+  "vocab":[
+    {"w":"weekend","p":"/wiik-END/","u":"Dam olish kuni","i":"🌞","x":["I had a great weekend.","Ajoyib dam olish kuni bo'ldi."]},
+    {"w":"went fishing","p":"/went FI-shing/","u":"Baliq oviga bordi","i":"🎣","x":["We went fishing on Saturday.","Shanba kuni baliq oviga bordik."]},
+    {"w":"had a barbecue","p":"/had a BAR-bi-kyu/","u":"Barbekyu qildi","i":"🍖","x":["We had a barbecue in the garden.","Bog'da barbekyu qildik."]},
+    {"w":"visited","p":"/VI-zit-ed/","u":"Tashrif buyurdi","i":"🏛️","x":["We visited our grandparents.","Buvijonimiznikiga bordik."]},
+    {"w":"rested","p":"/RES-ted/","u":"Dam oldi","i":"😴","x":["I rested on Sunday.","Yakshanba kuni dam oldim."]},
+    {"w":"enjoyed","p":"/en-JOYD/","u":"Yoqdi, zavq oldi","i":"😊","x":["I enjoyed every minute.","Har bir daqiqadan zavq oldim."]}
+  ],
+  "grammar":{"rule":"Weekend story: **regular + irregular past** verbs in time order","uz":"Dam olish hikoyasi: o'tgan zamon fe'llari tartibda",
+    "ex":[["On Saturday I **went** fishing.","Shanba kuni baliq oviga bordim."],["In the evening we **had** a barbecue.","Kechqurun barbekyu qildik."],["On Sunday I **rested** and **watched** a film.","Yakshanba kuni dam oldim va film ko'rdim."]],
+    "mistake":["Wrong: *On Sunday I watch a film.*","Right: *On Sunday I watched a film.*","O'tgan zamon kerak."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["On Saturday I ___ (go) to the park.","We ___ (have) a nice time.","My father ___ (cook) a big dinner.","In the evening we ___ (watch) TV."]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Went fishing","Baliq ovi"],["Had a barbecue","Barbekyu"],["Visited","Tashrif"],["Rested","Dam oldi"]]},
+    {"t":"circle","title":"Circle the Answer","items":["Last weekend we ___ to the mountains. → a) go b) went c) gone"]},
+    {"t":"order","title":"Build the Sentence","items":["Saturday / I / on / went / fishing / .","a / had / We / great / weekend / ."]}
+  ],
+  "reading":{"title":"A Perfect Weekend","passage":"Last weekend was perfect. On Saturday morning, my family and I went to the mountains. We walked for two hours and saw beautiful views. My father took many photos. In the evening we came home and had a barbecue in the garden. On Sunday, we visited my grandparents. My grandmother cooked my favourite food. I had a wonderful weekend!",
+    "qs":["Where did the family go on Saturday?","How long did they walk?","What did they do in the evening?","Who did they visit on Sunday?"]},
+  "listening":{"title":"The Weekend","qs":["What did the girl do on Saturday?","Where did she go on Sunday?","What did she see there?"],
+    "script":"Listen. On Saturday I went to the park with my friends. We played games and had ice cream. On Sunday I visited my grandmother. She showed me her garden. I saw many flowers and one funny cat!"},
+  "writing":{"title":"My Weekend Story","task":"Write your own weekend story (8-10 sentences) using past verbs in order.","uz":"Dam olish kuningiz haqida hikoya yozing."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["What did you do on Saturday?","I went to the bazaar."],["Did you have a good time?","Yes, it was great!"],["What did you do on Sunday?","I rested at home."]]},
+    {"t":"mission","title":"Real-life Mission","body":"This weekend, collect 3 English sentences to share on Monday! / Shu dam olishda 3 gap yodlab keling."}
+  ],
+  "quiz":["Fill: 'Last week we ___ (go) to Tashkent.'","Fill: 'She ___ (watch) a film.'","Correct: 'On Sunday I play football.'","Translate: 'Ajoyib dam olish kuni bo'ldi.' → ______"],
+  "homework":"Vocabulary: 6 weekend words 3× · Grammar: 8-sentence weekend story · Reading: re-read 'A Perfect Weekend' · Speaking: tell your family about your last weekend.",
+  "teacher":["Anchor lesson consolidating L41-42.","Model a weekend story, then students write their own.","Watch for tense mixing within one story.","Collect Monday stories — a great routine."]
+},
+{
+  "n":57,"title":"Adverbs of Frequency","sub":"57-dars: Chastota ravishlari","icon":"🔁","accent":"5c6bc0","band":"preint","type":"normal",
+  "goals":[["🔁 Use always, usually, sometimes, never","'always, usually, sometimes, never'ni ishlatish"],["📆 Talk about daily habits","Kundalik odatlar haqida gapirish"],["🧠 Place frequency adverbs correctly","Ravishlarning o'rnini bilish"]],
+  "warmup":[["🔁 How often?","I drink tea every day — that's 'always'. What about you? / Qanchalik tez-tez choy ichasiz?"],["📅 Routine review","Name 3 things you do every day. / Har kuni qiladigan 3 ishingizni ayting."]],
+  "vocab":[
+    {"w":"always","p":"/OL-vez/","u":"Har doim","i":"💯","x":["I always do my homework.","Har doim uy vazifasini qilaman."]},
+    {"w":"usually","p":"/YU-ju-a-li/","u":"Odatda","i":"📆","x":["We usually eat dinner at 7.","Odatda soat 7 da kechki ovqat yeymiz."]},
+    {"w":"often","p":"/OF-ten/","u":"Tez-tez","i":"🔁","x":["He often plays football.","U tez-tez futbol o'ynaydi."]},
+    {"w":"sometimes","p":"/SAM-taymz/","u":"Ba'zan","i":"🌤️","x":["Sometimes I watch cartoons.","Ba'zan multfilm ko'raman."]},
+    {"w":"rarely","p":"/RAYR-li/","u":"Kamdan-kam","i":"🍂","x":["I rarely eat fast food.","Tez tayyorlanadigan taomni kam yeyman."]},
+    {"w":"never","p":"/NE-ver/","u":"Hech qachon","i":"🚫","x":["I never drink coffee.","Men hech qachon kofe ichmayman."]},
+    {"w":"every day","p":"/EV-ri day/","u":"Har kuni","i":"📅","x":["I walk to school every day.","Har kuni maktabga piyoda boraman."]},
+    {"w":"early","p":"/ER-li/","u":"Erta","i":"🌅","x":["I always get up early.","Har doim erta turaman."]},
+    {"w":"late","p":"/leyt/","u":"Kech","i":"🌙","x":["I never go to bed late.","Hech qachon kech uxlamayman."]},
+    {"w":"habit","p":"/HA-bit/","u":"Odat","i":"🔂","x":["This is my morning habit.","Bu mening ertalabki odatim."]}
+  ],
+  "grammar":{"rule":"Frequency adverb goes **before the main verb** (I always do) but **after am/is/are** (I am always...)","uz":"Ravish fe'ldan oldin, 'am/is/are' dan keyin keladi",
+    "ex":[["I **always do** my homework.","Har doim uy vazifasini qilaman."],["She **is always** happy.","U har doim xursand."],["We **sometimes go** to the cinema.","Ba'zan kinoga boramiz."]],
+    "mistake":["Wrong: *I do always my homework.*","Right: *I always do my homework.*","Ravish fe'ldan oldin."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["I ___ eat breakfast. (always)","She is ___ on time. (always)","We ___ watch TV. (sometimes)","He ___ drinks coffee. (never)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Always","Har doim"],["Usually","Odatda"],["Sometimes","Ba'zan"],["Never","Hech qachon"]]},
+    {"t":"circle","title":"Circle the Answer","items":["Where do you put 'always'? → a) I always get up b) I get up always c) Always I get up"]},
+    {"t":"order","title":"Build the Sentence","items":["always / I / get / early / up / .","never / drinks / He / coffee / ."]}
+  ],
+  "reading":{"title":"My Morning Routine","passage":"I have a simple morning routine. I always get up at six o'clock and I am always on time for school. I usually have bread and tea for breakfast. I often walk to school with my friend. I sometimes listen to music on the way. I rarely miss a day. I never go to school without my books — that is my golden rule!",
+    "qs":["What time does the writer get up?","What does he usually have for breakfast?","How does he go to school?","What is his golden rule?"]},
+  "listening":{"title":"How Often?","qs":["How often does Ali eat fast food?","How often does he walk?","What does he never do?"],
+    "script":"Listen. Ali has healthy habits. He never eats fast food. He always walks to school. He usually drinks milk, not cola. He sometimes plays football on weekends — but he never plays on school nights!"},
+  "writing":{"title":"My Habits","task":"Write 5 sentences about your habits using: always, usually, often, sometimes, never.","uz":"Odatlaringiz haqida 5 gap yozing."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["How often do you do homework?","I always do it."],["Do you often play games?","Yes, I often play."],["Do you ever skip breakfast?","I never skip it."]]},
+    {"t":"mission","title":"Real-life Mission","body":"Observe your day and report: 'I always/never...' at dinner. / Kuningizni kuzating va ayting."}
+  ],
+  "quiz":["Place 'always': 'She is ___ on time.'","Fill: 'I ___ (never) eat candy in the morning.'","Translate: 'U hech qachon kofe ichmaydi.' → ______","Correct: 'I do always my homework.'"],
+  "homework":"Vocabulary: 10 words 3× · Grammar: 6 habit sentences with frequency adverbs · Reading: re-read 'My Morning Routine' · Speaking: talk about habits with your family.",
+  "teacher":["Draw the frequency ladder (100% → 0%).","Drill position: before main verb, after be.","Watch for 'always I' at the start of sentences.","Link to L58: build a typical week."]
+},
+{
+  "n":58,"title":"A Typical Week","sub":"58-dars: Oddiy hafta","icon":"🗓️","accent":"ffa726","band":"preint","type":"normal",
+  "goals":[["🗓️ Describe a typical school week","Oddiy maktab haftasini tasvirlash"],["🔁 Combine routines with frequency adverbs","Odatlar va chastota ravishlarini birlashtirish"],["📅 Use days of the week in context","Hafta kunlarini qo'llash"]],
+  "warmup":[["📅 Days drill","Say the days of the week fast! / Hafta kunlarini tez ayting."],["🔁 Frequency review","always / usually / sometimes / never — what do you do? / Ravishlarni takrorlang."]],
+  "vocab":[
+    {"w":"Monday","p":"/MAN-day/","u":"Dushanba","i":"📅","x":["On Monday I go to school.","Dushanba kuni maktabga boraman."]},
+    {"w":"weekday","p":"/WIIK-day/","u":"Ish kuni","i":"💼","x":["Weekdays are busy.","Ish kunlari band bo'ladi."]},
+    {"w":"weekend","p":"/wiik-END/","u":"Dam olish kuni","i":"🌞","x":["The weekend is my favourite time.","Dam olish kuni — sevimli vaqtim."]},
+    {"w":"class","p":"/klas/","u":"Dars","i":"🏫","x":["We have five classes on Wednesday.","Chorshanba kuni 5 ta darsimiz bor."]},
+    {"w":"homework","p":"/HOM-werk/","u":"Uy vazifasi","i":"📚","x":["I always do my homework.","Har doim uy vazifasini qilaman."]},
+    {"w":"spare time","p":"/spair taym/","u":"Bo'sh vaqt","i":"⏳","x":["In my spare time I read.","Bo'sh vaqtimda o'qiyman."]},
+    {"w":"cooking club","p":"/KU-king klab/","u":"Oshxona to'garagi","i":"👨‍🍳","x":["I go to the cooking club on Fridays.","Juma kuni oshxona to'garagiga boraman."]},
+    {"w":"sports","p":"/sports/","u":"Sport","i":"🏋️","x":["I do sports twice a week.","Haftada ikki marta sport bilan shug'ullanaman."]},
+    {"w":"sometimes","p":"/SAM-taymz/","u":"Ba'zan","i":"🌤️","x":["Sometimes I visit my aunt.","Ba'zan xolamnikiga boraman."]},
+    {"w":"usually","p":"/YU-ju-a-li/","u":"Odatda","i":"📆","x":["I usually get up at 6.","Odatda soat 6 da turaman."]}
+  ],
+  "grammar":{"rule":"Describe a week: **On + day** + activity + **frequency adverb**","uz":"'On' + kun + mashg'ulot + ravish",
+    "ex":[["**On Monday I always** go to school.","Dushanba kuni har doim maktabga boraman."],["**On Friday I sometimes** go to the club.","Juma kuni ba'zan to'garakka boraman."],["**At the weekend I usually** rest.","Dam olish kunlari odatda dam olaman."]],
+    "mistake":["Wrong: *In Monday I go.*","Right: *On Monday I go.*","Kunlar bilan 'on'."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["___ Monday I go to school. (On/In)","I ___ do my homework. (always)","___ the weekend we rest. (At/On)","She ___ plays games. (sometimes)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Monday","Dushanba"],["Friday","Juma"],["Weekend","Dam olish"],["Homework","Uy vazifasi"]]},
+    {"t":"circle","title":"Circle the Answer","items":["On Tuesday I ___ football. → a) always play b) play always c) always playing"]},
+    {"t":"order","title":"Build the Sentence","items":["Monday / on / school / to / I / go / .","sometimes / club / Friday / I / on / go / the / to / ."]}
+  ],
+  "reading":{"title":"Aziz's Week","passage":"Aziz has a busy but happy week. On Monday he goes to school and always does his homework. On Tuesday he plays football with his friends. On Wednesday he usually helps his mother in the kitchen. On Thursday he reads a book. On Friday he sometimes goes to the cooking club. At the weekend, he plays with his cousins and rests. A typical week for Aziz!",
+    "qs":["What does Aziz always do on Monday?","What does he do on Tuesday?","Where does he go on Fridays?","What does he do at the weekend?"]},
+  "listening":{"title":"A Typical Week","qs":["What day does the girl go swimming?","What does she do on Wednesday?","What does she do at the weekend?"],
+    "script":"Listen. My typical week: on Monday and Tuesday I go to school. On Wednesday I always go swimming. On Thursday I visit my grandmother. On Friday I sometimes meet my friends. At the weekend I help at home and rest."},
+  "writing":{"title":"My Typical Week","task":"Write your week (7 sentences, one per day) using frequency adverbs.","uz":"Haftangiz haqida har kun uchun bittadan gap yozing."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["What do you do on Mondays?","I always go to school."],["Do you play sports?","Yes, twice a week."],["What do you do at the weekend?","I usually rest."]]},
+    {"t":"mission","title":"Real-life Mission","body":"Tell your family about your typical week. Ask them about theirs. / Oilangizga haftangiz haqida aytib bering."}
+  ],
+  "quiz":["Fill: '___ Friday I go to the club.' (On/In)","Fill: 'I ___ do my homework.' (always)","Translate: 'Dam olish kunlari dam olaman.' → ______","Correct: 'In Monday I go to school.'"],
+  "homework":"Vocabulary: 10 week words 3× · Grammar: 7-sentence typical week · Reading: re-read 'Aziz's Week' · Speaking: share your week with your family.",
+  "teacher":["Build the week grid on the board together.","Drill 'On + day'; watch for 'In Monday'.","Let students compare their weeks in pairs.","This is real-life English — schedules matter."]
+},
+{
+  "n":59,"title":"Plan a Weekend Trip","sub":"59-dars: Dam olish safarini rejalash","icon":"🗺️","accent":"8d6e63","band":"preint","type":"workshop",
+  "goals":[["🗺️ Plan a trip using 'going to'","'going to' bilan sayohat rejalash"],["⚖️ Compare places to choose the best","Joylarni taqqoslab eng yaxshisini tanlash"],["🗣️ Present your trip plan","Sayohat rejasini taqdim etish"]],
+  "warmup":[["🗺️ Travel words","Name 5 things you take on a trip. / Safarga nima olib borasiz?"],["💡 Where to?","Name 3 places to visit near your town. / Shahringiz yaqinida 3 joy ayting."]],
+  "vocab":[
+    {"w":"trip","p":"/trip/","u":"Sayohat (qisqa)","i":"🗺️","x":["We're going on a trip.","Sayohatga boryapmiz."]},
+    {"w":"mountain","p":"/MOUN-tan/","u":"Tog'","i":"⛰️","x":["The mountains are beautiful.","Tog'lar go'zal."]},
+    {"w":"lake","p":"/leyk/","u":"Ko'l","i":"🏞️","x":["Let's go to the lake.","Ko'lga boraylik."]},
+    {"w":"camping","p":"/KAM-ping/","u":"Lager (chodir)","i":"🏕️","x":["We're going camping.","Chodir quramiz."]},
+    {"w":"backpack","p":"/BAK-pak/","u":"Ryukzak","i":"🎒","x":["Pack your backpack.","Ryukzakni yig'ing."]},
+    {"w":"map","p":"/map/","u":"Xarita","i":"🗺️","x":["Look at the map.","Xaritaga qarang."]},
+    {"w":"weather","p":"/WE-ther/","u":"Ob-havo","i":"🌤️","x":["Check the weather.","Ob-havoni tekshiring."]},
+    {"w":"take photos","p":"/teyk FO-tos/","u":"Suratga olmoq","i":"📷","x":["I'm going to take photos.","Suratga olaman."]}
+  ],
+  "practice":[
+    {"t":"task","title":"Plan Your Trip","items":["Choose a place: mountains, lake, big city, village. / Joy tanlang.","Choose transport: bus, car, train. / Transport tanlang.","Write 4 activities: 'We're going to swim / take photos...' / 4 ta mashg'ulot yozing.","Pack your backpack: list 5 items. / Ryukzakga nima olib borasiz?","Present your plan to the class. / Rejani taqdim eting."]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Trip","Sayohat"],["Mountain","Tog'"],["Camping","Lager"],["Backpack","Ryukzak"],["Take photos","Suratga olmoq"]]},
+    {"t":"order","title":"Build the Sentence","items":["going / to / We're / the / lake / go / to / .","going / take / I'm / to / photos / ."]}
+  ],
+  "speaking":[
+    {"t":"talk","title":"Present Your Trip","body":"Present: where, how you're going, 4 activities. / Qayerga, qanday, nima qilasiz — taqdim eting."},
+    {"t":"partner","title":"Compare and Choose","body":"Compare two trip ideas: 'The mountains are cooler than the city.' Which is better? / Ikki rejani taqqoslang."},
+    {"t":"mission","title":"Vote","body":"Class votes for the best trip plan! / Sinf eng yaxshi rejaga ovoz bersin."}
+  ],
+  "quiz":["Fill: 'We're going to ___ camping.' (go/going)","Fill: 'I'm going to take ___ .' (photos/photoing)","Translate: 'Tog'lar go'zal.' → ______","Name 3 trip items in English."],
+  "homework":"Write your final trip plan (6 sentences with going to) and draw a small map. / Sayohat rejangizni yozing.",
+  "teacher":["Workshop: plan in groups of 3.","Provide travel word bank and map pictures.","Encourage comparatives: 'the lake is closer than the mountains'.","Vote on the best plan to keep energy high."]
+},
+{
+  "n":60,"title":"Speaking Circle: Pre-Intermediate Review","sub":"60-dars: Suhbat doirasi — takrorlash","icon":"🎯","accent":"42a5f5","band":"preint","type":"speaking",
+  "goals":[["🎯 Review L41-59: past, going to, comparatives, frequency","L41-59 mavzularini takrorlash"],["🗣️ Speak about past and future fluently","O'tmish va kelajak haqida ravon gapirish"],["👥 Use all tenses in one conversation","Bitta suhbatda barcha zamonlarni ishlatish"]],
+  "warmup":[["🎯 Tenses quiz","go→went, do→did, eat→ate. Say the past! / O'tgan zamonni ayting."],["🔄 Going to review","'I'm going to...' — what are your plans? / Rejalaringizni ayting."]],
+  "vocab":[
+    {"w":"review","p":"/ri-VIU/","u":"Takrorlash","i":"🔄","x":["Let's review the past tense.","O'tgan zamonni takrorlaymiz."]},
+    {"w":"remember","p":"/ri-MEM-ber/","u":"Eslab qolmoq","i":"🧠","x":["Do you remember this word?","Bu so'zni eslaysizmi?"]},
+    {"w":"happen","p":"/HA-pen/","u":"Bo'lmoq (voqea)","i":"🌟","x":["What happened yesterday?","Kecha nima bo'ldi?"]},
+    {"w":"still","p":"/stil/","u":"Hali ham","i":"⏳","x":["I still remember it.","Men buni hali ham eslayman."]},
+    {"w":"everything","p":"/EV-ri-thing/","u":"Hammasi","i":"🌍","x":["Tell me everything!","Menga hammasini ayt!"]},
+    {"w":"plan","p":"/plan/","u":"Reja","i":"🗓️","x":["What's your plan?","Rejangiz nima?"]}
+  ],
+  "practice":[
+    {"t":"task","title":"Review Stations","items":["Past: 'Yesterday I went to...' — tell 3 things. / Kecha qilgan 3 ishingizni ayting.","Going to: 'Next weekend I'm going to...' — 3 plans. / Keyingi rejalaringiz.","Compare: '... is better than ...' — 2 comparisons. / 2 taqqoslash.","Frequency: 'I usually... / I never...' — 2 habits. / 2 odat.","Invite: 'Would you like to...?' — invite your partner. / Taklif qiling."]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Went","Bordi"],["Going to","Mo'ljal"],["Better than","Dan yaxshiroq"],["Never","Hech qachon"],["Would you like to","Taklif"]]}
+  ],
+  "speaking":[
+    {"t":"talk","title":"My Story","body":"Speak for 2 minutes mixing past and future: what you did last weekend and what you're going to do next. / O'tgan va kelajak haqida gapiring."},
+    {"t":"partner","title":"Interview","table":[["What did you do last weekend?","I went to the park."],["What are you going to do tomorrow?","I'm going to study."],["Who is taller, you or your friend?","My friend is taller."],["How often do you play games?","Sometimes."]]},
+    {"t":"mission","title":"Active Listening","body":"Summarize your partner's story in 3 sentences. / Juftingizning hikoyasini 3 gapda ayting."}
+  ],
+  "quiz":["Say the past of: buy, make, come.","Make a sentence with 'going to'.","Make a comparison with 'than'.","Fill: 'I ___ drink coffee.' (never)"],
+  "homework":"Write your best story of the review (10 sentences: past + future). Practice speaking it. / Eng yaxshi hikoyangizni yozing.",
+  "teacher":["Speaking circle consolidating L41-59.","Run review stations so every student speaks.","Note any weak areas for targeted review.","Celebrate progress — next band is Strong A2!"]
+}
+]}

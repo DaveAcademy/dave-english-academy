@@ -1,0 +1,333 @@
+{"lessons":[
+{
+  "n":71,"title":"Body Parts","sub":"71-dars: Tana a'zolari","icon":"🦵","accent":"26a69a","band":"stronga2","type":"normal",
+  "goals":[["🦵 Name the main body parts","Tana a'zolarini nomlash"],["👋 Use 'my/his/her + body part'","'my/his/her' + a'zo ishlatish"],["🤕 Describe a small injury","Kichik jarohatni tasvirlash"]],
+  "warmup":[["🖐️ Point and say","Teacher points — students say the part! / Ko'rsatib ayting."],["👀 Body words","How many body parts can you name in 30 seconds? / 30 soniyada qancha ayta olasiz?"]],
+  "vocab":[
+    {"w":"head","p":"/hed/","u":"Bosh","i":"🙆","x":["My head hurts.","Boshim og'riyapti."]},
+    {"w":"shoulder","p":"/SHOHL-der/","u":"Yelka","i":"🤷","x":["He touched my shoulder.","U yelkamga tegdi."]},
+    {"w":"arm","p":"/arm/","u":"Qo'l (bilak)","i":"💪","x":["My arm is strong.","Qo'lim kuchli."]},
+    {"w":"hand","p":"/hand/","u":"Kaft","i":"🖐️","x":["Wash your hands.","Qo'lingizni yuving."]},
+    {"w":"finger","p":"/FING-ger/","u":"Barmoq","i":"👆","x":["I hurt my finger.","Barmog'imni urib oldim."]},
+    {"w":"leg","p":"/leg/","u":"Oyoq (son)","i":"🦵","x":["My leg hurts.","Oyog'im og'riyapti."]},
+    {"w":"knee","p":"/nii/","u":"Tizza","i":"🦿","x":["I fell and hurt my knee.","Yiqilib tizzamni urib oldim."]},
+    {"w":"foot","p":"/fut/","u":"Oyoq (panja)","i":"🦶","x":["My foot is cold.","Oyog'im sovuq."]},
+    {"w":"back","p":"/bak/","u":"Bel, orqa","i":"🧍","x":["My back hurts.","Belim og'riyapti."]},
+    {"w":"eye","p":"/ay/","u":"Ko'z","i":"👁️","x":["She has beautiful eyes.","Uning ko'zlari go'zal."]}
+  ],
+  "grammar":{"rule":"**My/his/her/our + body part** · **body part + hurts** (it hurts)","uz":"Egalik + a'zo; 'hurts' — og'riyapti",
+    "ex":[["**My head hurts.**","Boshim og'riyapti."],["**His knee hurts** after football.","Futboldan keyin tizzasi og'riyapti."],["She washed **her hands**.","U qo'llarini yuvdi."]],
+    "mistake":["Wrong: *My head hurt.*","Right: *My head hurts.*","Uchinchi shaxsda '-s'."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["My ___ hurts. (head/heads)","Wash your ___. (hand/hands)","She hurt ___ knee. (her/she)","I fell and hurt my ___. (knee/knees)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Head","Bosh"],["Shoulder","Yelka"],["Knee","Tizza"],["Foot","Oyoq panjasi"],["Back","Bel"]]},
+    {"t":"circle","title":"Circle the Answer","items":["You see with your: → a) eyes b) ears c) hands"]},
+    {"t":"order","title":"Build the Sentence","items":["my / hurts / head / .","hands / your / wash / ."]}
+  ],
+  "reading":{"title":"Football Injury","passage":"Yesterday Bek played football with his classmates. In the second half, he jumped for the ball and fell. 'Ow! My knee hurts!' he cried. His friend helped him up. At home, Bek put ice on his knee. His mother said: 'Rest today, and your leg will feel better tomorrow.' Bek washed his hands, ate dinner and rested. By morning, the knee felt much better.",
+    "qs":["What happened to Bek in the second half?","What did he cry?","How did Bek's mother help him?","How did he feel by morning?"]},
+  "listening":{"title":"At the Doctor's","qs":["Which body part hurts?","How did the accident happen?","What does the doctor say?"],
+    "script":"Listen. Doctor: 'What's the problem?' Patient: 'My arm hurts.' Doctor: 'What happened?' Patient: 'I fell down the stairs.' Doctor: 'Let me look. Rest your arm for three days and put ice on it. It will be fine.'"},
+  "writing":{"title":"Describe an Injury","task":"Write 4 sentences about a time you hurt yourself: what part, what happened, what you did.","uz":"Qachondir jarohat olganingiz haqida yozing."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["What's the matter?","My head hurts."],["What happened?","I fell and hurt my knee."],["How does it feel now?","It's better, thank you."]]},
+    {"t":"mission","title":"Real-life Mission","body":"Point to 5 body parts and say them in English for your family. / 5 ta a'zoni inglizcha ayting."}
+  ],
+  "quiz":["Fill: 'My ___ hurts.' (back/backes)","Fill: 'Wash your ___ .' (hand/hands)","Translate: 'Tizzam og'riyapti.' → ______","Name 5 body parts in English."],
+  "homework":"Vocabulary: 10 body parts 3× · Grammar: 6 sentences with 'my/her + part' + hurts · Reading: re-read 'Football Injury' · Speaking: teach your family body parts.",
+  "teacher":["Anchor lesson — gesture and music make body parts stick.","Drill 'hurts' with the third person.","Watch for 'my head hurt'.","This is the vocabulary base for L72-73."]
+},
+{
+  "n":72,"title":"Health Problems","sub":"72-dars: Sog'liq muammolari","icon":"🤒","accent":"ef5350","band":"stronga2","type":"normal",
+  "goals":[["🤒 Name common health problems","Keng tarqalgan kasalliklarni nomlash"],["🤧 Describe symptoms: 'I have a cold'","Alomatlarni tasvirlash"],["💊 Say simple advice","Oddiy maslahat berish"]],
+  "warmup":[["🤒 Aches and pains","'My head hurts' — what else can hurt? / Yana nima og'rishi mumkin?"],["🤧 Symptoms","What do you say when you feel sick? / Kasal bo'lganingizda nima deysiz?"]],
+  "vocab":[
+    {"w":"a cold","p":"/a kohld/","u":"Shamollash","i":"🤧","x":["I have a cold.","Shamollab qoldim."]},
+    {"w":"a cough","p":"/a kof/","u":"Yo'tal","i":"😮‍💨","x":["He has a bad cough.","Uning yo'tali kuchli."]},
+    {"w":"a fever","p":"/a FII-ver/","u":"Isitma","i":"🌡️","x":["She has a high fever.","Uning isitmasi baland."]},
+    {"w":"a headache","p":"/a HE-dake/","u":"Bosh og'rig'i","i":"🤕","x":["I have a headache.","Boshim og'riyapti."]},
+    {"w":"a stomach ache","p":"/a STO-mek ake/","u":"Qorin og'rig'i","i":"🤢","x":["He has a stomach ache.","Qorni og'riyapti."]},
+    {"w":"a sore throat","p":"/a sor throht/","u":"Tomog' og'rig'i","i":"🗣️","x":["I have a sore throat.","Tomog'im og'riyapti."]},
+    {"w":"tired","p":"/TAYerd/","u":"Charchagan","i":"😴","x":["I feel tired all day.","Kun bo'yi charchayapman."]},
+    {"w":"medicine","p":"/ME-di-sin/","u":"Dori","i":"💊","x":["Take your medicine.","Doringizni iching."]},
+    {"w":"rest","p":"/rest/","u":"Dam olish","i":"🛌","x":["You need rest.","Sizga dam kerak."]},
+    {"w":"temperature","p":"/TEM-pre-cher/","u":"Harorat, isitma","i":"🌡️","x":["Let's check your temperature.","Haroratni o'lchaymiz."]}
+  ],
+  "grammar":{"rule":"**I have a cold/a headache/a fever** · **My ... hurts** · **You should...**","uz":"'I have a...' — kasallik nomi; 'should' — maslahat",
+    "ex":[["I **have a cold** and a **sore throat**.","Shamollab, tomog'im og'riyapti."],["**My stomach hurts.**","Qornim og'riyapti."],["You **should take** this medicine and **rest**.","Bu dorini iching va dam oling."]],
+    "mistake":["Wrong: *I have headache.*","Right: *I have a headache.*","'a' sharti kerak."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["I have ___ cold. (a/the)","She has a high ___. (fever/cough)","He has a ___ throat. (sore/sorry)","Take your ___. (medicine/medicines)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["A cold","Shamollash"],["A cough","Yo'tal"],["A fever","Isitma"],["A headache","Bosh og'rig'i"],["Medicine","Dori"]]},
+    {"t":"circle","title":"Circle the Answer","items":["You have a temperature. You should: → a) rest b) run c) eat ice cream"]},
+    {"t":"order","title":"Build the Sentence","items":["a / have / I / cold / .","medicine / take / your / ."]}
+  ],
+  "reading":{"title":"Lola's Sick Day","passage":"Lola woke up with a sore throat and a high temperature. 'I have a headache too,' she told her mother. Mother checked her temperature: 38.5 degrees. 'You have a fever. You should stay in bed today,' she said. Lola drank warm tea, took her medicine and slept. By evening, she felt a little better. 'Rest is the best medicine,' her mother smiled.",
+    "qs":["What did Lola wake up with?","What was her temperature?","What did the mother say?","How did Lola feel by evening?"]},
+  "listening":{"title":"The Phone Call to the Doctor","qs":["What is wrong with the boy?","What does the doctor advise?","When should he call again?"],
+    "script":"Listen. Boy: 'My stomach hurts and I feel tired.' Doctor: 'Did you eat something bad?' Boy: 'Maybe.' Doctor: 'Drink warm water and rest. Don't eat heavy food today. If it gets worse, call me tomorrow.'"},
+  "writing":{"title":"Advice for a Sick Friend","task":"Write advice (5 sentences) for a friend with a cold, using should/shouldn't.","uz":"Shamollagan do'stingizga maslahat yozing."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["What's the matter?","I have a cough."],["How long have you felt sick?","Since yesterday."],["What should I do?","Rest and drink warm tea."]]},
+    {"t":"mission","title":"Real-life Mission","body":"Tell your family what to do when someone has a fever. / Isitmada nima qilish kerakligini ayting."}
+  ],
+  "quiz":["Fill: 'I have ___ fever.' (a/the)","Fill: 'He has a ___ throat.' (sore/sorry)","Translate: 'Shamollab qoldim.' → ______","What do you take when you are sick?"],
+  "homework":"Vocabulary: 10 health words 3× · Grammar: 6 sentences about symptoms + advice · Reading: re-read 'Lola's Sick Day' · Speaking: role-play being sick with your family.",
+  "teacher":["Anchor lesson — link symptoms to body parts (L71).","Use pictures of sick people for vocabulary.","Watch for 'have headache' without 'a'.","This leads directly to L73: the doctor."]
+},
+{
+  "n":73,"title":"At the Doctor's","sub":"73-dars: Shifokorda","icon":"🩺","accent":"26a69a","band":"stronga2","type":"normal",
+  "goals":[["🩺 Have a basic doctor's visit","Oddiy shifokor suhbati"],["🩹 Understand doctor's instructions","Shifokor ko'rsatmalarini tushunish"],["💊 Ask and answer about symptoms","Alomatlar haqida so'rash va javob berish"]],
+  "warmup":[["🩺 Why do we see a doctor?","When do people visit a doctor? / Qachon shifokorga boramiz?"],["🩹 Symptoms review","What did you learn in L72? Name 3 problems. / 3 ta kasallik ayting."]],
+  "vocab":[
+    {"w":"appointment","p":"/a-POINT-ment/","u":"Uchrashuv (qabul)","i":"📅","x":["I have an appointment at 3.","Soat 3 da qabulim bor."]},
+    {"w":"patient","p":"/PAY-shent/","u":"Bemor","i":"🧍","x":["The patient is waiting.","Bemor kutmoqda."]},
+    {"w":"receptionist","p":"/ri-SEP-shen-ist/","u":"Registrator","i":"💁","x":["The receptionist takes your card.","Registrator kartangizni oladi."]},
+    {"w":"examine","p":"/ig-ZA-min/","u":"Ko'zdan kechirmoq","i":"🔍","x":["The doctor examined me.","Shifokor meni ko'zdan kechirdi."]},
+    {"w":"prescription","p":"/pri-SKRIP-shen/","u":"Retsept","i":"📝","x":["Here is your prescription.","Mana retseptingiz."]},
+    {"w":"pharmacy","p":"/FAR-ma-si/","u":"Dorixona","i":"💊","x":["Buy this at the pharmacy.","Buni dorixonadan oling."]},
+    {"w":"tablet","p":"/TAB-let/","u":"Tabletka","i":"💊","x":["Take one tablet twice a day.","Kuniga ikki marta bitta tabletka."]},
+    {"w":"injection","p":"/in-JEK-shen/","u":"Ukol","i":"💉","x":["You need an injection.","Sizga ukol kerak."]},
+    {"w":"recover","p":"/ri-KA-ver/","u":"Tuzalmoq","i":"🌱","x":["You will recover in a week.","Bir haftada tuzalasiz."]},
+    {"w":"keep warm","p":"/kiip worm/","u":"Issiq yurish","i":"🧣","x":["Keep warm and drink tea.","Issiq yuring va choy iching."]}
+  ],
+  "grammar":{"rule":"Doctor phrases: **What's the problem? / I have... / Take... / You should...**","uz":"Shifokor suhbati iboralari",
+    "ex":[["Doctor: **What's the problem?**","Shifokor: 'Nima muammo?'"],["Patient: **I have a fever** and my throat hurts.","Bemor: 'Isitmam bor, tomog'im og'riyapti.'"],["Doctor: **Take one tablet** twice a day.","Shifokor: 'Kuniga ikki marta bitta tabletka iching.'"]],
+    "mistake":["Wrong: *I have fever.*","Right: *I have a fever.*","Kasallik nomida 'a'."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["What's the ___ ? (problem/problems)","I have ___ fever. (a/the)","Take one ___ twice a day. (tablet/tablets)","Here is your ___. (prescription/prescribe)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Patient","Bemor"],["Examine","Ko'zdan kechirmoq"],["Prescription","Retsept"],["Pharmacy","Dorixona"],["Tablet","Tabletka"]]},
+    {"t":"circle","title":"Circle the Answer","items":["The doctor gives you: → a) a prescription b) a ticket c) a map"]},
+    {"t":"order","title":"Build the Sentence","items":["the / What's / problem / ?","a / have / fever / I / ."]}
+  ],
+  "reading":{"title":"A Visit to the Doctor","passage":"Jasur felt sick, so his mother made an appointment. At the clinic, the receptionist took his card and told him to wait. Soon the doctor called him in. 'What's the problem?' the doctor asked. 'I have a sore throat and a headache,' said Jasur. The doctor examined him and checked his temperature. 'It's just a cold. Take this prescription to the pharmacy. Rest for two days and drink warm tea. You'll recover quickly.' Jasur felt better already.",
+    "qs":["Who made the appointment for Jasur?","What did the receptionist do?","What did the doctor examine?","What did the doctor tell Jasur to do?"]},
+  "listening":{"title":"At the Pharmacy","qs":["How often should the man take the tablets?","How many tablets should he take?","What else should he do?"],
+    "script":"Listen. Pharmacist: 'Here is your medicine. Take one tablet three times a day, after food.' Man: 'Anything else?' Pharmacist: 'Drink plenty of warm water and rest. Keep warm.' Man: 'Thank you!' Pharmacist: 'Get well soon!'"},
+  "writing":{"title":"A Doctor's Dialogue","task":"Write a dialogue (6-8 lines) between a doctor and a patient.","uz":"Shifokor va bemor suhbatini yozing."},
+  "speaking":[
+    {"t":"partner","title":"Role-Play: At the Clinic","table":[["What's the problem?","I have a cough and a fever."],["How long have you felt this?","Since yesterday."],["Take this medicine twice a day.","Thank you, doctor."]]},
+    {"t":"mission","title":"Real-life Mission","body":"Role-play the doctor's visit with a family member. / Shifokor suhbatini oilada mashq qiling."}
+  ],
+  "quiz":["Fill: 'I have ___ sore throat.' (a/the)","Fill: 'Take one ___ twice a day.' (tablet/tablets)","Translate: 'Mana retseptingiz.' → ______","Where do you buy medicine? → the ___."],
+  "homework":"Vocabulary: 10 doctor words 3× · Grammar: write the doctor-patient dialogue · Reading: re-read 'A Visit to the Doctor' · Speaking: practice your dialogue at home.",
+  "teacher":["Anchor lesson — full role-play is the goal.","Set up a classroom clinic.","Drill 'What's the problem? / I have...'.","This is a high-value real-life skill."]
+},
+{
+  "n":74,"title":"Emergencies","sub":"74-dars: Favqulodda holatlar","icon":"🚨","accent":"f44336","band":"stronga2","type":"normal",
+  "goals":[["🚨 Recognize emergency situations","Favqulodda holatlarni bilish"],["📞 Call for help: 112, 101, 103","Yordam chaqirish raqamlari"],["🆘 Use 'must/mustn't' for safety rules","Xavfsizlikda 'must'ni ishlatish"]],
+  "warmup":[["🚨 Emergency numbers","What numbers do you call for fire, police, ambulance in Uzbekistan? / Qaysi raqamlar?"],["🆘 Safety rules","'Don't touch fire!' — what else? / Yana qanday qoidalar?"]],
+  "vocab":[
+    {"w":"emergency","p":"/i-MER-jen-si/","u":"Favqulodda holat","i":"🚨","x":["Call an ambulance — it's an emergency!","Tez yordam chaqiring — favqulodda!"]},
+    {"w":"ambulance","p":"/AM-byu-lans/","u":"Tez yordam","i":"🚑","x":["The ambulance arrived fast.","Tez yordam tez keldi."]},
+    {"w":"fire","p":"/FAYer/","u":"Yong'in","i":"🔥","x":["There is a fire in the kitchen!","Oshxonada yong'in!"]},
+    {"w":"accident","p":"/AK-si-dent/","u":"Baxtsiz hodisa","i":"💥","x":["There was a car accident.","Avtohalokat bo'ldi."]},
+    {"w":"help","p":"/help/","u":"Yordam","i":"🆘","x":["Help! Please help me!","Yordam bering!"]},
+    {"w":"danger","p":"/DEYN-jer/","u":"Xavf","i":"⚠️","x":["Danger! Don't come near.","Xavf! Yaqinlashmang."]},
+    {"w":"must","p":"/mast/","u":"Kerak (shart)","i":"✅","x":["You must call 103.","103 ga qo'ng'iroq qilishingiz kerak."]},
+    {"w":"mustn't","p":"/MA-snt/","u":"Mumkin emas (taqiq)","i":"🚫","x":["You mustn't touch the wire.","Simga tegish mumkin emas."]},
+    {"w":"safe","p":"/seyf/","u":"Xavfsiz","i":"🛡️","x":["Keep children safe.","Bolalarni xavfsiz tuting."]},
+    {"w":"breathing","p":"/BRII-thing/","u":"Nafas olish","i":"🌬️","x":["Check if he is breathing.","Nafas olayotganini tekshiring."]}
+  ],
+  "grammar":{"rule":"**must + verb** (obligation) · **mustn't + verb** (forbidden) · imperatives for safety","uz":"'must' — shart, 'mustn't' — taqiq",
+    "ex":[["You **must call** an ambulance.","Tez yordam chaqirishingiz kerak."],["You **mustn't touch** a burning wire.","Yonayotgan simga tegish mumkin emas."],["**Stay calm** and **call** 103.","Sokin bo'ling va 103 ga qo'ng'iroq qiling."]],
+    "mistake":["Wrong: *You must to call.*","Right: *You must call.*","'must' dan keyin 'to' yo'q."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["You ___ call 103. (must/mustn't)","You ___ run across the road. (must/mustn't)","Stay ___ and call for help. (calm/calmly)","The ambulance came to the ___. (accident/accidentally)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Emergency","Favqulodda"],["Ambulance","Tez yordam"],["Fire","Yong'in"],["Danger","Xavf"],["Safe","Xavfsiz"]]},
+    {"t":"circle","title":"Circle the Answer","items":["There is a fire. You call: → a) 101 b) 103 c) 100"]},
+    {"t":"order","title":"Build the Sentence","items":["call / must / ambulance / You / an / .","mustn't / wire / touch / You / the / ."]}
+  ],
+  "reading":{"title":"The Quick Decision","passage":"On Saturday, Umida saw smoke coming from her neighbour's kitchen window. She called 101 immediately and told the operator the address. 'You mustn't go inside,' the operator warned. Umida stayed outside and guided her neighbours to a safe place. When the firefighters arrived, the fire was still small because of her quick call. 'You were brave and calm,' the chief said. Umida smiled. She knew the rules.",
+    "qs":["What did Umida see?","What number did she call?","What did the operator warn?","Why did the fire stay small?"]},
+  "listening":{"title":"The Emergency Call","qs":["What is the emergency?","What is the address?","What must the caller do until help arrives?"],
+    "script":"Listen. Operator: 'Emergency, which service?' Caller: 'There's a car accident on Mustaqillik street!' Operator: 'Is anyone hurt?' Caller: 'Yes, a man is hurt.' Operator: 'Stay calm. Don't move him. An ambulance is coming now.'"},
+  "writing":{"title":"Safety Rules at Home","task":"Write 5 safety rules using must/mustn't.","uz":"Uydagi xavfsizlik qoidalarini yozing."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["What must you do in a fire?","Call 101 and leave the building."],["What mustn't you touch?","Burning wires."],["What number is the ambulance?","103."]]},
+    {"t":"mission","title":"Real-life Mission","body":"Teach your family the emergency numbers. / Oilangizga raqamlarni o'rgating."}
+  ],
+  "quiz":["Fill: 'You ___ call 103.' (must/mustn't)","Fill: 'You ___ touch the fire.' (must/mustn't)","Translate: 'Sokin bo'ling!' → ______","Ambulance number in Uzbekistan?"],
+  "homework":"Vocabulary: 10 emergency words 3× · Grammar: 5 safety rules with must/mustn't · Reading: re-read 'The Quick Decision' · Speaking: role-play an emergency call.",
+  "teacher":["Teach real emergency numbers and when to call.","Drill must + verb (no 'to').","Watch for 'must to'.","Role-play the emergency call — students remember this."]
+},
+{
+  "n":75,"title":"Clinic Role-Play Workshop","sub":"75-dars: Klinika rolli o'yin ustaxonasi","icon":"🏥","accent":"8d6e63","band":"stronga2","type":"workshop",
+  "goals":[["🏥 Act out a full clinic visit","To'liq klinika suhbatini o'ynash"],["🩺 Use doctor vocabulary fluently","Shifokor lug'atini qo'llash"],["💊 Give and follow advice","Maslahat berish va bajarish"]],
+  "warmup":[["🏥 Clinic words","Name 5 things at a clinic. / Klinikada nimalar bor?"],["🩺 Roles","Who works at a clinic? / Klinikada kim ishlaydi?"]],
+  "vocab":[
+    {"w":"receptionist","p":"/ri-SEP-shen-ist/","u":"Registrator","i":"💁","x":["Talk to the receptionist first.","Avval registratorga murojaat qiling."]},
+    {"w":"patient","p":"/PAY-shent/","u":"Bemor","i":"🧍","x":["The patient sits in the waiting room.","Bemor kutish xonasida o'tiradi."]},
+    {"w":"nurse","p":"/ners/","u":"Hamshira","i":"👩‍⚕️","x":["The nurse checks your temperature.","Hamshira haroratni o'lchaydi."]},
+    {"w":"doctor","p":"/DOK-tar/","u":"Shifokor","i":"🩺","x":["The doctor examines the patient.","Shifokor bemorni ko'zdan kechiradi."]},
+    {"w":"pharmacist","p":"/FAR-ma-sist/","u":"Dorixonachi","i":"💊","x":["The pharmacist gives you medicine.","Dorixonachi dori beradi."]},
+    {"w":"waiting room","p":"/WEY-ting rum/","u":"Kutish xonasi","i":"🪑","x":["Wait in the waiting room.","Kutish xonasida kuting."]}
+  ],
+  "practice":[
+    {"t":"task","title":"Build the Clinic Scene","items":["Choose roles: patient, receptionist, nurse, doctor, pharmacist. / Rollar tanlang.","Patient: say your symptoms. / Bemor alomatlarini aytadi.","Receptionist: take the card, tell the patient to wait. / Registrator kartani oladi.","Nurse: check temperature. / Hamshira haroratni o'lchaydi.","Doctor: examine, give advice and a prescription. / Shifokor maslahat beradi.","Pharmacist: give the medicine with instructions. / Dorixonachi dori beradi.","Swap roles and repeat! / Rollarni almashtiring!"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["What's the problem?","Nima muammo?"],["Take one tablet twice a day","Kuniga ikki marta bitta tabletka"],["Here is your prescription","Mana retseptingiz"],["Get well soon","Tez tuzalib keting"]]}
+  ],
+  "speaking":[
+    {"t":"talk","title":"Perform the Scene","body":"Perform your clinic scene for the class. Use at least 8 phrases. / Klinika sahnasini ko'rsating."},
+    {"t":"mission","title":"Give Feedback","body":"Give one piece of feedback to another group: pronunciation, phrases, or politeness. / Boshqa guruhga fikr bering."}
+  ],
+  "quiz":["Who takes your card first? → the ___ .","Who examines you? → the ___ .","Fill: 'Take one ___ three times a day.' (tablet/tablets)","Translate: 'Tez tuzalib keting!' → ______"],
+  "homework":"Write the full clinic dialogue (10 lines) and practice performing it at home. / To'liq suhbatni yozing.",
+  "teacher":["Workshop: full role-play integrates L71-74.","Let students be creative with their symptoms.","Emphasize politeness ('please', 'thank you').","This is the band's practical capstone."]
+},
+{
+  "n":76,"title":"Speaking Circle: Health","sub":"76-dars: Suhbat doirasi — salomatlik","icon":"❤️","accent":"ec407a","band":"stronga2","type":"speaking",
+  "goals":[["❤️ Talk about health and habits","Salomatlik va odatlar haqida gapirish"],["🩺 Describe problems and give advice","Muammo va maslahatni aytish"],["👥 Share healthy-living ideas","Sog'lom turmush g'oyalarini bo'lishish"]],
+  "warmup":[["❤️ Healthy habits","Name 3 healthy habits from L69. / 3 ta sog'lom odat."],["🩺 Symptoms review","What do you say when you have a fever? / Isitma bo'lganda nima deysiz?"]],
+  "vocab":[
+    {"w":"healthy","p":"/HEL-thi/","u":"Sog'lom","i":"🥗","x":["I eat healthy food.","Sog'lom taom yeyman."]},
+    {"w":"lifestyle","p":"/LAYF-stayl/","u":"Turmuş tarzi","i":"🌿","x":["A healthy lifestyle is important.","Sog'lom turmush tarzi muhim."]},
+    {"w":"exercise","p":"/EK-ser-sayz/","u":"Mashq","i":"🏃","x":["I exercise every morning.","Har kuni ertalab mashq qilaman."]},
+    {"w":"energy","p":"/EN-er-ji/","u":"Kuch","i":"⚡","x":["Fruit gives me energy.","Meva menga kuch beradi."]},
+    {"w":"advice","p":"/ad-VAYS/","u":"Maslahat","i":"💡","x":["Thank you for your advice.","Maslahatingiz uchun rahmat."]},
+    {"w":"recover","p":"/ri-KA-ver/","u":"Tuzalmoq","i":"🌱","x":["I hope you recover soon.","Tez tuzalishingizni tilayman."]}
+  ],
+  "practice":[
+    {"t":"task","title":"Health Discussion Cards","items":["What do you do to stay healthy? / Sog'lom bo'lish uchun nima qilasiz?","How many hours do you sleep? / Necha soat uxlaysiz?","What is your advice for a cold? / Shamollashga maslahatingiz?","When did you last see a doctor? Why? / Oxirgi marta shifokorga qachon bordingiz?","What is your favourite healthy food? / Sevimli sog'lom taomingiz?"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Healthy","Sog'lom"],["Exercise","Mashq"],["Advice","Maslahat"],["Recover","Tuzalmoq"],["Energy","Kuch"]]}
+  ],
+  "speaking":[
+    {"t":"talk","title":"My Health","body":"Speak for 2 minutes: your healthy habits, your sleep, and one piece of advice. / Salomatligingiz haqida gapiring."},
+    {"t":"partner","title":"Interview","table":[["How do you stay healthy?","I exercise and eat fruit."],["How much sleep do you need?","Eight hours."],["What's good advice for a cold?","Rest and drink tea."],["Do you take medicine often?","No, rarely."]]},
+    {"t":"mission","title":"Active Listening","body":"Write 3 healthy habits your partner has. / Juftingizning 3 odatini yozing."}
+  ],
+  "quiz":["Translate: 'Har kuni ertalab mashq qilaman.' → ______","Translate: 'Tez tuzalishingizni tilayman.' → ______","Fill: 'I eat ___ food.' (healthy/health)","Name 3 ways to stay healthy."],
+  "homework":"Write your healthy-day plan (8-10 sentences) and practice speaking it. / Sog'lom kun rejangizni yozing.",
+  "teacher":["Speaking circle consolidating L69-74.","Focus on fluency and real advice.","Echo-correct gently.","Celebrate healthy habits students already have."]
+},
+{
+  "n":77,"title":"Career Dreams","sub":"77-dars: Kasb orzulari","icon":"🌟","accent":"5c6bc0","band":"stronga2","type":"normal",
+  "goals":[["🌟 Talk about future careers","Kelajak kasblari haqida gapirish"],["💭 Express dreams: 'I want to be a...'","Orzu: 'men... bo'lmoqchiman'"],["🎯 Give reasons for career choices","Kasb tanlash sabablari"]],
+  "warmup":[["🌟 Dream jobs","What do you want to be? / Nima bo'lmoqchisiz?"],["💭 Jobs review","Name 5 jobs from L46. / L46 kasblarini ayting."]],
+  "vocab":[
+    {"w":"career","p":"/ka-RIER/","u":"Kasb, kariera","i":"📈","x":["I want a career in medicine.","Tibbiyotda kariera qilmoqchiman."]},
+    {"w":"dream","p":"/driim/","u":"Orzu","i":"💭","x":["My dream is to be a pilot.","Orzuim — uchuvchi bo'lish."]},
+    {"w":"become","p":"/bi-KAM/","u":"Bo'lmoq","i":"🌟","x":["I want to become a doctor.","Shifokor bo'lmoqchiman."]},
+    {"w":"engineer","p":"/en-ji-NIER/","u":"Muhandis","i":"🧑‍🔧","x":["Engineers build bridges.","Muhandislar ko'prik quradi."]},
+    {"w":"scientist","p":"/SAY-en-tist/","u":"Olim","i":"🔬","x":["The scientist works in a lab.","Olim laboratoriyada ishlaydi."]},
+    {"w":"designer","p":"/di-ZAY-ner/","u":"Dizayner","i":"🎨","x":["She is a fashion designer.","U moda dizayneri."]},
+    {"w":"programmer","p":"/PRO-gram-er/","u":"Dasturchi","i":"💻","x":["Programmers write code.","Dasturchilar kod yozadi."]},
+    {"w":"businessman","p":"/BIZ-nes-man/","u":"Tadbirkor","i":"💼","x":["My uncle is a businessman.","Amakim tadbirkor."]},
+    {"w":"useful","p":"/YU-s-ful/","u":"Foydali","i":"👍","x":["Doctors are very useful for society.","Shifokorlar jamiyatga juda foydali."]},
+    {"w":"successful","p":"/sak-SES-ful/","u":"Muvaffaqiyatli","i":"🏆","x":["She is a successful engineer.","U muvaffaqiyatli muhandis."]}
+  ],
+  "grammar":{"rule":"Dreams: **I want to be a... / I'm going to be a... / I'd like to...** + reason with because","uz":"Orzu: 'I want to be' + sabab",
+    "ex":[["I **want to be** a programmer **because** I love computers.","Dasturchi bo'lmoqchiman, chunki kompyuterlarni yaxshi ko'raman."],["She **is going to be** a doctor.","U shifokor bo'ladi."],["**I'd like to help** people.","Odamlarga yordam berishni xohlayman."]],
+    "mistake":["Wrong: *I want become a doctor.*","Right: *I want to become a doctor.*","'want to' + fe'l."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["I want ___ be a doctor. (to/-)","My dream is ___ be a pilot. (to/-)","She is going ___ be a teacher. (to/-)","I want to help people ___ I love them. (because/but)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Career","Kariera"],["Dream","Orzu"],["Become","Bo'lmoq"],["Scientist","Olim"],["Programmer","Dasturchi"]]},
+    {"t":"circle","title":"Circle the Answer","items":["A doctor ___ people. → a) helps b) help c) helping"]},
+    {"t":"order","title":"Build the Sentence","items":["be / to / want / a / I / programmer / .","is / a / going / She / to / teacher / be / ."]}
+  ],
+  "reading":{"title":"Three Dreams","passage":"Three friends, three dreams. Dilnoza wants to be a doctor because she likes helping sick people. She studies biology every day. Bobur is going to be a programmer — he loves computers and games, and wants to create his own game one day. Aziz dreams of being a pilot. He watches planes at the airport and reads about flying. Their teacher says: 'Dreams are important. Work hard, and they will come true.'",
+    "qs":["Why does Dilnoza want to be a doctor?","What does Bobur want to create?","What does Aziz dream of?","What does the teacher say?"]},
+  "listening":{"title":"Career Interview","qs":["What does the man do now?","Why did he choose this job?","What advice does he give?"],
+    "script":"Listen. Interviewer: 'What is your job?' Man: 'I'm an engineer. I design buildings.' Interviewer: 'Why did you choose this?' Man: 'Because I always loved maths and drawing. My advice: find what you love, then work hard. You will be successful.'"},
+  "writing":{"title":"My Dream Career","task":"Write a paragraph (5-7 sentences): what you want to be and why, and what you'll do to achieve it.","uz":"Orzu kasbingiz haqida yozing."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["What do you want to be?","I want to be a scientist."],["Why?","Because I love biology."],["What will you do to achieve it?","I'll study hard."]]},
+    {"t":"mission","title":"Real-life Mission","body":"Ask 3 people about their jobs and dreams. Report to class. / 3 kishidan so'rang."}
+  ],
+  "quiz":["Fill: 'I want ___ be a doctor.' (to/-)","Fill: 'My dream is ___ be a pilot.' (to/-)","Translate: 'Dasturchi bo'lmoqchiman.' → ______","Correct: 'I want become a teacher.'"],
+  "homework":"Vocabulary: 10 career words 3× · Grammar: 6 sentences about your dream job · Reading: re-read 'Three Dreams' · Speaking: discuss careers with your family.",
+  "teacher":["Career dreams are motivating — let students dream big.","Drill 'want to + verb'.","Watch for 'want become'.","Link to L79: the job interview."]
+},
+{
+  "n":78,"title":"At Work","sub":"78-dars: Ishda","icon":"💼","accent":"42a5f5","band":"stronga2","type":"normal",
+  "goals":[["💼 Describe workplace rules with 'have to'","'have to' bilan ish qoidalari"],["🕘 Talk about working hours and duties","Ish vaqti va vazifalar haqida gapirish"],["🗣️ Ask questions about a job","Ish haqida savol berish"]],
+  "warmup":[["💼 Working people","What jobs have we learned? / Qaysi kasblarni bildik?"],["🕘 Work hours","When does your father start work? / Otangiz ishni soat nechada boshlaydi?"]],
+  "vocab":[
+    {"w":"have to","p":"/hav tu/","u":"Majbur bo'lmoq","i":"📌","x":["I have to wake up at 6.","Soat 6 da turishim kerak."]},
+    {"w":"doesn't have to","p":"/DA-snt hav tu/","u":"Majbur emas","i":"✔️","x":["She doesn't have to work on Sunday.","Yakshanba kuni ishlashi shart emas."]},
+    {"w":"duty","p":"/DU-ti/","u":"Vazifa","i":"📋","x":["My duty is to answer calls.","Vazifam — qo'ng'iroqlarga javob berish."]},
+    {"w":"schedule","p":"/SKE-jul/","u":"Jadval","i":"🕒","x":["My schedule is flexible.","Jadvalim moslashuvchan."]},
+    {"w":"overtime","p":"/OH-ver-taym/","u":"Qo'shimcha ish vaqti","i":"⏰","x":["We sometimes work overtime.","Ba'zan qo'shimcha ishlaymiz."]},
+    {"w":"uniform","p":"/YU-ni-form/","u":"Forma","i":"👔","x":["The nurse wears a uniform.","Hamshira forma kiyadi."]},
+    {"w":"meeting","p":"/MII-ting/","u":"Yig'ilish","i":"🤝","x":["We have a meeting every Monday.","Har dushanba yig'ilishimiz bor."]},
+    {"w":"colleague","p":"/KO-liig/","u":"Hamkasab","i":"👥","x":["My colleagues are friendly.","Hamkasablarim do'stona."]},
+    {"w":"employee","p":"/em-PLO-yi/","u":"Xodim","i":"🧑‍💼","x":["The company has 100 employees.","Kompaniyada 100 xodim bor."]},
+    {"w":"boss","p":"/bos/","u":"Rahbar, boshliq","i":"👔","x":["My boss is strict but fair.","Rahbarim qattiqqo'l, lekin adolatli."]}
+  ],
+  "grammar":{"rule":"**have to + verb** (necessary) · **don't/doesn't have to + verb** (not necessary)","uz":"'have to' — majburiyat; 'don't have to' — shart emas",
+    "ex":[["I **have to** wear a uniform.","Forma kiyishim kerak."],["She **doesn't have to** work on Friday.","Juma kuni ishlashi shart emas."],["We **have to** finish the report today.","Hisobotni bugun tugatishimiz kerak."]],
+    "mistake":["Wrong: *She has to works.*","Right: *She has to work.*","'has to' dan keyin asosiy fe'l."]},
+  "practice":[
+    {"t":"fill","title":"Fill in the Gaps","items":["I ___ wake up at 6. (have to/has to)","She ___ wear a uniform. (has to/have to)","We ___ work overtime. (don't have to/has to)","He ___ answer calls. (has to/have to)"]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Duty","Vazifa"],["Uniform","Forma"],["Meeting","Yig'ilish"],["Colleague","Hamkasab"],["Boss","Rahbar"]]},
+    {"t":"circle","title":"Circle the Answer","items":["Not necessary means: → a) don't have to b) have to c) must"]},
+    {"t":"order","title":"Build the Sentence","items":["wear / to / a / I / uniform / have / .","has / She / to / calls / answer / ."]}
+  ],
+  "reading":{"title":"A Nurse's Day","passage":"Malika is a nurse at a city hospital. She has to wake up at five o'clock and be at work by seven. She has to wear a clean uniform and check the patients in her ward. Some days she works overtime when there are many patients. She doesn't have to work on Saturdays — that is her rest day. Malika loves her job. 'I have to be kind and careful every day,' she says. 'My colleagues help me, and my boss is fair.'",
+    "qs":["What time does Malika have to wake up?","What does she have to wear?","When doesn't she have to work?","What does Malika love about her job?"]},
+  "listening":{"title":"The New Job","qs":["What time does the man have to start?","What does he have to wear?","When doesn't he have to work?"],
+    "script":"Listen. 'So, you are the new employee. You have to start at 8 o'clock and wear a uniform. You don't have to work on Sundays. On Fridays we have a short meeting.' 'Do I have to work overtime?' 'Only in busy weeks.' 'OK, I understand. Thank you!'"},
+  "writing":{"title":"A Job Description","task":"Describe a job (5-7 sentences) using have to / doesn't have to.","uz":"Bir kasbni 'have to' bilan tasvirlang."},
+  "speaking":[
+    {"t":"partner","title":"Talk with a Partner","table":[["What do you have to do at school?","I have to do homework."],["What doesn't your father have to do?","He doesn't have to work on Sunday."],["Do you have to wear a uniform?","Yes, at school."]]},
+    {"t":"mission","title":"Real-life Mission","body":"Ask your parents what they have to do at work. Report. / Ota-onangizdan so'rang."}
+  ],
+  "quiz":["Fill: 'She ___ wear a uniform.' (has to/have to)","Fill: 'I ___ wake up early.' (have to/has to)","Translate: 'Yakshanba kuni ishlashim shart emas.' → ______","Correct: 'She has to works.'"],
+  "homework":"Vocabulary: 10 work words 3× · Grammar: 6 sentences with have to · Reading: re-read 'A Nurse's Day' · Speaking: describe your parent's job.",
+  "teacher":["Contrast must (strong) vs have to (daily need).","Drill has to + verb.","Watch for 'has to works'.","Link to L79: job interviews."]
+},
+{
+  "n":79,"title":"Job Interview Workshop","sub":"79-dars: Ish suhbati ustaxonasi","icon":"🧑‍💼","accent":"ffa726","band":"stronga2","type":"workshop",
+  "goals":[["🧑‍💼 Answer common interview questions","Umumiy suhbat savollariga javob berish"],["💼 Present your skills and strengths","Mahorat va kuchli tomonlaringizni aytish"],["🗣️ Do a short job interview","Qisqa ish suhbati"]],
+  "warmup":[["🧑‍💼 Interview questions","What do employers usually ask? / Ish beruvchi nima so'raydi?"],["💼 Your skills","What are you good at? / Nimada yaxshisiz?"]],
+  "vocab":[
+    {"w":"interview","p":"/IN-ter-viu/","u":"Suhbat (intervyu)","i":"🎤","x":["I have a job interview tomorrow.","Ertaga ish suhbatim bor."]},
+    {"w":"employer","p":"/em-PLO-yer/","u":"Ish beruvchi","i":"🧑‍💼","x":["The employer asks questions.","Ish beruvchi savol beradi."]},
+    {"w":"employee","p":"/em-PLO-yi/","u":"Xodim","i":"🧑‍💼","x":["They need a new employee.","Ularga yangi xodim kerak."]},
+    {"w":"skills","p":"/skilz/","u":"Mahoratlar","i":"🛠️","x":["What skills do you have?","Qanday mahoratlaringiz bor?"]},
+    {"w":"experience","p":"/ik-SPIER-i-ens/","u":"Tajriba","i":"📜","x":["Do you have any experience?","Tajribangiz bormi?"]},
+    {"w":"strength","p":"/strength/","u":"Kuchli tomon","i":"💪","x":["My strength is teamwork.","Kuchli tomonim — jamoada ishlash."]},
+    {"w":"salary","p":"/SA-la-ri/","u":"Maosh","i":"💰","x":["What is the salary?","Maoshi qancha?"]},
+    {"w":"apply","p":"/a-PLAY/","u":"Ariza bermoq","i":"📝","x":["I want to apply for this job.","Bu ishga ariza bermoqchiman."]},
+    {"w":"hard-working","p":"/hard WOR-king/","u":"Ishchan","i":"🐝","x":["I am hard-working and honest.","Men ishchan va halolman."]},
+    {"w":"confident","p":"/KON-fi-dent/","u":"O'ziga ishongan","i":"😎","x":["Be confident in the interview.","Suhbatda o'zingizga ishoning."]}
+  ],
+  "practice":[
+    {"t":"task","title":"Build Your Interview","items":["Prepare answers: 'Tell me about yourself.' / O'zingiz haqida ayting.","'What are your skills?' — list 3. / 3 ta mahoratingiz.","'Why do you want this job?' — give a reason. / Sabab ayting.","'What are your strengths?' — name 2. / 2 ta kuchli tomon.","Role-play: one employer, one candidate. Swap! / Rollarni almashtiring."]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Interview","Suhbat"],["Employer","Ish beruvchi"],["Experience","Tajriba"],["Salary","Maosh"],["Skills","Mahoratlar"]]},
+    {"t":"circle","title":"Circle the Answer","items":["In an interview, you should be: → a) confident b) late c) silent"]}
+  ],
+  "speaking":[
+    {"t":"talk","title":"The Interview","body":"Do a 2-minute interview. Use polite answers and give reasons. / 2 daqiqalik suhbat o'tkazing."},
+    {"t":"partner","title":"Give Feedback","body":"Give your partner one positive point and one suggestion. / Juftingizga fikr bering."}
+  ],
+  "quiz":["Fill: 'What ___ are you good at?' (skills/skill)","Fill: 'I am hard-___ .' (working/work)","Translate: 'Maoshi qancha?' → ______","Name 3 strengths you could say."],
+  "homework":"Write your answers to the 4 interview questions and practice aloud. / Savollarga javob yozing.",
+  "teacher":["Workshop: real interview practice is valuable.","Focus on confident, polite answers.","Let each student practice twice.","This prepares L95: formal writing."]
+},
+{
+  "n":80,"title":"Speaking Circle: Strong A2 Review","sub":"80-dars: Suhbat doirasi — takrorlash","icon":"🏁","accent":"7e57c2","band":"stronga2","type":"speaking",
+  "goals":[["🏁 Review the Strong A2 band (L61-79)","L61-79 mavzularini takrorlash"],["🗣️ Speak about health, work and travel","Salomatlik, ish va sayohat haqida gapirish"],["👥 Use new vocabulary confidently","Yangi lug'atni ishonch bilan qo'llash"]],
+  "warmup":[["🏁 Band review","What was your favourite lesson in this band? / Qaysi dars yoqdi?"],["🔁 Words race","Name 5 body parts, 5 jobs, 5 health problems. / So'zlarni ayting."]],
+  "vocab":[
+    {"w":"achievement","p":"/a-CHIIV-ment/","u":"Yutuq","i":"🏆","x":["This is a great achievement.","Bu katta yutuq."]},
+    {"w":"progress","p":"/PRO-gres/","u":"Taraqqiyot","i":"📈","x":["You are making progress!","Taraqqiyot qilayapsiz!"]},
+    {"w":"experience","p":"/ik-SPIER-i-ens/","u":"Tajriba","i":"🎒","x":["It was a new experience.","Bu yangi tajriba edi."]},
+    {"w":"improve","p":"/im-PRUUV/","u":"Yaxshilamoq","i":"🔧","x":["I want to improve my English.","Ingliz tilimni yaxshilamoqchiman."]},
+    {"w":"goal","p":"/gohl/","u":"Maqsad","i":"🎯","x":["My goal is to speak fluently.","Maqsadim — ravon gapirish."]},
+    {"w":"proud","p":"/praud/","u":"Faxrlanadigan","i":"🦁","x":["I am proud of you.","Siz bilan faxrlanaman."]}
+  ],
+  "practice":[
+    {"t":"task","title":"Review Stations","items":["Health: 'When I have a fever, I...' — 2 sentences. / Isitmada nima qilasiz?","Work: 'In a job, you have to...' — 2 rules. / Ishda nimalar shart?","Travel: 'My last trip...' — 3 sentences. / Oxirgi safaringiz.","Body: 'My ___ hurts because...' — 2 sentences. / Nima og'riyapti?","Career: 'I want to be... because...' — 2 sentences. / Kasb orzuingiz."]},
+    {"t":"match","title":"Match the Pairs","pairs":[["Achievement","Yutuq"],["Progress","Taraqqiyot"],["Improve","Yaxshilamoq"],["Goal","Maqsad"],["Proud","Faxr"]]}
+  ],
+  "speaking":[
+    {"t":"talk","title":"My Band Story","body":"Speak for 2 minutes: the best thing you learned, a new word you love, your goal for the next band. / Eng yaxshi o'rganganingiz haqida gapiring."},
+    {"t":"partner","title":"Interview","table":[["What's the best thing you learned?","How to talk to a doctor."],["What's your favourite new word?","Unforgettable!"],["What's your goal for the next band?","To read longer texts."]]},
+    {"t":"mission","title":"Active Listening","body":"Write 3 things your partner said about their goals. / Juftingizning maqsadlarini yozing."}
+  ],
+  "quiz":["Translate: 'Taraqqiyot qilayapsiz!' → ______","Translate: 'Maqsadim — ravon gapirish.' → ______","Fill: 'I want to ___ my English.' (improve/improvement)","What is your goal for B1?"],
+  "homework":"Write a reflection: what you learned in this band and your goals (8-10 sentences). / Band haqida fikr yozing.",
+  "teacher":["Speaking circle consolidating L61-79.","Celebrate the band completion — students are Strong A2!","Note weak areas for B1 revision.","Next band: B1 — Beginning B1, lessons 81-100."]
+}
+]}

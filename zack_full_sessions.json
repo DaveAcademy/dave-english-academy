@@ -1,0 +1,2249 @@
+﻿supabase : Initialising login role...
+At line:1 char:1
++ supabase db query --linked "SELECT gs.id as session_id, gs.score as s ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Initialising login role...:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[
+  {
+    "level": 214,
+    "played_at": "2026-08-21 11:44:57.581969+00",
+    "session_id": 2261,
+    "session_score": "30",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 3,
+    "words_total": 19
+  },
+  {
+    "level": 213,
+    "played_at": "2026-08-21 11:44:43.518727+00",
+    "session_id": 2259,
+    "session_score": "70",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 7,
+    "words_total": 19
+  },
+  {
+    "level": 212,
+    "played_at": "2026-08-21 11:44:29.625933+00",
+    "session_id": 2258,
+    "session_score": "40",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 4,
+    "words_total": 19
+  },
+  {
+    "level": 211,
+    "played_at": "2026-08-21 11:44:16.958334+00",
+    "session_id": 2257,
+    "session_score": "50",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 5,
+    "words_total": 19
+  },
+  {
+    "level": 210,
+    "played_at": "2026-08-21 11:44:04.216213+00",
+    "session_id": 2256,
+    "session_score": "40",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 4,
+    "words_total": 19
+  },
+  {
+    "level": 209,
+    "played_at": "2026-08-21 11:43:51.020494+00",
+    "session_id": 2255,
+    "session_score": "20",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 2,
+    "words_total": 19
+  },
+  {
+    "level": 208,
+    "played_at": "2026-08-21 11:43:38.19475+00",
+    "session_id": 2254,
+    "session_score": "60",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 6,
+    "words_total": 19
+  },
+  {
+    "level": 207,
+    "played_at": "2026-08-21 11:43:22.811671+00",
+    "session_id": 2253,
+    "session_score": "60",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 6,
+    "words_total": 19
+  },
+  {
+    "level": 206,
+    "played_at": "2026-08-21 11:43:04.184261+00",
+    "session_id": 2252,
+    "session_score": "70",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 7,
+    "words_total": 19
+  },
+  {
+    "level": 205,
+    "played_at": "2026-08-21 11:42:52.256093+00",
+    "session_id": 2251,
+    "session_score": "30",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 3,
+    "words_total": 19
+  },
+  {
+    "level": 204,
+    "played_at": "2026-08-21 11:42:32.856234+00",
+    "session_id": 2250,
+    "session_score": "70",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 7,
+    "words_total": 19
+  },
+  {
+    "level": 203,
+    "played_at": "2026-08-21 11:42:15.942142+00",
+    "session_id": 2249,
+    "session_score": "20",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 2,
+    "words_total": 19
+  },
+  {
+    "level": 202,
+    "played_at": "2026-08-21 11:42:02.652496+00",
+    "session_id": 2248,
+    "session_score": "50",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 5,
+    "words_total": 19
+  },
+  {
+    "level": 201,
+    "played_at": "2026-08-21 11:41:49.30641+00",
+    "session_id": 2247,
+    "session_score": "40",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 4,
+    "words_total": 19
+  },
+  {
+    "level": 200,
+    "played_at": "2026-08-21 11:41:32.559409+00",
+    "session_id": 2246,
+    "session_score": "70",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 7,
+    "words_total": 19
+  },
+  {
+    "level": 199,
+    "played_at": "2026-08-21 11:41:12.546284+00",
+    "session_id": 2245,
+    "session_score": "60",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 6,
+    "words_total": 19
+  },
+  {
+    "level": 198,
+    "played_at": "2026-08-21 11:40:45.161305+00",
+    "session_id": 2244,
+    "session_score": "20",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 2,
+    "words_total": 19
+  },
+  {
+    "level": 197,
+    "played_at": "2026-08-21 11:38:48.811474+00",
+    "session_id": 2241,
+    "session_score": "30",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 3,
+    "words_total": 19
+  },
+  {
+    "level": 196,
+    "played_at": "2026-08-21 11:38:38.902168+00",
+    "session_id": 2240,
+    "session_score": "30",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 3,
+    "words_total": 19
+  },
+  {
+    "level": 195,
+    "played_at": "2026-08-21 11:31:03.673313+00",
+    "session_id": 2235,
+    "session_score": "10",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 1,
+    "words_total": 19
+  },
+  {
+    "level": 194,
+    "played_at": "2026-08-21 11:30:49.940119+00",
+    "session_id": 2234,
+    "session_score": "60",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 6,
+    "words_total": 19
+  },
+  {
+    "level": 193,
+    "played_at": "2026-08-21 11:30:36.89271+00",
+    "session_id": 2233,
+    "session_score": "40",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 4,
+    "words_total": 19
+  },
+  {
+    "level": 192,
+    "played_at": "2026-08-21 11:30:27.129933+00",
+    "session_id": 2232,
+    "session_score": "0",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 0,
+    "words_total": 19
+  },
+  {
+    "level": 191,
+    "played_at": "2026-08-21 11:29:36.657189+00",
+    "session_id": 2231,
+    "session_score": "40",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 4,
+    "words_total": 19
+  },
+  {
+    "level": 190,
+    "played_at": "2026-08-21 11:29:20.729773+00",
+    "session_id": 2230,
+    "session_score": "50",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 5,
+    "words_total": 19
+  },
+  {
+    "level": 189,
+    "played_at": "2026-08-21 11:29:07.430789+00",
+    "session_id": 2229,
+    "session_score": "50",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 5,
+    "words_total": 19
+  },
+  {
+    "level": 188,
+    "played_at": "2026-08-21 11:28:47.130191+00",
+    "session_id": 2228,
+    "session_score": "50",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 5,
+    "words_total": 19
+  },
+  {
+    "level": 187,
+    "played_at": "2026-08-21 11:28:36.394312+00",
+    "session_id": 2227,
+    "session_score": "40",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 4,
+    "words_total": 19
+  },
+  {
+    "level": 186,
+    "played_at": "2026-08-21 11:28:21.174274+00",
+    "session_id": 2226,
+    "session_score": "40",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 4,
+    "words_total": 19
+  },
+  {
+    "level": 185,
+    "played_at": "2026-08-21 11:25:50.745602+00",
+    "session_id": 2225,
+    "session_score": "70",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 7,
+    "words_total": 19
+  },
+  {
+    "level": 184,
+    "played_at": "2026-08-21 11:24:36.113666+00",
+    "session_id": 2224,
+    "session_score": "50",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 5,
+    "words_total": 19
+  },
+  {
+    "level": 184,
+    "played_at": "2026-08-21 11:24:26.895887+00",
+    "session_id": 2223,
+    "session_score": "0",
+    "txn_count": 0,
+    "txn_points": 0,
+    "words_correct": 0,
+    "words_total": 1
+  },
+  {
+    "level": 183,
+    "played_at": "2026-08-21 11:24:24.563506+00",
+    "session_id": 2222,
+    "session_score": "10",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 1,
+    "words_total": 19
+  },
+  {
+    "level": 182,
+    "played_at": "2026-08-21 11:23:58.657797+00",
+    "session_id": 2221,
+    "session_score": "30",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 3,
+    "words_total": 19
+  },
+  {
+    "level": 181,
+    "played_at": "2026-08-21 11:20:41.03906+00",
+    "session_id": 2218,
+    "session_score": "10",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 1,
+    "words_total": 19
+  },
+  {
+    "level": 180,
+    "played_at": "2026-08-21 11:20:26.3517+00",
+    "session_id": 2217,
+    "session_score": "30",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 3,
+    "words_total": 19
+  },
+  {
+    "level": 179,
+    "played_at": "2026-08-21 11:20:12.111611+00",
+    "session_id": 2216,
+    "session_score": "60",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 6,
+    "words_total": 19
+  },
+  {
+    "level": 178,
+    "played_at": "2026-08-21 11:20:01.126324+00",
+    "session_id": 2215,
+    "session_score": "60",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 6,
+    "words_total": 19
+  },
+  {
+    "level": 177,
+    "played_at": "2026-08-21 11:19:48.119678+00",
+    "session_id": 2214,
+    "session_score": "30",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 3,
+    "words_total": 19
+  },
+  {
+    "level": 176,
+    "played_at": "2026-08-21 11:19:35.65383+00",
+    "session_id": 2213,
+    "session_score": "20",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 2,
+    "words_total": 19
+  },
+  {
+    "level": 175,
+    "played_at": "2026-08-21 11:19:22.922399+00",
+    "session_id": 2212,
+    "session_score": "50",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 5,
+    "words_total": 19
+  },
+  {
+    "level": 174,
+    "played_at": "2026-08-21 11:19:10.23927+00",
+    "session_id": 2211,
+    "session_score": "50",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 5,
+    "words_total": 19
+  },
+  {
+    "level": 173,
+    "played_at": "2026-08-21 11:18:59.597785+00",
+    "session_id": 2210,
+    "session_score": "20",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 2,
+    "words_total": 19
+  },
+  {
+    "level": 172,
+    "played_at": "2026-08-21 11:18:47.870905+00",
+    "session_id": 2209,
+    "session_score": "50",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 5,
+    "words_total": 19
+  },
+  {
+    "level": 171,
+    "played_at": "2026-08-21 11:18:04.351339+00",
+    "session_id": 2208,
+    "session_score": "70",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 7,
+    "words_total": 19
+  },
+  {
+    "level": 170,
+    "played_at": "2026-08-21 11:17:52.382117+00",
+    "session_id": 2207,
+    "session_score": "50",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 5,
+    "words_total": 19
+  },
+  {
+    "level": 169,
+    "played_at": "2026-08-21 11:17:37.704084+00",
+    "session_id": 2206,
+    "session_score": "40",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 4,
+    "words_total": 19
+  },
+  {
+    "level": 168,
+    "played_at": "2026-08-21 11:17:14.304003+00",
+    "session_id": 2205,
+    "session_score": "20",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 2,
+    "words_total": 19
+  },
+  {
+    "level": 167,
+    "played_at": "2026-08-21 11:16:59.259962+00",
+    "session_id": 2204,
+    "session_score": "30",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 3,
+    "words_total": 19
+  },
+  {
+    "level": 166,
+    "played_at": "2026-08-21 11:16:41.712752+00",
+    "session_id": 2203,
+    "session_score": "40",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 4,
+    "words_total": 19
+  },
+  {
+    "level": 165,
+    "played_at": "2026-08-21 11:16:28.707645+00",
+    "session_id": 2202,
+    "session_score": "50",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 5,
+    "words_total": 19
+  },
+  {
+    "level": 164,
+    "played_at": "2026-08-21 11:16:14.430974+00",
+    "session_id": 2201,
+    "session_score": "30",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 3,
+    "words_total": 19
+  },
+  {
+    "level": 163,
+    "played_at": "2026-08-21 11:15:58.285752+00",
+    "session_id": 2200,
+    "session_score": "70",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 7,
+    "words_total": 19
+  },
+  {
+    "level": 162,
+    "played_at": "2026-08-21 11:15:44.343158+00",
+    "session_id": 2199,
+    "session_score": "50",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 5,
+    "words_total": 19
+  },
+  {
+    "level": 161,
+    "played_at": "2026-08-21 11:15:26.892476+00",
+    "session_id": 2198,
+    "session_score": "80",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 8,
+    "words_total": 19
+  },
+  {
+    "level": 160,
+    "played_at": "2026-08-21 11:15:12.965735+00",
+    "session_id": 2197,
+    "session_score": "40",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 4,
+    "words_total": 19
+  },
+  {
+    "level": 159,
+    "played_at": "2026-08-21 11:14:56.892487+00",
+    "session_id": 2196,
+    "session_score": "40",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 4,
+    "words_total": 19
+  },
+  {
+    "level": 158,
+    "played_at": "2026-08-21 11:14:39.721207+00",
+    "session_id": 2195,
+    "session_score": "30",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 3,
+    "words_total": 19
+  },
+  {
+    "level": 157,
+    "played_at": "2026-08-21 11:14:23.657304+00",
+    "session_id": 2194,
+    "session_score": "30",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 3,
+    "words_total": 19
+  },
+  {
+    "level": 156,
+    "played_at": "2026-08-21 11:14:11.034413+00",
+    "session_id": 2193,
+    "session_score": "30",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 3,
+    "words_total": 19
+  },
+  {
+    "level": 155,
+    "played_at": "2026-08-21 11:13:57.431864+00",
+    "session_id": 2192,
+    "session_score": "30",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 3,
+    "words_total": 19
+  },
+  {
+    "level": 154,
+    "played_at": "2026-08-21 11:13:30.476934+00",
+    "session_id": 2191,
+    "session_score": "50",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 5,
+    "words_total": 19
+  },
+  {
+    "level": 153,
+    "played_at": "2026-08-21 11:13:03.638375+00",
+    "session_id": 2190,
+    "session_score": "140",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 14,
+    "words_total": 19
+  },
+  {
+    "level": 152,
+    "played_at": "2026-08-21 11:11:49.163781+00",
+    "session_id": 2189,
+    "session_score": "30",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 3,
+    "words_total": 19
+  },
+  {
+    "level": 151,
+    "played_at": "2026-08-21 11:11:27.46989+00",
+    "session_id": 2188,
+    "session_score": "40",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 4,
+    "words_total": 19
+  },
+  {
+    "level": 150,
+    "played_at": "2026-08-21 11:11:17.439951+00",
+    "session_id": 2187,
+    "session_score": "30",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 3,
+    "words_total": 19
+  },
+  {
+    "level": 149,
+    "played_at": "2026-08-21 11:10:47.501984+00",
+    "session_id": 2186,
+    "session_score": "30",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 3,
+    "words_total": 19
+  },
+  {
+    "level": 148,
+    "played_at": "2026-08-21 11:10:34.161606+00",
+    "session_id": 2185,
+    "session_score": "40",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 4,
+    "words_total": 19
+  },
+  {
+    "level": 147,
+    "played_at": "2026-08-21 11:10:09.074763+00",
+    "session_id": 2184,
+    "session_score": "10",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 1,
+    "words_total": 19
+  },
+  {
+    "level": 146,
+    "played_at": "2026-08-21 11:09:57.699479+00",
+    "session_id": 2183,
+    "session_score": "20",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 2,
+    "words_total": 19
+  },
+  {
+    "level": 145,
+    "played_at": "2026-08-21 11:09:47.801261+00",
+    "session_id": 2182,
+    "session_score": "30",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 3,
+    "words_total": 19
+  },
+  {
+    "level": 144,
+    "played_at": "2026-08-21 11:09:38.55771+00",
+    "session_id": 2181,
+    "session_score": "40",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 4,
+    "words_total": 19
+  },
+  {
+    "level": 143,
+    "played_at": "2026-08-21 11:09:27.243225+00",
+    "session_id": 2180,
+    "session_score": "50",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 5,
+    "words_total": 19
+  },
+  {
+    "level": 142,
+    "played_at": "2026-08-21 11:08:53.384141+00",
+    "session_id": 2179,
+    "session_score": "20",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 2,
+    "words_total": 19
+  },
+  {
+    "level": 141,
+    "played_at": "2026-08-21 11:08:42.771417+00",
+    "session_id": 2178,
+    "session_score": "20",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 2,
+    "words_total": 19
+  },
+  {
+    "level": 140,
+    "played_at": "2026-08-21 11:08:20.140751+00",
+    "session_id": 2177,
+    "session_score": "30",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 3,
+    "words_total": 19
+  },
+  {
+    "level": 139,
+    "played_at": "2026-08-21 11:08:06.818368+00",
+    "session_id": 2176,
+    "session_score": "40",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 4,
+    "words_total": 19
+  },
+  {
+    "level": 138,
+    "played_at": "2026-08-21 11:07:44.103364+00",
+    "session_id": 2175,
+    "session_score": "60",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 6,
+    "words_total": 19
+  },
+  {
+    "level": 137,
+    "played_at": "2026-08-21 11:07:32.167145+00",
+    "session_id": 2174,
+    "session_score": "40",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 4,
+    "words_total": 19
+  },
+  {
+    "level": 136,
+    "played_at": "2026-08-21 11:07:17.646141+00",
+    "session_id": 2173,
+    "session_score": "50",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 5,
+    "words_total": 19
+  },
+  {
+    "level": 135,
+    "played_at": "2026-08-21 11:07:06.247297+00",
+    "session_id": 2172,
+    "session_score": "30",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 3,
+    "words_total": 19
+  },
+  {
+    "level": 134,
+    "played_at": "2026-08-21 11:06:02.073004+00",
+    "session_id": 2168,
+    "session_score": "50",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 5,
+    "words_total": 19
+  },
+  {
+    "level": 133,
+    "played_at": "2026-08-21 11:05:48.386251+00",
+    "session_id": 2167,
+    "session_score": "50",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 5,
+    "words_total": 19
+  },
+  {
+    "level": 132,
+    "played_at": "2026-08-21 11:05:36.333084+00",
+    "session_id": 2166,
+    "session_score": "50",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 5,
+    "words_total": 19
+  },
+  {
+    "level": 131,
+    "played_at": "2026-08-21 11:05:24.098058+00",
+    "session_id": 2165,
+    "session_score": "30",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 3,
+    "words_total": 19
+  },
+  {
+    "level": 130,
+    "played_at": "2026-08-21 11:05:12.321472+00",
+    "session_id": 2164,
+    "session_score": "30",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 3,
+    "words_total": 19
+  },
+  {
+    "level": 129,
+    "played_at": "2026-08-21 11:04:59.854156+00",
+    "session_id": 2163,
+    "session_score": "40",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 4,
+    "words_total": 19
+  },
+  {
+    "level": 128,
+    "played_at": "2026-08-21 11:04:40.044201+00",
+    "session_id": 2162,
+    "session_score": "70",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 7,
+    "words_total": 19
+  },
+  {
+    "level": 127,
+    "played_at": "2026-08-21 11:04:28.608277+00",
+    "session_id": 2161,
+    "session_score": "30",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 3,
+    "words_total": 19
+  },
+  {
+    "level": 126,
+    "played_at": "2026-08-21 11:04:07.16445+00",
+    "session_id": 2160,
+    "session_score": "40",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 4,
+    "words_total": 19
+  },
+  {
+    "level": 125,
+    "played_at": "2026-08-21 11:03:44.173693+00",
+    "session_id": 2159,
+    "session_score": "30",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 3,
+    "words_total": 19
+  },
+  {
+    "level": 124,
+    "played_at": "2026-08-21 11:03:32.371092+00",
+    "session_id": 2158,
+    "session_score": "60",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 6,
+    "words_total": 19
+  },
+  {
+    "level": 123,
+    "played_at": "2026-08-21 11:03:11.55878+00",
+    "session_id": 2157,
+    "session_score": "50",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 5,
+    "words_total": 19
+  },
+  {
+    "level": 122,
+    "played_at": "2026-08-21 11:03:00.69992+00",
+    "session_id": 2156,
+    "session_score": "40",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 4,
+    "words_total": 19
+  },
+  {
+    "level": 121,
+    "played_at": "2026-08-21 11:02:49.091137+00",
+    "session_id": 2155,
+    "session_score": "40",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 4,
+    "words_total": 19
+  },
+  {
+    "level": 120,
+    "played_at": "2026-08-21 11:02:34.926189+00",
+    "session_id": 2154,
+    "session_score": "80",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 8,
+    "words_total": 19
+  },
+  {
+    "level": 119,
+    "played_at": "2026-08-21 11:02:23.739179+00",
+    "session_id": 2153,
+    "session_score": "20",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 2,
+    "words_total": 19
+  },
+  {
+    "level": 118,
+    "played_at": "2026-08-21 11:02:12.889731+00",
+    "session_id": 2152,
+    "session_score": "70",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 7,
+    "words_total": 19
+  },
+  {
+    "level": 117,
+    "played_at": "2026-08-21 11:02:00.578509+00",
+    "session_id": 2151,
+    "session_score": "30",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 3,
+    "words_total": 19
+  },
+  {
+    "level": 116,
+    "played_at": "2026-08-21 11:01:28.972128+00",
+    "session_id": 2150,
+    "session_score": "10",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 1,
+    "words_total": 19
+  },
+  {
+    "level": 115,
+    "played_at": "2026-08-21 11:01:15.007379+00",
+    "session_id": 2149,
+    "session_score": "60",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 6,
+    "words_total": 19
+  },
+  {
+    "level": 114,
+    "played_at": "2026-08-21 11:00:54.378668+00",
+    "session_id": 2148,
+    "session_score": "30",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 3,
+    "words_total": 19
+  },
+  {
+    "level": 113,
+    "played_at": "2026-08-21 11:00:39.64747+00",
+    "session_id": 2147,
+    "session_score": "70",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 7,
+    "words_total": 19
+  },
+  {
+    "level": 112,
+    "played_at": "2026-08-21 11:00:27.048509+00",
+    "session_id": 2146,
+    "session_score": "30",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 3,
+    "words_total": 19
+  },
+  {
+    "level": 111,
+    "played_at": "2026-08-21 11:00:12.467711+00",
+    "session_id": 2145,
+    "session_score": "30",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 3,
+    "words_total": 19
+  },
+  {
+    "level": 110,
+    "played_at": "2026-08-21 10:57:41.731997+00",
+    "session_id": 2140,
+    "session_score": "30",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 3,
+    "words_total": 19
+  },
+  {
+    "level": 109,
+    "played_at": "2026-08-21 10:57:30.772778+00",
+    "session_id": 2139,
+    "session_score": "10",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 1,
+    "words_total": 19
+  },
+  {
+    "level": 108,
+    "played_at": "2026-08-21 10:57:16.570361+00",
+    "session_id": 2138,
+    "session_score": "40",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 4,
+    "words_total": 19
+  },
+  {
+    "level": 107,
+    "played_at": "2026-08-21 10:57:03.849801+00",
+    "session_id": 2137,
+    "session_score": "20",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 2,
+    "words_total": 19
+  },
+  {
+    "level": 107,
+    "played_at": "2026-08-21 10:56:53.934839+00",
+    "session_id": 2136,
+    "session_score": "0",
+    "txn_count": 0,
+    "txn_points": 0,
+    "words_correct": 0,
+    "words_total": 1
+  },
+  {
+    "level": 106,
+    "played_at": "2026-08-21 10:56:51.809434+00",
+    "session_id": 2135,
+    "session_score": "40",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 4,
+    "words_total": 19
+  },
+  {
+    "level": 105,
+    "played_at": "2026-08-21 10:56:39.679706+00",
+    "session_id": 2134,
+    "session_score": "40",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 4,
+    "words_total": 19
+  },
+  {
+    "level": 104,
+    "played_at": "2026-08-21 10:56:27.763266+00",
+    "session_id": 2133,
+    "session_score": "50",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 5,
+    "words_total": 19
+  },
+  {
+    "level": 103,
+    "played_at": "2026-08-21 10:56:15.083841+00",
+    "session_id": 2132,
+    "session_score": "20",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 2,
+    "words_total": 19
+  },
+  {
+    "level": 102,
+    "played_at": "2026-08-21 10:56:03.319347+00",
+    "session_id": 2131,
+    "session_score": "20",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 2,
+    "words_total": 19
+  },
+  {
+    "level": 101,
+    "played_at": "2026-08-21 10:55:44.119662+00",
+    "session_id": 2130,
+    "session_score": "20",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 2,
+    "words_total": 19
+  },
+  {
+    "level": 100,
+    "played_at": "2026-08-21 10:55:25.421559+00",
+    "session_id": 2129,
+    "session_score": "40",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 4,
+    "words_total": 19
+  },
+  {
+    "level": 99,
+    "played_at": "2026-08-21 04:17:26.902846+00",
+    "session_id": 1968,
+    "session_score": "10",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 1,
+    "words_total": 19
+  },
+  {
+    "level": 98,
+    "played_at": "2026-08-21 04:17:14.938444+00",
+    "session_id": 1967,
+    "session_score": "20",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 2,
+    "words_total": 19
+  },
+  {
+    "level": 97,
+    "played_at": "2026-08-21 04:17:02.31146+00",
+    "session_id": 1966,
+    "session_score": "40",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 4,
+    "words_total": 19
+  },
+  {
+    "level": 96,
+    "played_at": "2026-08-21 04:16:20.286361+00",
+    "session_id": 1965,
+    "session_score": "90",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 9,
+    "words_total": 19
+  },
+  {
+    "level": 95,
+    "played_at": "2026-08-21 04:16:01.107608+00",
+    "session_id": 1964,
+    "session_score": "120",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 12,
+    "words_total": 19
+  },
+  {
+    "level": 94,
+    "played_at": "2026-08-21 04:15:47.497402+00",
+    "session_id": 1963,
+    "session_score": "10",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 1,
+    "words_total": 19
+  },
+  {
+    "level": 93,
+    "played_at": "2026-08-21 04:15:31.603745+00",
+    "session_id": 1962,
+    "session_score": "70",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 7,
+    "words_total": 19
+  },
+  {
+    "level": 92,
+    "played_at": "2026-08-21 04:15:17.336641+00",
+    "session_id": 1961,
+    "session_score": "110",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 11,
+    "words_total": 19
+  },
+  {
+    "level": 91,
+    "played_at": "2026-08-21 04:15:02.985782+00",
+    "session_id": 1960,
+    "session_score": "30",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 3,
+    "words_total": 19
+  },
+  {
+    "level": 90,
+    "played_at": "2026-08-21 04:14:52.37154+00",
+    "session_id": 1959,
+    "session_score": "40",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 4,
+    "words_total": 19
+  },
+  {
+    "level": 89,
+    "played_at": "2026-08-21 04:14:37.858478+00",
+    "session_id": 1958,
+    "session_score": "30",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 3,
+    "words_total": 19
+  },
+  {
+    "level": 88,
+    "played_at": "2026-08-21 04:13:59.886668+00",
+    "session_id": 1957,
+    "session_score": "50",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 5,
+    "words_total": 19
+  },
+  {
+    "level": 87,
+    "played_at": "2026-08-21 04:13:45.886153+00",
+    "session_id": 1956,
+    "session_score": "30",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 3,
+    "words_total": 19
+  },
+  {
+    "level": 86,
+    "played_at": "2026-08-21 04:13:33.194164+00",
+    "session_id": 1955,
+    "session_score": "30",
+    "txn_count": 1,
+    "txn_points": 22,
+    "words_correct": 3,
+    "words_total": 19
+  },
+  {
+    "level": 85,
+    "played_at": "2026-08-21 04:13:17.642564+00",
+    "session_id": 1954,
+    "session_score": "40",
+    "txn_count": 1,
+    "txn_points": 18,
+    "words_correct": 4,
+    "words_total": 21
+  },
+  {
+    "level": 84,
+    "played_at": "2026-08-21 04:12:58.959834+00",
+    "session_id": 1953,
+    "session_score": "20",
+    "txn_count": 1,
+    "txn_points": 18,
+    "words_correct": 2,
+    "words_total": 21
+  },
+  {
+    "level": 83,
+    "played_at": "2026-08-21 04:12:43.464995+00",
+    "session_id": 1952,
+    "session_score": "30",
+    "txn_count": 1,
+    "txn_points": 18,
+    "words_correct": 3,
+    "words_total": 21
+  },
+  {
+    "level": 82,
+    "played_at": "2026-08-21 04:12:33.016999+00",
+    "session_id": 1951,
+    "session_score": "30",
+    "txn_count": 1,
+    "txn_points": 18,
+    "words_correct": 3,
+    "words_total": 21
+  },
+  {
+    "level": 81,
+    "played_at": "2026-08-21 04:12:17.542945+00",
+    "session_id": 1950,
+    "session_score": "30",
+    "txn_count": 1,
+    "txn_points": 18,
+    "words_correct": 3,
+    "words_total": 21
+  },
+  {
+    "level": 80,
+    "played_at": "2026-08-21 04:12:01.775376+00",
+    "session_id": 1949,
+    "session_score": "20",
+    "txn_count": 1,
+    "txn_points": 18,
+    "words_correct": 2,
+    "words_total": 21
+  },
+  {
+    "level": 79,
+    "played_at": "2026-08-21 04:11:43.238325+00",
+    "session_id": 1948,
+    "session_score": "30",
+    "txn_count": 1,
+    "txn_points": 18,
+    "words_correct": 3,
+    "words_total": 21
+  },
+  {
+    "level": 78,
+    "played_at": "2026-08-21 04:11:24.032161+00",
+    "session_id": 1947,
+    "session_score": "70",
+    "txn_count": 1,
+    "txn_points": 18,
+    "words_correct": 7,
+    "words_total": 21
+  },
+  {
+    "level": 77,
+    "played_at": "2026-08-21 04:11:02.106959+00",
+    "session_id": 1946,
+    "session_score": "40",
+    "txn_count": 1,
+    "txn_points": 18,
+    "words_correct": 4,
+    "words_total": 21
+  },
+  {
+    "level": 76,
+    "played_at": "2026-08-21 04:10:47.939349+00",
+    "session_id": 1945,
+    "session_score": "50",
+    "txn_count": 1,
+    "txn_points": 18,
+    "words_correct": 5,
+    "words_total": 21
+  },
+  {
+    "level": 75,
+    "played_at": "2026-08-21 04:10:32.664916+00",
+    "session_id": 1944,
+    "session_score": "50",
+    "txn_count": 1,
+    "txn_points": 18,
+    "words_correct": 5,
+    "words_total": 21
+  },
+  {
+    "level": 74,
+    "played_at": "2026-08-21 04:10:16.420288+00",
+    "session_id": 1943,
+    "session_score": "60",
+    "txn_count": 1,
+    "txn_points": 18,
+    "words_correct": 6,
+    "words_total": 21
+  },
+  {
+    "level": 73,
+    "played_at": "2026-08-21 04:09:56.116039+00",
+    "session_id": 1942,
+    "session_score": "60",
+    "txn_count": 1,
+    "txn_points": 18,
+    "words_correct": 6,
+    "words_total": 21
+  },
+  {
+    "level": 72,
+    "played_at": "2026-08-21 04:09:33.428052+00",
+    "session_id": 1941,
+    "session_score": "60",
+    "txn_count": 1,
+    "txn_points": 18,
+    "words_correct": 6,
+    "words_total": 21
+  },
+  {
+    "level": 71,
+    "played_at": "2026-08-21 04:09:19.078602+00",
+    "session_id": 1940,
+    "session_score": "50",
+    "txn_count": 1,
+    "txn_points": 18,
+    "words_correct": 5,
+    "words_total": 21
+  },
+  {
+    "level": 70,
+    "played_at": "2026-08-21 04:08:55.350258+00",
+    "session_id": 1939,
+    "session_score": "70",
+    "txn_count": 1,
+    "txn_points": 18,
+    "words_correct": 7,
+    "words_total": 21
+  },
+  {
+    "level": 69,
+    "played_at": "2026-08-21 04:08:42.830635+00",
+    "session_id": 1938,
+    "session_score": "60",
+    "txn_count": 1,
+    "txn_points": 18,
+    "words_correct": 6,
+    "words_total": 21
+  },
+  {
+    "level": 68,
+    "played_at": "2026-08-21 04:08:23.089583+00",
+    "session_id": 1937,
+    "session_score": "30",
+    "txn_count": 1,
+    "txn_points": 18,
+    "words_correct": 3,
+    "words_total": 21
+  },
+  {
+    "level": 67,
+    "played_at": "2026-08-21 04:08:04.708885+00",
+    "session_id": 1936,
+    "session_score": "30",
+    "txn_count": 1,
+    "txn_points": 18,
+    "words_correct": 3,
+    "words_total": 21
+  },
+  {
+    "level": 66,
+    "played_at": "2026-08-21 04:07:30.812115+00",
+    "session_id": 1935,
+    "session_score": "70",
+    "txn_count": 1,
+    "txn_points": 18,
+    "words_correct": 7,
+    "words_total": 21
+  },
+  {
+    "level": 65,
+    "played_at": "2026-08-21 04:07:03.577543+00",
+    "session_id": 1934,
+    "session_score": "60",
+    "txn_count": 1,
+    "txn_points": 15,
+    "words_correct": 6,
+    "words_total": 21
+  },
+  {
+    "level": 64,
+    "played_at": "2026-08-21 04:06:16.157358+00",
+    "session_id": 1933,
+    "session_score": "80",
+    "txn_count": 1,
+    "txn_points": 15,
+    "words_correct": 8,
+    "words_total": 21
+  },
+  {
+    "level": 63,
+    "played_at": "2026-08-21 04:05:28.9972+00",
+    "session_id": 1932,
+    "session_score": "20",
+    "txn_count": 1,
+    "txn_points": 15,
+    "words_correct": 2,
+    "words_total": 21
+  },
+  {
+    "level": 62,
+    "played_at": "2026-08-21 04:05:12.179937+00",
+    "session_id": 1931,
+    "session_score": "20",
+    "txn_count": 1,
+    "txn_points": 15,
+    "words_correct": 2,
+    "words_total": 21
+  },
+  {
+    "level": 61,
+    "played_at": "2026-08-21 04:04:48.557668+00",
+    "session_id": 1930,
+    "session_score": "90",
+    "txn_count": 1,
+    "txn_points": 15,
+    "words_correct": 9,
+    "words_total": 21
+  },
+  {
+    "level": 60,
+    "played_at": "2026-08-21 04:04:30.952098+00",
+    "session_id": 1929,
+    "session_score": "50",
+    "txn_count": 1,
+    "txn_points": 15,
+    "words_correct": 5,
+    "words_total": 21
+  },
+  {
+    "level": 59,
+    "played_at": "2026-08-21 04:04:06.971488+00",
+    "session_id": 1928,
+    "session_score": "80",
+    "txn_count": 1,
+    "txn_points": 15,
+    "words_correct": 8,
+    "words_total": 21
+  },
+  {
+    "level": 58,
+    "played_at": "2026-08-21 04:03:25.218503+00",
+    "session_id": 1926,
+    "session_score": "90",
+    "txn_count": 1,
+    "txn_points": 15,
+    "words_correct": 9,
+    "words_total": 21
+  },
+  {
+    "level": 57,
+    "played_at": "2026-08-21 04:02:48.591973+00",
+    "session_id": 1925,
+    "session_score": "50",
+    "txn_count": 1,
+    "txn_points": 15,
+    "words_correct": 5,
+    "words_total": 21
+  },
+  {
+    "level": 56,
+    "played_at": "2026-08-21 04:02:33.885527+00",
+    "session_id": 1924,
+    "session_score": "40",
+    "txn_count": 1,
+    "txn_points": 15,
+    "words_correct": 4,
+    "words_total": 21
+  },
+  {
+    "level": 55,
+    "played_at": "2026-08-21 04:02:17.59215+00",
+    "session_id": 1923,
+    "session_score": "50",
+    "txn_count": 1,
+    "txn_points": 15,
+    "words_correct": 5,
+    "words_total": 21
+  },
+  {
+    "level": 54,
+    "played_at": "2026-08-21 04:02:01.38905+00",
+    "session_id": 1922,
+    "session_score": "60",
+    "txn_count": 1,
+    "txn_points": 15,
+    "words_correct": 6,
+    "words_total": 21
+  },
+  {
+    "level": 53,
+    "played_at": "2026-08-21 04:01:27.613854+00",
+    "session_id": 1921,
+    "session_score": "40",
+    "txn_count": 1,
+    "txn_points": 15,
+    "words_correct": 4,
+    "words_total": 21
+  },
+  {
+    "level": 52,
+    "played_at": "2026-08-21 03:59:49.597499+00",
+    "session_id": 1919,
+    "session_score": "70",
+    "txn_count": 1,
+    "txn_points": 15,
+    "words_correct": 7,
+    "words_total": 21
+  },
+  {
+    "level": 51,
+    "played_at": "2026-08-21 03:59:37.852758+00",
+    "session_id": 1918,
+    "session_score": "50",
+    "txn_count": 1,
+    "txn_points": 15,
+    "words_correct": 5,
+    "words_total": 21
+  },
+  {
+    "level": 50,
+    "played_at": "2026-08-21 03:59:25.706518+00",
+    "session_id": 1917,
+    "session_score": "40",
+    "txn_count": 1,
+    "txn_points": 15,
+    "words_correct": 4,
+    "words_total": 21
+  },
+  {
+    "level": 49,
+    "played_at": "2026-08-21 03:59:07.051121+00",
+    "session_id": 1916,
+    "session_score": "40",
+    "txn_count": 1,
+    "txn_points": 15,
+    "words_correct": 4,
+    "words_total": 21
+  },
+  {
+    "level": 48,
+    "played_at": "2026-08-21 03:58:39.951128+00",
+    "session_id": 1915,
+    "session_score": "20",
+    "txn_count": 1,
+    "txn_points": 15,
+    "words_correct": 2,
+    "words_total": 21
+  },
+  {
+    "level": 48,
+    "played_at": "2026-08-21 03:58:22.335189+00",
+    "session_id": 1914,
+    "session_score": "0",
+    "txn_count": 0,
+    "txn_points": 0,
+    "words_correct": 0,
+    "words_total": 1
+  },
+  {
+    "level": 47,
+    "played_at": "2026-08-21 03:57:33.213985+00",
+    "session_id": 1913,
+    "session_score": "60",
+    "txn_count": 1,
+    "txn_points": 15,
+    "words_correct": 6,
+    "words_total": 21
+  },
+  {
+    "level": 46,
+    "played_at": "2026-08-21 03:57:11.453783+00",
+    "session_id": 1912,
+    "session_score": "80",
+    "txn_count": 1,
+    "txn_points": 15,
+    "words_correct": 8,
+    "words_total": 21
+  },
+  {
+    "level": 45,
+    "played_at": "2026-08-21 03:56:53.872196+00",
+    "session_id": 1911,
+    "session_score": "70",
+    "txn_count": 1,
+    "txn_points": 15,
+    "words_correct": 7,
+    "words_total": 21
+  },
+  {
+    "level": 44,
+    "played_at": "2026-08-21 03:56:34.967528+00",
+    "session_id": 1910,
+    "session_score": "20",
+    "txn_count": 1,
+    "txn_points": 15,
+    "words_correct": 2,
+    "words_total": 21
+  },
+  {
+    "level": 43,
+    "played_at": "2026-08-21 03:56:20.26047+00",
+    "session_id": 1909,
+    "session_score": "50",
+    "txn_count": 1,
+    "txn_points": 15,
+    "words_correct": 5,
+    "words_total": 21
+  },
+  {
+    "level": 42,
+    "played_at": "2026-08-21 03:56:04.818969+00",
+    "session_id": 1908,
+    "session_score": "60",
+    "txn_count": 1,
+    "txn_points": 15,
+    "words_correct": 6,
+    "words_total": 21
+  },
+  {
+    "level": 41,
+    "played_at": "2026-08-21 03:55:41.688437+00",
+    "session_id": 1907,
+    "session_score": "70",
+    "txn_count": 1,
+    "txn_points": 15,
+    "words_correct": 7,
+    "words_total": 21
+  },
+  {
+    "level": 40,
+    "played_at": "2026-08-21 03:55:21.91002+00",
+    "session_id": 1906,
+    "session_score": "60",
+    "txn_count": 1,
+    "txn_points": 12,
+    "words_correct": 6,
+    "words_total": 20
+  },
+  {
+    "level": 39,
+    "played_at": "2026-08-21 03:55:04.734477+00",
+    "session_id": 1905,
+    "session_score": "40",
+    "txn_count": 1,
+    "txn_points": 12,
+    "words_correct": 4,
+    "words_total": 20
+  },
+  {
+    "level": 38,
+    "played_at": "2026-08-21 03:54:48.951852+00",
+    "session_id": 1904,
+    "session_score": "50",
+    "txn_count": 1,
+    "txn_points": 12,
+    "words_correct": 5,
+    "words_total": 20
+  },
+  {
+    "level": 37,
+    "played_at": "2026-08-21 03:54:32.814961+00",
+    "session_id": 1903,
+    "session_score": "50",
+    "txn_count": 1,
+    "txn_points": 12,
+    "words_correct": 5,
+    "words_total": 20
+  },
+  {
+    "level": 36,
+    "played_at": "2026-08-21 03:54:19.021623+00",
+    "session_id": 1902,
+    "session_score": "60",
+    "txn_count": 1,
+    "txn_points": 12,
+    "words_correct": 6,
+    "words_total": 20
+  },
+  {
+    "level": 35,
+    "played_at": "2026-08-21 03:54:00.437565+00",
+    "session_id": 1901,
+    "session_score": "90",
+    "txn_count": 1,
+    "txn_points": 12,
+    "words_correct": 9,
+    "words_total": 20
+  },
+  {
+    "level": 34,
+    "played_at": "2026-08-21 03:53:46.586295+00",
+    "session_id": 1900,
+    "session_score": "40",
+    "txn_count": 1,
+    "txn_points": 12,
+    "words_correct": 4,
+    "words_total": 20
+  },
+  {
+    "level": 33,
+    "played_at": "2026-08-21 03:53:33.8843+00",
+    "session_id": 1899,
+    "session_score": "60",
+    "txn_count": 1,
+    "txn_points": 12,
+    "words_correct": 6,
+    "words_total": 20
+  },
+  {
+    "level": 32,
+    "played_at": "2026-08-21 03:53:21.116927+00",
+    "session_id": 1898,
+    "session_score": "40",
+    "txn_count": 1,
+    "txn_points": 12,
+    "words_correct": 4,
+    "words_total": 20
+  },
+  {
+    "level": 31,
+    "played_at": "2026-08-21 03:53:07.348822+00",
+    "session_id": 1897,
+    "session_score": "50",
+    "txn_count": 1,
+    "txn_points": 12,
+    "words_correct": 5,
+    "words_total": 20
+  },
+  {
+    "level": 30,
+    "played_at": "2026-08-21 03:52:53.436892+00",
+    "session_id": 1896,
+    "session_score": "30",
+    "txn_count": 1,
+    "txn_points": 12,
+    "words_correct": 3,
+    "words_total": 20
+  },
+  {
+    "level": 29,
+    "played_at": "2026-08-21 03:52:27.85531+00",
+    "session_id": 1895,
+    "session_score": "70",
+    "txn_count": 1,
+    "txn_points": 12,
+    "words_correct": 7,
+    "words_total": 20
+  },
+  {
+    "level": 28,
+    "played_at": "2026-08-21 03:52:11.225361+00",
+    "session_id": 1894,
+    "session_score": "50",
+    "txn_count": 1,
+    "txn_points": 12,
+    "words_correct": 5,
+    "words_total": 20
+  },
+  {
+    "level": 27,
+    "played_at": "2026-08-21 03:51:58.086595+00",
+    "session_id": 1893,
+    "session_score": "40",
+    "txn_count": 1,
+    "txn_points": 12,
+    "words_correct": 4,
+    "words_total": 20
+  },
+  {
+    "level": 26,
+    "played_at": "2026-08-21 03:51:43.045105+00",
+    "session_id": 1892,
+    "session_score": "80",
+    "txn_count": 1,
+    "txn_points": 12,
+    "words_correct": 8,
+    "words_total": 20
+  },
+  {
+    "level": 25,
+    "played_at": "2026-08-21 03:51:20.636422+00",
+    "session_id": 1891,
+    "session_score": "60",
+    "txn_count": 1,
+    "txn_points": 12,
+    "words_correct": 6,
+    "words_total": 20
+  },
+  {
+    "level": 24,
+    "played_at": "2026-08-21 03:51:05.642533+00",
+    "session_id": 1890,
+    "session_score": "20",
+    "txn_count": 1,
+    "txn_points": 12,
+    "words_correct": 2,
+    "words_total": 20
+  },
+  {
+    "level": 23,
+    "played_at": "2026-08-21 03:50:50.065727+00",
+    "session_id": 1889,
+    "session_score": "80",
+    "txn_count": 1,
+    "txn_points": 12,
+    "words_correct": 8,
+    "words_total": 20
+  },
+  {
+    "level": 22,
+    "played_at": "2026-08-21 03:50:36.339783+00",
+    "session_id": 1888,
+    "session_score": "80",
+    "txn_count": 1,
+    "txn_points": 12,
+    "words_correct": 8,
+    "words_total": 20
+  },
+  {
+    "level": 21,
+    "played_at": "2026-08-21 03:49:19.418187+00",
+    "session_id": 1883,
+    "session_score": "60",
+    "txn_count": 1,
+    "txn_points": 12,
+    "words_correct": 6,
+    "words_total": 20
+  },
+  {
+    "level": 20,
+    "played_at": "2026-08-21 03:48:58.371212+00",
+    "session_id": 1882,
+    "session_score": "60",
+    "txn_count": 1,
+    "txn_points": 10,
+    "words_correct": 6,
+    "words_total": 21
+  },
+  {
+    "level": 19,
+    "played_at": "2026-08-21 03:48:44.593266+00",
+    "session_id": 1881,
+    "session_score": "50",
+    "txn_count": 1,
+    "txn_points": 10,
+    "words_correct": 5,
+    "words_total": 21
+  },
+  {
+    "level": 18,
+    "played_at": "2026-08-21 03:48:31.985134+00",
+    "session_id": 1880,
+    "session_score": "80",
+    "txn_count": 1,
+    "txn_points": 10,
+    "words_correct": 8,
+    "words_total": 21
+  },
+  {
+    "level": 17,
+    "played_at": "2026-08-21 03:48:18.500571+00",
+    "session_id": 1878,
+    "session_score": "50",
+    "txn_count": 1,
+    "txn_points": 10,
+    "words_correct": 5,
+    "words_total": 21
+  },
+  {
+    "level": 16,
+    "played_at": "2026-08-21 03:47:51.663063+00",
+    "session_id": 1874,
+    "session_score": "60",
+    "txn_count": 1,
+    "txn_points": 10,
+    "words_correct": 6,
+    "words_total": 21
+  },
+  {
+    "level": 15,
+    "played_at": "2026-08-21 03:47:40.069093+00",
+    "session_id": 1872,
+    "session_score": "80",
+    "txn_count": 1,
+    "txn_points": 10,
+    "words_correct": 8,
+    "words_total": 21
+  },
+  {
+    "level": 14,
+    "played_at": "2026-08-21 03:47:28.523438+00",
+    "session_id": 1870,
+    "session_score": "60",
+    "txn_count": 1,
+    "txn_points": 10,
+    "words_correct": 6,
+    "words_total": 21
+  },
+  {
+    "level": 13,
+    "played_at": "2026-08-21 03:47:03.601492+00",
+    "session_id": 1867,
+    "session_score": "90",
+    "txn_count": 1,
+    "txn_points": 10,
+    "words_correct": 9,
+    "words_total": 21
+  },
+  {
+    "level": 12,
+    "played_at": "2026-08-21 03:46:48.803437+00",
+    "session_id": 1864,
+    "session_score": "80",
+    "txn_count": 1,
+    "txn_points": 10,
+    "words_correct": 8,
+    "words_total": 21
+  },
+  {
+    "level": 11,
+    "played_at": "2026-08-21 03:46:18.77241+00",
+    "session_id": 1862,
+    "session_score": "100",
+    "txn_count": 1,
+    "txn_points": 10,
+    "words_correct": 10,
+    "words_total": 21
+  },
+  {
+    "level": 10,
+    "played_at": "2026-08-21 03:45:59.235132+00",
+    "session_id": 1859,
+    "session_score": "50",
+    "txn_count": 1,
+    "txn_points": 10,
+    "words_correct": 5,
+    "words_total": 21
+  },
+  {
+    "level": 9,
+    "played_at": "2026-08-21 03:45:38.972624+00",
+    "session_id": 1857,
+    "session_score": "60",
+    "txn_count": 1,
+    "txn_points": 10,
+    "words_correct": 6,
+    "words_total": 21
+  },
+  {
+    "level": 8,
+    "played_at": "2026-08-21 03:45:16.806511+00",
+    "session_id": 1854,
+    "session_score": "80",
+    "txn_count": 1,
+    "txn_points": 10,
+    "words_correct": 8,
+    "words_total": 21
+  },
+  {
+    "level": 7,
+    "played_at": "2026-08-21 03:44:58.551916+00",
+    "session_id": 1852,
+    "session_score": "60",
+    "txn_count": 1,
+    "txn_points": 10,
+    "words_correct": 6,
+    "words_total": 21
+  },
+  {
+    "level": 6,
+    "played_at": "2026-08-21 03:44:42.420129+00",
+    "session_id": 1851,
+    "session_score": "70",
+    "txn_count": 1,
+    "txn_points": 10,
+    "words_correct": 7,
+    "words_total": 21
+  },
+  {
+    "level": 5,
+    "played_at": "2026-08-21 03:44:21.807881+00",
+    "session_id": 1850,
+    "session_score": "80",
+    "txn_count": 1,
+    "txn_points": 10,
+    "words_correct": 8,
+    "words_total": 21
+  },
+  {
+    "level": 4,
+    "played_at": "2026-08-21 03:43:57.382317+00",
+    "session_id": 1849,
+    "session_score": "80",
+    "txn_count": 1,
+    "txn_points": 10,
+    "words_correct": 8,
+    "words_total": 22
+  },
+  {
+    "level": 3,
+    "played_at": "2026-08-21 03:19:34.610587+00",
+    "session_id": 1812,
+    "session_score": "140",
+    "txn_count": 1,
+    "txn_points": 10,
+    "words_correct": 14,
+    "words_total": 21
+  },
+  {
+    "level": 2,
+    "played_at": "2026-08-20 11:13:43.659008+00",
+    "session_id": 1473,
+    "session_score": "120",
+    "txn_count": 1,
+    "txn_points": 10,
+    "words_correct": 12,
+    "words_total": 21
+  },
+  {
+    "level": 1,
+    "played_at": "2026-08-20 11:11:28.319076+00",
+    "session_id": 1468,
+    "session_score": "120",
+    "txn_count": 1,
+    "txn_points": 10,
+    "words_correct": 12,
+    "words_total": 21
+  },
+  {
+    "level": 1,
+    "played_at": "2026-08-19 11:12:38.086169+00",
+    "session_id": 552,
+    "session_score": "80",
+    "txn_count": 0,
+    "txn_points": 0,
+    "words_correct": 8,
+    "words_total": 12
+  },
+  {
+    "level": 1,
+    "played_at": "2026-08-19 10:48:35.436735+00",
+    "session_id": 507,
+    "session_score": "80",
+    "txn_count": 0,
+    "txn_points": 0,
+    "words_correct": 8,
+    "words_total": 12
+  },
+  {
+    "level": 1,
+    "played_at": "2026-08-19 04:47:16.052526+00",
+    "session_id": 419,
+    "session_score": "50",
+    "txn_count": 0,
+    "txn_points": 0,
+    "words_correct": 5,
+    "words_total": 12
+  },
+  {
+    "level": 1,
+    "played_at": "2026-08-18 12:57:03.766331+00",
+    "session_id": 380,
+    "session_score": "50",
+    "txn_count": 0,
+    "txn_points": 0,
+    "words_correct": 5,
+    "words_total": 12
+  },
+  {
+    "level": 1,
+    "played_at": "2026-08-18 12:55:53.127873+00",
+    "session_id": 379,
+    "session_score": "30",
+    "txn_count": 0,
+    "txn_points": 0,
+    "words_correct": 3,
+    "words_total": 12
+  },
+  {
+    "level": 1,
+    "played_at": "2026-08-18 12:46:00.527834+00",
+    "session_id": 374,
+    "session_score": "50",
+    "txn_count": 0,
+    "txn_points": 0,
+    "words_correct": 5,
+    "words_total": 12
+  },
+  {
+    "level": 1,
+    "played_at": "2026-08-18 12:40:35.532389+00",
+    "session_id": 371,
+    "session_score": "60",
+    "txn_count": 0,
+    "txn_points": 0,
+    "words_correct": 6,
+    "words_total": 12
+  }
+]
