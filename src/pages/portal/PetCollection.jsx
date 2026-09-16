@@ -6,7 +6,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, PawPrint, Gift, CheckCircle2, PartyPopper, Lock, Clock, Sparkles, AlertCircle, X, Crown, Medal } from 'lucide-react';
+import { ArrowLeft, PawPrint, Gift, CheckCircle2, PartyPopper, Lock, Clock, Sparkles, AlertCircle, X, Crown, Medal, Trophy } from 'lucide-react';
 import { useAcademy } from '../../lib/AcademyDataContext';
 import { getActivePetWithParts, claimPetPart, getPetCheckinStatus, getMyPetProgress, getOwlProgress, getPremiumCollection, setActivePet, getPetCollectionOverview, getPetRanking, getPremiumPetsProgress, unlockPremiumPet } from '../../lib/storageBridge';
 
@@ -476,6 +476,8 @@ export default function PetCollection() {
   const [owl, setOwl] = useState(null);
   const [overview, setOverview] = useState(null);
   const [ranking, setRanking] = useState(null);
+  // Collection/Ranking tab — client-side view switch only, no refetch.
+  const [view, setView] = useState('collection');
   const [loading, setLoading] = useState(true);
   const [claiming, setClaiming] = useState(false);
   const [claimedPart, setClaimedPart] = useState(null);
@@ -609,11 +611,40 @@ export default function PetCollection() {
         <ArrowLeft size={14} /> {t('backToPortal')}
       </Link>
 
+      {/* Collection / Ranking segmented tabs */}
+      <div className="mb-4 inline-flex rounded-full bg-ink/[0.05] p-1" role="tablist" aria-label={t('petCollectionTitle')}>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={view === 'collection'}
+          onClick={() => setView('collection')}
+          className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 ${
+            view === 'collection' ? 'bg-white text-ink shadow-sm' : 'text-ink/50 hover:text-ink/70'
+          }`}
+        >
+          <span aria-hidden>🐾</span> {t('petCollectionTitle')}
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={view === 'ranking'}
+          onClick={() => setView('ranking')}
+          className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 ${
+            view === 'ranking' ? 'bg-white text-ink shadow-sm' : 'text-ink/50 hover:text-ink/70'
+          }`}
+        >
+          <Trophy size={13} aria-hidden /> {t('petRankingTitle')}
+        </button>
+      </div>
+
+      {view === 'ranking' ? (
+        /* Pet Ranking — cross-student leaderboard by pets owned */
+        <PetRanking rows={ranking} myStudentId={me?.id} />
+      ) : (
+      <>
+
       {/* Collection overview — data-driven from get_pet_collection_overview */}
       <CollectionOverview overview={overview} />
-
-      {/* Pet Ranking — cross-student leaderboard by pets owned */}
-      <PetRanking rows={ranking} myStudentId={me?.id} />
 
       {/* Premium Catalogue — 25 data-driven pets from premium_pet_definitions */}
       <PremiumCatalogue />
@@ -949,6 +980,7 @@ export default function PetCollection() {
       <p className="mt-4 text-center text-[11px] font-medium leading-snug text-ink/35">
         {completed ? t('petCompleteDescription', { name: pet.name }) : t('petCheckinHint')}
       </p>
+      </>)}
     </div>
   );
 }
