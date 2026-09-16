@@ -18,6 +18,7 @@ import {
   searchUnified,
 } from '../api/dictionaryBridge';
 import { formatStudentDisplayName } from '../../../lib/gameRecordFormat';
+import { levelToken } from '../../../lib/levels';
 import {
   QUALITY, STATE_META, playAudio, showSpeechFallback,
   Pill, EmptyState, ErrorBanner, SkeletonRows,
@@ -263,7 +264,7 @@ export function LeaderboardTab({ me, t }) {
                   {formatStudentDisplayName(r.real_name, r.english_name)}
                 </p>
                 <p className="text-[11px] text-ink/40">
-                  {r.level ?? '-'} · {r.mastered_words} {t('masteredWordsShort')} · {Number(r.accuracy) || 0}%
+                  {r.level ? levelToken(r.level) : '-'} · {r.mastered_words} {t('masteredWordsShort')} · {Number(r.accuracy) || 0}%
                 </p>
               </div>
               {r.learning_words > 0 && (

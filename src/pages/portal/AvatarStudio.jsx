@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { Sparkles, Lock, Check, ShoppingBag, Save, Loader2, AlertCircle, Shirt, ArrowLeft, Crown, Star } from 'lucide-react';
 import { getMyAvatar, saveMyAvatar, purchaseAvatarCosmetic } from '../../lib/storageBridge';
 import AvatarDisplay from '../../features/avatar/components/AvatarDisplay';
+import { levelToken } from '../../lib/levels';
 
 const CATEGORIES = [
   { key: 'skin', labelKey: 'avatarCatSkin', icon: '🙂', sort: 1 },
@@ -42,7 +43,7 @@ function rarityMeta(key, t) {
 
 function requirementText(c, t) {
   const parts = [];
-  if (c.req_level) parts.push(t('avatarReqLevel', { level: c.req_level }));
+  if (c.req_level) parts.push(t('avatarReqLevel', { level: levelToken(c.req_level) }));
   if (c.req_xp_level) parts.push(t('avatarReqXp', { xp: c.req_xp_level }));
   if (c.req_lessons_completed) parts.push(t('avatarReqLessons', { count: c.req_lessons_completed }));
   if (c.req_homework_validated) parts.push(t('avatarReqHomework', { count: c.req_homework_validated }));
@@ -219,7 +220,7 @@ export default function AvatarStudio() {
               <Star size={13} className="text-amber-500" /> {metrics.points} {t('avatarPoints')}
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-100 bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-700">
-              {t('avatarLevel')} {metrics.level} · Lv{metrics.xp_level}
+              {t('avatarLevel')} {levelToken(metrics.level)} · Lv{metrics.xp_level}
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">
               <Check size={13} /> {ownedCount} {t('avatarOwnedCount')}

@@ -14,7 +14,7 @@
 
 import { useMemo, useState } from 'react';
 import { Search, Download, FileDown, AlertTriangle } from 'lucide-react';
-import { LEVELS } from '../lib/levels';
+import { LEVELS, levelToken } from '../lib/levels';
 import { TONE } from '../utils/tone';
 import Panel from './Panel';
 import { summarizeProgress, levelBreakdown, lessonDistribution } from '../lib/progressAnalytics';
@@ -195,7 +195,7 @@ export default function ProgressAnalytics({ rows: allRows, levelFilter, loading:
               sortedRows.map((r) => (
                 <tr key={r.id}>
                   <td className="py-2 font-medium text-ink">{r.name}</td>
-                  <td className="py-2 text-ink/70">{r.level}</td>
+                  <td className="py-2 text-ink/70">{levelToken(r.level)}</td>
                   <td className="py-2 text-ink/70">{r.currentLessonNumber ?? '—'}</td>
                   <td className="py-2 text-ink/70">{r.lessonCap ?? '—'}</td>
                   <td className="py-2 text-ink/70">{pct(r.progressPct)}</td>
@@ -235,7 +235,7 @@ export default function ProgressAnalytics({ rows: allRows, levelFilter, loading:
             <tbody className="divide-y divide-ink/[0.06]">
               {breakdown.map((g) => (
                 <tr key={g.level}>
-                  <td className="py-2 font-medium text-ink">Level {g.level}</td>
+                  <td className="py-2 font-medium text-ink">Level {levelToken(g.level)}</td>
                   <td className="py-2 text-ink/70">{g.count}</td>
                   <td className="py-2 text-ink/70">{pct(g.avgProgress)}</td>
                   <td className="py-2 text-ink/70">{pct(g.avgHomework)}</td>
@@ -275,7 +275,7 @@ export default function ProgressAnalytics({ rows: allRows, levelFilter, loading:
             <div className="space-y-2">
               {atRiskRows.map((r) => (
                 <div key={r.id} className="flex flex-col gap-0.5 rounded-lg bg-inactive/5 px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
-                  <span className="text-sm font-semibold text-ink">{r.name} <span className="font-normal text-ink/50">· Level {r.level}</span></span>
+                  <span className="text-sm font-semibold text-ink">{r.name} <span className="font-normal text-ink/50">· Level {levelToken(r.level)}</span></span>
                   <span className="text-xs text-inactive">{r.atRiskReasons.join(', ')}</span>
                 </div>
               ))}

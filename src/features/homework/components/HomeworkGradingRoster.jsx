@@ -7,6 +7,7 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { Paperclip, Image as ImageIcon, Award, ShieldCheck, ShieldX, AlertCircle, CheckSquare, Square } from 'lucide-react';
+import { levelToken } from '../../../lib/levels';
 
 const STATUS_OPTIONS = ['Assigned', 'Submitted', 'Graded'];
 const QUALITY_OPTIONS = ['pending_review', 'valid', 'invalid', 'corrected'];
@@ -236,7 +237,7 @@ export default function HomeworkGradingRoster({
                       {isSelected ? <CheckSquare size={14} className="text-brand-600" /> : <Square size={14} className="text-ink/30" />}
                     </button>
                     <p className="truncate font-semibold text-ink">{displayName(s)}</p>
-                    {s.level && <span className="rounded-full bg-ink px-1.5 py-0.5 text-[10px] font-bold text-white">{s.level}</span>}
+                    {s.level && <span className="rounded-full bg-ink px-1.5 py-0.5 text-[10px] font-bold text-white">{levelToken(s.level)}</span>}
                     <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
                       gradingState === 'graded' ? 'bg-brand-50 text-brand-600 ring-1 ring-brand-100' :
                       gradingState === 'needsGrading' ? 'bg-amber-50 text-amber-700 ring-1 ring-amber-100' :

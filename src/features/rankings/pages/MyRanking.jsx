@@ -7,6 +7,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Trophy, Crown, Medal, ArrowUp, ArrowDown, Minus, RefreshCw, AlertCircle } from 'lucide-react';
 import { useAcademy } from '../../../lib/AcademyDataContext';
+import { levelToken } from '../../../lib/levels';
 import {
   getGroupLeaderboard,
   getRecognitionAwards,
@@ -281,7 +282,7 @@ export default function MyRanking() {
                 {/* Level badge + rank label */}
                 <div className="inline-flex items-center gap-2">
                   <span className={`inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-white ${LEVEL_COLORS[me.level] || 'bg-ink'}`}>
-                    {me.level}
+                    {levelToken(me.level)}
                   </span>
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-amber-700">
                     <Trophy size={11} aria-hidden="true" /> {t('portal:yourRankLabel', { defaultValue: 'Your Rank' })}
@@ -318,7 +319,7 @@ export default function MyRanking() {
                 <div className="mt-3 flex items-center gap-1.5 justify-center sm:justify-start">
                   <span className="flex h-2 w-2 rounded-full bg-active" aria-hidden="true" />
                   <span className="text-xs font-medium text-ink/40">
-                    {t('portal:levelLabelShort', { defaultValue: 'Level {{level}}', level: me.level })}
+                    {t('portal:levelLabelShort', { defaultValue: 'Level {{level}}', level: levelToken(me.level) })}
                     {leaderboard && leaderboard.length > 0 ? ` · ${leaderboard.length} players` : ''}
                   </span>
                 </div>
@@ -369,7 +370,7 @@ export default function MyRanking() {
       <section aria-labelledby="leaderboard-heading" className="mb-6">
         <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
           <h2 id="leaderboard-heading" className="font-display text-base font-bold tracking-tight text-ink">
-            {t('portal:leaderboardTitle', { level: me.level })}
+            {t('portal:leaderboardTitle', { level: levelToken(me.level) })}
           </h2>
           <div role="tablist" aria-label={t('portal:rankingPeriodLabel', { defaultValue: 'Ranking period' })} className="flex flex-wrap gap-1.5">
             {PERIODS.map((p) => {
@@ -429,7 +430,7 @@ export default function MyRanking() {
               <p className="mx-auto mt-1 max-w-sm text-xs text-ink/50">{t('portal:rankingEmptyHint', { defaultValue: 'The leaderboard will appear after the first class scores are published.' })}</p>
             </div>
           ) : (
-            <ol className="divide-y divide-ink/[0.04]" aria-label={t('portal:leaderboardTitle', { level: me.level })}>
+            <ol className="divide-y divide-ink/[0.04]" aria-label={t('portal:leaderboardTitle', { level: levelToken(me.level) })}>
               {leaderboard.map((row) => {
                 const isMe = me && row.student_id === me.id;
                 const isTop3 = row.rank <= 3;
@@ -496,7 +497,7 @@ export default function MyRanking() {
           )}
         </div>
         {leaderboard && leaderboard.length > 0 && (
-          <p className="mt-2 px-1 text-xs text-ink/35">{t('portal:rankingLevelNote', { defaultValue: 'Ranking within Level {{level}} only.', level: me.level })}</p>
+          <p className="mt-2 px-1 text-xs text-ink/35">{t('portal:rankingLevelNote', { defaultValue: 'Ranking within Level {{level}} only.', level: levelToken(me.level) })}</p>
         )}
       </section>
 

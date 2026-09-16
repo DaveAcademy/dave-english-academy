@@ -38,7 +38,7 @@ import {
   listClassSessionsInRange,
 } from '../lib/db';
 import { formatStudentDisplayName } from '../lib/gameRecordFormat';
-import { LEVELS } from '../lib/levels';
+import { LEVELS, levelToken } from '../lib/levels';
 import { todayTashkentISO, formatDateOnly, getMonthlyClassSchedule } from '../utils/date';
 
 const REASON_NEW = 'Class Score (manual entry)';
@@ -324,7 +324,7 @@ export default function ManualClassScoreEntry() {
         ok: mismatches.length === 0,
         message:
           mismatches.length === 0
-            ? `Verified: ${changes.length} Class Score${changes.length === 1 ? '' : 's'} saved correctly for ${groupName || `Level ${level}`} on ${formatDateOnly(selectedDate)}.`
+            ? `Verified: ${changes.length} Class Score${changes.length === 1 ? '' : 's'} saved correctly for ${groupName || `Level ${levelToken(level)}`} on ${formatDateOnly(selectedDate)}.`
             : 'Verification found a discrepancy - see details below.',
         mismatches,
       });
@@ -486,7 +486,7 @@ export default function ManualClassScoreEntry() {
                     level === lvl ? 'bg-brand-600 text-white' : 'bg-ink/5 text-ink/60 hover:text-ink'
                   }`}
                 >
-                  Level {lvl}
+                  Level {levelToken(lvl)}
                 </button>
               ))}
             </div>
@@ -557,7 +557,7 @@ export default function ManualClassScoreEntry() {
                 <dt className="font-medium text-ink/50">Date</dt>
                 <dd>{formatDateOnly(selectedDate)}</dd>
                 <dt className="font-medium text-ink/50">Level/Group</dt>
-                <dd>{groupName || `Level ${level}`}</dd>
+                <dd>{groupName || `Level ${levelToken(level)}`}</dd>
                 <dt className="font-medium text-ink/50">Session</dt>
                 <dd>{classSession ? `Existing session #${classSession.id}` : 'New session will be created'}</dd>
                 <dt className="font-medium text-ink/50">Students affected</dt>

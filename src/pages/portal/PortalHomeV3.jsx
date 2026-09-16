@@ -28,6 +28,7 @@ import {
   LESSON_STATUS, teacherPaceFor, lessonCapFor, progressByLessonNumber, lessonStatusFor, nextUnfinishedLesson, translatedLessonTitle,
 } from '../../lib/lessonLogic';
 import { useAcademy } from '../../lib/AcademyDataContext';
+import { levelToken } from '../../lib/levels';
 import { getStudentPaymentStatus } from '../../lib/storageBridge';
 import Panel from '../../components/Panel';
 import StatCard from '../../components/StatCard';
@@ -351,7 +352,7 @@ export default function PortalHomeV3() {
                 {formatWeekdayName(now, dateLocale)} · {formatFullDateNumeric(now, dateLocale)} · {formatClockTime(now, dateLocale)}
               </p>
               <p className="mt-1 text-xs text-ink/40">
-                {t('v3ClassMeta', { level: me.level, group: me.group_name || t('v3NoGroup'), points: totalPoints })}
+                {t('v3ClassMeta', { level: levelToken(me.level), group: me.group_name || t('v3NoGroup'), points: totalPoints })}
               </p>
             </div>
             <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border border-ink/[0.06] bg-paper text-sm font-bold tracking-wide text-ink sm:h-12 sm:w-12 sm:text-base" aria-hidden="true">
@@ -362,7 +363,7 @@ export default function PortalHomeV3() {
           {/* compact stats strip — level / points / tier / streak / milestone */}
           <div className="mt-4 flex flex-wrap gap-2 border-t border-ink/[0.06] pt-4">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-100 bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700">
-              <GraduationCap size={13} aria-hidden="true" />{t('v3LevelLabel', { level: me.level })}
+              <GraduationCap size={13} aria-hidden="true" />{t('v3LevelLabel', { level: levelToken(me.level) })}
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-ink/[0.06] bg-white px-2.5 py-1 text-xs font-semibold text-ink shadow-sm">
               <Trophy size={13} className="text-brand-500" aria-hidden="true" />{totalPoints} {t('v3PointsLabel', { defaultValue: 'Points' })}

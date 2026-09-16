@@ -6,7 +6,7 @@ import { Plus, Pencil, Trash2, MessageSquare, MessageSquareOff, Download, Clock 
 import { useAcademy } from '../../../lib/AcademyDataContext';
 import { LevelBadge } from '../../../components/Badge';
 import { getAttachmentUrl } from '../../../lib/db';
-import { LEVELS } from '../../../lib/levels';
+import { LEVELS, levelToken } from '../../../lib/levels';
 
 const EMPTY_FORM = { topic: '', group_name: '', level: 'A', discussion_enabled: false };
 
@@ -234,7 +234,7 @@ export default function Lessons() {
           />
           <select value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value })} className="input">
             {LEVELS.map((lvl) => (
-              <option key={lvl} value={lvl}>Level {lvl}</option>
+              <option key={lvl} value={lvl}>Level {levelToken(lvl)}</option>
             ))}
           </select>
           <label className="flex items-center gap-2 text-sm text-ink/70 sm:col-span-2">

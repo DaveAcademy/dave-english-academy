@@ -6,7 +6,7 @@ import { Search, ShieldAlert, X, History, MessageSquare, Download } from 'lucide
 import { useAcademy } from '../../../lib/AcademyDataContext';
 import { useAuth } from '../../../lib/AuthContext';
 import { LevelBadge } from '../../../components/Badge';
-import { LEVELS } from '../../../lib/levels';
+import { LEVELS, levelToken } from '../../../lib/levels';
 import { formatUZS } from '../../../utils/format';
 import { formatDateOnly, todayISO } from '../../../utils/date';
 import { DUE_SOON_DAYS, TIMELINE_INITIAL_LIMIT } from '../config';
@@ -713,7 +713,7 @@ export default function Payments() {
         <div className="mb-2 flex items-center justify-between gap-2">
           <h2 className="text-[11px] font-bold uppercase tracking-widest text-ink/40">{t('payments:overviewTitle')}</h2>
           <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-ink/50 shadow-sm border border-ink/5">
-            {level ? t('payments:overviewScopeLevel', { level }) : t('payments:overviewScopeAll')} · {overview.total}
+            {level ? t('payments:overviewScopeLevel', { level: levelToken(level) }) : t('payments:overviewScopeAll')} · {overview.total}
           </span>
         </div>
 
@@ -792,12 +792,12 @@ export default function Payments() {
                   key={g.level}
                   type="button"
                   onClick={() => setLevel((prev) => (prev === g.level ? '' : g.level))}
-                  aria-label={t('payments:overviewClickToFilter', { label: `Level ${g.level}` })}
+                  aria-label={t('payments:overviewClickToFilter', { label: `Level ${levelToken(g.level)}` })}
                   className={`rounded-xl border p-3 text-left shadow-card transition-colors hover:bg-ink/[0.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 ${isActive ? 'border-brand-200 bg-brand-50/40 ring-1 ring-brand-500/15' : 'border-ink/[0.06] bg-white'}`}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-bold leading-none ${g.level === 'A' ? 'bg-levelA/10 text-levelA border-levelA/20' : g.level === 'A1' ? 'bg-levelA1/10 text-levelA1 border-levelA1/20' : g.level === 'B' ? 'bg-levelB/10 text-levelB border-levelB/20' : 'bg-levelC/10 text-levelC border-levelC/20'}`}>
-                      Level {g.level}
+                      Level {levelToken(g.level)}
                     </span>
                     <span className={`text-[11px] font-semibold ${pct === 100 ? 'text-active' : pct >= 50 ? 'text-ink/60' : 'text-inactive'}`}>{pct}%</span>
                   </div>
@@ -849,7 +849,7 @@ export default function Payments() {
         <select value={level} onChange={(e) => setLevel(e.target.value)} className="input sm:w-32" aria-label={t('payments:allLevels')}>
           <option value="">{t('payments:allLevels')}</option>
           {LEVELS.map((lvl) => (
-            <option key={lvl} value={lvl}>{t('payments:levelOption', { level: lvl })}</option>
+            <option key={lvl} value={lvl}>{t('payments:levelOption', { level: levelToken(lvl) })}</option>
           ))}
         </select>
         <select value={sortKey} onChange={(e) => setSortKey(e.target.value)} className="input sm:w-48" aria-label={t('payments:sortLabel', { label: '' })}>
@@ -1235,7 +1235,7 @@ export default function Payments() {
                       const next = st?.paid_through_date ? nextBillingDateJS(st.paid_through_date, s.payment_deadline) : null;
                       return (
                         <li key={s.id} className="flex justify-between gap-2">
-                          <span>{s.real_name} · Level {s.level} · {formatUZS(s.monthly_fee)}</span>
+                          <span>{s.real_name} · Level {levelToken(s.level)} · {formatUZS(s.monthly_fee)}</span>
                           <span className="text-ink/60">{st?.paid_through_date ? `${formatDueDate(st.paid_through_date)} → ${next ? formatDueDate(next) : ''}` : ''}</span>
                         </li>
                       );

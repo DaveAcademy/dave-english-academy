@@ -54,7 +54,7 @@ import { TONE } from '../../../utils/tone';
 import { formatUZS } from '../../../utils/format';
 import { attendanceRate, filterByYearMonth } from '../../../utils/attendance';
 import { currentAndPreviousMonth, trendFrom } from '../../../utils/date';
-import { LEVELS } from '../../../lib/levels';
+import { LEVELS, levelToken } from '../../../lib/levels';
 import { buildStudentProgressRows, summarizeProgress } from '../../../lib/progressAnalytics';
 import { buildWebsiteEngagementRows, summarizeWebsiteEngagement } from '../../../lib/websiteEngagement';
 
@@ -575,7 +575,7 @@ function AdminDashboard() {
               hint={levelFilter ? undefined : (() => {
                 const entries = Object.entries(stats.levelCounts);
                 if (entries.length === 0) return t('levelBreakdownHint', { a: 0, b: 0, c: 0 });
-                return entries.map(([level, count]) => `${level}: ${count}`).join(' · ');
+                return entries.map(([level, count]) => `${levelToken(level)}: ${count}`).join(' · ');
               })()}
               tone="success"
               icon={Users}
@@ -786,7 +786,7 @@ function AdminDashboard() {
                     <>
                       {stats.financeByGroup.map((g) => (
                         <tr key={g.level}>
-                          <td className="py-2 font-medium text-ink">{t('levelLabel', { level: g.level })}</td>
+                          <td className="py-2 font-medium text-ink">{t('levelLabel', { level: levelToken(g.level) })}</td>
                           <td className="py-2 text-ink/70">{g.paid}</td>
                           <td className="py-2 text-ink/70">{g.total}</td>
                           <td className="py-2 text-ink/70">{formatUZS(g.collected)}</td>
@@ -890,7 +890,7 @@ function AdminDashboard() {
                 ) : (
                   stats.classHealth.map((g) => (
                     <tr key={g.level}>
-                      <td className="py-2 font-medium text-ink">{t('levelLabel', { level: g.level })}</td>
+                      <td className="py-2 font-medium text-ink">{t('levelLabel', { level: levelToken(g.level) })}</td>
                       <td className="py-2 text-ink/70">{g.students}</td>
                       <td className="py-2 text-ink/70">{g.attendanceRate == null ? '—' : `${g.attendanceRate}%`}</td>
                       <td className="py-2 text-ink/70">{g.homeworkRate == null ? '—' : `${g.homeworkRate}%`}</td>

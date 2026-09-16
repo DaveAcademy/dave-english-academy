@@ -42,7 +42,7 @@ import {
   getMonthlyClassLeaderboard,
   listClassScores,
 } from '../../../lib/db';
-import { LEVELS } from '../../../lib/levels';
+import { LEVELS, levelToken } from '../../../lib/levels';
 import { addDaysISO, addMonthsISO, todayISO, todayTashkentISO, formatMonthDay } from '../../../utils/date';
 
 const PERIODS = ['class', 'week', 'month', 'all_time'];
@@ -624,7 +624,7 @@ export default function Rankings() {
                     boardLevel === lvl ? 'bg-brand-600 text-white' : 'bg-ink/5 text-ink/60 hover:text-ink'
                   }`}
                 >
-                  {lvl}
+                  {levelToken(lvl)}
                 </button>
               ))}
             </div>
@@ -694,7 +694,7 @@ export default function Rankings() {
           board === null ? (
             <p className="py-6 text-center text-sm text-ink/50">Loading...</p>
           ) : board.length === 0 ? (
-            <p className="py-6 text-center text-sm text-ink/50">No active students in Level {boardLevel}.</p>
+            <p className="py-6 text-center text-sm text-ink/50">No active students in Level {levelToken(boardLevel)}.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[520px] text-left text-sm">
@@ -837,7 +837,7 @@ export default function Rankings() {
                     sessionLevel === lvl ? 'bg-brand-600 text-white' : 'bg-ink/5 text-ink/60 hover:text-ink'
                   }`}
                 >
-                  Level {lvl}
+                  Level {levelToken(lvl)}
                 </button>
               ))}
             </div>
@@ -858,7 +858,7 @@ export default function Rankings() {
           {classScoreStudents.length > 0 && (
             <>
               <p className="mb-2 text-xs font-medium text-active">
-                Level {sessionLevel}
+                Level {levelToken(sessionLevel)}
                 {openSessionGroupName ? ` (${openSessionGroupName})` : ''} - {sessionDate}.
                 {classScoreDoneStudents.length > 0 &&
                   ` ${classScoreDoneStudents.length} of ${classScoreStudents.length} already recorded.`}

@@ -16,6 +16,7 @@ import {
   BookMarked, PenLine, MessagesSquare, Timer, Puzzle, Brain,
 } from 'lucide-react';
 import { useAcademy } from '../../lib/AcademyDataContext';
+import { levelToken } from '../../lib/levels';
 import { supabase } from '../../lib/supabaseClient';
 import {
   LESSON_STATUS, teacherPaceFor, lessonCapFor, progressByLessonNumber, lessonStatusFor,
@@ -380,7 +381,7 @@ export default function MyProgress() {
                 {me.real_name}
               </h1>
               <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs font-medium text-ink/60">
-                <span className="inline-flex items-center gap-1 rounded-full border border-ink/[0.08] bg-paper px-2 py-0.5 text-[11px] font-bold text-ink"><GraduationCap size={11} aria-hidden="true" /> {t('portal:mpLevelLabel', { level: academyLevel })}</span>
+                <span className="inline-flex items-center gap-1 rounded-full border border-ink/[0.08] bg-paper px-2 py-0.5 text-[11px] font-bold text-ink"><GraduationCap size={11} aria-hidden="true" /> {t('portal:mpLevelLabel', { level: levelToken(academyLevel) })}</span>
                 <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-bold ${tierInfo.color}`}><Layers size={11} aria-hidden="true" /> {t(`portal:${tierInfo.key}`)}</span>
                 <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-amber-700"><Trophy size={11} aria-hidden="true" /> {totalPoints} {t('portal:mpPointsSuffix')}</span>
               </p>

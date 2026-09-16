@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { CheckCircle2, Clock, XCircle } from 'lucide-react';
 import { useAcademy } from '../../../lib/AcademyDataContext';
 import { todayTashkentISO } from '../../../shared/utils/date';
-import { LEVELS } from '../../../lib/levels';
+import { LEVELS, levelToken } from '../../../lib/levels';
 
 // labelKey is a translation key (looked up at render time inside the
 // component, not here at module scope - see Nav.jsx for the same pattern).
@@ -92,7 +92,7 @@ export default function Attendance() {
       {activeStudents.length === 0 ? (
         <div className="rounded-xl bg-white p-10 text-center shadow-card">
           <p className="font-display text-lg font-semibold text-ink">
-            {level ? t('noActiveStudentsInLevel', { level }) : t('noActiveStudents')}
+            {level ? t('noActiveStudentsInLevel', { level: levelToken(level) }) : t('noActiveStudents')}
           </p>
           <p className="mt-1 text-sm text-ink/50">
             {level ? t('tryDifferentLevel') : t('addActiveStudentsHint')}

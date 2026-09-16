@@ -10,3 +10,11 @@ export function levelDisplayName(level, labels, t) {
   if (typeof t === 'function') return t(`common:level${level}`, { defaultValue: `Level ${level}` });
   return `Level ${level}`;
 }
+
+// Short display token for a level key inside generic templates and literals
+// (e.g. "Level {{level}}"). A1 is display-renamed to D; the underlying key
+// stays A1 in the DB, APIs, filters, and logic.
+const LEVEL_TOKENS = { A1: 'D' };
+export function levelToken(level) {
+  return LEVEL_TOKENS[level] ?? level;
+}

@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { Download, FileBarChart, ShieldAlert } from 'lucide-react';
 import { useAcademy } from '../../../lib/AcademyDataContext';
 import { useAuth } from '../../../lib/AuthContext';
-import { LEVELS } from '../../../lib/levels';
+import { LEVELS, levelToken } from '../../../lib/levels';
 import { formatUZS } from '../../../utils/format';
 import { downloadReportPdf } from '../../../utils/pdf';
 import { getPaymentCollectionSummary, getStudentPaymentStatus, listAllStudentLessonProgress } from '../../../lib/storageBridge';
@@ -268,7 +268,7 @@ export default function Reports() {
         <select value={level} onChange={(e) => setLevel(e.target.value)} className="input w-auto">
           <option value="">All levels</option>
           {LEVELS.map((lvl) => (
-            <option key={lvl} value={lvl}>Level {lvl}</option>
+            <option key={lvl} value={lvl}>Level {levelToken(lvl)}</option>
           ))}
         </select>
         {reportType === 'monthly' ? (

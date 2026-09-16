@@ -13,6 +13,7 @@ import {
   Clock, CheckCircle2, AlertCircle, Award, FileText, Sparkles,
 } from 'lucide-react';
 import { useAcademy } from '../../../lib/AcademyDataContext';
+import { levelToken } from '../../../lib/levels';
 import { getAttachmentUrl } from '../../../lib/db';
 import LessonSectionTabs from '../../../components/lesson/LessonSectionTabs';
 import StatusPill from '../../../components/StatusPill';
@@ -259,7 +260,7 @@ export default function MyHomework() {
                           ) : h.lesson_id ? (
                             <span className="text-ink/30">{t('noLinkedLesson')}</span>
                           ) : null}
-                          {h.level && <span className="rounded-full bg-ink px-1.5 py-0.5 text-[10px] font-bold text-white">{h.level}</span>}
+                          {h.level && <span className="rounded-full bg-ink px-1.5 py-0.5 text-[10px] font-bold text-white">{levelToken(h.level)}</span>}
                         </div>
 
                         {/* lesson PDF meta */}

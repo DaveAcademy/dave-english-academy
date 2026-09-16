@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, PawPrint, Gift, CheckCircle2, PartyPopper, Lock, Clock, Sparkles, AlertCircle, X, Crown, Medal, Trophy } from 'lucide-react';
 import { useAcademy } from '../../lib/AcademyDataContext';
+import { levelToken } from '../../lib/levels';
 import { getActivePetWithParts, claimPetPart, getPetCheckinStatus, getMyPetProgress, getOwlProgress, getPremiumCollection, setActivePet, getPetCollectionOverview, getPetRanking, getPremiumPetsProgress, unlockPremiumPet } from '../../lib/storageBridge';
 
 function RarityChip({ label, color }) {
@@ -285,7 +286,7 @@ function PremiumCatalogue() {
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {g.pets.map((p) => {
               const isBusy = busyKey === p.key;
-              const reasons = p.points_needed > 0 ? t('premiumPointsGate', { count: p.points_needed }) : t('premiumRequirements', { level: p.min_academic_level, xp: p.min_xp, lessons: p.min_lessons, hw: p.min_valid_homework });
+              const reasons = p.points_needed > 0 ? t('premiumPointsGate', { count: p.points_needed }) : t('premiumRequirements', { level: levelToken(p.min_academic_level), xp: p.min_xp, lessons: p.min_lessons, hw: p.min_valid_homework });
               const foil = p.owned ? p.rarity_color : undefined;
               const glow = rarityGlow(p.rarity_color, p.owned ? 0.12 : 0.07);
               return (

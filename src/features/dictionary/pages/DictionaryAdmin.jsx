@@ -15,6 +15,7 @@ import {
   getStudentDetail,
 } from '../api/dictionaryBridge';
 import { STATE_META } from '../components/shared';
+import { levelToken } from '../../../lib/levels';
 
 const LEVELS = ['A', 'A1', 'B', 'C'];
 
@@ -137,7 +138,7 @@ export default function DictionaryAdmin() {
               onClick={() => setLevelFilter(l)}
               className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${levelFilter === l ? 'bg-brand-600 text-white' : 'bg-ink/[0.04] text-ink/60 hover:text-ink'}`}
             >
-              Level {l}
+              Level {levelToken(l)}
             </button>
           ))}
           <label className="ml-auto flex cursor-pointer select-none items-center gap-2 text-xs font-medium text-ink/60">
@@ -186,7 +187,7 @@ export default function DictionaryAdmin() {
                         {formatStudentDisplayName(r.real_name, r.english_name)}
                         {flag && <span className="ml-1.5 inline-block h-1.5 w-1.5 rounded-full bg-red-500 align-middle" title="Needs attention" />}
                       </td>
-                      <td className="py-2.5 pr-3 text-ink/60">{r.level ?? '—'}</td>
+                      <td className="py-2.5 pr-3 text-ink/60">{r.level ? levelToken(r.level) : '—'}</td>
                       <td className="py-2.5 pr-3 text-right font-semibold text-emerald-700">{r.mastered_count}</td>
                       <td className="py-2.5 pr-3 text-right text-brand-700">{r.reviewing_count}</td>
                       <td className="py-2.5 pr-3 text-right text-amber-700">{r.learning_count}</td>

@@ -6,7 +6,7 @@ import { Award, Plus, Download, Printer, Search, Pencil, Trash2, RotateCcw, X, C
 import { useAcademy } from '../../../lib/AcademyDataContext';
 import { useAuth } from '../../../lib/AuthContext';
 import { LevelBadge } from '../../../components/Badge';
-import { LEVELS } from '../../../lib/levels';
+import { LEVELS, levelToken } from '../../../lib/levels';
 import ConfirmDialog from '../../../components/ConfirmDialog';
 import { downloadCertificatePdf, printCertificatePdf, pickCertificateTemplate, VECTOR_TEMPLATE_KEYS } from '../../../utils/pdf';
 import { getAttachmentUrl } from '../../../lib/db';
@@ -252,7 +252,7 @@ export default function Certificates() {
         <select value={filters.level} onChange={(e) => setFilters({ ...filters, level: e.target.value })} className="input sm:w-36">
           <option value="">All levels</option>
           {LEVELS.map((lvl) => (
-            <option key={lvl} value={lvl}>Level {lvl}</option>
+            <option key={lvl} value={lvl}>Level {levelToken(lvl)}</option>
           ))}
         </select>
         <select value={filters.studentId} onChange={(e) => setFilters({ ...filters, studentId: e.target.value })} className="input sm:w-44">

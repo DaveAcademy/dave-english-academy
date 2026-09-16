@@ -4,7 +4,7 @@ import { useAcademy } from '../../../lib/AcademyDataContext';
 import { useAuth } from '../../../lib/AuthContext';
 import { LevelBadge } from '../../../components/Badge';
 import { getGroupLeaderboard, getPeriodBounds, listRecognitionAwards } from '../../../lib/db';
-import { LEVELS } from '../../../lib/levels';
+import { LEVELS, levelToken } from '../../../lib/levels';
 import { addDaysISO, addMonthsISO } from '../../../utils/date';
 
 const AWARD_TYPES = [
@@ -141,8 +141,8 @@ export default function Recognition() {
       });
       setMessage(
         pendingConfirm.isEdit
-          ? `${awardType.title} changed to ${pendingConfirm.candidate.real_name} (Level ${pendingConfirm.level}).`
-          : `${awardType.title} confirmed for ${pendingConfirm.candidate.real_name} (Level ${pendingConfirm.level}).`
+          ? `${awardType.title} changed to ${pendingConfirm.candidate.real_name} (Level ${levelToken(pendingConfirm.level)}).`
+          : `${awardType.title} confirmed for ${pendingConfirm.candidate.real_name} (Level ${levelToken(pendingConfirm.level)}).`
       );
       setPendingConfirm(null);
       setConfirmReason('');
@@ -326,7 +326,7 @@ export default function Recognition() {
               </div>
               <div className="flex justify-between">
                 <dt className="text-ink/50">Level</dt>
-                <dd className="font-medium text-ink">Level {pendingConfirm.level}</dd>
+                <dd className="font-medium text-ink">Level {levelToken(pendingConfirm.level)}</dd>
               </div>
               {pendingConfirm.isEdit && (
                 <div className="flex justify-between">
@@ -410,7 +410,7 @@ export default function Recognition() {
             </div>
             <p className="mt-2 text-sm text-ink/60">
               This revokes the {awardTitle(pendingRevoke.award_type)} award for{' '}
-              <strong>{studentsById[pendingRevoke.student_id]?.real_name || 'this student'}</strong> (Level {pendingRevoke.level},{' '}
+              <strong>{studentsById[pendingRevoke.student_id]?.real_name || 'this student'}</strong> (Level {levelToken(pendingRevoke.level)},{' '}
               {formatPeriodLabel(pendingRevoke.period_start, pendingRevoke.period_end)}) and removes the certificate it issued. The
               record is kept, marked &quot;Revoked&quot; - this can&apos;t be silently undone.
             </p>

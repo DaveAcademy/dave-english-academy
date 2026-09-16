@@ -16,6 +16,7 @@ import {
   getAdminProfiles,
 } from '../lib/storageBridge';
 import { formatDateOnly } from '../utils/date';
+import { levelToken } from '../lib/levels';
 
 // Mirrors buildMessage() in supabase/functions/send-payment-reminder -
 // kept in sync by hand so the preview shown to the admin is what actually
@@ -243,7 +244,7 @@ function MissingTelegramSection() {
           {missing.map((s) => (
             <div key={s.id} className="flex items-center justify-between gap-2 text-sm">
               <span className="text-ink">
-                {s.real_name} <span className="text-xs text-ink/40">Level {s.level}</span>
+                {s.real_name} <span className="text-xs text-ink/40">Level {levelToken(s.level)}</span>
               </span>
               <span className="text-xs text-ink/50">{s.parent_phone || s.phone || 'No contact on file'}</span>
             </div>
