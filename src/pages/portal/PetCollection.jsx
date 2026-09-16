@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, PawPrint, Gift, CheckCircle2, PartyPopper, Lock, Clock, Sparkles, AlertCircle, X } from 'lucide-react';
 import { useAcademy } from '../../lib/AcademyDataContext';
-import { getActivePetWithParts, claimPetPart, getPetCheckinStatus, getMyPetProgress, getOwlProgress, getPremiumCollection, setActivePet, getPetCollectionOverview, getPremiumPetsProgress, unlockPremiumPet } from '../../lib/storageBridge';
+import { getActivePetWithParts, claimPetPart, getPetCheckinStatus, getMyPetProgress, getOwlProgress, getPremiumCollection, setActivePet, getPetCollectionOverview, getPetRanking, getPremiumPetsProgress, unlockPremiumPet } from '../../lib/storageBridge';
 
 function RarityChip({ label, color }) {
   if (!label) return null;
@@ -79,6 +79,39 @@ function CollectionOverview({ overview }) {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+function PetRanking({ rows, myStudentId }) {
+  const { t } = useTranslation('game');
+  if (!rows || rows.length === 0) return null;
+  return (
+    <div className="mb-4 overflow-hidden rounded-2xl border border-ink/[0.06] bg-white shadow-card">
+      <div className="px-5 pt-4 sm:px-6">
+        <p className="font-display text-[13px] font-extrabold tracking-tight text-ink">{t('petRankingTitle')}</p>
+        <p className="mt-0.5 text-xs text-ink/55">{t('petRankingSubtitle')}</p>
+      </div>
+      <ol className="mt-2 space-y-1 px-2 pb-3">
+        {rows.map((r) => {
+          const mine = myStudentId != null && r.student_id === myStudentId;
+          return (
+            <li
+              key={r.student_id}
+              className={`flex items-center gap-3 rounded-xl px-3 py-2 ${mine ? 'bg-brand-50 ring-1 ring-brand-200' : ''}`}
+            >
+              <span className="w-7 shrink-0 text-center font-display text-sm font-extrabold tabular-nums text-ink/60">{r.rank}</span>
+              <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink">
+                {r.real_name}
+                {mine && (
+                  <span className="ml-2 rounded-full bg-brand-600 px-2 py-0.5 text-[10px] font-bold text-white">{t('petRankingYou')}</span>
+                )}
+              </span>
+              <span className="shrink-0 text-xs font-bold tabular-nums text-ink/60">{t('petRankingPets', { count: r.pets_owned })}</span>
+            </li>
+          );
+        })}
+      </ol>
     </div>
   );
 }
@@ -320,6 +353,7 @@ export default function PetCollection() {
   const [petProgress, setPetProgress] = useState(null);
   const [owl, setOwl] = useState(null);
   const [overview, setOverview] = useState(null);
+  const [ranking, setRanking] = useState(null);
   const [loading, setLoading] = useState(true);
   const [claiming, setClaiming] = useState(false);
   const [claimedPart, setClaimedPart] = useState(null);
@@ -331,18 +365,20 @@ export default function PetCollection() {
     setLoading(true);
     setError(null);
     try {
-      const [pet, status, prog, owlData, ovData] = await Promise.all([
+      const [pet, status, prog, owlData, ovData, rankData] = await Promise.all([
         getActivePetWithParts(),
         getPetCheckinStatus(),
         getMyPetProgress().catch(() => null),
         getOwlProgress().catch(() => null),
         getPetCollectionOverview().catch(() => null),
+        getPetRanking().catch(() => null),
       ]);
       setPetData(pet);
       setCheckinStatus(status);
       setPetProgress(prog);
       setOwl(owlData);
       setOverview(ovData);
+      setRanking(rankData);
     } catch (err) {
       const msg = String(err.message || err);
       if (/already claimed/i.test(msg)) setError(t('petAlreadyClaimed'));
@@ -366,16 +402,18 @@ export default function PetCollection() {
       const part = result?.part ?? null;
       setClaimedPart(part);
       setCelebrateKey((k) => k + 1);
-      const [pet, status, prog, ovData] = await Promise.all([
+      const [pet, status, prog, ovData, rankData] = await Promise.all([
         getActivePetWithParts(),
         getPetCheckinStatus(),
         getMyPetProgress().catch(() => null),
         getPetCollectionOverview().catch(() => null),
+        getPetRanking().catch(() => null),
       ]);
       setPetData(pet);
       setCheckinStatus(status);
       setPetProgress(prog);
       setOverview(ovData);
+      setRanking(rankData);
     } catch (err) {
       const msg = String(err.message || err);
       if (/already claimed/i.test(msg)) setError(t('petAlreadyClaimed'));
@@ -451,6 +489,9 @@ export default function PetCollection() {
 
       {/* Collection overview — data-driven from get_pet_collection_overview */}
       <CollectionOverview overview={overview} />
+
+      {/* Pet Ranking — cross-student leaderboard by pets owned */}
+      <PetRanking rows={ranking} myStudentId={me?.id} />
 
       {/* Premium Catalogue — 25 data-driven pets from premium_pet_definitions */}
       <PremiumCatalogue />

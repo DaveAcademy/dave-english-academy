@@ -663,33 +663,105 @@ export async function exportAllData() {
   return { exported_at: new Date().toISOString(), students, payments, attendance };
 }
 
-export async function importAllData(data) {
-  if (!data || typeof data !== 'object') throw new Error('Invalid backup file.');
+// Destructive-restore guardrails (data-safety Phase 1). importAllData wipes
+// students (cascading to payments/attendance) before re-inserting, so it
+// defaults to a dry-run plan with ZERO writes. The wipe path requires an
+// explicit confirm token plus an explicit production opt-in when connected
+// to the production project.
+export const RESTORE_CONFIRM_TOKEN = 'WIPE-AND-RESTORE';
+const PROD_PROJECT_REF = 'usqzcsoolkbuxyiiawmx';
+
+function getActiveSupabaseUrl() {
+  try {
+    return import.meta.env.VITE_SUPABASE_URL || '';
+  } catch {
+    return '';
+  }
+}
+
+function validateRestoreBackup(data) {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('Invalid backup file.');
+  for (const key of ['students', 'payments', 'attendance']) {
+    if (data[key] !== undefined && !Array.isArray(data[key])) throw new Error('Invalid backup file.');
+  }
+  const students = Array.isArray(data.students) ? data.students : [];
+  // Refuse backups that would wipe everything and restore nothing.
+  if (students.length === 0) throw new Error('Refusing restore: backup contains zero students.');
+  return {
+    students: students.length,
+    payments: Array.isArray(data.payments) ? data.payments.length : 0,
+    attendance: Array.isArray(data.attendance) ? data.attendance.length : 0,
+  };
+}
+
+// Read-only preview of what a restore WOULD do. Never writes.
+export async function previewRestore(data) {
+  const wouldInsert = validateRestoreBackup(data);
+  const [existing] = await Promise.all([
+    supabase.from('students').select('id', { count: 'exact', head: true }),
+  ]);
+  if (existing.error) throw existing.error;
+  return { dryRun: true, existingStudents: existing.count ?? null, wouldDeleteStudents: 'ALL', wouldInsert };
+}
+
+export async function importAllData(data, options = {}) {
+  const wouldInsert = validateRestoreBackup(data);
+
+  // SAFE DEFAULT: no confirm token => dry-run plan only, no writes.
+  if (options.confirm !== RESTORE_CONFIRM_TOKEN) {
+    return previewRestore(data);
+  }
+
+  // Explicit authorization required against production.
+  const url = options.supabaseUrl || getActiveSupabaseUrl();
+  const isProduction = url.includes(PROD_PROJECT_REF);
+  if (isProduction && options.allowProduction !== true) {
+    throw new Error('Refusing restore against production without explicit authorization.');
+  }
+
+  const before = await supabase.from('students').select('id', { count: 'exact', head: true });
+  if (before.error) throw before.error;
 
   // Deleting students cascades to payments/attendance automatically.
   const { error: clearError } = await supabase.from('students').delete().not('id', 'is', null);
   if (clearError) throw clearError;
 
-  if (Array.isArray(data.students) && data.students.length > 0) {
-    const { error } = await supabase.from('students').insert(data.students);
-    if (error) throw error;
-  }
-  if (Array.isArray(data.payments) && data.payments.length > 0) {
-    const { error } = await supabase.from('payments').insert(data.payments);
-    if (error) throw error;
-  }
-  if (Array.isArray(data.attendance) && data.attendance.length > 0) {
-    const { error } = await supabase.from('attendance').insert(data.attendance);
-    if (error) throw error;
+  try {
+    if (Array.isArray(data.students) && data.students.length > 0) {
+      const { error } = await supabase.from('students').insert(data.students);
+      if (error) throw error;
+    }
+    if (Array.isArray(data.payments) && data.payments.length > 0) {
+      const { error } = await supabase.from('payments').insert(data.payments);
+      if (error) throw error;
+    }
+    if (Array.isArray(data.attendance) && data.attendance.length > 0) {
+      const { error } = await supabase.from('attendance').insert(data.attendance);
+      if (error) throw error;
+    }
+
+    // Restoring inserts explicit id values, which bypasses (and desyncs) the
+    // identity sequences - resync them or every future insert eventually
+    // collides with an id from this restore.
+    const { error: resyncError } = await supabase.rpc('resync_sequences');
+    if (resyncError) throw resyncError;
+  } catch (e) {
+    throw new Error(`Restore failed mid-way AFTER wiping students (before=${before.count}): ${e.message}`);
   }
 
-  // Restoring inserts explicit id values, which bypasses (and desyncs) the
-  // identity sequences - resync them or every future insert eventually
-  // collides with an id from this restore.
-  const { error: resyncError } = await supabase.rpc('resync_sequences');
-  if (resyncError) throw resyncError;
+  // After-verification: counts must match the backup.
+  const [s, p, a] = await Promise.all([
+    supabase.from('students').select('id', { count: 'exact', head: true }),
+    supabase.from('payments').select('id', { count: 'exact', head: true }),
+    supabase.from('attendance').select('id', { count: 'exact', head: true }),
+  ]);
+  if (s.error || p.error || a.error) throw s.error || p.error || a.error;
+  const after = { students: s.count, payments: p.count, attendance: a.count };
+  if (after.students !== wouldInsert.students || after.payments !== wouldInsert.payments || after.attendance !== wouldInsert.attendance) {
+    throw new Error(`Restore verification failed: expected ${JSON.stringify(wouldInsert)}, found ${JSON.stringify(after)}.`);
+  }
 
-  return true;
+  return { restored: true, before: { students: before.count }, after };
 }
 
 export const STORAGE_KEYS = { students: 'students', payments: 'payments', attendance: 'attendance' };
@@ -1915,6 +1987,11 @@ export async function getPremiumCollection() {
 }
 export async function getPetCollectionOverview() {
   const { data, error } = await supabase.rpc('get_pet_collection_overview');
+  if (error) throw error;
+  return data;
+}
+export async function getPetRanking() {
+  const { data, error } = await supabase.rpc('get_pet_ranking');
   if (error) throw error;
   return data;
 }
