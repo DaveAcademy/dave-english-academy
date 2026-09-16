@@ -196,6 +196,15 @@ function PetRanking({ rows, myStudentId }) {
   );
 }
 
+// Collectible-card helpers (Direction 1: Premium Fantasy Collection).
+// Presentation only — all rarity colors come from pet_rarity data.
+function rarityGlow(color, alpha) {
+  const m = /^#([0-9a-f]{6})$/i.exec(String(color || '').trim());
+  if (!m) return undefined;
+  const n = parseInt(m[1], 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${alpha})`;
+}
+
 function PremiumCatalogue() {
   const { t } = useTranslation('game');
   const [data, setData] = React.useState(null);
@@ -239,16 +248,21 @@ function PremiumCatalogue() {
     <div className="mb-4 rounded-2xl border border-ink/[0.06] bg-white p-4 shadow-card sm:p-5">
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-violet-700">{t('premiumCatalogueTitle')}</p>
-        <div className="flex items-center gap-2">
-          <span className="shrink-0 rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-bold tabular-nums text-amber-700 ring-1 ring-amber-100">
-            {t('premiumBalance', { points: data.points })}
-          </span>
-          <span className="shrink-0 rounded-full bg-violet-50 px-2.5 py-1 text-[10px] font-bold tabular-nums text-violet-700 ring-1 ring-violet-100">
-            {t('collectionOwnedCount', { owned: ownedCount, total: data.pets.length })}
-          </span>
-        </div>
       </div>
       <p className="mt-1 text-[11px] leading-snug text-ink/50">{t('premiumCatalogueSubtitle')}</p>
+
+      {/* Collection headline — large owned count + thin progress rule */}
+      <div className="mt-3 flex items-end justify-between gap-3">
+        <p className="font-display text-[26px] font-extrabold leading-none tabular-nums text-ink">
+          {ownedCount}<span className="text-ink/35">/{data.pets.length}</span>
+        </p>
+        <span className="shrink-0 rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-bold tabular-nums text-amber-700 ring-1 ring-amber-100">
+          {t('premiumBalance', { points: data.points })}
+        </span>
+      </div>
+      <div className="mt-2 h-1 overflow-hidden rounded-full bg-ink/[0.06]" role="progressbar" aria-valuenow={ownedCount} aria-valuemin={0} aria-valuemax={data.pets.length}>
+        <div className="h-full rounded-full bg-brand-500 motion-safe:transition-all motion-safe:duration-700" style={{ width: `${data.pets.length ? Math.round((ownedCount / data.pets.length) * 100) : 0}%` }} />
+      </div>
 
       {info && (
         <div className="mt-3 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-[12px] font-bold text-emerald-700">
@@ -268,42 +282,70 @@ function PremiumCatalogue() {
             <RarityChip label={g.label} color={g.color} />
             <span className="text-[10px] font-bold tabular-nums text-ink/40">{g.pets.filter((p) => p.owned).length}/{g.pets.length}</span>
           </div>
-          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {g.pets.map((p) => {
               const isBusy = busyKey === p.key;
               const reasons = p.points_needed > 0 ? t('premiumPointsGate', { count: p.points_needed }) : t('premiumRequirements', { level: p.min_academic_level, xp: p.min_xp, lessons: p.min_lessons, hw: p.min_valid_homework });
+              const foil = p.owned ? p.rarity_color : undefined;
+              const glow = rarityGlow(p.rarity_color, p.owned ? 0.12 : 0.07);
               return (
-                <div key={p.key} className={`flex flex-col rounded-2xl border p-3 text-center transition-all ${p.owned ? 'border-emerald-100 bg-white shadow-sm' : p.can_unlock ? 'border-violet-200 bg-violet-50/60' : 'border-ink/[0.06] bg-white opacity-[0.85]'}`}>
-                  <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full text-[20px] leading-none ring-1 ring-ink/[0.05] bg-white">{p.icon}</div>
-                  <p className="mt-2 line-clamp-1 text-[12px] font-bold text-ink">{p.name}</p>
-                  <div className="mt-1 flex justify-center"><RarityChip label={p.rarity_label} color={p.rarity_color} /></div>
-                  <div className="mt-2 flex-1" />
-                  {p.owned ? (
-                    <p className="inline-flex items-center justify-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-extrabold text-emerald-700 ring-1 ring-emerald-200">
-                      <CheckCircle2 size={11} /> {t('premiumOwned')}
-                    </p>
-                  ) : p.can_unlock ? (
-                    <button
-                      type="button"
-                      onClick={() => handleUnlock(p)}
-                      disabled={isBusy}
-                      className="inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-violet-600 px-3 py-1.5 text-[10px] font-extrabold text-white shadow-sm transition-all hover:bg-violet-700 active:scale-[0.98] disabled:opacity-70"
+                <div
+                  key={p.key}
+                  className={`relative flex aspect-[3/4] flex-col overflow-hidden rounded-2xl border bg-white shadow-sm motion-safe:transition-all motion-safe:duration-150 motion-safe:hover:-translate-y-1 motion-safe:hover:shadow-card ${p.owned ? 'border-ink/[0.06]' : p.can_unlock ? 'border-violet-200' : 'border-ink/[0.06]'}`}
+                >
+                  {/* 2px rarity foil top edge */}
+                  <span aria-hidden className={`absolute inset-x-0 top-0 z-10 h-[2px] ${p.owned ? '' : 'bg-ink/15'}`} style={foil ? { backgroundColor: foil } : undefined} />
+                  {/* Artwork zone (~60%) with contained rarity glow */}
+                  <div
+                    className="relative flex flex-[3] items-center justify-center px-2 pt-3"
+                    style={glow ? { background: `radial-gradient(circle at 50% 42%, ${glow}, transparent 72%)` } : undefined}
+                  >
+                    {p.owned && <span aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-14 bg-gradient-to-b from-white/70 to-transparent" />}
+                    <span
+                      aria-hidden
+                      className={`text-[64px] leading-none drop-shadow-[0_10px_14px_rgba(0,0,0,0.22)] ${p.owned ? '' : 'opacity-35 grayscale'}`}
                     >
-                      {isBusy ? (
-                        <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-white/25 border-t-white" aria-hidden />
+                      {p.icon}
+                    </span>
+                    {!p.owned && !p.can_unlock && (
+                      <span className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink/[0.06] text-ink/45">
+                        <Lock size={11} />
+                      </span>
+                    )}
+                  </div>
+                  {/* Metadata zone */}
+                  <div className="flex flex-[2] flex-col items-center px-2 pb-2.5 text-center">
+                    <p className="w-full truncate text-[13px] font-bold text-ink" title={p.name}>{p.name}</p>
+                    <div className="mt-1 flex justify-center"><RarityChip label={p.rarity_label} color={p.rarity_color} /></div>
+                    <div className="mt-auto w-full pt-1.5">
+                      {p.owned ? (
+                        <p className="inline-flex items-center justify-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-extrabold text-emerald-700 ring-1 ring-emerald-200">
+                          <CheckCircle2 size={11} /> {t('premiumOwned')}
+                        </p>
+                      ) : p.can_unlock ? (
+                        <button
+                          type="button"
+                          onClick={() => handleUnlock(p)}
+                          disabled={isBusy}
+                          className="inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-violet-600 px-3 py-1.5 text-[10px] font-extrabold text-white shadow-sm transition-colors hover:bg-violet-700 active:scale-[0.98] disabled:opacity-70"
+                        >
+                          {isBusy ? (
+                            <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-white/25 border-t-white" aria-hidden />
+                          ) : (
+                            <Sparkles size={11} />
+                          )}
+                          {t('premiumUnlockAction', { points: p.points_required })}
+                        </button>
                       ) : (
-                        <Sparkles size={11} />
+                        <>
+                          <p className="inline-flex items-center justify-center gap-1 rounded-full bg-ink/[0.05] px-2 py-1 text-[10px] font-extrabold text-ink/45">
+                            <Lock size={10} /> {t('premiumLocked')}
+                          </p>
+                          <p className="mt-1 line-clamp-2 text-[9.5px] leading-snug text-ink/45">{reasons}</p>
+                        </>
                       )}
-                      {t('premiumUnlockAction', { points: p.points_required })}
-                    </button>
-                  ) : (
-                    <>
-                      <p className="inline-flex items-center justify-center gap-1 rounded-full bg-ink/[0.05] px-2 py-1 text-[10px] font-extrabold text-ink/45">
-                        <Lock size={10} /> {t('premiumLocked')}
-                      </p>
-                      <p className="mt-1 text-[9.5px] leading-snug text-ink/45">{reasons}</p>
-                    </>
-                  )}
+                    </div>
+                  </div>
                 </div>
               );
             })}
