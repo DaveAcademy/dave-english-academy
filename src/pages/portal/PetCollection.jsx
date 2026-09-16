@@ -6,7 +6,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, PawPrint, Gift, CheckCircle2, PartyPopper, Lock, Clock, Sparkles, AlertCircle, X } from 'lucide-react';
+import { ArrowLeft, PawPrint, Gift, CheckCircle2, PartyPopper, Lock, Clock, Sparkles, AlertCircle, X, Crown, Medal } from 'lucide-react';
 import { useAcademy } from '../../lib/AcademyDataContext';
 import { getActivePetWithParts, claimPetPart, getPetCheckinStatus, getMyPetProgress, getOwlProgress, getPremiumCollection, setActivePet, getPetCollectionOverview, getPetRanking, getPremiumPetsProgress, unlockPremiumPet } from '../../lib/storageBridge';
 
@@ -83,35 +83,115 @@ function CollectionOverview({ overview }) {
   );
 }
 
+// Podium tiers for the top 3 — gold/silver/bronze accents on the page's
+// light card language (no dark arena here; this lives inside Pet Collection).
+const PODIUM_TIER = {
+  1: {
+    ring: 'ring-2 ring-amber-300',
+    bg: 'bg-gradient-to-b from-amber-50 to-white',
+    badge: 'bg-amber-500 text-white',
+    num: 'text-amber-600',
+    Icon: Crown,
+  },
+  2: {
+    ring: 'ring-1 ring-slate-200',
+    bg: 'bg-gradient-to-b from-slate-50 to-white',
+    badge: 'bg-slate-400 text-white',
+    num: 'text-slate-500',
+    Icon: Medal,
+  },
+  3: {
+    ring: 'ring-1 ring-orange-200',
+    bg: 'bg-gradient-to-b from-orange-50 to-white',
+    badge: 'bg-orange-400 text-white',
+    num: 'text-orange-500',
+    Icon: Medal,
+  },
+};
+
+function PodiumCard({ row, mine, youLabel, petsLabel, place }) {
+  const tier = PODIUM_TIER[place] ?? PODIUM_TIER[3];
+  const { Icon } = tier;
+  return (
+    <div
+      className={`relative flex flex-col items-center rounded-2xl px-2 py-4 text-center shadow-sm ${tier.ring} ${tier.bg} ${
+        place === 1 ? 'sm:-translate-y-2 sm:py-5 sm:shadow-card' : ''
+      } ${place === 2 ? 'sm:order-1' : ''} ${place === 1 ? 'sm:order-2' : ''} ${place === 3 ? 'sm:order-3' : ''} ${
+        mine ? 'outline outline-2 outline-brand-400' : ''
+      }`}
+    >
+      <span className={`flex h-9 w-9 items-center justify-center rounded-full shadow-sm ${tier.badge}`} aria-hidden>
+        <Icon size={17} />
+      </span>
+      <span className={`mt-1.5 font-display font-extrabold tabular-nums leading-none ${place === 1 ? 'text-2xl' : 'text-xl'} ${tier.num}`}>
+        {row.rank}
+      </span>
+      <span className="mt-1.5 w-full truncate px-1 text-[13px] font-bold text-ink" title={row.real_name}>
+        {row.real_name}
+      </span>
+      {mine && (
+        <span className="mt-1 rounded-full bg-brand-600 px-2 py-0.5 text-[10px] font-bold text-white">{youLabel}</span>
+      )}
+      <span className="mt-1.5 rounded-full bg-ink/[0.06] px-2.5 py-1 text-[11px] font-bold tabular-nums text-ink/70">
+        {petsLabel}
+      </span>
+    </div>
+  );
+}
+
 function PetRanking({ rows, myStudentId }) {
   const { t } = useTranslation('game');
   if (!rows || rows.length === 0) return null;
+  const youLabel = t('petRankingYou');
+  const top = rows.slice(0, 3);
+  const rest = rows.slice(3);
   return (
     <div className="mb-4 overflow-hidden rounded-2xl border border-ink/[0.06] bg-white shadow-card">
-      <div className="px-5 pt-4 sm:px-6">
-        <p className="font-display text-[13px] font-extrabold tracking-tight text-ink">{t('petRankingTitle')}</p>
-        <p className="mt-0.5 text-xs text-ink/55">{t('petRankingSubtitle')}</p>
+      <div className="flex items-center gap-2.5 px-5 pt-4 sm:px-6">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-600 ring-1 ring-violet-100" aria-hidden>
+          <PawPrint size={16} />
+        </span>
+        <div className="min-w-0">
+          <p className="font-display text-[13px] font-extrabold tracking-tight text-ink">{t('petRankingTitle')}</p>
+          <p className="mt-0.5 truncate text-xs text-ink/55">{t('petRankingSubtitle')}</p>
+        </div>
       </div>
-      <ol className="mt-2 space-y-1 px-2 pb-3">
-        {rows.map((r) => {
-          const mine = myStudentId != null && r.student_id === myStudentId;
-          return (
-            <li
-              key={r.student_id}
-              className={`flex items-center gap-3 rounded-xl px-3 py-2 ${mine ? 'bg-brand-50 ring-1 ring-brand-200' : ''}`}
-            >
-              <span className="w-7 shrink-0 text-center font-display text-sm font-extrabold tabular-nums text-ink/60">{r.rank}</span>
-              <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink">
-                {r.real_name}
-                {mine && (
-                  <span className="ml-2 rounded-full bg-brand-600 px-2 py-0.5 text-[10px] font-bold text-white">{t('petRankingYou')}</span>
-                )}
-              </span>
-              <span className="shrink-0 text-xs font-bold tabular-nums text-ink/60">{t('petRankingPets', { count: r.pets_owned })}</span>
-            </li>
-          );
-        })}
-      </ol>
+      <div className="flex flex-col gap-2 px-3 pb-1 pt-3 sm:grid sm:grid-cols-3 sm:items-end sm:px-4">
+        {top.map((r, i) => (
+          <PodiumCard
+            key={r.student_id}
+            row={r}
+            place={i + 1}
+            mine={myStudentId != null && r.student_id === myStudentId}
+            youLabel={youLabel}
+            petsLabel={t('petRankingPets', { count: r.pets_owned })}
+          />
+        ))}
+      </div>
+      {rest.length > 0 && (
+        <ol className="mt-1 max-h-72 space-y-1 overflow-y-auto px-2 pb-3">
+          {rest.map((r) => {
+            const mine = myStudentId != null && r.student_id === myStudentId;
+            return (
+              <li
+                key={r.student_id}
+                className={`flex items-center gap-3 rounded-xl px-3 py-2 ${mine ? 'bg-brand-50 ring-1 ring-brand-200' : 'bg-ink/[0.03]'}`}
+              >
+                <span className="w-7 shrink-0 text-center font-display text-sm font-extrabold tabular-nums text-ink/55">{r.rank}</span>
+                <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink">
+                  {r.real_name}
+                  {mine && (
+                    <span className="ml-2 rounded-full bg-brand-600 px-2 py-0.5 text-[10px] font-bold text-white">{youLabel}</span>
+                  )}
+                </span>
+                <span className="shrink-0 rounded-full bg-white px-2.5 py-1 text-[11px] font-bold tabular-nums text-ink/70 ring-1 ring-ink/[0.06]">
+                  {t('petRankingPets', { count: r.pets_owned })}
+                </span>
+              </li>
+            );
+          })}
+        </ol>
+      )}
     </div>
   );
 }
