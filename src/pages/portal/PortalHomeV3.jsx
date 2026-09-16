@@ -21,8 +21,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowRight, CalendarClock, MessageSquare, BookOpen, FileCheck2, CreditCard, Flame, GraduationCap, Trophy, Target, Layers, Languages, Sparkles, Award, Shirt } from 'lucide-react';
-import AvatarDisplay from '../../features/avatar/components/AvatarDisplay';
+import { ArrowRight, CalendarClock, MessageSquare, BookOpen, FileCheck2, CreditCard, Flame, GraduationCap, Trophy, Target, Layers, Languages, Sparkles, Award } from 'lucide-react';
+// Avatar temporarily hidden (unfinished) - AvatarDisplay import kept for later restore.
+// import AvatarDisplay from '../../features/avatar/components/AvatarDisplay';
 import {
   LESSON_STATUS, teacherPaceFor, lessonCapFor, progressByLessonNumber, lessonStatusFor, nextUnfinishedLesson, translatedLessonTitle,
 } from '../../lib/lessonLogic';
@@ -134,7 +135,8 @@ export default function PortalHomeV3() {
   const [learningStreak, setLearningStreak] = useState(null);
   const [achievements, setAchievements] = useState(null);
   const [petProgress, setPetProgress] = useState(null);
-  const [avatarPreview, setAvatarPreview] = useState(null);
+  // Avatar temporarily hidden (unfinished) - state kept for later restore.
+  // const [avatarPreview, setAvatarPreview] = useState(null);
   const { celebrateLevel: xpLevelUp, dismiss: dismissXpLevelUp } = useLevelUpCelebration(me?.id, xpProgress?.level);
   const { current, previous } = useMemo(() => currentAndPreviousMonth(), []);
 
@@ -162,9 +164,10 @@ export default function PortalHomeV3() {
     import('../../lib/storageBridge').then(({ getStudentAchievements }) =>
       getStudentAchievements(me.id).then((a) => !cancelled && setAchievements(Array.isArray(a) ? a.slice(0, 3) : [])).catch(() => {})
     );
-    import('../../lib/storageBridge').then(({ getMyAvatar }) =>
-      getMyAvatar().then((a) => !cancelled && setAvatarPreview(a)).catch(() => {})
-    );
+    // Avatar prefetch temporarily hidden with the Avatar card - kept for later restore.
+    // import('../../lib/storageBridge').then(({ getMyAvatar }) =>
+    //   getMyAvatar().then((a) => !cancelled && setAvatarPreview(a)).catch(() => {})
+    // );
     return () => { cancelled = true; };
   }, [me]);
 
@@ -550,8 +553,9 @@ export default function PortalHomeV3() {
         );
       })()}
 
-      {/* ── Avatar teaser (supplementary, fail-silent) ── */}
-      {avatarPreview && (
+      {/* Avatar teaser temporarily hidden (unfinished) - card, page, RPCs,
+          tables and assets kept intact for later restore. Uncomment to re-expose. */}
+      {/* {avatarPreview && (
         <Link to="/avatar" className="mb-6 flex items-center gap-4 rounded-2xl border border-ink/[0.06] bg-white p-4 shadow-card transition-colors hover:border-brand-200 hover:shadow-md sm:p-5">
           <AvatarDisplay config={avatarPreview.avatar?.config} cosmetics={avatarPreview.cosmetics} size={72} compact />
           <div className="min-w-0 flex-1">
@@ -561,7 +565,7 @@ export default function PortalHomeV3() {
           </div>
           <span className="shrink-0 text-xs font-bold text-brand-600">{t('portal:avatarOpenStudio')}</span>
         </Link>
-      )}
+      )} */}
 
       {/* ── Daily missions + Streak + Pet + Achievements strip (supplementary, fail-silent) ── */}
       {(dailyMissions !== null || learningStreak !== null || petProgress || (achievements && achievements.length > 0)) && (

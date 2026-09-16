@@ -32,7 +32,9 @@ const PORTAL_NAV_ITEMS = [
   { to: '/my-exams', label: 'myExamsFull', shortLabel: 'examsShort', Icon: FileCheck2, lessonsGroup: true },
   { to: '/dictionary', label: 'dictionary', shortLabel: 'dictionaryShort', Icon: Languages },
   { to: '/games', label: 'gameCenterFull', shortLabel: 'gameCenterShort', Icon: Gamepad2 },
-  { to: '/avatar', label: 'avatar', shortLabel: 'avatarShort', Icon: Shirt },
+  // Avatar temporarily hidden (unfinished) - page, components, RPCs, tables
+  // and assets kept intact for later restore. Uncomment to re-expose.
+  // { to: '/avatar', label: 'avatar', shortLabel: 'avatarShort', Icon: Shirt },
   { to: '/pet-collection', label: 'petCollection', shortLabel: 'petCollectionShort', Icon: PawPrint },
   { to: '/my-certificates', label: 'certificates', shortLabel: 'certificatesShort', Icon: Award },
   { to: '/my-ranking', label: 'ranking', shortLabel: 'rankingsShort', Icon: Trophy },
