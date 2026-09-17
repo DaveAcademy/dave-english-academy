@@ -2078,6 +2078,100 @@ export async function saveLevelLabel(level, label) {
   return data;
 }
 
+// ---------- Four-Stage Homework System ----------
+
+export async function listHomeworkStages(homeworkId) {
+  const { data, error } = await supabase
+    .from('homework_stages')
+    .select('*')
+    .eq('homework_id', homeworkId)
+    .order('stage_number');
+  if (error) throw error;
+  return data;
+}
+
+export async function listHomeworkQuestions(stageId) {
+  const { data, error } = await supabase
+    .from('homework_questions')
+    .select('*')
+    .eq('stage_id', stageId)
+    .order('display_order');
+  if (error) throw error;
+  return data;
+}
+
+export async function submitHomeworkAnswer(studentId, questionId, answerData) {
+  const { data, error } = await supabase
+    .from('homework_answers')
+    .upsert({
+      question_id: questionId,
+      student_id: studentId,
+      answer_data: answerData,
+      submitted_at: new Date().toISOString(),
+    }, { onConflict: 'question_id,student_id' })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function listHomeworkAnswers(studentId, questionId) {
+  const { data, error } = await supabase
+    .from('homework_answers')
+    .select('*')
+    .eq('student_id', studentId)
+    .eq('question_id', questionId);
+  if (error) throw error;
+  return data;
+}
+
+export async function getHomeworkStageProgress(homeworkId, studentId) {
+  const { data, error } = await supabase.rpc('get_homework_stage_progress', {
+    p_homework_id: homeworkId,
+    p_student_id: studentId,
+  });
+  if (error) throw error;
+  return data;
+}
+
+export async function ensureHomeworkStageProgress(homeworkId, studentId) {
+  const { error } = await supabase.rpc('ensure_homework_stage_progress', {
+    p_homework_id: homeworkId,
+    p_student_id: studentId,
+  });
+  if (error) throw error;
+}
+
+export async function checkHomeworkStageCompletion(homeworkId, studentId, stageId) {
+  const { data, error } = await supabase.rpc('check_homework_stage_completion', {
+    p_homework_id: homeworkId,
+    p_student_id: studentId,
+    p_stage_id: stageId,
+  });
+  if (error) throw error;
+  return data;
+}
+
+export async function autoGradeHomeworkAnswerById(answerId) {
+  const { data, error } = await supabase.rpc('auto_grade_homework_answer', {
+    p_answer_id: answerId,
+  });
+  if (error) throw error;
+  return data;
+}
+
+export async function awardHomeworkPoints(homeworkId, studentId, points, reason, awardedBy) {
+  const { data, error } = await supabase.rpc('award_homework_points', {
+    p_homework_id: homeworkId,
+    p_student_id: studentId,
+    p_points: points,
+    p_reason: reason,
+    p_awarded_by: awardedBy,
+  });
+  if (error) throw error;
+  return data;
+}
+
 // ---------- Homework bulk operations (Phase 2) ----------
 
 export async function setHomeworkStatusBulk(homeworkId, updates) {

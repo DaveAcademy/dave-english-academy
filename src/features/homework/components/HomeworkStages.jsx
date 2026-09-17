@@ -191,30 +191,32 @@ export function HomeworkStages({ homeworkId, lessonId, isStudent, me, t }) {
           </div>
         </div>
 
-        {!isLocked && (
-          <div className={`space-y-3 ${!isActive ? 'hidden' : ''}`}>
-            {stageQuestions.length === 0 ? (
-              <p className="text-sm text-ink/40 text-center py-4">No questions yet for this stage</p>
-            ) : (
-              <div className="space-y-3">
-                {stageQuestions.map(question => (
-                  <div
-                    key={question.id}
-                    className="space-y-3 p-3 rounded-lg border border-ink/10 bg-white"
-                  >
-                    <p className="text-sm font-medium text-ink/70">
-                      {question.question_text}
-                    </p>
-                    <div className="text-sm text-ink/50">
-                      Question type: {question.question_type}
-                    </div>
-                  </div>
-                ))}
-</div>
-            ))}
-        </div>
-          )}
-      );
+{!isLocked && (
+           <div className={`space-y-3 ${!isActive ? 'hidden' : ''}`}>
+             {stageQuestions.length === 0 ? (
+               <p className="text-sm text-ink/40 text-center py-4">No questions yet for this stage</p>
+             ) : (
+               <div className="space-y-3">
+                 {stageQuestions.map(question => (
+                   <div
+                     key={question.id}
+                     className="space-y-3 p-3 rounded-lg border border-ink/10 bg-white"
+                   >
+                     <QuestionRenderer
+                       question={question}
+                       answer={answers[question.id]}
+                       studentId={studentId}
+                       onAnswer={handleAnswer}
+                       isSubmitting={submitting}
+                       t={t}
+                     />
+                   </div>
+                 ))}
+               </div>
+             )}
+           </div>
+         </div>
+       );
     });
 
   return (
