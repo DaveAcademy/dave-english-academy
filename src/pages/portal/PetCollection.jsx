@@ -9,7 +9,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, PawPrint, Gift, CheckCircle2, PartyPopper, Lock, Clock, Sparkles, AlertCircle, X, Crown, Medal, Trophy } from 'lucide-react';
 import { useAcademy } from '../../lib/AcademyDataContext';
 import { levelToken } from '../../lib/levels';
-import { getActivePetWithParts, claimPetPart, getPetCheckinStatus, getMyPetProgress, getOwlProgress, getPremiumCollection, setActivePet, getPetCollectionOverview, getPetRanking, getPremiumPetsProgress, unlockPremiumPet } from '../../lib/storageBridge';
+import { getActivePetWithParts, claimPetPart, getPetCheckinStatus, getMyPetProgress, getOwlProgress, getPremiumCollection, setActivePet, getPetCollectionOverview, getPetRanking, getPremiumPetsProgress, unlockPremiumPet, getMyGamePointHistory } from '../../lib/storageBridge';
 
 function RarityChip({ label, color }) {
   if (!label) return null;
@@ -477,6 +477,7 @@ export default function PetCollection() {
   const [owl, setOwl] = useState(null);
   const [overview, setOverview] = useState(null);
   const [ranking, setRanking] = useState(null);
+  const [gameLog, setGameLog] = useState(null);
   // Collection/Ranking tab — client-side view switch only, no refetch.
   const [view, setView] = useState('collection');
   const [loading, setLoading] = useState(true);
@@ -490,13 +491,14 @@ export default function PetCollection() {
     setLoading(true);
     setError(null);
     try {
-      const [pet, status, prog, owlData, ovData, rankData] = await Promise.all([
+      const [pet, status, prog, owlData, ovData, rankData, gameLogData] = await Promise.all([
         getActivePetWithParts(),
         getPetCheckinStatus(),
         getMyPetProgress().catch(() => null),
         getOwlProgress().catch(() => null),
         getPetCollectionOverview().catch(() => null),
         getPetRanking().catch(() => null),
+        getMyGamePointHistory().catch(() => null),
       ]);
       setPetData(pet);
       setCheckinStatus(status);
@@ -504,6 +506,7 @@ export default function PetCollection() {
       setOwl(owlData);
       setOverview(ovData);
       setRanking(rankData);
+      setGameLog(gameLogData);
     } catch (err) {
       const msg = String(err.message || err);
       if (/already claimed/i.test(msg)) setError(t('petAlreadyClaimed'));
@@ -639,8 +642,44 @@ export default function PetCollection() {
       </div>
 
       {view === 'ranking' ? (
-        /* Pet Ranking — cross-student leaderboard by pets owned */
+        <>
+        {/* Pet Ranking — cross-student leaderboard by pets owned */}
         <PetRanking rows={ranking} myStudentId={me?.id} />
+        {/* Game Points Log — own game_activity only, directly below the ranking table */}
+        {gameLog !== null && (
+        <section aria-labelledby="game-points-log-heading" className="mb-4 overflow-hidden rounded-2xl border border-ink/[0.06] bg-white shadow-card">
+          <div className="px-5 pt-4 sm:px-6">
+            <h2 id="game-points-log-heading" className="font-display text-[13px] font-extrabold tracking-tight text-ink">{t('gamePointsLogTitle', { defaultValue: 'Game Points Log' })}</h2>
+            <p className="mt-0.5 text-xs text-ink/55">{t('gamePointsLogSubtitle', { defaultValue: 'How you earned Game Points.' })}</p>
+          </div>
+          {gameLog.length === 0 ? (
+            <p className="px-5 py-6 text-center text-sm text-ink/50 sm:px-6">{t('gamePointsLogEmpty', { defaultValue: 'No Game Points yet — play a game to earn some.' })}</p>
+          ) : (
+            <ul className="divide-y divide-ink/[0.04]">
+              {gameLog.map((row, idx) => {
+                const pts = Number(row.points);
+                const isNeg = pts < 0;
+                return (
+                  <li key={`${row.game_date}-${row.game_type}-${row.level}-${idx}`} className="flex items-center gap-3 px-4 py-3 sm:px-5">
+                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-paper text-xs" aria-hidden="true">🎮</span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-semibold text-ink">{String(row.game_type || '').replace(/_/g, ' ')}{row.level != null ? ` · Lv ${row.level}` : ''}</span>
+                      <span className="block text-xs text-ink/45">
+                        {row.game_date ? new Date(row.game_date).toLocaleDateString() : ''}
+                        {row.tier ? ` · ${row.tier}` : ''}{row.is_perfect ? ' · ⭐' : ''}{row.is_correction ? ` · ${t('gamePointsLogCorrection', { defaultValue: 'correction' })}` : ''}
+                      </span>
+                    </span>
+                    <span className={`flex-shrink-0 rounded-full px-2.5 py-1 text-xs font-bold tabular-nums ${isNeg ? 'bg-inactive/10 text-inactive' : 'bg-active/10 text-active'}`}>
+                      {pts > 0 ? `+${pts}` : pts}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+        )}
+        </>
       ) : (
       <>
 

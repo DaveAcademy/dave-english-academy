@@ -1975,6 +1975,15 @@ export async function getMyGamePoints() {
   return data;
 }
 
+// Student's own Game Points transaction log (newest first) — feeds the
+// Game Points Log below the Pet Ranking table. Game rows only by
+// construction (see migration 20261013000004); never Lesson/Class Points.
+export async function getMyGamePointHistory() {
+  const { data, error } = await supabase.rpc('get_my_game_point_history');
+  if (error) throw error;
+  return data;
+}
+
 export async function getOwlProgress() {
   const { data, error } = await supabase.rpc('get_owl_progress');
   if (error) throw error;

@@ -1,6 +1,6 @@
 // MyProgress.jsx — Premium learning-progress redesign (section 5)
 // Preserves every backend derivation from the previous version (lessonLogic,
-// attendanceRate, listAchievementDefinitions etc) — this is a presentation
+// attendanceRate etc) — this is a presentation
 // rebuild, not a data-layer change. New data (vocab journey, games, pet)
 // is fetched additively via existing storageBridge / direct supabase reads
 // and guarded so the page never breaks when a table is empty or a migration
@@ -10,8 +10,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  CheckCircle2, Clock, XCircle, CalendarCheck, FileCheck2, BookOpen,
-  GraduationCap, Trophy, Flame, Target, Languages, Gamepad2, Award, PawPrint, Gift,
+  CheckCircle2, Clock, XCircle, CalendarCheck, BookOpen,
+  GraduationCap, Trophy, Flame, Target, Languages, Gamepad2,
   Sparkles, TrendingUp, TrendingDown, Minus, Zap, Crown, Star, Layers, ArrowRight,
   BookMarked, PenLine, MessagesSquare, Timer, Puzzle, Brain,
 } from 'lucide-react';
@@ -25,8 +25,6 @@ import {
 import { formatWeekdayDate } from '../../utils/date';
 import { attendanceRate, currentStreak } from '../../utils/attendance';
 import { SkeletonList } from '../../components/Skeleton';
-import { listAchievementDefinitions, getStudentAchievements, getActivePetWithParts, getPetCheckinStatus } from '../../lib/storageBridge';
-import AchievementCollection from '../../features/achievements/components/AchievementCollection';
 import SectionLabel from '../../components/SectionLabel';
 import StatusPill from '../../components/StatusPill';
 
@@ -84,20 +82,6 @@ export default function MyProgress() {
       .filter((s) => s.exam)
       .sort((a, b) => new Date(b.exam.exam_date) - new Date(a.exam.exam_date));
   }, [examScores, exams]);
-
-  const examAvg = useMemo(() => {
-    const scored = examRows.filter((s) => s.score != null);
-    return scored.length > 0
-      ? Math.round((scored.reduce((sum, s) => sum + Number(s.score) / (s.exam.max_score || 100), 0) / scored.length) * 100)
-      : null;
-  }, [examRows]);
-
-  const finalWriting = useMemo(() => examRows.find((s) => s.exam.exam_type === 'Written') || null, [examRows]);
-  const finalSpeaking = useMemo(() => examRows.find((s) => s.exam.exam_type === 'Oral') || null, [examRows]);
-  const finalExamContribution = useMemo(() => {
-    const parts = [finalWriting, finalSpeaking].filter((s) => s?.score != null);
-    return parts.length > 0 ? parts.reduce((sum, s) => sum + Number(s.score), 0) : null;
-  }, [finalWriting, finalSpeaking]);
 
   const examTrend = useMemo(() => {
     if (examRows.length < 2) return null;
@@ -162,48 +146,6 @@ export default function MyProgress() {
     const graded = homeworkRows.filter((h) => h.statusRow?.status === 'Graded').length;
     return { total, completed, graded, rate: total > 0 ? Math.round((completed / total) * 100) : null };
   }, [homeworkRows]);
-
-  // ── achievements (preserved logic) ────────────────────────────────────
-  const [badgeDefinitions, setBadgeDefinitions] = useState([]);
-  const [studentAchievements, setStudentAchievements] = useState([]);
-
-  useEffect(() => {
-    if (!me?.id) return;
-    let cancelled = false;
-    Promise.all([listAchievementDefinitions(), getStudentAchievements(me.id)])
-      .then(([defs, earned]) => {
-        if (cancelled) return;
-        setBadgeDefinitions(defs || []);
-        setStudentAchievements(earned || []);
-      })
-      .catch(() => {
-        if (!cancelled) { setBadgeDefinitions([]); setStudentAchievements([]); }
-      });
-    return () => { cancelled = true; };
-  }, [me?.id]);
-
-  const earnedKeys = useMemo(() => new Set((studentAchievements || []).map((a) => a.achievement?.key || a.key)), [studentAchievements]);
-
-  const computedBadges = useMemo(() => {
-    if (!badgeDefinitions.length) return [];
-    return badgeDefinitions.map((def) => {
-      const isEarned = earnedKeys.has(def.key);
-      if (isEarned) return { id: def.id, key: def.key, name: def.name, description: def.description, icon: def.icon, category: def.category, rarity: def.rarity || 'common', rule_config: def.rule_config, unlocked: true, progress: 100 };
-      const rc = def.rule_config;
-      if (def.trigger_type === 'threshold' && rc?.metric && rc?.value) {
-        const metrics = {
-          lessons_completed: lessonBlock?.completed ?? 0,
-          practice_submitted: homeworkStats.completed,
-          attendance_present: attendedCount,
-          total_points: examAvg ?? 0,
-        };
-        const cur = metrics[rc.metric] ?? 0;
-        const pct = Math.min(100, Math.max(0, (cur / rc.value) * 100));
-        return { id: def.id, key: def.key, name: def.name, description: def.description, icon: def.icon, category: def.category, rarity: def.rarity || 'common', rule_config: rc, unlocked: false, progress: pct };
-      }
-      return { id: def.id, key: def.key, name: def.name, description: def.description, icon: def.icon, category: def.category, rarity: def.rarity || 'common', rule_config: def.rule_config, unlocked: false, progress: 0 };
-    });
-  }, [badgeDefinitions, earnedKeys, lessonBlock, homeworkStats.completed, attendedCount, examAvg]);
 
   // ── supplemental: vocabulary journey (SRS stages) ─────────────────────
   const [vocabJourney, setVocabJourney] = useState(null);
@@ -305,24 +247,6 @@ export default function MyProgress() {
         if (!cancelled) setGameStatsLoading(false);
       }
     })();
-    return () => { cancelled = true; };
-  }, [me?.id]);
-
-  // ── supplemental: pet ─────────────────────────────────────────────────
-  const [petData, setPetData] = useState(null);
-  const [petCheckin, setPetCheckin] = useState(null);
-  useEffect(() => {
-    if (!me?.id) return;
-    let cancelled = false;
-    Promise.all([getActivePetWithParts(), getPetCheckinStatus()])
-      .then(([pet, status]) => {
-        if (cancelled) return;
-        setPetData(pet);
-        setPetCheckin(status);
-      })
-      .catch(() => {
-        if (!cancelled) { setPetData(null); setPetCheckin(null); }
-      });
     return () => { cancelled = true; };
   }, [me?.id]);
 
@@ -672,83 +596,6 @@ export default function MyProgress() {
         </div>
       )}
 
-      {/* ── EXAMS ────────────────────────────────────────────────────── */}
-      <div className="mp-stagger mt-6" style={{ animationDelay: '240ms' }}>
-        <SectionLabel>{t('portal:mpExamsAssessments')}</SectionLabel>
-
-        {/* Final Exams highlight */}
-        {(finalWriting || finalSpeaking) && (
-          <div className="mb-3 rounded-xl border-2 border-brand-200 bg-brand-50/40 p-4 shadow-card">
-            <h3 className="mb-3 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-brand-700">🏆 {t('portal:finalExamsTitle', { defaultValue: 'Final Exams' })}</h3>
-            <div className="space-y-2">
-              {finalWriting && (
-                <div className="flex items-center justify-between rounded-lg bg-white px-3 py-2">
-                  <span className="text-sm font-semibold text-ink">✍️ {t('portal:finalWritingExam', { defaultValue: 'Writing Exam' })}</span>
-                  {finalWriting.score != null ? <span className="text-sm font-bold text-brand-600">{finalWriting.score}/{finalWriting.exam.max_score}</span> : <StatusPill tone="info">{t('dashboard:awaitingGrading')}</StatusPill>}
-                </div>
-              )}
-              {finalSpeaking && (
-                <div className="flex items-center justify-between rounded-lg bg-white px-3 py-2">
-                  <span className="text-sm font-semibold text-ink">🗣️ {t('portal:finalSpeakingExam', { defaultValue: 'Speaking Exam' })}</span>
-                  {finalSpeaking.score != null ? <span className="text-sm font-bold text-brand-600">{finalSpeaking.score}/{finalSpeaking.exam.max_score}</span> : <StatusPill tone="info">{t('exams:resultPending', { defaultValue: 'Pending' })}</StatusPill>}
-                </div>
-              )}
-            </div>
-            {finalExamContribution != null && (
-              <p className="mt-3 text-xs font-semibold text-brand-700">{t('portal:finalExamContribution', { defaultValue: 'Exam contribution' })}: {t('portal:finalExamContributionPoints', { points: finalExamContribution, defaultValue: `+${finalExamContribution} pts` })}</p>
-            )}
-          </div>
-        )}
-
-        {/* exam avg pill */}
-        {examAvg != null && (
-          <div className="mb-3 flex flex-wrap items-center gap-2 rounded-xl border border-ink/[0.06] bg-white px-4 py-3 shadow-card">
-            <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600"><FileCheck2 size={16} aria-hidden="true" /></span>
-            <span className="text-sm font-bold text-ink">{t('dashboard:averageScore')} <span className="font-display text-lg">{examAvg}%</span></span>
-            <span className="text-xs text-ink/40">· {examRows.filter((s) => s.score != null).length} graded</span>
-            {examTrend && <span className={`ml-auto inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-bold ${examTrend.direction === 'up' ? 'border-active/15 bg-active/10 text-active' : examTrend.direction === 'down' ? 'border-inactive/15 bg-inactive/10 text-inactive' : 'border-ink/10 bg-ink/5 text-ink/50'}`}>{examTrend.direction === 'up' ? <TrendingUp size={12} aria-hidden="true" /> : examTrend.direction === 'down' ? <TrendingDown size={12} aria-hidden="true" /> : <Minus size={12} aria-hidden="true" />}{examTrend.direction === 'flat' ? t('portal:examTrendSame') : examTrend.direction === 'up' ? `+${examTrend.delta}%` : `-${examTrend.delta}%`}</span>}
-          </div>
-        )}
-
-        {loading ? (
-          <SkeletonList count={3} />
-        ) : examRows.length === 0 ? (
-          <div className="rounded-xl border border-ink/[0.06] bg-white p-8 text-center shadow-card">
-            <FileCheck2 className="mx-auto mb-2 text-ink/15" size={28} aria-hidden="true" />
-            <p className="text-sm font-semibold text-ink/60">{t('portal:noExamScoresYet', { defaultValue: 'No exam scores yet.' })}</p>
-            <p className="mt-1 text-xs text-ink/40">{t('portal:mpNoExamHint')}</p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {examRows.map((s) => {
-              const pct = s.exam.max_score ? Math.round((Number(s.score ?? 0) / s.exam.max_score) * 100) : null;
-              const barColor = pct == null ? 'bg-ink/10' : pct >= 80 ? 'bg-active' : pct >= 60 ? 'bg-brand-500' : pct >= 45 ? 'bg-levelB' : 'bg-inactive';
-              return (
-                <div key={s.id} className="rounded-xl border border-ink/[0.06] bg-white p-3.5 shadow-card sm:p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-semibold text-ink">{s.exam.title}</p>
-                      <p className="text-xs text-ink/40">{s.exam.exam_date} · {t('portal:mpMaxScore', { score: s.exam.max_score })}</p>
-                    </div>
-                    {s.score != null ? (
-                      <span className="flex-shrink-0 rounded-full bg-ink px-3 py-1 text-sm font-bold text-white">{s.score}/{s.exam.max_score}</span>
-                    ) : (
-                      <StatusPill tone="info">{t('dashboard:awaitingGrading')}</StatusPill>
-                    )}
-                  </div>
-                  {s.score != null && pct != null && (
-                    <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-ink/[0.06]">
-                      <div className={`h-full rounded-full transition-all ${barColor}`} style={{ width: `${Math.min(100, pct)}%` }} />
-                    </div>
-                  )}
-                  {s.feedback && <p className="mt-2 rounded-lg bg-paper px-2.5 py-1.5 text-xs leading-relaxed text-ink/60">{t('portal:teacherFeedbackLabel', { defaultValue: 'Feedback' })}: {s.feedback}</p>}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
       {/* ── HOMEWORK ─────────────────────────────────────────────────── */}
       <div className="mp-stagger mt-6" style={{ animationDelay: '300ms' }}>
         <SectionLabel>{t('portal:mpHomeworkTitle')}</SectionLabel>
@@ -794,74 +641,6 @@ export default function MyProgress() {
             </div>
           )}
         </div>
-      </div>
-
-      {/* ── ACHIEVEMENTS — compact collectibles ──────────────────────── */}
-      <div className="mp-stagger mt-6 rounded-xl border border-ink/[0.06] bg-white p-3.5 shadow-card sm:p-4" style={{ animationDelay: '360ms' }}>
-        <div className="mb-2 flex items-center gap-2">
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600"><Award size={14} aria-hidden="true" /></span>
-          <h2 className="font-display text-sm font-bold text-ink">{t('portal:achievementsTitle')}</h2>
-        </div>
-        {computedBadges.length === 0 ? (
-          <div className="py-6 text-center">
-            <Award className="mx-auto mb-1.5 text-ink/15" size={24} aria-hidden="true" />
-            <p className="text-sm text-ink/50">{t('portal:achievementsEmpty', { defaultValue: 'No achievements yet — keep going!' })}</p>
-          </div>
-        ) : (
-          <AchievementCollection
-            badges={computedBadges}
-            studentMetrics={{
-              lessons_completed: lessonBlock?.completed ?? 0,
-              practice_submitted: homeworkStats.completed,
-              attendance_present: attendedCount,
-              total_points: examAvg ?? 0,
-            }}
-          />
-        )}
-      </div>
-
-      {/* ── PET COLLECTION ───────────────────────────────────────────── */}
-      <div className="mp-stagger mt-6" style={{ animationDelay: '420ms' }}>
-        <SectionLabel>{t('portal:mpPetCollection')}</SectionLabel>
-        {!petData || !petData.pet ? (
-          <div className="rounded-2xl border border-ink/[0.06] bg-white px-5 py-10 text-center shadow-card">
-            <PawPrint className="mx-auto mb-2 text-ink/15" size={28} aria-hidden="true" />
-            <p className="text-sm font-semibold text-ink/60">{t('portal:mpNoPet')}</p>
-            <p className="mt-1 text-xs text-ink/40">{t('portal:mpNoPetHint')}</p>
-            <Link to="/pet-collection" className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-ink/[0.06] bg-white px-3 py-1.5 text-xs font-semibold text-ink shadow-sm hover:bg-paper">{t('portal:mpViewCollection')} <ArrowRight size={12} aria-hidden="true" /></Link>
-          </div>
-        ) : (
-          <div className="overflow-hidden rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 shadow-card">
-            <div className="flex items-center gap-4 px-5 py-4">
-              <span className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-white text-3xl shadow-sm" aria-hidden="true">{petData.pet.icon || '🐾'}</span>
-              <div className="min-w-0 flex-1">
-                <p className="font-display text-base font-bold leading-none text-ink">{petData.pet.name}</p>
-                <p className="mt-1 text-xs text-ink/50">{petData.completed ? t('portal:mpPetCompleted') : t('portal:mpPetProgress', { collected: petData.collected_count, total: petData.total_required })}</p>
-                <div className="mt-2 h-1.5 max-w-[220px] overflow-hidden rounded-full bg-ink/[0.08]">
-                  <div className="h-full rounded-full bg-amber-500 transition-all" style={{ width: `${petData.total_required ? Math.round((petData.collected_count / petData.total_required) * 100) : 0}%` }} />
-                </div>
-              </div>
-              <Link to="/pet-collection" className="hidden flex-shrink-0 items-center gap-1 rounded-full bg-ink px-3 py-1.5 text-xs font-bold text-white hover:bg-ink/90 sm:inline-flex">{t('portal:mpViewCollection')} <ArrowRight size={12} aria-hidden="true" /></Link>
-            </div>
-            {petData.parts && petData.parts.length > 0 && (
-              <div className="grid grid-cols-4 gap-2 border-t border-amber-100 bg-white/60 px-3 py-3 sm:grid-cols-6">
-                {petData.parts.slice(0, 6).map((part) => (
-                  <div key={part.id} className={`flex flex-col items-center gap-1 rounded-xl border px-2 py-2.5 text-center ${part.collected ? 'border-green-200 bg-green-50' : 'border-ink/[0.06] bg-white'}`}>
-                    <span className={`flex h-8 w-8 items-center justify-center rounded-full text-sm ${part.collected ? 'bg-green-100' : 'bg-ink/[0.04] text-ink/20'}`} aria-hidden="true">{part.collected ? part.icon : '🔒'}</span>
-                    <span className={`truncate text-[11px] font-bold leading-none ${part.collected ? 'text-green-800' : 'text-ink/40'}`}>{part.name}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-            <div className="flex items-center justify-between border-t border-amber-100 bg-white px-4 py-2.5">
-              <span className="flex items-center gap-1.5 text-xs font-semibold text-ink/60">
-                {petCheckin?.claimed_today ? <><CheckCircle2 size={12} className="text-active" aria-hidden="true" /> {t('portal:mpClaimedToday')}</> : petCheckin?.all_collected ? <><Gift size={12} className="text-amber-600" aria-hidden="true" /> {t('portal:mpAllPartsDone')}</> : <><Gift size={12} className="text-amber-600" aria-hidden="true" /> {t('portal:mpDailyCheckinAvail')}</>}
-              </span>
-              <Link to="/pet-collection" className="text-xs font-bold text-amber-700 hover:underline sm:hidden">{t('portal:mpViewCollectionArrow')}</Link>
-              <Link to="/pet-collection" className="hidden text-xs font-bold text-amber-700 hover:underline sm:inline">{t('portal:mpOpenCollectionArrow')}</Link>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* ── ATTENDANCE (compact, not dominating) ─────────────────────── */}
