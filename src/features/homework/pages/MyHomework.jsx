@@ -14,6 +14,11 @@ import {
 } from 'lucide-react';
 import { useAcademy } from '../../../lib/AcademyDataContext';
 import { levelToken } from '../../../lib/levels';
+import {
+  listHomeworkStages,
+  listHomeworkQuestions,
+  getHomeworkStageProgress,
+} from '../../../lib/db';
 import { getAttachmentUrl } from '../../../lib/db';
 import LessonSectionTabs from '../../../components/lesson/LessonSectionTabs';
 import StatusPill from '../../../components/StatusPill';
@@ -50,6 +55,7 @@ export default function MyHomework() {
   } = useAcademy();
   const { me } = useAcademy(); // single source, no fallback
   const [actionError, setActionError] = useState(null);
+  const [stageData, setStageData] = useState({});
 
   const myHomework = useMemo(() => {
     if (!me) return [];
@@ -108,6 +114,27 @@ export default function MyHomework() {
   }, [myHomework, homeworkStatus, homeworkSubmissionFiles]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const completionPct = stats.total ? Math.round((stats.submitted / stats.total) * 100) : 0;
+
+  // Load four-stage homework data (Vocabulary, Grammar, Practice, Review)
+  useEffect(() => {
+    const loadHomeworkStages = async () => {
+      for (const h of myHomework) {
+        try {
+          const stages = await listHomeworkStages(h.id);
+          const progress = await getHomeworkStageProgress(h.id, me.id);
+          const questionsMap = {};
+          for (const s of stages) {
+            const questions = await listHomeworkQuestions(s.id);
+            questionsMap[s.id] = questions;
+          }
+          setStageData(prev => ({ ...prev, [h.id]: { stages, questions: questionsMap, progress } }));
+        } catch (e) {
+          console.error(`Failed to load stages for homework ${h.id}:`, e);
+        }
+      }
+    };
+    if (myHomework.length > 0) loadHomeworkStages();
+  }, [myHomework, me]);
 
   if (!me) {
     return (
@@ -313,10 +340,72 @@ export default function MyHomework() {
                         {journey.key === 'needsCorrection' && t('portal:mpJourneyNeedsCorrection')}
                         {journey.key === 'completed' && t('portal:mpJourneyCompleted')}
                       </p>
-                    </div>
+</div>
 
-                     {/* submission summary + valid/invalid */}
-                     <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                  {/* four-stage homework content */}
+                  {stageData[h.id] && stageData[h.id].stages.length > 0 && (
+                    <div className="mt-3 rounded-xl bg-white p-4 shadow-card">
+                      <h3 className="font-display text-sm font-semibold text-ink uppercase tracking-wider mb-3">
+                        {t('homework:stageTitle')}
+                      </h3>
+                      <div className="grid grid-cols-4 gap-2">
+                        {stageData[h.id].stages.map((s) => {
+                          const config = {
+                            vocabulary: { icon: BookOpen, color: 'brand' },
+                            grammar: { icon: PenTool, color: 'amber' },
+                            practice: { icon: Target, color: 'emerald' },
+                            review: { icon: Sparkles, color: 'violet' },
+                          }[s.stage_key] || { icon: BookOpen, color: 'ink' };
+                          const progress = stageData[h.id].progress[s.id];
+                          const progressPct = progress
+                            ? Math.round(
+                                ((progress.points_earned || 0) / (progress.total_points || 1)) * 100
+                              )
+                            : 0;
+                          const questions = stageData[h.id].questions[s.id] || [];
+                          const answeredCount = questions.filter(
+                            (q) => stageData[h.id].answers[q.id]
+                          ).length;
+                          return (
+                            <div
+                              key={s.id}
+                              className={`group border rounded-lg border-ink/10 bg-white p-3 hover:bg-brand-50 transition-colors`}
+                            >
+                              <div className="flex items-center gap-2 mb-2">
+                                <Icon
+                                  size={16}
+                                  className={`text-${config.color}-500`}
+                                />
+                                <span className="font-semibold text-ink">{config.label}</span>
+                              </div>
+                              <p className="text-xs text-ink/50">
+                                {s.title}
+                              </p>
+                              <div className="text-xs text-ink/50">
+                                {progressPct}% complete
+                              </div>
+                              <div className="mt-1">
+                                <span className="text-[10px] font-bold rounded-full px-1.5 py-0.5 ${
+                                  progressPct >= 100 ? 'bg-brand-100 text-brand-700' :
+                                  progressPct >= 50 ? 'bg-emerald-100 text-emerald-700' :
+                                  'bg-ink/5 text-ink/50'
+                                }">
+                                  {progressPct === 0 ? 'Not Started' :
+                                   progressPct < 100 ? 'In Progress' : 'Completed'}
+                                </span>
+                              </div>
+                              <div className="mt-1 text-[10px] text-ink/40">
+                                {answeredCount}/{questions.length} answered
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                   {/* submission summary + valid/invalid */}
+                  <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
                        <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-semibold ring-1 ${hasSubmission ? (isValidSubmission ? 'bg-emerald-50 text-emerald-700 ring-emerald-100' : 'bg-amber-50 text-amber-700 ring-amber-200') : 'bg-ink/5 text-ink/50 ring-ink/10'}`}>
                          {hasSubmission ? <CheckCircle2 size={12} /> : <AlertCircle size={12} />}
                          {hasSubmission ? (submittedFiles.length > 0 ? t('portal:mpImagesSubmitted', { count: submittedFiles.length }) : t('portal:mpSubmissionOnFile')) : t('portal:mpNoSubmissionYet')}
