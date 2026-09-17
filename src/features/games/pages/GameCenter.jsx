@@ -16,10 +16,8 @@ import { Gamepad2, PawPrint, Trophy, Crown, Medal, Target, Zap } from 'lucide-re
 import { useAcademy } from '../../../lib/AcademyDataContext';
 import GameCard from '../components/GameCard';
 import GameLeaderboardBlock from '../components/GameLeaderboardBlock';
-import BadgeShelf from '../../../components/BadgeShelf';
-import { getGamePointsLeaderboard, getGameLevelLeaderboard, getGamePeriodLeaderboard, listMyGameLevels, listAchievementDefinitions, getStudentAchievements, getMyGamePoints } from '../../../lib/storageBridge';
+import { getGamePointsLeaderboard, getGameLevelLeaderboard, getGamePeriodLeaderboard, listMyGameLevels, getMyGamePoints } from '../../../lib/storageBridge';
 import { formatStudentDisplayName } from '../utils/gameRecordFormat';
-import SectionLabel from '../../../components/SectionLabel';
 
 const OVERALL_TOP_N = 10;
 
@@ -188,7 +186,6 @@ export default function GameCenter() {
   const [overall, setOverall] = useState(null);
   const [loadingOverall, setLoadingOverall] = useState(true);
   const [period, setPeriod] = useState('weekly');
-  const [badges, setBadges] = useState([]);
 
   useEffect(() => {
     if (!me) return;
@@ -250,28 +247,6 @@ export default function GameCenter() {
       // Supplementary, same as the score leaderboard - a failed fetch just
       // means no level-leader chip.
     });
-
-    // DB-backed achievements: merge full catalog with student's earned
-    // achievements into the format BadgeShelf expects (id, emoji, labelKey,
-    // descriptionKey, unlocked). Uses real achievement_definitions +
-    // student_achievements tables, not the deprecated computeBadges().
-    Promise.all([listAchievementDefinitions(), getStudentAchievements(me.id)])
-      .then(([definitions, earned]) => {
-        if (cancelled) return;
-        const earnedKeys = new Set((earned || []).map((r) => r.achievement?.key));
-        setBadges(
-          (definitions || []).map((d) => ({
-            id: d.key,
-            emoji: d.icon || '🏅',
-            labelKey: d.name || d.key,
-            descriptionKey: d.description || '',
-            unlocked: earnedKeys.has(d.key),
-          }))
-        );
-      })
-      .catch(() => {
-        // Achievements are supplementary — empty state is fine.
-      });
 
     return () => {
       cancelled = true;
@@ -496,13 +471,6 @@ export default function GameCenter() {
           />
         ))}
       </div>
-
-      {badges.length > 0 && (
-        <div className="mt-6">
-          <SectionLabel>{t('achievementsTitle')}</SectionLabel>
-          <BadgeShelf badges={badges} />
-        </div>
-      )}
     </div>
   );
 }
