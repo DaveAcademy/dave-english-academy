@@ -49,56 +49,168 @@ function QuestionRenderer({ question, answer, studentId, onAnswer, isSubmitting,
   const [correct, setCorrect] = useState(null);
   const [showResult, setShowResult] = useState(false);
 
+  // Connect grading result to UI - read is_correct from answer data
+  useEffect(() => {
+    if (!studentId || !question || !answer) return;
+
+    // Objectively auto-graded types: multiple_choice, matching, fill_blank, translation, ordering
+    if (answer?.answer_data?.is_correct !== undefined) {
+      setCorrect(answer?.answer_data?.is_correct);
+      setShowResult(true);
+    } else if (
+      // Subjectively manually-graded types: sentence_creation, short_answer, reading_comprehension
+      // These have is_correct === undefined from the backend
+      answer?.answer_data?.is_correct === undefined &&
+      showResult === false
+    ) {
+      // Show "submitted for manual grading" for subjective types
+      setShowResult(true);
+    }
+  }, [answer, studentId]);
+
   // Render based on question type
   switch (question.question_type) {
-    case 'matching': {
-      const pairs = question.question_data?.pairs || [];
+case 'matching': {
+      const left = question.question_data?.left || [];
+      const right = question.question_data?.right || [];
+      const correctPairs = question.question_data?.correct_pairs || [];
 
-      if (pairs.length === 0) {
+      if (left.length === 0 || right.length === 0) {
         return (
-          <p className="text-sm text-ink/40 text-center py-4">No pairs defined for this matching question</p>
+          <p className="text-sm text-ink/40 text-center py-4">No matching items defined</p>
         );
       }
 
+      // Build UI: students click left then right to create pairs
+      const selectedLeft = answer?.answer_data?.selected_left;
+      const selectedRight = answer?.answer_data?.selected_right;
+
       return (
         <div className="space-y-3">
-          {pairs.map((pair, idx) => (
-            <div
-              key={idx}
-              className={`flex items-center gap-2 rounded-lg border border-ink/10 bg-white px-3 py-2 text-sm transition-colors hover:bg-brand-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
-                answer?.answer_data?.selected_index === idx
-                  ? 'bg-brand-50 text-brand-700 ring-brand-100' :
-                  answer?.answer_data?.selected_index !== null && showResult && !correct
-                    ? 'bg-red-50 text-red-600 ring-red-100' :
+          {/* Left items */}
+          <div className="space-y-2">
+            {left.map((item, idx) => (
+              <div
+                key={idx}
+                className={`flex items-center gap-2 rounded-lg border border-ink/10 bg-white px-3 py-2 text-sm transition-colors hover:bg-brand-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
+                  selectedLeft === idx
+                    ? 'bg-brand-50 text-brand-700 ring-brand-100' :
                     'bg-ink/5 text-ink/60'
-              }`}
-              onClick={() => {
-                if (!submitting) {
-                  setAnswers(prev => ({ ...prev, [question.id]: { selected_index: idx } }));
-                  onAnswer(question.id, { selected_index: idx });
-                }
-              }}
-              role="button"
-              tabIndex={1}
-              aria-label={t(`question:matching_pair_${idx}`, defaultValue: `Pair ${idx + 1}`)}
-            >
-              <span className={answer?.answer_data?.selected_index === idx ? 'font-bold text-brand-700' : 'text-ink/60'}>
-                {pair.left} ↔ {pair.right}
-              </span>
-            </div>
-          ))}
-          {showResult && correct !== null && (
+                }`}
+                onClick={() => {
+                  if (!submitting) {
+                    setAnswers(prev => ({
+                      ...prev,
+                      [question.id]: {
+                        ...prev[question.id]?.answer_data,
+                        answer_data: {
+                          ...prev[question.id]?.answer_data?.answer_data,
+                          selected_left: selectedLeft === idx ? null : idx,
+                        },
+                      },
+                    }));
+                    onAnswer(question.id, {
+                      answer_data: {
+                        ...prev[question.id]?.answer_data?.answer_data,
+                        selected_left: selectedLeft === idx ? null : idx,
+                      },
+                    });
+                  }
+                }}
+                role="button"
+tabIndex={1}
+              >
+                <span className={selectedLeft === idx ? 'font-bold text-brand-700' : 'text-ink/60'}>
+                  {item}
+                </span>
+              </div>
+            ))
+          </div>
+
+          {/* Right items */}
+          <div className="space-y-2">
+            {right.map((item, idx) => (
+              <div
+                key={idx}
+                className={`flex items-center gap-2 rounded-lg border border-ink/10 bg-white px-3 py-2 text-sm transition-colors hover:bg-brand-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
+                  selectedRight === idx
+                    ? 'bg-brand-50 text-brand-700 ring-brand-100' :
+                    'bg-ink/5 text-ink/60'
+                }`}
+                onClick={() => {
+                  if (!submitting && selectedLeft !== null) {
+                    setAnswers(prev => ({
+                      ...prev,
+                      [question.id]: {
+                        ...prev[question.id]?.answer_data,
+                        answer_data: {
+                          ...prev[question.id]?.answer_data?.answer_data,
+                          selected_right: selectedRight === idx ? null : idx,
+                          pairs: [
+                            ...(prev[question.id]?.answer_data?.answer_data?.pairs || []),
+                            selectedRight === idx
+                              ? [...(prev[question.id]?.answer_data?.answer_data?.pairs || []).filter(p => p[0] !== selectedLeft && p[1] !== idx)]
+                              : [...(prev[question.id]?.answer_data?.answer_data?.pairs || []), [selectedLeft, idx]],
+                        ],
+                      },
+                    }));
+                    onAnswer(question.id, {
+                      answer_data: {
+                        ...prev[question.id]?.answer_data?.answer_data,
+                        selected_right: selectedRight === idx ? null : idx,
+                        pairs: [
+                          ...(prev[question.id]?.answer_data?.answer_data?.pairs || []),
+                          selectedRight === idx
+                            ? [...(prev[question.id]?.answer_data?.answer_data?.pairs || []).filter(p => p[0] !== selectedLeft && p[1] !== idx)]
+                            : [...(prev[question.id]?.answer_data?.answer_data?.pairs || []), [selectedLeft, idx]],
+                        ],
+                      },
+                    });
+                  }
+                }}
+                role="button"
+                tabIndex={1}
+              >
+                <span className={selectedRight === idx ? 'font-bold text-brand-700' : 'text-ink/60'}>
+                  {item}
+                </span>
+              </div>
+            ))
+              {/* Auto-grading feedback: only for objectively gradable types */}
+          {/* For matching, check if answer has pairs and compare with correctPairs */}
+          {showResult && answer?.answer_data?.pairs !== undefined && correctPairs.length > 0 && (
             <div className="mt-2 pt-2 border-t border-ink/10">
-              {correct !== null ? (
-                {correct ? (
+              {answer?.answer_data?.pairs.length === correctPairs.length &&
+                answer?.answer_data?.pairs.every((p, i) => {
+                  const [pi0, pi1] = p;
+                  const [ci0, ci1] = correctPairs[i];
+                  return pi0 === ci0 && pi1 === ci1;
+                }) ? (
                   <p className="text-sm text-emerald-700">Correct!</p>
                 ) : (
                   <p className="text-sm text-red-600">Incorrect</p>
                 )
-              ) : null}
-              {correct === false && (
-                <p className="text-xs text-ink/50">The correct pairs are listed above</p>
               )}
+            </div>
+          )}
+
+          {/* Show correct pairs when incorrect */}
+          {showResult && correctPairs.length > 0 && (
+            <div className="mt-2 pt-2 border-t border-ink/10">
+              <p className="text-sm text-ink/70">The correct pairs are:</p>
+              {correctPairs.map((pair, cIdx) => (
+                <div key={cIdx} className="flex items-center gap-1">
+                  <span className="text-sm font-medium text-ink/70">{String.fromCharCode(65 + pair[0])}</span>
+                  <span className="text-xs text-ink/50">↔</span>
+                  <span className="text-sm font-medium text-ink/70">{String.fromCharCode(97 + pair[1])}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {showResult && answer?.answer_data?.pairs === undefined && correctPairs.length > 0 && (
+            <div className="mt-2 pt-2 border-t border-ink/10">
+              <p className="text-sm text-ink/70">Submitted for manual grading</p>
             </div>
           )}
         </div>
