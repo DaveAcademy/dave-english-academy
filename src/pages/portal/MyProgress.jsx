@@ -10,7 +10,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  CheckCircle2, Clock, XCircle, CalendarCheck, BookOpen,
+  CheckCircle2, Clock, XCircle, CalendarCheck, FileCheck2, BookOpen,
   GraduationCap, Trophy, Flame, Target, Languages, Gamepad2,
   Sparkles, TrendingUp, TrendingDown, Minus, Zap, Crown, Star, Layers, ArrowRight,
   BookMarked, PenLine, MessagesSquare, Timer, Puzzle, Brain,
@@ -595,6 +595,48 @@ export default function MyProgress() {
           )}
         </div>
       )}
+
+      {/* ── EXAMS — two most recent only ─────────────────────────────── */}
+      <div className="mp-stagger mt-6" style={{ animationDelay: '240ms' }}>
+        <SectionLabel>{t('portal:mpExamsAssessments')}</SectionLabel>
+        {loading ? (
+          <SkeletonList count={2} />
+        ) : examRows.length === 0 ? (
+          <div className="rounded-xl border border-ink/[0.06] bg-white p-8 text-center shadow-card">
+            <FileCheck2 className="mx-auto mb-2 text-ink/15" size={28} aria-hidden="true" />
+            <p className="text-sm font-semibold text-ink/60">{t('portal:noExamScoresYet', { defaultValue: 'No exam scores yet.' })}</p>
+            <p className="mt-1 text-xs text-ink/40">{t('portal:mpNoExamHint')}</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {examRows.slice(0, 2).map((s) => {
+              const pct = s.exam.max_score ? Math.round((Number(s.score ?? 0) / s.exam.max_score) * 100) : null;
+              const barColor = pct == null ? 'bg-ink/10' : pct >= 80 ? 'bg-active' : pct >= 60 ? 'bg-brand-500' : pct >= 45 ? 'bg-levelB' : 'bg-inactive';
+              return (
+                <div key={s.id} className="rounded-xl border border-ink/[0.06] bg-white p-3.5 shadow-card sm:p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-semibold text-ink">{s.exam.title}</p>
+                      <p className="text-xs text-ink/40">{s.exam.exam_date} · {t('portal:mpMaxScore', { score: s.exam.max_score })}</p>
+                    </div>
+                    {s.score != null ? (
+                      <span className="flex-shrink-0 rounded-full bg-ink px-3 py-1 text-sm font-bold text-white">{s.score}/{s.exam.max_score}</span>
+                    ) : (
+                      <StatusPill tone="info">{t('dashboard:awaitingGrading')}</StatusPill>
+                    )}
+                  </div>
+                  {s.score != null && pct != null && (
+                    <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-ink/[0.06]">
+                      <div className={`h-full rounded-full transition-all ${barColor}`} style={{ width: `${Math.min(100, pct)}%` }} />
+                    </div>
+                  )}
+                  {s.feedback && <p className="mt-2 rounded-lg bg-paper px-2.5 py-1.5 text-xs leading-relaxed text-ink/60">{t('portal:teacherFeedbackLabel', { defaultValue: 'Feedback' })}: {s.feedback}</p>}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
       {/* ── HOMEWORK ─────────────────────────────────────────────────── */}
       <div className="mp-stagger mt-6" style={{ animationDelay: '300ms' }}>
