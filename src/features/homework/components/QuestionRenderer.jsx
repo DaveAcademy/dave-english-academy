@@ -11,6 +11,7 @@
 
 import { useState } from 'react';
 import { CheckCircle2, XCircle, Clock, Send } from 'lucide-react';
+import { normalizeTranslationAnswer } from '../../../lib/normalizeTranslation';
 
 function ResultBanner({ savedAnswer, explanation }) {
   if (!savedAnswer) return null;
@@ -298,7 +299,19 @@ export default function QuestionRenderer({ question, savedAnswer, onSubmit, subm
         <p className="py-2 text-center text-sm text-ink/40">Unsupported question type: {type}</p>
       )}
       {type in DRAFT_FIELD && (
-        <SubmitButton disabled={empty || submitting} submitting={submitting} onClick={() => onSubmit(question.id, draft)} />
+        <SubmitButton
+          disabled={empty || submitting}
+          submitting={submitting}
+          onClick={() =>
+            onSubmit(
+              question.id,
+              // Translation answers are normalized (trim/collapse/harmless
+              // punctuation) before grading; the stored key is untouched and
+              // the RPC still decides. All other types submit verbatim.
+              type === 'translation' ? { ...draft, answer: normalizeTranslationAnswer(draft.answer ?? '') } : draft
+            )
+          }
+        />
       )}
       <ResultBanner savedAnswer={savedAnswer} explanation={question.explanation} />
     </div>
