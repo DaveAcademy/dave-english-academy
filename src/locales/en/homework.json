@@ -53,5 +53,21 @@
   "replaceMySubmission": "Replace my submission",
   "submitMyWork": "Submit my work",
   "viewMySubmission": "View my submission",
-  "stageTitle": "Practice stages"
+  "stageTitle": "Practice stages",
+  "lessonHomeworkTitle": "Lesson homework",
+  "lessonHomeworkSubtitle": "One hub per lesson — open it to study vocabulary, play grammar and practice games, and complete the lesson.",
+  "allLessons": "All lessons",
+  "openLesson": "Open lesson",
+  "lhLocked": "Locked",
+  "lhNotStarted": "Not started",
+  "lhInProgress": "In progress",
+  "lhCompleted": "Completed",
+  "lhWords": "{{count}} words",
+  "lhAssignments": "{{done}}/{{total}} assignments",
+  "lhVocabulary": "Vocabulary",
+  "lhGrammar": "Grammar",
+  "lhPractice": "Practice",
+  "teacherHomeworkTitle": "Teacher assignments",
+  "teacherHomeworkSubtitle": "Special homework assigned by your teacher.",
+  "noTeacherHomework": "No teacher assignments right now — your lesson homework above is always available."
 }

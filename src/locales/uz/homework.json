@@ -53,5 +53,21 @@
   "replaceMySubmission": "Topshirig'imni almashtirish",
   "submitMyWork": "Ishimni topshirish",
   "viewMySubmission": "Topshirig'imni ko'rish",
-  "stageTitle": "Mashq bosqichlari"
+  "stageTitle": "Mashq bosqichlari",
+  "lessonHomeworkTitle": "Dars vazifalari",
+  "lessonHomeworkSubtitle": "Har bir dars uchun bitta markaz — lug'atni o'rganing, grammatika va mashq o'yinlarini o'ynang, darsni yakunlang.",
+  "allLessons": "Barcha darslar",
+  "openLesson": "Darsni ochish",
+  "lhLocked": "Yopiq",
+  "lhNotStarted": "Boshlanmagan",
+  "lhInProgress": "Jarayonda",
+  "lhCompleted": "Yakunlangan",
+  "lhWords": "{{count}} ta so'z",
+  "lhAssignments": "{{done}}/{{total}} topshiriq",
+  "lhVocabulary": "Lug'at",
+  "lhGrammar": "Grammatika",
+  "lhPractice": "Mashq",
+  "teacherHomeworkTitle": "O'qituvchi topshiriqlari",
+  "teacherHomeworkSubtitle": "O'qituvchingiz bergan maxsus vazifalar.",
+  "noTeacherHomework": "Hozircha o'qituvchi topshiriqlari yo'q — yuqoridagi dars vazifalari doimo mavjud."
 }

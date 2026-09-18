@@ -11,8 +11,12 @@ import { useTranslation } from 'react-i18next';
 import {
   BookOpen, Download, MessageSquare, X, Image as ImageIcon,
   Clock, CheckCircle2, AlertCircle, Award, FileText, Sparkles,
-  PenTool, Target,
+  PenTool, Target, ChevronRight, Lock, Languages, Gamepad2, Swords,
 } from 'lucide-react';
+import {
+  LESSON_STATUS, teacherPaceFor, lessonCapFor, progressByLessonNumber,
+  lessonStatusFor, translatedLessonTitle,
+} from '../../../lib/lessonLogic';
 import { useAcademy } from '../../../lib/AcademyDataContext';
 import { levelToken } from '../../../lib/levels';
 import {
@@ -52,6 +56,7 @@ export default function MyHomework() {
   const { t } = useTranslation(['homework', 'common', 'portal']);
   const {
     students, homework, homeworkStatus, homeworkSubmissionFiles, lessons,
+    curriculumProgress, lessonProgress,
     removeMyHomeworkSubmissionFile, loading,
   } = useAcademy();
   const { me } = useAcademy(); // single source, no fallback
@@ -85,6 +90,38 @@ export default function MyHomework() {
     const todayLocal = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     return todayLocal > due;
   };
+
+  // --- Lesson homework (derived, no new rows) ---------------------------
+  // One homework hub per lesson the student can see — same scope, order,
+  // and unlock rules as MyLessons (lessonLogic.js). Standard lesson
+  // homework is therefore automatically available without any per-student
+  // teacher assignment; teacher-assigned rows (myHomework above) stay a
+  // separate section below for special assignments.
+  const lessonPace = teacherPaceFor(curriculumProgress, me?.level);
+  const lessonCap = lessonCapFor(curriculumProgress, me?.level);
+  const lessonItems = useMemo(() => {
+    if (!me) return [];
+    return [...lessons]
+      .filter((l) => (!l.group_name && !l.level) || l.group_name === me.group_name || l.level === me.level)
+      .sort((a, b) => {
+        const an = a.curriculum_lessons?.lesson_number;
+        const bn = b.curriculum_lessons?.lesson_number;
+        if (an != null && bn != null) return an - bn;
+        if (an != null) return -1;
+        if (bn != null) return 1;
+        return new Date(b.created_at) - new Date(a.created_at);
+      });
+  }, [lessons, me]);
+  const lessonProgressByNum = useMemo(
+    () => progressByLessonNumber(lessonProgress, lessonItems),
+    [lessonProgress, lessonItems]
+  );
+  const lessonHwStatus = (lesson) => lessonStatusFor(lesson, lessonPace, lessonProgressByNum, lessonCap);
+  const linkedHomeworkFor = (lessonId) =>
+    myHomework.filter((h) => h.lesson_id === lessonId);
+  const lessonTitleOf = (lesson) =>
+    translatedLessonTitle(t, lesson.curriculum_lessons?.lesson_number, lesson.topic || lesson.curriculum_lessons?.title || '');
+  const vocabCountOf = (lesson) => lesson.lesson_vocabulary?.[0]?.count ?? 0;
 
   const handleOpenFile = async (path) => {
     setActionError(null);
@@ -196,7 +233,95 @@ export default function MyHomework() {
 
       {loading ? (
         <SkeletonList count={3} />
-      ) : myHomework.length === 0 ? (
+      ) : (
+        <>
+          {/* Standard lesson homework — one hub per lesson, derived from
+              lessons (no assignment rows needed). Click a card to open the
+              lesson hub with PDF, vocabulary, practice, and quiz. */}
+          {lessonItems.length > 0 && (
+            <section aria-label={t('homework:lessonHomeworkTitle')} className="mb-6">
+              <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+                <div>
+                  <h2 className="font-display text-lg font-bold tracking-tight text-ink">{t('homework:lessonHomeworkTitle')}</h2>
+                  <p className="mt-0.5 text-sm text-ink/55">{t('homework:lessonHomeworkSubtitle')}</p>
+                </div>
+                <Link to="/my-lessons" className="text-xs font-semibold text-brand-600 hover:underline">
+                  {t('homework:allLessons')}
+                </Link>
+              </div>
+              <div className="space-y-3">
+                {lessonItems.map((l) => {
+                  const num = l.curriculum_lessons?.lesson_number;
+                  const lst = lessonHwStatus(l);
+                  const locked = lst === 'locked';
+                  const linked = linkedHomeworkFor(l.id);
+                  const linkedDone = linked.filter((h) => {
+                    const s = statusFor(h.id);
+                    return s?.score != null || Boolean(s?.answer_file_url) || submittedFilesFor(h.id).length > 0;
+                  }).length;
+                  const vocabCount = vocabCountOf(l);
+                  return (
+                    <article
+                      key={l.id}
+                      className={`overflow-hidden rounded-2xl border bg-white shadow-card transition-shadow hover:shadow-[0_4px_24px_rgba(27,36,48,0.08)] ${locked ? 'border-ink/[0.06] opacity-90' : lst === LESSON_STATUS.COMPLETED ? 'border-active/20' : 'border-ink/[0.06]'}`}
+                    >
+                      <div className={`h-1 w-full ${lst === LESSON_STATUS.COMPLETED ? 'bg-active' : lst === LESSON_STATUS.IN_PROGRESS ? 'bg-brand-500' : 'bg-ink/5'}`} />
+                      <div className="p-3 sm:p-4">
+                        <div className="flex items-start gap-3">
+                          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl font-display text-sm font-bold ring-1 ${lst === LESSON_STATUS.COMPLETED ? 'bg-active/10 text-active ring-active/20' : locked ? 'bg-ink/5 text-ink/40 ring-ink/10' : 'bg-brand-50 text-brand-700 ring-brand-100'}`}>
+                            {locked ? <Lock size={16} /> : (num ?? <BookOpen size={18} />)}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <Link to={`/my-lessons/${l.id}`} className="break-words font-display text-[15px] font-bold leading-tight text-ink hover:text-brand-600 hover:underline sm:text-base">
+                                {num != null ? `#${num} · ` : ''}{lessonTitleOf(l)}
+                              </Link>
+                              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-bold ring-1 ${lst === LESSON_STATUS.COMPLETED ? 'bg-active/10 text-active ring-active/20' : lst === LESSON_STATUS.IN_PROGRESS ? 'bg-brand-50 text-brand-700 ring-brand-100' : locked ? 'bg-ink/5 text-ink/50 ring-ink/10' : 'bg-ink/5 text-ink/60 ring-ink/10'}`}>
+                                {lst === 'locked' ? t('homework:lhLocked') : lst === LESSON_STATUS.COMPLETED ? t('homework:lhCompleted') : lst === LESSON_STATUS.IN_PROGRESS ? t('homework:lhInProgress') : t('homework:lhNotStarted')}
+                              </span>
+                            </div>
+                            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink/50">
+                              {vocabCount > 0 && (
+                                <span className="inline-flex items-center gap-1"><Languages size={12} className="text-ink/30" />{t('homework:lhWords', { count: vocabCount })}</span>
+                              )}
+                              {linked.length > 0 && (
+                                <span className="inline-flex items-center gap-1"><FileText size={11} className="text-ink/30" />{t('homework:lhAssignments', { done: linkedDone, total: linked.length })}</span>
+                              )}
+                            </div>
+                          </div>
+                          <Link to={`/my-lessons/${l.id}`} aria-label={t('homework:openLesson')} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-ink/10 text-ink/50 transition-colors hover:bg-brand-50 hover:text-brand-600">
+                            <ChevronRight size={16} />
+                          </Link>
+                        </div>
+                        {!locked && (
+                          <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-ink/5 pt-3">
+                            <Link to={`/my-lessons/${l.id}`} className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl bg-ink px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-ink/90">
+                              <BookOpen size={13} /> {t('homework:openLesson')}
+                            </Link>
+                            <Link to={`/my-vocabulary?lesson=${l.id}`} className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-ink/10 bg-white px-3 py-2 text-xs font-semibold text-ink/70 transition-colors hover:bg-ink/5">
+                              <Languages size={13} /> {t('homework:lhVocabulary')}
+                            </Link>
+                            <Link to="/grammar-battle" className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-ink/10 bg-white px-3 py-2 text-xs font-semibold text-ink/70 transition-colors hover:bg-ink/5">
+                              <Swords size={13} /> {t('homework:lhGrammar')}
+                            </Link>
+                            <Link to="/games" className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-ink/10 bg-white px-3 py-2 text-xs font-semibold text-ink/70 transition-colors hover:bg-ink/5">
+                              <Gamepad2 size={13} /> {t('homework:lhPractice')}
+                            </Link>
+                          </div>
+                        )}
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+          {myHomework.length === 0 ? (
+            lessonItems.length > 0 ? (
+              <p className="rounded-xl border border-ink/[0.06] bg-white px-4 py-3 text-center text-xs text-ink/45 shadow-card">
+                {t('homework:noTeacherHomework')}
+              </p>
+            ) : (
         <div className="overflow-hidden rounded-2xl border border-ink/[0.06] bg-white shadow-card">
           <div className="bg-gradient-to-br from-brand-50 via-white to-paper px-6 py-10 text-center sm:px-10 sm:py-12">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-card ring-1 ring-ink/[0.06]">
@@ -231,8 +356,13 @@ export default function MyHomework() {
             ))}
           </div>
         </div>
-      ) : (
+          )
+        ) : (
         <>
+          <div className="mb-3">
+            <h2 className="font-display text-lg font-bold tracking-tight text-ink">{t('homework:teacherHomeworkTitle')}</h2>
+            <p className="mt-0.5 text-sm text-ink/55">{t('homework:teacherHomeworkSubtitle')}</p>
+          </div>
           <div className="space-y-3">
             {myHomework.map((h, idx) => {
               const status = statusFor(h.id) || { status: 'Assigned' };
@@ -475,6 +605,14 @@ export default function MyHomework() {
                           {t('viewMySubmission')}
                         </button>
                       )}
+                      {lesson && (
+                        <Link
+                          to={`/my-lessons/${lesson.id}`}
+                          className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl bg-ink px-3.5 py-2.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-ink/90"
+                        >
+                          <BookOpen size={14} /> {t('homework:openLesson')}
+                        </Link>
+                      )}
                       <Link
                         to={`/chat?type=homework&id=${h.id}`}
                         className="ml-auto inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-ink/10 bg-white px-3.5 py-2.5 text-xs font-semibold text-ink/70 shadow-sm transition-colors hover:bg-ink/5"
@@ -488,7 +626,9 @@ export default function MyHomework() {
             })}
           </div>
         </>
-      )}
+            )}
+          </>
+        )}
     </div>
   );
 }
