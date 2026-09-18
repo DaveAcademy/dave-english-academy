@@ -119,10 +119,13 @@ function buildQuestions(lesson) {
     });
   }
 
-  // Practice: matching activities only (pairs are explicit). fill/circle/order/task skipped (no keys).
+  // Practice: matching activities only (pairs are explicit; library uses
+  // `pairs`, some lessons `items`). fill/circle/order/task skipped (no keys).
   for (const p of lesson.practice || []) {
-    if (p.t !== 'match' || !Array.isArray(p.items)) continue;
-    const pairs = p.items.filter((it) => Array.isArray(it) && it.length >= 2);
+    if (p.t !== 'match') continue;
+    const raw = Array.isArray(p.pairs) ? p.pairs : p.items;
+    if (!Array.isArray(raw)) continue;
+    const pairs = raw.filter((it) => Array.isArray(it) && it.length >= 2);
     if (pairs.length < 2) continue;
     out.practice.push({
       question_type: 'matching',
