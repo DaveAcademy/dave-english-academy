@@ -26,6 +26,7 @@ import {
 } from '../../../lib/db';
 import { getAttachmentUrl } from '../../../lib/db';
 import LessonSectionTabs from '../../../components/lesson/LessonSectionTabs';
+import HomeworkStages from '../components/HomeworkStages';
 import StatusPill from '../../../components/StatusPill';
 import ErrorBanner from '../../../components/ErrorBanner';
 import { SkeletonList } from '../../../components/Skeleton';
@@ -62,11 +63,14 @@ export default function MyHomework() {
   const { me } = useAcademy(); // single source, no fallback
   const [actionError, setActionError] = useState(null);
   const [stageData, setStageData] = useState({});
+  const [practiceOpen, setPracticeOpen] = useState(null);
 
+  // Teacher-assigned rows only: standard lesson-homework rows carry a
+  // lesson_id and live in the lesson-hub section (never duplicated here).
   const myHomework = useMemo(() => {
     if (!me) return [];
     return [...homework]
-      .filter((h) => !h.level || h.level === me.level)
+      .filter((h) => !h.lesson_id && (!h.level || h.level === me.level))
       .sort((a, b) => new Date(b.due_date) - new Date(a.due_date));
   }, [homework, me]);
 
@@ -118,7 +122,9 @@ export default function MyHomework() {
   );
   const lessonHwStatus = (lesson) => lessonStatusFor(lesson, lessonPace, lessonProgressByNum, lessonCap);
   const linkedHomeworkFor = (lessonId) =>
-    myHomework.filter((h) => h.lesson_id === lessonId);
+    homework.filter((h) => h.lesson_id === lessonId && (!h.level || h.level === me?.level));
+  // The standard (reusable, non-assignment) homework row for a lesson, if seeded.
+  const standardHomeworkFor = (lessonId) => linkedHomeworkFor(lessonId)[0] || null;
   const lessonTitleOf = (lesson) =>
     translatedLessonTitle(t, lesson.curriculum_lessons?.lesson_number, lesson.topic || lesson.curriculum_lessons?.title || '');
   const vocabCountOf = (lesson) => lesson.lesson_vocabulary?.[0]?.count ?? 0;
@@ -260,6 +266,8 @@ export default function MyHomework() {
                     return s?.score != null || Boolean(s?.answer_file_url) || submittedFilesFor(h.id).length > 0;
                   }).length;
                   const vocabCount = vocabCountOf(l);
+                  const standardHw = standardHomeworkFor(l.id);
+                  const qaOpen = practiceOpen === l.id;
                   return (
                     <article
                       key={l.id}
@@ -307,6 +315,19 @@ export default function MyHomework() {
                             <Link to="/games" className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-ink/10 bg-white px-3 py-2 text-xs font-semibold text-ink/70 transition-colors hover:bg-ink/5">
                               <Gamepad2 size={13} /> {t('homework:lhPractice')}
                             </Link>
+                            {standardHw && (
+                              <button
+                                onClick={() => setPracticeOpen(qaOpen ? null : l.id)}
+                                className={`inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors ${qaOpen ? 'border-brand-300 bg-brand-50 text-brand-700' : 'border-ink/10 bg-white text-ink/70 hover:bg-ink/5'}`}
+                              >
+                                <Target size={13} /> {qaOpen ? t('homework:lhHideQA') : t('homework:lhPracticeQA')}
+                              </button>
+                            )}
+                          </div>
+                        )}
+                        {!locked && standardHw && qaOpen && (
+                          <div className="mt-3 rounded-xl bg-paper/50 p-3 ring-1 ring-ink/[0.04]">
+                            <HomeworkStages homeworkId={standardHw.id} studentId={me?.id} />
                           </div>
                         )}
                       </div>

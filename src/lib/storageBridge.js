@@ -2117,6 +2117,12 @@ export async function submitHomeworkAnswer(studentId, questionId, answerData) {
       student_id: studentId,
       answer_data: answerData,
       submitted_at: new Date().toISOString(),
+      // A re-answer invalidates any previous grade until (auto-)grading reruns.
+      is_correct: null,
+      auto_graded: false,
+      points_earned: 0,
+      graded_at: null,
+      graded_by: null,
     }, { onConflict: 'question_id,student_id' })
     .select()
     .single();

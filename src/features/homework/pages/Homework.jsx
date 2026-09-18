@@ -83,7 +83,9 @@ const {
     };
   }, []);
 
-  const sortedHomework = useMemo(() => [...homework].sort((a, b) => new Date(b.due_date) - new Date(a.due_date)), [homework]);
+  // Teacher-assigned rows only: standard lesson-homework rows carry a
+  // lesson_id and are managed through the lesson hub, not this assignment list.
+  const sortedHomework = useMemo(() => [...homework].filter((h) => !h.lesson_id).sort((a, b) => new Date(b.due_date) - new Date(a.due_date)), [homework]);
   const selected = sortedHomework.find((h) => h.id === selectedHomeworkId) || sortedHomework[0] || null;
 
   const activeStudents = useMemo(

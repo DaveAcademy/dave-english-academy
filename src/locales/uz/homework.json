@@ -67,6 +67,8 @@
   "lhVocabulary": "Lug'at",
   "lhGrammar": "Grammatika",
   "lhPractice": "Mashq",
+  "lhPracticeQA": "Mashq savollari",
+  "lhHideQA": "Savollarni yashirish",
   "teacherHomeworkTitle": "O'qituvchi topshiriqlari",
   "teacherHomeworkSubtitle": "O'qituvchingiz bergan maxsus vazifalar.",
   "noTeacherHomework": "Hozircha o'qituvchi topshiriqlari yo'q — yuqoridagi dars vazifalari doimo mavjud."

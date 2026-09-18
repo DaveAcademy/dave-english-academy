@@ -67,6 +67,8 @@
   "lhVocabulary": "Vocabulary",
   "lhGrammar": "Grammar",
   "lhPractice": "Practice",
+  "lhPracticeQA": "Practice questions",
+  "lhHideQA": "Hide questions",
   "teacherHomeworkTitle": "Teacher assignments",
   "teacherHomeworkSubtitle": "Special homework assigned by your teacher.",
   "noTeacherHomework": "No teacher assignments right now — your lesson homework above is always available."
