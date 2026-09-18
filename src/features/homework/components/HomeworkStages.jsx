@@ -4,7 +4,7 @@
 // answers persist in homework_answers, auto-graded where the question has an
 // explicit key, otherwise left for teacher review. Points stay manual.
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { CheckCircle2, BookOpen, PenTool, Target, Sparkles, Lock } from 'lucide-react';
 import {
   listHomeworkStages,
@@ -25,7 +25,7 @@ const STAGE_META = {
   review: { icon: Sparkles, iconClass: 'text-violet-500', label: 'Review' },
 };
 
-export function HomeworkStages({ homeworkId, studentId }) {
+export function HomeworkStages({ homeworkId, studentId, focusStageKey }) {
   const [stages, setStages] = useState([]);
   const [stageProgress, setStageProgress] = useState({});
   const [questions, setQuestions] = useState({});
@@ -96,6 +96,20 @@ export function HomeworkStages({ homeworkId, studentId }) {
     };
   }, [loadData]);
 
+  // When the parent asks to focus a specific stage (e.g. a "Quizzes" button
+  // clicked on the lesson card), activate it once its data is loaded — but
+  // respect locking; a locked stage is never opened early. Each key is applied
+  // once, so later user-driven stage changes are not overridden on re-render.
+  const appliedFocusRef = useRef(null);
+  useEffect(() => {
+    if (!focusStageKey || stages.length === 0 || appliedFocusRef.current === focusStageKey) return;
+    const target = stages.find((s) => s.stage_key === focusStageKey);
+    if (target && stageProgress[target.id]?.status !== 'locked') {
+      setActiveStage(target.id);
+    }
+    appliedFocusRef.current = focusStageKey;
+  }, [focusStageKey, stages, stageProgress]);
+
   const handleAnswer = useCallback(
     async (questionId, answerData) => {
       if (!studentId) return;
@@ -141,7 +155,7 @@ export function HomeworkStages({ homeworkId, studentId }) {
 
   if (loading) return <p className="py-4 text-center text-sm text-ink/40">Loading practice questions…</p>;
   if (error && stages.length === 0) return <p className="py-4 text-center text-sm text-ink/40">{error}</p>;
-  if (stages.length === 0) return <p className="py-4 text-center text-sm text-ink/40">No practice stages for this lesson yet.</p>;
+  if (stages.length === 0) return <p className="py-4 text-center text-sm text-ink/40">No homework stages for this lesson yet.</p>;
 
   // Non-required stages with no questions carry no content — hide them
   // instead of showing a dead tile. Required-but-empty stages stay visible

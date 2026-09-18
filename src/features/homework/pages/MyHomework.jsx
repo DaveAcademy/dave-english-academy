@@ -63,7 +63,7 @@ export default function MyHomework() {
   const { me } = useAcademy(); // single source, no fallback
   const [actionError, setActionError] = useState(null);
   const [stageData, setStageData] = useState({});
-  const [practiceOpen, setPracticeOpen] = useState(null);
+  const [activeHomeworkStage, setActiveHomeworkStage] = useState(null);
 
   // Teacher-assigned rows only: standard lesson-homework rows carry a
   // lesson_id and live in the lesson-hub section (never duplicated here).
@@ -267,7 +267,6 @@ export default function MyHomework() {
                   }).length;
                   const vocabCount = vocabCountOf(l);
                   const standardHw = standardHomeworkFor(l.id);
-                  const qaOpen = practiceOpen === l.id;
                   return (
                     <article
                       key={l.id}
@@ -306,28 +305,44 @@ export default function MyHomework() {
                             <Link to={`/my-lessons/${l.id}`} className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl bg-ink px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-ink/90">
                               <BookOpen size={13} /> {t('homework:openLesson')}
                             </Link>
-                            <Link to={`/my-vocabulary?lesson=${l.id}`} className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-ink/10 bg-white px-3 py-2 text-xs font-semibold text-ink/70 transition-colors hover:bg-ink/5">
-                              <Languages size={13} /> {t('homework:lhVocabulary')}
-                            </Link>
-                            <Link to="/grammar-battle" className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-ink/10 bg-white px-3 py-2 text-xs font-semibold text-ink/70 transition-colors hover:bg-ink/5">
-                              <Swords size={13} /> {t('homework:lhGrammar')}
-                            </Link>
-                            <Link to="/games" className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-ink/10 bg-white px-3 py-2 text-xs font-semibold text-ink/70 transition-colors hover:bg-ink/5">
-                              <Gamepad2 size={13} /> {t('homework:lhPractice')}
-                            </Link>
-                            {standardHw && (
-                              <button
-                                onClick={() => setPracticeOpen(qaOpen ? null : l.id)}
-                                className={`inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors ${qaOpen ? 'border-brand-300 bg-brand-50 text-brand-700' : 'border-ink/10 bg-white text-ink/70 hover:bg-ink/5'}`}
-                              >
-                                <Target size={13} /> {qaOpen ? t('homework:lhHideQA') : t('homework:lhPracticeQA')}
-                              </button>
+                            {standardHw ? (
+                              <>
+                                {[
+                                  { key: 'vocabulary', icon: Languages, label: t('homework:lhVocabulary') },
+                                  { key: 'grammar', icon: PenTool, label: t('homework:lhSentences') },
+                                  { key: 'practice', icon: Target, label: t('homework:lhQuizzes') },
+                                  { key: 'review', icon: Sparkles, label: t('homework:lhReview') },
+                                ].map(({ key, icon: StageIcon, label }) => {
+                                  const isActive = activeHomeworkStage?.lessonId === l.id && activeHomeworkStage?.stageKey === key;
+                                  return (
+                                    <button
+                                      key={key}
+                                      onClick={() => setActiveHomeworkStage(isActive ? null : { lessonId: l.id, stageKey: key })}
+                                      className={`inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors ${isActive ? 'border-brand-300 bg-brand-50 text-brand-700' : 'border-ink/10 bg-white text-ink/70 hover:bg-ink/5'}`}
+                                    >
+                                      <StageIcon size={13} /> {label}
+                                    </button>
+                                  );
+                                })}
+                              </>
+                            ) : (
+                              <>
+                                <Link to={`/my-vocabulary?lesson=${l.id}`} className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-ink/10 bg-white px-3 py-2 text-xs font-semibold text-ink/70 transition-colors hover:bg-ink/5">
+                                  <Languages size={13} /> {t('homework:lhVocabulary')}
+                                </Link>
+                                <Link to="/grammar-battle" className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-ink/10 bg-white px-3 py-2 text-xs font-semibold text-ink/70 transition-colors hover:bg-ink/5">
+                                  <Swords size={13} /> {t('homework:lhGrammar')}
+                                </Link>
+                                <Link to="/games" className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-ink/10 bg-white px-3 py-2 text-xs font-semibold text-ink/70 transition-colors hover:bg-ink/5">
+                                  <Gamepad2 size={13} /> {t('homework:lhPractice')}
+                                </Link>
+                              </>
                             )}
                           </div>
                         )}
-                        {!locked && standardHw && qaOpen && (
+                        {!locked && standardHw && activeHomeworkStage?.lessonId === l.id && (
                           <div className="mt-3 rounded-xl bg-paper/50 p-3 ring-1 ring-ink/[0.04]">
-                            <HomeworkStages homeworkId={standardHw.id} studentId={me?.id} />
+                            <HomeworkStages homeworkId={standardHw.id} studentId={me?.id} focusStageKey={activeHomeworkStage.stageKey} />
                           </div>
                         )}
                       </div>
