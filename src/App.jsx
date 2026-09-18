@@ -62,7 +62,6 @@ const PictureWord = lazy(() => import('./features/games/pages/PictureWord'));
 const GrammarBattle = lazy(() => import('./features/games/pages/GrammarBattle'));
 const PictureQuiz = lazy(() => import('./features/games/pages/PictureQuiz'));
 const SpeedChallenge = lazy(() => import('./features/games/pages/SpeedChallenge'));
-const ListeningChallenge = lazy(() => import('./features/games/pages/ListeningChallenge'));
 const Install = lazy(() => import('./pages/Install'));
 
 export default function App() {
@@ -164,7 +163,6 @@ function RoutedContent({ isStudent }) {
             <Route path="/speed-challenge" element={<SpeedChallenge />} />
             <Route path="/word-builder" element={<WordBuilder />} />
             <Route path="/sentence-scramble" element={<SentenceScramble />} />
-            <Route path="/listening-challenge" element={<ListeningChallenge />} />
             <Route path="/hangman" element={<Hangman />} />
             <Route path="/grammar-battle" element={<GrammarBattle />} />
             <Route path="/picture-quiz" element={<PictureQuiz />} />

@@ -1396,12 +1396,6 @@ export async function getWordBuilderRound() {
   return splitRoundId(data);
 }
 
-export async function getListeningChallengeRound() {
-  const { data, error } = await supabase.rpc('get_listening_challenge_round');
-  if (error) throw error;
-  return splitRoundId(data);
-}
-
 export async function getSentenceScrambleRound() {
   const { data, error } = await supabase.rpc('get_sentence_scramble_round');
   if (error) throw error;
