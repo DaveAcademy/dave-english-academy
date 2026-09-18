@@ -20,6 +20,8 @@
  *
  * Run without --apply to dry-run (reads only, prints the plan).
  * Run with --apply to execute writes.
+ * Run with --lessons-1-20 (plus optional --apply) for the vocabulary-only
+ * Lessons 1-20 scope (DB vocabulary source, other stages removed).
  */
 const fs = require('fs');
 const path = require('path');
@@ -28,6 +30,12 @@ const https = require('https');
 const { createClient } = require('@supabase/supabase-js');
 
 const APPLY = process.argv.includes('--apply');
+// --lessons-1-20: vocabulary-only mode for Lessons 1-20. No JSON source
+// exists for these lessons, so vocabulary pairs come from the DB
+// (lesson_vocabulary) and ONLY the vocabulary stage is seeded. The trigger's
+// unavoidably created empty Sentences/Quizzes/Review stages are removed
+// (only when question-free) so the UI never shows dead stages.
+const MODE_1_20 = process.argv.includes('--lessons-1-20');
 const ROOT = path.resolve(__dirname, '..');
 const DATA_DIR = path.join(ROOT, 'lesson-library', 'data');
 const REF = process.env.SUPABASE_PROJECT_REF || 'usqzcsoolkbuxyiiawmx';
@@ -71,6 +79,56 @@ function fetchServiceRole() {
 function stripPrefix(s, prefix) {
   const t = stripMd(s);
   return t.toLowerCase().startsWith(prefix.toLowerCase()) ? t.slice(prefix.length).trim() : t;
+}
+
+// Vocabulary-only builder from DB pairs [{w, u}] — same deterministic
+// matching + multiple-choice construction as the JSON path, hardened:
+// duplicate translations are never used as same-question distractors, and
+// duplicate pair labels are dropped from matching (first alphabetically kept).
+function buildVocabOnly(n, pairs) {
+  const out = { vocabulary: [] };
+  const clean = (pairs || [])
+    .filter((p) => p && p.w && p.u)
+    .sort((a, b) => (a.w < b.w ? -1 : a.w > b.w ? 1 : 0));
+  if (clean.length < 2) return out;
+  const seenUz = new Set();
+  const matchPairs = [];
+  for (const p of clean) {
+    if (!seenUz.has(p.u)) {
+      seenUz.add(p.u);
+      matchPairs.push(p);
+    }
+  }
+  if (matchPairs.length >= 2) {
+    out.vocabulary.push({
+      question_type: 'matching',
+      question_text: `Match the Lesson ${n} words with their translations`,
+      question_data: {
+        left: matchPairs.map((v) => v.w),
+        right: matchPairs.map((v) => v.u),
+        correct_pairs: matchPairs.map((_, i) => [i, i]),
+      },
+      explanation: `Lesson ${n} vocabulary`,
+      points: 1,
+    });
+  }
+  const distinctUz = [...new Set(clean.map((v) => v.u))];
+  for (let i = 0; i < clean.length; i++) {
+    const others = distinctUz.filter((u) => u !== clean[i].u);
+    if (others.length < 3) continue; // not enough distinct distractors — skip word
+    const candIdx = [0, 1, 2].map((k) => (i + k) % others.length);
+    const options = [clean[i].u, ...candIdx.map((j) => others[j])];
+    const rot = i % 4;
+    const rotated = options.slice(rot).concat(options.slice(0, rot));
+    out.vocabulary.push({
+      question_type: 'multiple_choice',
+      question_text: `What does "${clean[i].w}" mean?`,
+      question_data: { options: rotated, correct_index: rotated.indexOf(clean[i].u) },
+      explanation: `${clean[i].w} — ${clean[i].u}`,
+      points: 1,
+    });
+  }
+  return out;
 }
 
 function buildQuestions(lesson) {
@@ -230,19 +288,30 @@ function buildQuestions(lesson) {
 }
 
 async function main() {
-  const library = loadLibrary();
-  console.log(`[seed] lessons in scope: ${library.length} (30-100)`);
-  console.log(`[seed] mode: ${APPLY ? 'APPLY (writes!)' : 'dry-run (reads only)'}`);
-
   const key = await fetchServiceRole();
   const db = createClient(URL, key);
+
+  const LO = MODE_1_20 ? 1 : 30;
+  const HI = MODE_1_20 ? 20 : 100;
+  let library = [];
+  const dbVocabByNum = {};
+  const currTitleByNum = {};
+  if (MODE_1_20) {
+    // Vocabulary-only mode: shells from curriculum titles + DB vocabulary.
+    const { data: curr } = await db.from('curriculum_lessons').select('lesson_number, title').gte('lesson_number', LO).lte('lesson_number', HI);
+    for (const c of curr || []) currTitleByNum[c.lesson_number] = c.title;
+  } else {
+    library = loadLibrary();
+  }
+  console.log(`[seed] lessons in scope: ${MODE_1_20 ? '1-20 (DB vocabulary only)' : `${library.length} (30-100)`}`);
+  console.log(`[seed] mode: ${APPLY ? 'APPLY (writes!)' : 'dry-run (reads only)'}`);
 
   // Map curriculum lesson_number -> lessons.id
   const { data: lessonRows, error: lessonErr } = await db
     .from('lessons')
     .select('id, curriculum_lessons!inner(lesson_number)')
-    .gte('curriculum_lessons.lesson_number', 30)
-    .lte('curriculum_lessons.lesson_number', 100);
+    .gte('curriculum_lessons.lesson_number', LO)
+    .lte('curriculum_lessons.lesson_number', HI);
   if (lessonErr) throw lessonErr;
   const lessonIdByNum = {};
   for (const r of lessonRows) lessonIdByNum[r.curriculum_lessons.lesson_number] = r.id;
@@ -253,8 +322,26 @@ async function main() {
   let stagesSkipped = 0;
   const perLesson = [];
 
-  for (const lesson of library) {
-    const n = lesson.n;
+  const scopeNums = MODE_1_20
+    ? Array.from({ length: HI - LO + 1 }, (_, i) => LO + i)
+    : library.map((l) => l.n);
+  const jsonByNum = {};
+  for (const l of library) jsonByNum[l.n] = l;
+  if (MODE_1_20) {
+    // One query per lesson keeps the logic obvious; 20 lessons only.
+    for (const n of scopeNums) {
+      const lid = lessonIdByNum[n];
+      if (!lid) continue;
+      const { data: words } = await db.from('lesson_vocabulary').select('english, uzbek').eq('lesson_id', lid).order('english');
+      dbVocabByNum[n] = (words || []).map((w) => ({ w: w.english, u: w.uzbek }));
+    }
+  }
+
+  for (const n of scopeNums) {
+    const lesson = MODE_1_20
+      ? { n, title: currTitleByNum[n] || `Lesson ${n}`, homework: null, dbVocab: dbVocabByNum[n] || [] }
+      : jsonByNum[n];
+    if (!lesson) continue;
     const lessonId = lessonIdByNum[n];
     if (!lessonId) {
       console.log(`[seed] lesson ${n}: NO lessons row — skipped`);
@@ -299,10 +386,24 @@ async function main() {
           if (tErr) throw tErr;
         }
       }
+      if (MODE_1_20) {
+        // Vocabulary-only scope: remove the trigger-created empty
+        // Sentences/Quizzes/Review stages so no dead stages can render.
+        // Guarded to question-free rows of this lesson's homework only.
+        for (const s of stages || []) {
+          if (s.stage_key === 'vocabulary') continue;
+          const { count: qc } = await db.from('homework_questions').select('id', { count: 'exact', head: true }).eq('stage_id', s.id);
+          if ((qc || 0) === 0) {
+            const { error: dErr } = await db.from('homework_stages').delete().eq('id', s.id);
+            if (dErr) throw dErr;
+            delete stageByKey[s.stage_key];
+          }
+        }
+      }
     }
-    const planned = buildQuestions(lesson);
+    const planned = MODE_1_20 ? buildVocabOnly(n, lesson.dbVocab) : buildQuestions(lesson);
     let lessonQ = 0;
-    for (const key of ['vocabulary', 'grammar', 'practice', 'review']) {
+    for (const key of Object.keys(planned)) {
       const stage = stageByKey[key];
       if (!stage) continue;
       // Idempotency without a unique key: skip texts already present.
@@ -336,6 +437,10 @@ async function main() {
 }
 
 function countPlanned(lesson) {
+  if (lesson.dbVocab) {
+    const q = buildVocabOnly(lesson.n, lesson.dbVocab);
+    return q.vocabulary.length;
+  }
   const q = buildQuestions(lesson);
   return q.vocabulary.length + q.grammar.length + q.practice.length + q.review.length;
 }

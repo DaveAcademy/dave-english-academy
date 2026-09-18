@@ -231,6 +231,9 @@ export function HomeworkStages({ homeworkId, studentId, focusStageKey }) {
           </div>
         );
       })}
+      {visibleStages.length === 1 && visibleStages[0].stage_key === 'vocabulary' && (
+        <p className="text-center text-xs text-ink/45">Sentences, Quizzes, and Review are not available for this lesson yet.</p>
+      )}
       {allCompleted && (
         <div className="rounded-xl border border-active/20 bg-active/5 p-4 text-center">
           <CheckCircle2 size={22} className="mx-auto text-active" />
