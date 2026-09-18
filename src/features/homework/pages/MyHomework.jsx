@@ -159,7 +159,7 @@ export default function MyHomework() {
 
   const completionPct = stats.total ? Math.round((stats.submitted / stats.total) * 100) : 0;
 
-  // Load four-stage homework data (Vocabulary, Grammar, Practice, Review)
+  // Load four-stage homework data (Vocabulary, Sentences, Quizzes, Review)
   // Read-only: existing journey/scoring untouched. If the stage tables/RPCs
   // are absent, the calls throw, are caught per homework, and the stage
   // block below stays hidden — the existing homework UI keeps working.
@@ -542,7 +542,7 @@ export default function MyHomework() {
                                   size={16}
                                   className={config.iconClass}
                                 />
-                                <span className="font-semibold text-ink">{config.label}</span>
+                                <span className="font-semibold text-ink">{s.title || config.label}</span>
                               </div>
                               <p className="text-xs text-ink/50">
                                 {s.title}

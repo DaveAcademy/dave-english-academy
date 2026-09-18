@@ -155,6 +155,8 @@ export function HomeworkStages({ homeworkId, studentId }) {
       {error && <p className="text-xs font-semibold text-inactive">{error}</p>}
       {visibleStages.map((stage) => {
         const meta = STAGE_META[stage.stage_key] || { icon: BookOpen, iconClass: 'text-ink/40', label: stage.title };
+        // Prefer the DB display title (Vocabulary → Sentences → Quizzes → Review); key map is fallback only.
+        const stageLabel = stage.title || meta.label;
         const StageIcon = meta.icon;
         const progress = stageProgress[stage.id] || {};
         const status = progress.status || 'not_started';
@@ -178,7 +180,7 @@ export function HomeworkStages({ homeworkId, studentId }) {
               <span className="flex min-w-0 items-center gap-2">
                 {isLocked ? <Lock size={16} className="shrink-0 text-ink/30" /> : <StageIcon size={18} className={`shrink-0 ${meta.iconClass}`} />}
                 <span className="min-w-0">
-                  <span className="block truncate font-display text-[15px] font-bold text-ink">{meta.label}</span>
+                  <span className="block truncate font-display text-[15px] font-bold text-ink">{stageLabel}</span>
                   <span className="block text-xs text-ink/45">
                     {isLocked ? 'Locked — finish the previous stage' : isCompleted ? 'Completed' : `${answeredCount}/${stageQuestions.length} answered`}
                   </span>

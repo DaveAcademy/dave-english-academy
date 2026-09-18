@@ -64,10 +64,17 @@ function fetchServiceRole() {
   });
 }
 
-// Build the question set for one lesson. Returns { vocabulary: [], grammar: [], practice: [] }
-// (review intentionally empty). Pure function of the JSON — no DB access.
+// Build the question set for one lesson. Returns { vocabulary, grammar, practice, review }.
+// Auto-gradable (explicit keys): matching, multiple_choice, translation.
+// Manual (teacher review queue): short_answer, sentence_creation,
+// reading_comprehension. Pure function of the JSON — no DB access.
+function stripPrefix(s, prefix) {
+  const t = stripMd(s);
+  return t.toLowerCase().startsWith(prefix.toLowerCase()) ? t.slice(prefix.length).trim() : t;
+}
+
 function buildQuestions(lesson) {
-  const out = { vocabulary: [], grammar: [], practice: [] };
+  const out = { vocabulary: [], grammar: [], practice: [], review: [] };
   const vocab = lesson.vocab || [];
 
   // Vocabulary: one matching (all pairs) + one MC per word (same-lesson distractors, deterministic rotation).
@@ -119,8 +126,35 @@ function buildQuestions(lesson) {
     });
   }
 
-  // Practice: matching activities only (pairs are explicit; library uses
-  // `pairs`, some lessons `items`). fill/circle/order/task skipped (no keys).
+  // Sentences extras: mistake triples [wrong, right, note] -> short_answer
+  // (manual; the Right sentence is NOT stored as a key). Writing tasks ->
+  // sentence_creation (manual).
+  for (const m of ((lesson.grammar && lesson.grammar.mistake) || [])) {
+    if (!Array.isArray(m) || m.length < 2) continue;
+    const wrong = stripPrefix(stripMd(m[0]).replace(/^\*+|\*+$/g, ''), 'Wrong:');
+    const note = m.length > 2 ? stripMd(m[2]) : '';
+    if (!wrong) continue;
+    out.grammar.push({
+      question_type: 'short_answer',
+      question_text: `Correct the sentence: ${wrong}`,
+      question_data: {},
+      explanation: note,
+      points: 1,
+    });
+  }
+  const writing = lesson.writing;
+  if (writing && writing.task) {
+    out.grammar.push({
+      question_type: 'sentence_creation',
+      question_text: `${writing.title || 'Writing'}: ${stripMd(writing.task)}`,
+      question_data: { prompt: stripMd(writing.task), required_words: [] },
+      explanation: stripMd(writing.uz || ''),
+      points: 1,
+    });
+  }
+
+  // Quizzes: practice matching (explicit pairs) + circle items and quiz
+  // strings as manual short_answer (options shown, no invented keys).
   for (const p of lesson.practice || []) {
     if (p.t !== 'match') continue;
     const raw = Array.isArray(p.pairs) ? p.pairs : p.items;
@@ -136,6 +170,59 @@ function buildQuestions(lesson) {
         correct_pairs: pairs.map((_, i) => [i, i]),
       },
       explanation: p.title || '',
+      points: 1,
+    });
+  }
+  for (const p of lesson.practice || []) {
+    if (p.t !== 'circle' || !Array.isArray(p.items)) continue;
+    for (const it of p.items) {
+      if (typeof it !== 'string' || !it.trim()) continue;
+      out.practice.push({
+        question_type: 'short_answer',
+        question_text: `${stripMd(it)} — type the correct letter`,
+        question_data: {},
+        explanation: p.title || '',
+        points: 1,
+      });
+    }
+  }
+  for (const q of lesson.quiz || []) {
+    if (typeof q !== 'string' || !q.trim()) continue;
+    out.practice.push({
+      question_type: 'short_answer',
+      question_text: stripMd(q),
+      question_data: {},
+      explanation: '',
+      points: 1,
+    });
+  }
+
+  // Review: reading passage + questions and listening script + questions as
+  // reading_comprehension with short-answer sub-questions (manual). Speaking
+  // activities are not Q&A — skipped. fill/order/task skipped (no keys).
+  const reading = lesson.reading;
+  if (reading && (reading.passage || (reading.qs && reading.qs.length > 0))) {
+    out.review.push({
+      question_type: 'reading_comprehension',
+      question_text: `${reading.title || 'Reading'} (Lesson ${lesson.n})`,
+      question_data: {
+        passage: stripMd(reading.passage || ''),
+        questions: (reading.qs || []).filter((x) => typeof x === 'string' && x.trim()).map((x) => ({ question: stripMd(x), type: 'sa' })),
+      },
+      explanation: '',
+      points: 1,
+    });
+  }
+  const listening = lesson.listening;
+  if (listening && listening.script && listening.qs && listening.qs.length > 0) {
+    out.review.push({
+      question_type: 'reading_comprehension',
+      question_text: `${listening.title || 'Listening'} (Lesson ${lesson.n}) — read the script, then answer`,
+      question_data: {
+        passage: stripMd(listening.script),
+        questions: listening.qs.filter((x) => typeof x === 'string' && x.trim()).map((x) => ({ question: stripMd(x), type: 'sa' })),
+      },
+      explanation: '',
       points: 1,
     });
   }
@@ -198,22 +285,37 @@ async function main() {
       continue;
     }
 
+    // Display titles for the four-stage workflow (data-only; schema/keys untouched).
+    const STAGE_TITLES = { 1: 'Vocabulary', 2: 'Sentences', 3: 'Quizzes', 4: 'Review' };
     // Stages (trigger auto-creates on homework insert).
-    const { data: stages } = await db.from('homework_stages').select('id, stage_key').eq('homework_id', homeworkId);
+    const { data: stages } = await db.from('homework_stages').select('id, stage_key, stage_number, title').eq('homework_id', homeworkId);
     const stageByKey = {};
     for (const s of stages || []) stageByKey[s.stage_key] = s;
+    if (APPLY) {
+      for (const s of stages || []) {
+        const want = STAGE_TITLES[s.stage_number];
+        if (want && s.title !== want) {
+          const { error: tErr } = await db.from('homework_stages').update({ title: want }).eq('id', s.id);
+          if (tErr) throw tErr;
+        }
+      }
+    }
     const planned = buildQuestions(lesson);
     let lessonQ = 0;
-    for (const key of ['vocabulary', 'grammar', 'practice']) {
+    for (const key of ['vocabulary', 'grammar', 'practice', 'review']) {
       const stage = stageByKey[key];
       if (!stage) continue;
-      const { count } = await db.from('homework_questions').select('id', { count: 'exact', head: true }).eq('stage_id', stage.id);
-      if (count > 0) {
+      // Idempotency without a unique key: skip texts already present.
+      const { data: have } = await db.from('homework_questions').select('question_text').eq('stage_id', stage.id);
+      const haveTexts = new Set((have || []).map((r) => r.question_text));
+      const fresh = planned[key].filter((q) => !haveTexts.has(q.question_text));
+      if (fresh.length === 0) {
         stagesSkipped++;
         continue;
       }
-      const rows = planned[key].map((q, i) => ({ ...q, stage_id: stage.id, display_order: i + 1 }));
-      if (rows.length === 0) continue;
+      // Continue display_order after existing rows.
+      const { count: haveCount } = await db.from('homework_questions').select('id', { count: 'exact', head: true }).eq('stage_id', stage.id);
+      const rows = fresh.map((q, i) => ({ ...q, stage_id: stage.id, display_order: (haveCount || 0) + i + 1 }));
       if (APPLY) {
         const { error: qErr } = await db.from('homework_questions').insert(rows);
         if (qErr) throw qErr;
@@ -235,7 +337,7 @@ async function main() {
 
 function countPlanned(lesson) {
   const q = buildQuestions(lesson);
-  return q.vocabulary.length + q.grammar.length + q.practice.length;
+  return q.vocabulary.length + q.grammar.length + q.practice.length + q.review.length;
 }
 
 main().catch((e) => {
