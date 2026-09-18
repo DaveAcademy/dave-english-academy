@@ -2140,6 +2140,71 @@ export async function listHomeworkAnswers(studentId, questionId) {
   return data;
 }
 
+// ---------- Teacher manual-answer review ----------
+// Reads/writes the EXISTING homework_answers columns (is_correct, graded_at,
+// graded_by). No new tables, RPCs, or policies. Only staff pages call these;
+// RLS still enforces isolation (students can only ever see/touch their own
+// rows via is_own_student, teachers/admins via teacher_all/admin_all).
+export async function listHomeworkAnswersForReview({ pendingOnly = true, limit = 200 } = {}) {
+  let query = supabase
+    .from('homework_answers')
+    .select(`
+      id, question_id, student_id, answer_data, is_correct, auto_graded,
+      points_earned, submitted_at, graded_at,
+      students (id, real_name),
+      homework_questions (
+        id, question_type, question_text, question_data, explanation,
+        homework_stages (
+          id, stage_key, title,
+          homework (id, title, lesson_id,
+            lessons (id, topic, curriculum_lessons (lesson_number, title)))
+        )
+      )
+    `)
+    .order('submitted_at', { ascending: false })
+    .limit(limit);
+  if (pendingOnly) query = query.is('is_correct', null);
+  const { data, error } = await query;
+  if (error) throw error;
+  return data || [];
+}
+
+export async function gradeHomeworkAnswer({ answerId, isCorrect, homeworkId, studentId, stageId, callerIsStaff = false }) {
+  // Staff-only entry point (the /homework route is staff-only and RLS
+  // teacher_all/admin_all gates the write). Refuse outright otherwise so a
+  // student-kept client can never flip its own grades through this helper.
+  if (!callerIsStaff) throw new Error('Manual grading requires a teacher or admin session.');
+  if (answerId == null || isCorrect == null) throw new Error('answerId and isCorrect are required.');
+  let graderId = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    graderId = data?.user?.id || null;
+  } catch {
+    graderId = null;
+  }
+  const { data, error } = await supabase
+    .from('homework_answers')
+    .update({
+      is_correct: Boolean(isCorrect),
+      auto_graded: false,
+      graded_at: new Date().toISOString(),
+      graded_by: graderId,
+    })
+    .eq('id', answerId)
+    .select()
+    .single();
+  if (error) throw error;
+  // Re-evaluate stage completion so a corrected answer can unlock the next stage.
+  if (homeworkId && studentId && stageId) {
+    try {
+      await checkHomeworkStageCompletion(homeworkId, studentId, stageId);
+    } catch {
+      // best-effort: the grade itself is saved above
+    }
+  }
+  return data;
+}
+
 export async function getHomeworkStageProgress(homeworkId, studentId) {
   const { data, error } = await supabase.rpc('get_homework_stage_progress', {
     p_homework_id: homeworkId,

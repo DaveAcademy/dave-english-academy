@@ -19,6 +19,7 @@ import {
 } from '../../../lib/db';
 import { LEVELS } from '../../../lib/levels';
 import HomeworkGradingRoster from '../components/HomeworkGradingRoster';
+import HomeworkAnswerReview from '../components/HomeworkAnswerReview';
 
 const EMPTY_FORM = { title: '', level: 'A', description: '', due_date: new Date().toISOString().slice(0, 10), lesson_id: '' };
 const STATUS_OPTIONS = ['Assigned', 'Submitted', 'Graded'];
@@ -41,7 +42,8 @@ const {
     awardHomeworkPointsBulkForStudent,
     error,
   } = useAcademy();
-  const { profile } = useAuth();
+  const { profile, role } = useAuth();
+  const callerIsStaff = role === 'teacher' || role === 'administrator';
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
@@ -459,6 +461,11 @@ const {
           />
         </>
       )}
+
+      {/* Manual review queue for written Q&A answers (existing homework_answers
+          columns only). Separate from the assignment roster above, which covers
+          teacher-assigned file submissions. */}
+      <HomeworkAnswerReview callerIsStaff={callerIsStaff} />
 
       {/* Pending Submissions: Level -> Student -> expand, merging both the
           Homework domain (graded inline via HomeworkGradingRoster, reached
