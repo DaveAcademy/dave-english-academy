@@ -5,12 +5,13 @@
 // Adds: 6-stage status mapping, progress indicators, valid/invalid submission distinction,
 // premium empty state, 320px+ mobile, motion-safe animations, >=44px tap targets.
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   BookOpen, Download, MessageSquare, X, Image as ImageIcon,
   Clock, CheckCircle2, AlertCircle, Award, FileText, Sparkles,
+  PenTool, Target,
 } from 'lucide-react';
 import { useAcademy } from '../../../lib/AcademyDataContext';
 import { levelToken } from '../../../lib/levels';
@@ -116,24 +117,39 @@ export default function MyHomework() {
   const completionPct = stats.total ? Math.round((stats.submitted / stats.total) * 100) : 0;
 
   // Load four-stage homework data (Vocabulary, Grammar, Practice, Review)
+  // Read-only: existing journey/scoring untouched. If the stage tables/RPCs
+  // are absent, the calls throw, are caught per homework, and the stage
+  // block below stays hidden — the existing homework UI keeps working.
   useEffect(() => {
+    if (!me || myHomework.length === 0) return;
+    let cancelled = false;
     const loadHomeworkStages = async () => {
       for (const h of myHomework) {
+        if (cancelled) return;
         try {
           const stages = await listHomeworkStages(h.id);
-          const progress = await getHomeworkStageProgress(h.id, me.id);
-          const questionsMap = {};
-          for (const s of stages) {
-            const questions = await listHomeworkQuestions(s.id);
-            questionsMap[s.id] = questions;
+          const progressRows = await getHomeworkStageProgress(h.id, me.id);
+          // RPC returns an array of per-stage rows; index by stage_id.
+          const progress = {};
+          for (const p of Array.isArray(progressRows) ? progressRows : []) {
+            if (p && p.stage_id != null) progress[p.stage_id] = p;
           }
-          setStageData(prev => ({ ...prev, [h.id]: { stages, questions: questionsMap, progress } }));
+          const questionsMap = {};
+          for (const s of stages || []) {
+            try {
+              questionsMap[s.id] = await listHomeworkQuestions(s.id);
+            } catch {
+              questionsMap[s.id] = [];
+            }
+          }
+          if (!cancelled) setStageData(prev => ({ ...prev, [h.id]: { stages: stages || [], questions: questionsMap, progress } }));
         } catch (e) {
           console.error(`Failed to load stages for homework ${h.id}:`, e);
         }
       }
     };
-    if (myHomework.length > 0) loadHomeworkStages();
+    loadHomeworkStages();
+    return () => { cancelled = true; };
   }, [myHomework, me]);
 
   if (!me) {
@@ -342,39 +358,38 @@ export default function MyHomework() {
                       </p>
 </div>
 
-                  {/* four-stage homework content */}
-                  {stageData[h.id] && stageData[h.id].stages.length > 0 && (
+                  {/* four-stage homework content (read-only; hidden when no stage data) */}
+                  {stageData[h.id] && (stageData[h.id].stages || []).length > 0 && (
                     <div className="mt-3 rounded-xl bg-white p-4 shadow-card">
                       <h3 className="font-display text-sm font-semibold text-ink uppercase tracking-wider mb-3">
                         {t('homework:stageTitle')}
                       </h3>
-                      <div className="grid grid-cols-4 gap-2">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                         {stageData[h.id].stages.map((s) => {
                           const config = {
-                            vocabulary: { icon: BookOpen, color: 'brand' },
-                            grammar: { icon: PenTool, color: 'amber' },
-                            practice: { icon: Target, color: 'emerald' },
-                            review: { icon: Sparkles, color: 'violet' },
-                          }[s.stage_key] || { icon: BookOpen, color: 'ink' };
-                          const progress = stageData[h.id].progress[s.id];
-                          const progressPct = progress
-                            ? Math.round(
-                                ((progress.points_earned || 0) / (progress.total_points || 1)) * 100
-                              )
+                            vocabulary: { icon: BookOpen, iconClass: 'text-brand-500', label: 'Vocabulary' },
+                            grammar: { icon: PenTool, iconClass: 'text-amber-500', label: 'Grammar' },
+                            practice: { icon: Target, iconClass: 'text-emerald-500', label: 'Practice' },
+                            review: { icon: Sparkles, iconClass: 'text-violet-500', label: 'Review' },
+                          }[s.stage_key] || { icon: BookOpen, iconClass: 'text-ink/40', label: s.stage_key || 'Stage' };
+                          const StageIcon = config.icon;
+                          const progressRow = (stageData[h.id].progress || {})[s.id] || {};
+                          const totalPoints = Number(progressRow.total_points) || 0;
+                          const progressPct = totalPoints > 0
+                            ? Math.round(((Number(progressRow.points_earned) || 0) / totalPoints) * 100)
                             : 0;
-                          const questions = stageData[h.id].questions[s.id] || [];
-                          const answeredCount = questions.filter(
-                            (q) => stageData[h.id].answers[q.id]
-                          ).length;
+                          const questions = (stageData[h.id].questions || {})[s.id] || [];
+                          const answeredCount = Number(progressRow.answered_count) || 0;
+                          const totalQuestions = Number(progressRow.questions_count) || questions.length;
                           return (
                             <div
                               key={s.id}
-                              className={`group border rounded-lg border-ink/10 bg-white p-3 hover:bg-brand-50 transition-colors`}
+                              className="group border rounded-lg border-ink/10 bg-white p-3 hover:bg-brand-50 transition-colors"
                             >
                               <div className="flex items-center gap-2 mb-2">
-                                <Icon
+                                <StageIcon
                                   size={16}
-                                  className={`text-${config.color}-500`}
+                                  className={config.iconClass}
                                 />
                                 <span className="font-semibold text-ink">{config.label}</span>
                               </div>
@@ -385,17 +400,17 @@ export default function MyHomework() {
                                 {progressPct}% complete
                               </div>
                               <div className="mt-1">
-                                <span className="text-[10px] font-bold rounded-full px-1.5 py-0.5 ${
+                                <span className={`text-[10px] font-bold rounded-full px-1.5 py-0.5 ${
                                   progressPct >= 100 ? 'bg-brand-100 text-brand-700' :
                                   progressPct >= 50 ? 'bg-emerald-100 text-emerald-700' :
                                   'bg-ink/5 text-ink/50'
-                                }">
+                                }`}>
                                   {progressPct === 0 ? 'Not Started' :
                                    progressPct < 100 ? 'In Progress' : 'Completed'}
                                 </span>
                               </div>
                               <div className="mt-1 text-[10px] text-ink/40">
-                                {answeredCount}/{questions.length} answered
+                                {answeredCount}/{totalQuestions} answered
                               </div>
                             </div>
                           );
