@@ -22,6 +22,8 @@
  * Run with --apply to execute writes.
  * Run with --lessons-1-20 (plus optional --apply) for the vocabulary-only
  * Lessons 1-20 scope (DB vocabulary source, other stages removed).
+ * Run with --lessons-1-29-safe (plus optional --apply) for the reviewed
+ * manual-grade PDF content scope (Lessons 1-29 minus blocked 17/20/27/28).
  */
 const fs = require('fs');
 const path = require('path');
@@ -36,6 +38,13 @@ const APPLY = process.argv.includes('--apply');
 // unavoidably created empty Sentences/Quizzes/Review stages are removed
 // (only when question-free) so the UI never shows dead stages.
 const MODE_1_20 = process.argv.includes('--lessons-1-20');
+// --lessons-1-29-safe: manual-grade content from the reviewed PDF extraction
+// artifact (lesson-library/data/lessons-01-29-manual.json). Seeds ONLY
+// short_answer / sentence_creation / reading_comprehension (teacher-reviewed;
+// auto_grade returns NULL for these types). Skips blocked lessons
+// 17/20/27/28 entirely. Never invents keys.
+const MODE_1_29_SAFE = process.argv.includes('--lessons-1-29-safe');
+const SKIP_1_29 = new Set([17, 20, 27, 28]);
 const ROOT = path.resolve(__dirname, '..');
 const DATA_DIR = path.join(ROOT, 'lesson-library', 'data');
 const REF = process.env.SUPABASE_PROJECT_REF || 'usqzcsoolkbuxyiiawmx';
@@ -79,6 +88,78 @@ function fetchServiceRole() {
 function stripPrefix(s, prefix) {
   const t = stripMd(s);
   return t.toLowerCase().startsWith(prefix.toLowerCase()) ? t.slice(prefix.length).trim() : t;
+}
+
+// Manual-grade builder from the reviewed PDF extraction artifact. Every
+// question uses short_answer / sentence_creation / reading_comprehension,
+// for which auto_grade_homework_answer() returns NULL (teacher review).
+// NOTHING here carries an auto-grade key — nothing can be fabricated.
+function buildManual129(n, entry) {
+  const out = { grammar: [], practice: [], review: [] };
+  const E = entry || {};
+  for (const m of E.wrong || []) {
+    if (!m || !m.wrong) continue;
+    out.grammar.push({
+      question_type: 'short_answer',
+      question_text: `Correct the sentence: ${m.wrong}`,
+      question_data: {},
+      explanation: m.note || '',
+      points: 1,
+    });
+  }
+  if (E.challenge) {
+    out.grammar.push({
+      question_type: 'sentence_creation',
+      question_text: E.challenge,
+      question_data: { prompt: E.challenge, required_words: [] },
+      explanation: '',
+      points: 1,
+    });
+  }
+  for (const q of E.quiz || []) {
+    if (!q || !q.trim()) continue;
+    const isWrite = /^\s*write\b/i.test(q);
+    out.practice.push({
+      question_type: isWrite ? 'sentence_creation' : 'short_answer',
+      question_text: q,
+      question_data: isWrite ? { prompt: q, required_words: [] } : {},
+      explanation: '',
+      points: 1,
+    });
+  }
+  for (const c of E.circle || []) {
+    if (!c || !c.trim()) continue;
+    out.practice.push({
+      question_type: 'short_answer',
+      question_text: `${c} — type the correct letter`,
+      question_data: {},
+      explanation: '',
+      points: 1,
+    });
+  }
+  for (const t of E.tf || []) {
+    if (!t || !t.trim()) continue;
+    out.practice.push({
+      question_type: 'short_answer',
+      question_text: t,
+      question_data: {},
+      explanation: '',
+      points: 1,
+    });
+  }
+  if (E.read && (E.read.passage || (E.read.qs || []).length > 0)) {
+    out.review.push({
+      question_type: 'reading_comprehension',
+      question_text: `Reading (Lesson ${n})`,
+      question_data: {
+        passage: E.read.passage || '',
+        questions: (E.read.qs || []).filter((x) => x && x.trim()).map((x) => ({ question: x, type: 'sa' })),
+      },
+      explanation: '',
+      points: 1,
+    });
+  }
+  return out;
 }
 
 // Vocabulary-only builder from DB pairs [{w, u}] — same deterministic
@@ -291,11 +372,16 @@ async function main() {
   const key = await fetchServiceRole();
   const db = createClient(URL, key);
 
-  const LO = MODE_1_20 ? 1 : 30;
-  const HI = MODE_1_20 ? 20 : 100;
+  const LO = MODE_1_20 ? 1 : MODE_1_29_SAFE ? 1 : 30;
+  const HI = MODE_1_20 ? 20 : MODE_1_29_SAFE ? 29 : 100;
   let library = [];
   const dbVocabByNum = {};
   const currTitleByNum = {};
+  let manualByNum = {};
+  if (MODE_1_29_SAFE) {
+    manualByNum = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'lessons-01-29-manual.json'), 'utf8')).lessons
+      .reduce((m, l) => ((m[l.n] = l), m), {});
+  }
   if (MODE_1_20) {
     // Vocabulary-only mode: shells from curriculum titles + DB vocabulary.
     const { data: curr } = await db.from('curriculum_lessons').select('lesson_number, title').gte('lesson_number', LO).lte('lesson_number', HI);
@@ -303,7 +389,12 @@ async function main() {
   } else {
     library = loadLibrary();
   }
-  console.log(`[seed] lessons in scope: ${MODE_1_20 ? '1-20 (DB vocabulary only)' : `${library.length} (30-100)`}`);
+  if (MODE_1_20 && MODE_1_29_SAFE) throw new Error('Pick one scope: --lessons-1-20 or --lessons-1-29-safe.');
+  if (MODE_1_29_SAFE) {
+    const { data: curr } = await db.from('curriculum_lessons').select('lesson_number, title').gte('lesson_number', LO).lte('lesson_number', HI);
+    for (const c of curr || []) currTitleByNum[c.lesson_number] = c.title;
+  }
+  console.log(`[seed] lessons in scope: ${MODE_1_20 ? '1-20 (DB vocabulary only)' : MODE_1_29_SAFE ? '1-29 manual-grade PDF content (minus blocked 17/20/27/28)' : `${library.length} (30-100)`}`);
   console.log(`[seed] mode: ${APPLY ? 'APPLY (writes!)' : 'dry-run (reads only)'}`);
 
   // Map curriculum lesson_number -> lessons.id
@@ -322,8 +413,8 @@ async function main() {
   let stagesSkipped = 0;
   const perLesson = [];
 
-  const scopeNums = MODE_1_20
-    ? Array.from({ length: HI - LO + 1 }, (_, i) => LO + i)
+  const scopeNums = MODE_1_20 || MODE_1_29_SAFE
+    ? Array.from({ length: HI - LO + 1 }, (_, i) => LO + i).filter((n) => !SKIP_1_29.has(n) || !MODE_1_29_SAFE)
     : library.map((l) => l.n);
   const jsonByNum = {};
   for (const l of library) jsonByNum[l.n] = l;
@@ -340,7 +431,9 @@ async function main() {
   for (const n of scopeNums) {
     const lesson = MODE_1_20
       ? { n, title: currTitleByNum[n] || `Lesson ${n}`, homework: null, dbVocab: dbVocabByNum[n] || [] }
-      : jsonByNum[n];
+      : MODE_1_29_SAFE
+        ? { n, title: currTitleByNum[n] || `Lesson ${n}`, homework: null, manual: manualByNum[n] || null }
+        : jsonByNum[n];
     if (!lesson) continue;
     const lessonId = lessonIdByNum[n];
     if (!lessonId) {
@@ -378,8 +471,17 @@ async function main() {
     const { data: stages } = await db.from('homework_stages').select('id, stage_key, stage_number, title').eq('homework_id', homeworkId);
     const stageByKey = {};
     for (const s of stages || []) stageByKey[s.stage_key] = s;
+    if (APPLY && MODE_1_29_SAFE) {
+      // Lessons 1-20 homeworks currently hold only the vocabulary stage
+      // (others were removed); recreate the full set idempotently so manual
+      // content has stages to attach to. Lessons 21-29 get them by trigger.
+      const { error: ensErr } = await db.rpc('create_default_homework_stages', { p_homework_id: homeworkId });
+      if (ensErr) throw ensErr;
+      const { data: reStages } = await db.from('homework_stages').select('id, stage_key, stage_number, title').eq('homework_id', homeworkId);
+      for (const s of reStages || []) stageByKey[s.stage_key] = s;
+    }
     if (APPLY) {
-      for (const s of stages || []) {
+      for (const s of Object.values(stageByKey)) {
         const want = STAGE_TITLES[s.stage_number];
         if (want && s.title !== want) {
           const { error: tErr } = await db.from('homework_stages').update({ title: want }).eq('id', s.id);
@@ -390,7 +492,8 @@ async function main() {
         // Vocabulary-only scope: remove the trigger-created empty
         // Sentences/Quizzes/Review stages so no dead stages can render.
         // Guarded to question-free rows of this lesson's homework only.
-        for (const s of stages || []) {
+        // (Runs BEFORE seeding: the 1-20 scope seeds vocabulary only.)
+        for (const s of Object.values(stageByKey)) {
           if (s.stage_key === 'vocabulary') continue;
           const { count: qc } = await db.from('homework_questions').select('id', { count: 'exact', head: true }).eq('stage_id', s.id);
           if ((qc || 0) === 0) {
@@ -401,29 +504,52 @@ async function main() {
         }
       }
     }
-    const planned = MODE_1_20 ? buildVocabOnly(n, lesson.dbVocab) : buildQuestions(lesson);
+    const planned = MODE_1_20 ? buildVocabOnly(n, lesson.dbVocab) : MODE_1_29_SAFE ? buildManual129(n, lesson.manual) : buildQuestions(lesson);
     let lessonQ = 0;
     for (const key of Object.keys(planned)) {
       const stage = stageByKey[key];
-      if (!stage) continue;
       // Idempotency without a unique key: skip texts already present.
-      const { data: have } = await db.from('homework_questions').select('question_text').eq('stage_id', stage.id);
-      const haveTexts = new Set((have || []).map((r) => r.question_text));
+      // In safe-mode dry-run, missing stages count as fully fresh (the
+      // ensure call recreates them on apply).
+      let haveTexts = new Set();
+      let haveCount = 0;
+      if (stage) {
+        const { data: have } = await db.from('homework_questions').select('question_text').eq('stage_id', stage.id);
+        haveTexts = new Set((have || []).map((r) => r.question_text));
+        const { count } = await db.from('homework_questions').select('id', { count: 'exact', head: true }).eq('stage_id', stage.id);
+        haveCount = count || 0;
+      } else if (!(MODE_1_29_SAFE && !APPLY)) {
+        continue;
+      }
       const fresh = planned[key].filter((q) => !haveTexts.has(q.question_text));
       if (fresh.length === 0) {
         stagesSkipped++;
         continue;
       }
       // Continue display_order after existing rows.
-      const { count: haveCount } = await db.from('homework_questions').select('id', { count: 'exact', head: true }).eq('stage_id', stage.id);
-      const rows = fresh.map((q, i) => ({ ...q, stage_id: stage.id, display_order: (haveCount || 0) + i + 1 }));
+      const rows = fresh.map((q, i) => ({ ...q, stage_id: stage ? stage.id : null, display_order: haveCount + i + 1 }));
       if (APPLY) {
+        if (!stage) continue; // safety: never insert without a real stage
         const { error: qErr } = await db.from('homework_questions').insert(rows);
         if (qErr) throw qErr;
         qInserted += rows.length;
         lessonQ += rows.length;
       } else {
         lessonQ += rows.length;
+      }
+    }
+    if (APPLY && MODE_1_29_SAFE) {
+      // AFTER seeding: drop stages still question-free (non-vocabulary) so
+      // no dead clickable stages remain. Reruns restore-then-fill via the
+      // ensure call above, staying idempotent.
+      const { data: postStages } = await db.from('homework_stages').select('id, stage_key').eq('homework_id', homeworkId);
+      for (const s of postStages || []) {
+        if (s.stage_key === 'vocabulary') continue;
+        const { count: qc } = await db.from('homework_questions').select('id', { count: 'exact', head: true }).eq('stage_id', s.id);
+        if ((qc || 0) === 0) {
+          const { error: dErr } = await db.from('homework_stages').delete().eq('id', s.id);
+          if (dErr) throw dErr;
+        }
       }
     }
     perLesson.push({ n, homework: existing && existing.length > 0 ? `reuse#${homeworkId}` : `created#${homeworkId}`, questions: lessonQ });
@@ -440,6 +566,10 @@ function countPlanned(lesson) {
   if (lesson.dbVocab) {
     const q = buildVocabOnly(lesson.n, lesson.dbVocab);
     return q.vocabulary.length;
+  }
+  if (lesson.manual) {
+    const q = buildManual129(lesson.n, lesson.manual);
+    return q.grammar.length + q.practice.length + q.review.length;
   }
   const q = buildQuestions(lesson);
   return q.vocabulary.length + q.grammar.length + q.practice.length + q.review.length;
