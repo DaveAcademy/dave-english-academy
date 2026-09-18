@@ -2198,8 +2198,9 @@ export async function gradeHomeworkAnswer({ answerId, isCorrect, homeworkId, stu
   if (homeworkId && studentId && stageId) {
     try {
       await checkHomeworkStageCompletion(homeworkId, studentId, stageId);
-    } catch {
+    } catch (e) {
       // best-effort: the grade itself is saved above
+      console.error('checkHomeworkStageCompletion after manual grade failed:', e);
     }
   }
   return data;

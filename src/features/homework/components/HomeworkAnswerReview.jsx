@@ -120,12 +120,16 @@ export default function HomeworkAnswerReview({ callerIsStaff }) {
     setLoading(true);
     setError(null);
     try {
-      const [pend, all] = await Promise.all([
-        listHomeworkAnswersForReview({ pendingOnly: true, limit: 200 }),
-        listHomeworkAnswersForReview({ pendingOnly: false, limit: 200 }),
-      ]);
-      setPending((pend || []).map(flatten));
-      setGraded((all || []).filter((r) => r.is_correct != null).map(flatten).slice(0, 30));
+      // Single fetch, split client-side. Manual-review history excludes
+      // auto-graded rows so teachers only see human decisions here.
+      const all = await listHomeworkAnswersForReview({ pendingOnly: false, limit: 200 });
+      setPending((all || []).filter((r) => r.is_correct == null).map(flatten));
+      setGraded(
+        (all || [])
+          .filter((r) => r.is_correct != null && r.auto_graded === false)
+          .map(flatten)
+          .slice(0, 30)
+      );
     } catch (e) {
       setError('Could not load answers for review.');
     } finally {
