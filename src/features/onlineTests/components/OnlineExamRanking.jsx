@@ -49,9 +49,13 @@ export default function OnlineExamRanking() {
         </div>
       ) : (
         <>
-          {myRow && (
+          {myRow ? (
             <p className="mb-3 rounded-xl border border-brand-200 bg-brand-50 px-4 py-2.5 text-sm font-bold text-brand-700">
               {t('yourRank', { rank: myRow.rank, average: myRow.average })}
+            </p>
+          ) : (
+            <p className="mb-3 rounded-xl border border-ink/10 bg-white px-4 py-2.5 text-xs font-semibold text-ink/55 shadow-card">
+              {t('notRankedYet')}
             </p>
           )}
           <div className="overflow-hidden rounded-2xl border border-ink/[0.06] bg-white shadow-card">

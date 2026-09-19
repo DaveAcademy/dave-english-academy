@@ -17,6 +17,7 @@
   "colAverage": "Average",
   "colBest": "Best Score",
   "yourRank": "You are #{{rank}} with {{average}}% average",
+  "notRankedYet": "Complete a test to appear in the ranking.",
   "emptyRanking": "No completed tests yet",
   "emptyRankingHint": "Finish any Online English Test to appear here.",
   "latestResult": "Latest result",
