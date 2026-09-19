@@ -89,6 +89,10 @@ begin
 end;
 $f$;
 revoke execute on function public.finalize_online_test_attempt(bigint) from public;
+-- Supabase default privileges also grant new functions to anon +
+-- authenticated explicitly; strip those too so only internal definer
+-- calls (running as owner) can reach the finalizer.
+revoke all on function public.finalize_online_test_attempt(bigint) from anon, authenticated;
 
 -- Start or resume. New attempts get deadline = now() + 30 minutes;
 -- resuming never extends it. Returns deadline + server time for countdown.
