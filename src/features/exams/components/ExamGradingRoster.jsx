@@ -4,9 +4,13 @@
 // through the same setExamScoreForStudent setter callers already use;
 // submitted/graded state and file resolution stay the caller's job.
 
+import { useState } from 'react';
 import { Paperclip } from 'lucide-react';
 
 export default function ExamGradingRoster({ examMaxScore, students, answerOf, onOpenFile, onSetScore, t }) {
+  const max = Number(examMaxScore) || 100;
+  const [errors, setErrors] = useState({});
+  const clearError = (id) => setErrors((prev) => (prev[id] ? { ...prev, [id]: undefined } : prev));
   return (
     <div className="space-y-2">
       {students.map((s) => {
@@ -46,17 +50,26 @@ export default function ExamGradingRoster({ examMaxScore, students, answerOf, on
               <input
                 type="number"
                 min="0"
-                max={examMaxScore}
+                max={max}
                 defaultValue={answer.score ?? ''}
                 onBlur={(e) => {
                   const val = e.target.value;
-                  if (val !== '' && Number(val) !== answer.score) {
-                    onSetScore(s.id, Number(val), answer.feedback ?? null);
+                  if (val === '') { clearError(s.id); return; }
+                  const num = Number(val);
+                  if (!Number.isFinite(num) || num < 0 || num > max) {
+                    setErrors((prev) => ({ ...prev, [s.id]: t('scoreOutOfRange', { max }) }));
+                    return;
                   }
+                  clearError(s.id);
+                  if (num !== answer.score) onSetScore(s.id, num, answer.feedback ?? null);
                 }}
                 placeholder={t('scorePlaceholder')}
-                className="w-24 rounded-lg border border-ink/10 px-3 py-1.5 text-right text-sm"
+                aria-invalid={errors[s.id] ? true : undefined}
+                className={`w-24 rounded-lg border px-3 py-1.5 text-right text-sm ${errors[s.id] ? 'border-inactive/60 bg-inactive/5' : 'border-ink/10'}`}
               />
+              {errors[s.id] && (
+                <p role="alert" className="mt-1 text-xs font-semibold text-inactive">{errors[s.id]}</p>
+              )}
             </div>
             {graded && (
               <input

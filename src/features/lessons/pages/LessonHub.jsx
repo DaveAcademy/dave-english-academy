@@ -62,7 +62,11 @@ const GRADE_LABELS = {
   notGraded: 'Not graded',
   studentAnswerDefault: 'Answer',
 };
-const gradeT = (key, opts) => (key === 'imageN' ? `Image ${opts?.n}` : GRADE_LABELS[key] ?? key);
+const gradeT = (key, opts) => {
+  if (key === 'imageN') return `Image ${opts?.n}`;
+  if (key === 'scoreOutOfRange') return `Enter a score between 0 and ${opts?.max ?? 100}`;
+  return GRADE_LABELS[key] ?? key;
+};
 const HW_STATUS_LABELS = { Assigned: 'Assigned', Submitted: 'Submitted', Graded: 'Graded' };
 
 function HubCard({ icon: Icon, title, action, children }) {
@@ -480,7 +484,7 @@ export default function LessonHub() {
   if (isLockedForMe) {
     return (
       <div className="rounded-xl bg-white p-10 text-center shadow-card">
-        <p className="font-display text-lg font-semibold text-ink">=ƒöÆ {t('hubLockedTitle')}</p>
+        <p className="font-display text-lg font-semibold text-ink">=ï¿½ï¿½ï¿½ {t('hubLockedTitle')}</p>
         <p className="mt-1 text-sm text-ink/50">{t(lockReason === 'beyond_level' ? 'hubLockedSubLevel' : 'hubLockedSubSchedule')}</p>
         <Link to={backHref} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:underline">
           <ArrowLeft size={14} /> {t('hubBackToLessons')}
@@ -493,7 +497,7 @@ export default function LessonHub() {
     <div className="space-y-4">
       {justCompleted && (
         <div className="flex items-center gap-3 rounded-xl border border-active/20 bg-active/5 p-4 shadow-card">
-          <span className="text-2xl" aria-hidden="true">=ƒÄë</span>
+          <span className="text-2xl" aria-hidden="true">=ï¿½ï¿½ï¿½</span>
           <div>
             <p className="font-display text-base font-bold text-ink">{t('hubJustCompletedTitle')}</p>
             <p className="text-xs text-ink/60">{t('hubJustCompletedSub')}</p>
@@ -784,7 +788,7 @@ export default function LessonHub() {
                     className="flex w-full items-center justify-between rounded-lg px-1 py-1 text-xs font-semibold text-ink/60 hover:text-ink"
                   >
                     <span>{h.title} &middot; {hwSubmittedCount(h.id)}/{lessonRoster.length} submissions</span>
-                    <span className="text-brand-600">{expanded ? 'Hide grading Gû¦' : 'Grade Gû+'}</span>
+                    <span className="text-brand-600">{expanded ? 'Hide grading Gï¿½ï¿½' : 'Grade Gï¿½+'}</span>
                   </button>
                   {expanded && (
                     <div className="mt-2">
@@ -828,7 +832,7 @@ export default function LessonHub() {
           <ul className="grid gap-1 sm:grid-cols-2">
             {vocabWords.slice(0, 6).map((w) => (
               <li key={w.id} className="truncate text-sm text-ink/70">
-                <span className="font-semibold text-ink">{w.english}</span> GÇö {w.uzbek}
+                <span className="font-semibold text-ink">{w.english}</span> Gï¿½ï¿½ {w.uzbek}
               </li>
             ))}
           </ul>
@@ -897,7 +901,7 @@ export default function LessonHub() {
                   {isStudent && (
                     <div className="mt-2 flex flex-wrap items-center gap-2">
                       <span className="rounded-full bg-ink/5 px-2 py-0.5 text-[10px] font-bold text-ink/40">
-                        {graded ? t('hubQuizCompleted') : result?.answer_file_url ? t('hubQuizAwaitingGrading') : t('hubQuizAvailable')}
+                        {graded ? t('hubQuizCompleted') : t('hubQuizAvailable')}
                       </span>
                       {result?.feedback && <span className="text-xs text-ink/60">{result.feedback}</span>}
                     </div>
@@ -919,7 +923,7 @@ export default function LessonHub() {
                     className="flex w-full items-center justify-between rounded-lg px-1 py-1 text-xs font-semibold text-ink/60 hover:text-ink"
                   >
                     <span>{ex.title} &middot; {examSubmittedCount(ex.id)}/{lessonRoster.length} submissions</span>
-                    <span className="text-brand-600">{expanded ? 'Hide grading Gû¦' : 'Grade Gû+'}</span>
+                    <span className="text-brand-600">{expanded ? 'Hide grading Gï¿½ï¿½' : 'Grade Gï¿½+'}</span>
                   </button>
                   {expanded && (
                     <div className="mt-2">

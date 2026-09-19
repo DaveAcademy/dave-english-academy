@@ -4,10 +4,9 @@
 // Adds: upcoming highlight, countdown, preparation status, previous scores hierarchy, clear CTA, mobile, animations.
 
 import { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  FileCheck2, Download, MessageSquare, Clock, Award, CalendarDays,
+  FileCheck2, Download, Clock, Award, CalendarDays,
   TrendingUp, AlertTriangle, Timer, Sparkles,
 } from 'lucide-react';
 import { useAcademy } from '../../../lib/AcademyDataContext';
@@ -19,7 +18,7 @@ import StatusPill from '../../../components/StatusPill';
 import ErrorBanner from '../../../components/ErrorBanner';
 import { SkeletonList } from '../../../components/Skeleton';
 
-const STATUS_TONE = { graded: 'brand', awaitingGrading: 'success', upcoming: 'info', expired: 'danger', resultPending: 'neutral', notSubmitted: 'neutral' };
+const STATUS_TONE = { graded: 'brand', upcoming: 'info', expired: 'danger', resultPending: 'neutral', notSubmitted: 'neutral' };
 
 function countdownLabel(targetDateStr, t) {
   if (!targetDateStr) return null;
@@ -53,7 +52,6 @@ export default function MyExams() {
 
   const statusOf = (result, overdue, upcoming, isOral) => {
     if (result?.score != null) return 'graded';
-    if (result?.answer_file_url) return 'awaitingGrading';
     if (upcoming) return 'upcoming';
     if (isOral) return 'resultPending';
     if (overdue) return 'expired';
@@ -93,7 +91,14 @@ export default function MyExams() {
   const pastExams = useMemo(() => myExams.filter((e) => !isUpcoming(e)), [myExams]);
   const gradedCount = useMemo(() => myExams.filter((e) => scoreFor(e.id)?.score != null).length, [myExams, examScores]); // eslint-disable-line react-hooks/exhaustive-deps
   const avgScore = useMemo(() => {
-    const vals = myExams.map((e) => scoreFor(e.id)?.score).filter((v) => v != null);
+    const vals = myExams
+      .map((e) => {
+        const s = scoreFor(e.id)?.score;
+        if (s == null) return null;
+        const max = Number(e.max_score) || 100;
+        return (Number(s) / max) * 100;
+      })
+      .filter((v) => v != null);
     if (!vals.length) return null;
     return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
   }, [myExams, examScores]);
@@ -123,7 +128,7 @@ export default function MyExams() {
               {avgScore != null && (
                 <div className="rounded-xl border border-ink/[0.06] bg-white px-3 py-2 shadow-card text-center">
                   <p className="text-[11px] font-bold uppercase tracking-wide text-ink/40">{t('portal:mpAverageLabel')}</p>
-                  <p className="font-display text-lg font-bold text-ink">{avgScore}</p>
+                  <p className="font-display text-lg font-bold text-ink">{avgScore}%</p>
                 </div>
               )}
             </div>
@@ -212,9 +217,6 @@ export default function MyExams() {
                               <Download size={14} className="shrink-0" /> <span className="min-w-0 max-w-[52vw] truncate sm:max-w-[220px]">{e.file_name || t('examFileDefault')}</span>
                             </button>
                           )}
-                          <Link to={`/chat?type=exam&id=${e.id}`} className="ml-auto inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-ink/10 bg-white px-3.5 py-2.5 text-xs font-semibold text-ink/70 shadow-sm hover:bg-ink/5">
-                            <MessageSquare size={14} /> {t('discuss')}
-                          </Link>
                         </div>
                       </div>
                     </div>
@@ -284,11 +286,6 @@ export default function MyExams() {
                               <p className="mt-1.5 text-[11px] font-medium text-brand-600/70">{t('portal:mpCompletionGraded')}</p>
                             </div>
                           )}
-                          {!graded && result?.answer_file_url && (
-                            <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-100">
-                              <FileCheck2 size={12} /> {t('portal:mpSubmittedAwaiting')}
-                            </div>
-                          )}
                           {expired && <p className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-inactive"><AlertTriangle size={12} /> {t('deadlinePassedWarning')}</p>}
                         </div>
                         {graded && (
@@ -309,14 +306,6 @@ export default function MyExams() {
                             <Download size={14} className="shrink-0" /> <span className="min-w-0 max-w-[52vw] truncate sm:max-w-[220px]">{e.file_name || t('examFileDefault')}</span>
                           </button>
                         )}
-                        {e.exam_type !== 'Oral' && result?.answer_file_url && (
-                          <button onClick={() => handleOpenFile(result.answer_file_url)} className="inline-flex min-h-[44px] items-center px-3 py-2.5 text-xs font-medium text-ink/50 hover:text-brand-600 hover:underline">
-                            {t('viewMySubmittedAnswer')}
-                          </button>
-                        )}
-                        <Link to={`/chat?type=exam&id=${e.id}`} className="ml-auto inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-ink/10 bg-white px-3.5 py-2.5 text-xs font-semibold text-ink/70 shadow-sm hover:bg-ink/5">
-                          <MessageSquare size={14} /> {t('discuss')}
-                        </Link>
                       </div>
                     </div>
                   );

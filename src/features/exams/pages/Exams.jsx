@@ -6,9 +6,8 @@
 // the app already uses between admin/teacher pages and the student portal).
 
 import { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Plus, FileCheck2, Pencil, Trash2, MessageSquare, Download, CheckCircle2 } from 'lucide-react';
+import { Plus, FileCheck2, Pencil, Trash2, Download, CheckCircle2 } from 'lucide-react';
 import { useAcademy } from '../../../lib/AcademyDataContext';
 import { LevelBadge } from '../../../components/Badge';
 import ConfirmDialog from '../../../components/ConfirmDialog';
@@ -482,12 +481,6 @@ export default function Exams() {
                   <Download size={13} /> {selectedExam.file_name || t('examFileDefault')}
                 </button>
               )}
-              <Link
-                to={`/chat?type=exam&id=${selectedExam.id}`}
-                className="flex items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-semibold text-ink/60 hover:bg-ink/5"
-              >
-                <MessageSquare size={13} /> {t('discuss')}
-              </Link>
               {selectedExamClosed && !editingGrades && (
                 <button
                   onClick={() => setEditingGrades(true)}

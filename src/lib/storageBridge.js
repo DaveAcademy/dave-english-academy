@@ -926,24 +926,6 @@ export async function setExamScore(examId, studentId, score, feedback = null) {
   return listExamScores();
 }
 
-// Student self-submission (see migration 0009) - only reaches the database
-// while the row is still ungraded; upsert only touches the columns listed
-// here, so it never disturbs a score a teacher has already entered.
-export async function submitExamAnswer(examId, studentId, { fileUrl, fileName }) {
-  const { error } = await supabase.from('exam_scores').upsert(
-    {
-      exam_id: examId,
-      student_id: studentId,
-      answer_file_url: fileUrl,
-      answer_file_name: fileName,
-      submitted_at: new Date().toISOString(),
-    },
-    { onConflict: 'exam_id,student_id' }
-  );
-  if (error) throw error;
-  return listExamScores();
-}
-
 // ---------- Homework ----------
 
 export async function listHomework() {

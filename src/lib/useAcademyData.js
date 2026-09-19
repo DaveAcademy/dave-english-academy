@@ -565,16 +565,6 @@ export function useAcademyData() {
     }
   }, []);
 
-  const submitMyExamAnswer = useCallback(async (examId, studentId, file) => {
-    try {
-      const updated = await db.submitExamAnswer(examId, studentId, file);
-      setExamScoresState(updated);
-    } catch (e) {
-      setError('Could not submit your answer. Please try again.');
-      throw e;
-    }
-  }, []);
-
   const addHomework = useCallback(async (data) => {
     try {
       const record = await db.createHomework(data);
@@ -1065,7 +1055,6 @@ export function useAcademyData() {
     editExam,
     removeExam,
     setExamScoreForStudent,
-    submitMyExamAnswer,
     addHomework,
     editHomework,
     removeHomework,
