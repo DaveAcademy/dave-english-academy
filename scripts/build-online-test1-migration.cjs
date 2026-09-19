@@ -15,6 +15,8 @@ const TARGETS = {
   4: 'supabase/migrations/20261018000004_online_test4_content.sql',
   5: 'supabase/migrations/20261018000005_online_test5_content.sql',
   6: 'supabase/migrations/20261018000006_online_test6_content.sql',
+  7: 'supabase/migrations/20261018000007_online_test7_content.sql',
+  8: 'supabase/migrations/20261018000008_online_test8_content.sql',
 };
 
 const lit = (v) => `'${JSON.stringify(v).replace(/'/g, "''")}'::jsonb`;

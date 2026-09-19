@@ -12,6 +12,8 @@ import {
   saveOnlineTestAnswer, submitOnlineTestAttempt, listMyOnlineTestAttempts,
 } from '../lib/onlineTestApi';
 import { TestQuestionInput, isAnswerEmpty } from '../components/TestInputs';
+import ExampleBox from '../components/ExampleBox';
+import { msRemaining, formatCountdown, warningLevel } from '../lib/testTimer';
 import StatusPill from '../../../components/StatusPill';
 import ErrorBanner from '../../../components/ErrorBanner';
 import ConfirmDialog from '../../../components/ConfirmDialog';
@@ -136,7 +138,13 @@ export default function OnlineTestRunner() {
   const [error, setError] = useState(null);
   const [saveState, setSaveState] = useState('saved');
   const [confirming, setConfirming] = useState(false);
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  const [warn5, setWarn5] = useState(false);
+  const [warn1, setWarn1] = useState(false);
   const saveTimers = useRef({});
+  const clockRef = useRef({ deadline: null, offsetMs: 0 });
+  const autoSubmittedRef = useRef(false);
+  const submitRef = useRef(null);
 
   const loadAttemptData = useCallback(async (attemptId) => {
     const data = await getOnlineTestAttempt(attemptId);
@@ -148,6 +156,14 @@ export default function OnlineTestRunner() {
     setAttempt(data.attempt);
     setItems(list);
     setDrafts(saved);
+    // Server-owned clock: deadline never comes from client input.
+    clockRef.current = {
+      deadline: data.attempt?.deadline || null,
+      offsetMs: data.attempt?.server_now ? new Date(data.attempt.server_now).getTime() - Date.now() : 0,
+    };
+    autoSubmittedRef.current = false;
+    setWarn5(false);
+    setWarn1(false);
     if (data.attempt?.status === 'submitted') {
       // Attach correctness flags for review rendering.
       const flags = {};
@@ -217,8 +233,14 @@ export default function OnlineTestRunner() {
       try {
         await saveOnlineTestAnswer(attempt.id, itemId, value);
         setSaveState('saved');
-      } catch {
-        setSaveState('error');
+      } catch (e) {
+        // Expired server-side: stop trying to save, finalize instead.
+        if (/expired/i.test(e?.message || '')) {
+          setSaveState('saved');
+          submitRef.current?.();
+        } else {
+          setSaveState('error');
+        }
       }
     }, 500);
   }, [attempt]);
@@ -248,6 +270,30 @@ export default function OnlineTestRunner() {
   }, [items]);
   const flat = useMemo(() => stages.flatMap((s) => s.items.map((it) => ({ ...it, _stage: s.stage }))), [stages]);
   const answeredCount = flat.filter((it) => !isAnswerEmpty(drafts[it.id], it.question_type)).length;
+
+  submitRef.current = submit;
+
+  const remainingMs = mode === 'active' && attempt?.status === 'in_progress' && clockRef.current.deadline
+    ? msRemaining(clockRef.current.deadline, nowMs + clockRef.current.offsetMs)
+    : null;
+
+  useEffect(() => {
+    if (mode !== 'active' || attempt?.status !== 'in_progress' || !clockRef.current.deadline) return undefined;
+    const id = setInterval(() => setNowMs(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [mode, attempt?.status, attempt?.id]);
+
+  useEffect(() => {
+    if (remainingMs == null) return;
+    const level = warningLevel(remainingMs);
+    if (level === 'warn5') setWarn5(true);
+    if (level === 'warn1') setWarn1(true);
+    if (level === 'expired' && !autoSubmittedRef.current) {
+      autoSubmittedRef.current = true;
+      Object.values(saveTimers.current).forEach(clearTimeout);
+      submitRef.current?.();
+    }
+  }, [remainingMs]);
 
   if (!me) {
     return (
@@ -282,6 +328,7 @@ export default function OnlineTestRunner() {
             {test?.lesson_from ? t('lessonsRange', { from: test.lesson_from, to: test.lesson_to }) : ''} · {t('stages')}
           </p>
           <p className="mt-3 text-sm leading-relaxed text-ink/65">{t('overviewHowItWorks')}</p>
+          <p className="mt-2 text-sm font-semibold leading-relaxed text-ink/75">{t('timeLimitInfo')}</p>
           <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
             {STAGE_ORDER.map((s) => (
               <div key={s} className="rounded-xl bg-paper px-2 py-2.5 text-center">
@@ -334,10 +381,29 @@ export default function OnlineTestRunner() {
     <div className="mx-auto max-w-[680px]">
       <div className="mb-3 flex items-center justify-between gap-2">
         <p className="text-xs font-bold text-ink/50">{test?.title} · {t('questionOf', { current: qIdx + 1, total: flat.length })}</p>
-        <span className={`text-[11px] font-bold ${saveState === 'error' ? 'text-inactive' : 'text-ink/40'}`}>
-          {saveState === 'saving' ? t('saving') : saveState === 'error' ? t('saveFailed') : t('saved')}
-        </span>
+        <div className="flex items-center gap-2">
+          {remainingMs != null && (
+            <span
+              role="timer"
+              className={`rounded-full px-2.5 py-1 text-[11px] font-bold tabular-nums ${
+                warningLevel(remainingMs) === 'warn1' || warningLevel(remainingMs) === 'expired'
+                  ? 'bg-inactive/10 text-inactive'
+                  : 'bg-ink/[0.06] text-ink/70'
+              }`}
+            >
+              {t('timeLeft', { time: formatCountdown(remainingMs) })}
+            </span>
+          )}
+          <span className={`text-[11px] font-bold ${saveState === 'error' ? 'text-inactive' : 'text-ink/40'}`}>
+            {saveState === 'saving' ? t('saving') : saveState === 'error' ? t('saveFailed') : t('saved')}
+          </span>
+        </div>
       </div>
+      {warn1 ? (
+        <p role="alert" className="mb-3 rounded-xl border border-inactive/30 bg-inactive/5 px-3 py-2 text-xs font-bold text-inactive">{t('timeWarning1')}</p>
+      ) : warn5 ? (
+        <p role="alert" className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-700">{t('timeWarning5')}</p>
+      ) : null}
       <div className="mb-4 flex gap-1.5" role="tablist" aria-label={t('title')}>
         {stages.map((s, idx) => {
           const done = s.items.filter((it) => !isAnswerEmpty(drafts[it.id], it.question_type)).length;
@@ -359,6 +425,9 @@ export default function OnlineTestRunner() {
         })}
       </div>
       <ErrorBanner>{error}</ErrorBanner>
+      {current && flat.findIndex((it) => it._stage === currentStage) === qIdx && (
+        <ExampleBox stage={currentStage} t={t} />
+      )}
       {current && (
         <div key={current.id} className="rounded-2xl border border-ink/[0.06] bg-white p-4 shadow-card sm:p-5">
           <div className="mb-1 flex items-center gap-1.5">

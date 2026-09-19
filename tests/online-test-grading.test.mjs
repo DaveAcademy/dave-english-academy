@@ -86,6 +86,13 @@ check(grade('fill_blank', { answer: 'swiming' }, { answer: 'swimming' }) === fal
 check(grade('translation', { answer: 'Bigger' }, { target_text: 'bigger' }) === true, 't6 comparative case-insensitive');
 check(grade('ordering', { order: ['On', 'Saturday', 'I', 'went', 'fishing.'] }, { correct_order: ['On', 'Saturday', 'I', 'went', 'fishing.'] }) === true, 't6 weekend ordering');
 check(grade('fill_blank', { answer: '' }, { answer: 'never' }) === false, 't6 empty fill rejected');
+// Tests 7-8 shapes: duplicate tokens, apostrophes, superlatives.
+check(grade('ordering', { order: ['I', 'am', 'happy', 'because', 'I', 'passed.'] }, { correct_order: ['I', 'am', 'happy', 'because', 'I', 'passed.'] }) === true, 't7 duplicate-I ordering');
+check(grade('ordering', { order: ['I', 'am', 'happy', 'because', 'passed.', 'I'] }, { correct_order: ['I', 'am', 'happy', 'because', 'I', 'passed.'] }) === false, 't7 duplicate-I misplaced');
+check(grade('translation', { answer: "Tizzam og'riyapti." }, { target_text: 'My knee hurts.' }) === false, 't8 direction check (uz source, en answer)');
+check(grade('translation', { answer: 'my knee hurts' }, { target_text: 'My knee hurts.' }) === true, 't8 body-part translation');
+check(grade('fill_blank', { answer: "mustn't" }, { answer: "mustn't" }) === true, 't8 apostrophe preserved');
+check(grade('multiple_choice', { selected_value: 'the biggest' }, { correct_value: 'the biggest' }) === true, 't7 superlative');
 const pct = (raw, total) => Math.round((raw * 100) / total);
 check(pct(27, 34) === 79, '27/34 -> 79%');
 check(pct(34, 34) === 100, '34/34 -> 100%');

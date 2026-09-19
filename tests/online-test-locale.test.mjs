@@ -40,7 +40,7 @@ check(!/prompt\?\.instruction/.test(codeOnly(runner)), 'runner never renders pro
 check(!/prompt\.instruction/.test(codeOnly(runner)), 'runner never renders prompt.instruction (direct)');
 check(!/prompt\?\.instruction/.test(codeOnly(inputs)), 'inputs never render prompt.instruction');
 
-for (const n of [1, 2, 3, 4, 5, 6]) {
+for (const n of [1, 2, 3, 4, 5, 6, 7, 8]) {
   const test = JSON.parse(readFileSync(`${root}/src/features/onlineTests/data/test${n}.json`, 'utf8'));
   // Frozen English source text intact per type: MC carries `question`,
   // all other types carry `instruction`. Counts: 18 MC + 16 instructed.

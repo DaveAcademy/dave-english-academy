@@ -7,7 +7,7 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const TESTS = [1, 2, 3, 4, 5, 6].map((n) => JSON.parse(readFileSync(`${root}/src/features/onlineTests/data/test${n}.json`, 'utf8')));
+const TESTS = [1, 2, 3, 4, 5, 6, 7, 8].map((n) => JSON.parse(readFileSync(`${root}/src/features/onlineTests/data/test${n}.json`, 'utf8')));
 
 let failures = 0;
 function check(cond, msg) {
@@ -15,7 +15,7 @@ function check(cond, msg) {
   else console.log(`ok ${msg}`);
 }
 
-const EXPECTED_RANGE = { 1: [1, 10], 2: [11, 20], 3: [21, 30], 4: [31, 40], 5: [41, 50], 6: [51, 60] };
+const EXPECTED_RANGE = { 1: [1, 10], 2: [11, 20], 3: [21, 30], 4: [31, 40], 5: [41, 50], 6: [51, 60], 7: [61, 70], 8: [71, 80] };
 const allPrompts = new Set();
 for (const test of TESTS) {
 const T = `t${test.test_number}`;
