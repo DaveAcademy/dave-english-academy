@@ -7,7 +7,7 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const TESTS = [1, 2, 3, 4, 5, 6, 7, 8].map((n) => JSON.parse(readFileSync(`${root}/src/features/onlineTests/data/test${n}.json`, 'utf8')));
+const TESTS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => JSON.parse(readFileSync(`${root}/src/features/onlineTests/data/test${n}.json`, 'utf8')));
 
 let failures = 0;
 function check(cond, msg) {
@@ -15,7 +15,7 @@ function check(cond, msg) {
   else console.log(`ok ${msg}`);
 }
 
-const EXPECTED_RANGE = { 1: [1, 10], 2: [11, 20], 3: [21, 30], 4: [31, 40], 5: [41, 50], 6: [51, 60], 7: [61, 70], 8: [71, 80] };
+const EXPECTED_RANGE = { 1: [1, 10], 2: [11, 20], 3: [21, 30], 4: [31, 40], 5: [41, 50], 6: [51, 60], 7: [61, 70], 8: [71, 80], 9: [81, 90], 10: [91, 100] };
 const allPrompts = new Set();
 for (const test of TESTS) {
 const T = `t${test.test_number}`;
@@ -82,6 +82,23 @@ if (test.test_number >= 3) {
   check(missing.length === 0, `${T} every lesson ${test.lesson_from}-${test.lesson_to} represented${missing.length ? ' (missing ' + missing.join(',') + ')' : ''}`);
 }
 }
+}
+
+// Bank-level contract: exactly 10 tests, 340 items, 34 per test,
+// 10/10/8/6 per test, 1 point each.
+check(TESTS.length === 10, `10 tests (got ${TESTS.length})`);
+{
+const all = TESTS.flatMap((t) => t.items);
+check(all.length === 340, `340 total items (got ${all.length})`);
+const perTest = {};
+for (const t of TESTS) perTest[t.test_number] = t.items.length;
+check(Object.keys(perTest).length === 10 && Object.values(perTest).every((n) => n === 34), '34 items per test');
+const stageTotals = {};
+for (const it of all) stageTotals[it.stage] = (stageTotals[it.stage] || 0) + 1;
+check(stageTotals.vocabulary === 100 && stageTotals.grammar === 100 && stageTotals.sentences === 80 && stageTotals.writing === 60, `bank stage totals 100/100/80/60 (got ${JSON.stringify(stageTotals)})`);
+const lessons = new Set();
+for (const t of TESTS) for (let n = t.lesson_from; n <= t.lesson_to; n++) lessons.add(n);
+check(lessons.size === 100, `all lessons 1-100 covered (got ${lessons.size})`);
 }
 
 console.log(failures === 0 ? 'ALL ONLINE-TEST-CONTENT CHECKS PASS' : `${failures} FAILURES`);

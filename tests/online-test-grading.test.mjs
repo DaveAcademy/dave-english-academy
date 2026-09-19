@@ -86,6 +86,14 @@ check(grade('fill_blank', { answer: 'swiming' }, { answer: 'swimming' }) === fal
 check(grade('translation', { answer: 'Bigger' }, { target_text: 'bigger' }) === true, 't6 comparative case-insensitive');
 check(grade('ordering', { order: ['On', 'Saturday', 'I', 'went', 'fishing.'] }, { correct_order: ['On', 'Saturday', 'I', 'went', 'fishing.'] }) === true, 't6 weekend ordering');
 check(grade('fill_blank', { answer: '' }, { answer: 'never' }) === false, 't6 empty fill rejected');
+// Tests 9-10 shapes: present perfect, conditionals, past continuous,
+// superlatives and advice forms.
+check(grade('multiple_choice', { selected_value: 'have downloaded it.' }, { correct_value: 'I have downloaded it.' }) === false, 't9 full-sentence exact match required');
+check(grade('multiple_choice', { selected_value: 'I have downloaded it.' }, { correct_value: 'I have downloaded it.' }) === true, 't9 present perfect correction');
+check(grade('translation', { answer: 'Sport is fun' }, { target_text: 'Sport is fun.' }) === true, 't9 punctuation-insensitive translation');
+check(grade('ordering', { order: ['While', 'we', 'were', 'walking,', 'it', 'rained.'] }, { correct_order: ['While', 'we', 'were', 'walking,', 'it', 'rained.'] }) === true, 't10 past continuous ordering');
+check(grade('multiple_choice', { selected_value: 'were' }, { correct_value: 'were' }) === true, 't10 were over was');
+check(grade('fill_blank', { answer: 'TABLET' }, { answer: 'tablet' }) === true, 't10 fill case-insensitive');
 // Tests 7-8 shapes: duplicate tokens, apostrophes, superlatives.
 check(grade('ordering', { order: ['I', 'am', 'happy', 'because', 'I', 'passed.'] }, { correct_order: ['I', 'am', 'happy', 'because', 'I', 'passed.'] }) === true, 't7 duplicate-I ordering');
 check(grade('ordering', { order: ['I', 'am', 'happy', 'because', 'passed.', 'I'] }, { correct_order: ['I', 'am', 'happy', 'because', 'I', 'passed.'] }) === false, 't7 duplicate-I misplaced');
