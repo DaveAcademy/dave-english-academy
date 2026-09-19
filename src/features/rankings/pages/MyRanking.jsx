@@ -36,6 +36,10 @@ const PERIOD_POINTS_KEY = {
 
 const LEVEL_COLORS = { A: 'bg-levelA', A1: 'bg-levelA1', B: 'bg-levelB', C: 'bg-levelC' };
 
+// Compact history window: display latest 12 Lesson/Class Point actions only.
+// Totals/balances and DB records unchanged — display slice only.
+const LESSON_HISTORY_LIMIT = 12;
+
 const AWARD_TYPE_INFO = {
   student_of_week: { icon: '⭐', key: 'awardStudentOfWeek' },
   student_of_month: { icon: '🏆', key: 'awardStudentOfMonth' },
@@ -534,7 +538,7 @@ export default function MyRanking() {
             </div>
           ) : (
             <ul className="divide-y divide-ink/[0.04]">
-              {pointHistory.map((row, idx) => {
+              {pointHistory.slice(0, LESSON_HISTORY_LIMIT).map((row, idx) => {
                 const pts = Number(row.points);
                 const isNeg = pts < 0;
                 return (
@@ -556,8 +560,8 @@ export default function MyRanking() {
               })}
             </ul>
           )}
-          {pointHistory && pointHistory.length > 8 && (
-            <p className="mt-2 px-1 text-xs text-ink/35">{t('portal:lessonPointsMore', { count: pointHistory.length - 8, defaultValue: `+{{count}} more in full history` })}</p>
+          {pointHistory && pointHistory.length > LESSON_HISTORY_LIMIT && (
+            <p className="mt-2 px-1 text-xs text-ink/35">{t('portal:lessonPointsMore', { count: pointHistory.length - LESSON_HISTORY_LIMIT, defaultValue: `+{{count}} more in full history` })}</p>
           )}
         </div>
       </section>

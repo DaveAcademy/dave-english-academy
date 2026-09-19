@@ -11,6 +11,10 @@ import { useAcademy } from '../../lib/AcademyDataContext';
 import { levelToken } from '../../lib/levels';
 import { getActivePetWithParts, claimPetPart, getPetCheckinStatus, getMyPetProgress, getOwlProgress, getPremiumCollection, setActivePet, getPetCollectionOverview, getPetRanking, getPremiumPetsProgress, unlockPremiumPet, getMyGamePointHistory } from '../../lib/storageBridge';
 
+// Compact history window: display latest 10 Game Point actions only.
+// Totals/balances and DB records unchanged — display slice only.
+const GAME_HISTORY_LIMIT = 10;
+
 function RarityChip({ label, color }) {
   if (!label) return null;
   return (
@@ -656,7 +660,7 @@ export default function PetCollection() {
             <p className="px-5 py-6 text-center text-sm text-ink/50 sm:px-6">{t('gamePointsLogEmpty', { defaultValue: 'No Game Points yet — play a game to earn some.' })}</p>
           ) : (
             <ul className="divide-y divide-ink/[0.04]">
-              {gameLog.map((row, idx) => {
+              {gameLog.slice(0, GAME_HISTORY_LIMIT).map((row, idx) => {
                 const pts = Number(row.points);
                 const isNeg = pts < 0;
                 return (
