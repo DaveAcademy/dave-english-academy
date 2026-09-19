@@ -7,7 +7,7 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const TESTS = [1, 2].map((n) => JSON.parse(readFileSync(`${root}/src/features/onlineTests/data/test${n}.json`, 'utf8')));
+const TESTS = [1, 2, 3, 4].map((n) => JSON.parse(readFileSync(`${root}/src/features/onlineTests/data/test${n}.json`, 'utf8')));
 
 let failures = 0;
 function check(cond, msg) {
@@ -15,7 +15,7 @@ function check(cond, msg) {
   else console.log(`ok ${msg}`);
 }
 
-const EXPECTED_RANGE = { 1: [1, 10], 2: [11, 20] };
+const EXPECTED_RANGE = { 1: [1, 10], 2: [11, 20], 3: [21, 30], 4: [31, 40] };
 const allPrompts = new Set();
 for (const test of TESTS) {
 const T = `t${test.test_number}`;
@@ -32,6 +32,7 @@ const STAGES = ['vocabulary', 'grammar', 'sentences', 'writing'];
 const QTYPES = ['multiple_choice', 'matching', 'ordering', 'fill_blank', 'translation'];
 const seenPos = new Set();
 const seenPrompt = new Set();
+const seenLessons = new Set();
 for (const it of test.items) {
   const id = `${T} ${it.stage}#${it.position}`;
   check(STAGES.includes(it.stage) && QTYPES.includes(it.qtype), `${id} valid stage/qtype`);
@@ -69,6 +70,17 @@ for (const it of test.items) {
   if (it.qtype === 'fill_blank' || it.qtype === 'translation') {
     check(!('answer' in it.prompt), `${id} prompt has no .answer`);
   }
+  if (!seenLessons.has(lesson)) seenLessons.add(lesson);
+}
+{
+const missing = [];
+// Full-range coverage is enforced for Tests 3+ (task requirement).
+// Test 1 predates this rule and has a known L8 gap; Test 1 content is
+// frozen and must not be modified here.
+if (test.test_number >= 3) {
+  for (let n = test.lesson_from; n <= test.lesson_to; n++) if (!seenLessons.has(n)) missing.push(n);
+}
+check(missing.length === 0, `${T} every lesson ${test.lesson_from}-${test.lesson_to} represented${missing.length ? ' (missing ' + missing.join(',') + ')' : ''}`);
 }
 }
 

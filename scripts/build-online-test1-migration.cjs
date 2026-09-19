@@ -11,6 +11,8 @@ const ROOT = path.resolve(__dirname, '..');
 const TARGETS = {
   1: 'supabase/migrations/20261018000001_online_test1_content.sql',
   2: 'supabase/migrations/20261018000002_online_test2_content.sql',
+  3: 'supabase/migrations/20261018000003_online_test3_content.sql',
+  4: 'supabase/migrations/20261018000004_online_test4_content.sql',
 };
 
 const lit = (v) => `'${JSON.stringify(v).replace(/'/g, "''")}'::jsonb`;

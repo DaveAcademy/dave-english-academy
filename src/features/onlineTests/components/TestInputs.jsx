@@ -71,7 +71,7 @@ function MatchingInput({ prompt, value, onChange, disabled }) {
   );
 }
 
-function OrderingInput({ prompt, value, onChange, disabled }) {
+function OrderingInput({ prompt, value, onChange, disabled, t }) {
   const tokens = prompt.tokens || [];
   // Pool instances keep identity so duplicate tokens are consumable twice.
   const pool = useMemo(() => tokens.map((tok, i) => ({ tok, i })), [prompt]);
@@ -96,7 +96,7 @@ function OrderingInput({ prompt, value, onChange, disabled }) {
   return (
     <div>
       <div className="mb-2 flex min-h-[52px] flex-wrap items-center gap-1.5 rounded-xl border border-brand-200 bg-brand-50/50 px-2.5 py-2">
-        {order.length === 0 && <span className="text-xs text-ink/40">Tap words below in order</span>}
+        {order.length === 0 && <span className="text-xs text-ink/40">{t('tapWordsHint')}</span>}
         {order.map((tok, idx) => (
           <button
             key={`${tok}-${idx}`}
@@ -126,7 +126,7 @@ function OrderingInput({ prompt, value, onChange, disabled }) {
       </div>
       {order.length > 0 && !disabled && (
         <button type="button" onClick={() => onChange({ order: [] })} className="mt-2 text-xs font-semibold text-ink/50 hover:text-ink">
-          Clear
+          {t('clear')}
         </button>
       )}
     </div>
@@ -166,7 +166,7 @@ export function TestQuestionInput({ item, value, onChange, disabled, t }) {
     case 'matching':
       return <MatchingInput prompt={prompt} value={value} onChange={onChange} disabled={disabled} />;
     case 'ordering':
-      return <OrderingInput prompt={prompt} value={value} onChange={onChange} disabled={disabled} />;
+      return <OrderingInput prompt={prompt} value={value} onChange={onChange} disabled={disabled} t={t} />;
     case 'fill_blank':
       return <TextAnswerInput value={value} onChange={onChange} disabled={disabled} placeholder={prompt.template || ''} />;
     case 'translation':

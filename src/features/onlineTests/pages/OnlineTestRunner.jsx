@@ -24,6 +24,23 @@ function stageKey(t, stage) {
   return t(`stage${stage[0].toUpperCase()}${stage.slice(1)}`);
 }
 
+// UI instruction per question type, always localized. English test content
+// (questions, templates, source texts, options) comes from the item itself;
+// the instruction never comes from prompt.instruction (frozen English).
+function instructionFor(item, t) {
+  switch (item.question_type) {
+    case 'multiple_choice': return t('instructionMultipleChoice');
+    case 'matching': return t('instructionMatching');
+    case 'ordering': return t('instructionOrdering');
+    case 'fill_blank': return t('instructionFill');
+    case 'translation':
+      return item.prompt?.direction === 'uz2en'
+        ? t('instructionTranslateToEnglish')
+        : t('instructionTranslateToUzbek');
+    default: return '';
+  }
+}
+
 function answerSummary(item, raw) {
   if (!raw) return null;
   if (item.question_type === 'multiple_choice') return raw.selected_value ?? null;
@@ -347,21 +364,10 @@ export default function OnlineTestRunner() {
           <div className="mb-1 flex items-center gap-1.5">
             <StatusPill tone="info">{stageKey(t, currentStage)}</StatusPill>
           </div>
-          <p className="mb-3 font-display text-[15px] font-bold leading-snug text-ink">
-            {current.prompt?.question || current.prompt?.template || current.prompt?.instruction || ''}
+          <p className="mb-1 font-display text-[15px] font-bold leading-snug text-ink">
+            {current.prompt?.question || current.prompt?.template || ''}
           </p>
-          {current.question_type === 'fill_blank' && current.prompt?.instruction && (
-            <p className="mb-2 text-xs text-ink/50">{current.prompt.instruction}</p>
-          )}
-          {current.question_type === 'translation' && (
-            <p className="mb-2 text-xs text-ink/50">{current.prompt?.instruction || ''}</p>
-          )}
-          {current.question_type === 'matching' && (
-            <p className="mb-2 text-xs text-ink/50">{current.prompt?.instruction || ''}</p>
-          )}
-          {current.question_type === 'ordering' && (
-            <p className="mb-2 text-xs text-ink/50">{current.prompt?.instruction || ''}</p>
-          )}
+          <p className="mb-3 text-xs text-ink/50">{instructionFor(current, t)}</p>
           <TestQuestionInput
             item={current}
             value={drafts[current.id] ?? null}
