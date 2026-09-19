@@ -146,7 +146,7 @@ export default function FileManager() {
         <button
           type="submit"
           disabled={uploading || !file}
-          className="flex items-center justify-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-60 sm:col-span-3"
+          className="flex items-center justify-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60 sm:col-span-3"
         >
           <Upload size={16} /> {uploading ? 'Uploading...' : 'Upload file'}
         </button>
@@ -185,7 +185,7 @@ export default function FileManager() {
             const isBusy = busyId === f.id;
             return (
               <div key={f.id} className="flex flex-wrap items-center gap-3 rounded-xl bg-white p-3 shadow-card">
-                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-500">
+                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600">
                   <meta.Icon size={18} />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -200,7 +200,7 @@ export default function FileManager() {
                 <div className="flex flex-shrink-0 flex-wrap items-center gap-1.5">
                   <button
                     onClick={() => handleOpen(f.file_path)}
-                    className="flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-xs font-semibold text-brand-500 hover:bg-brand-50"
+                    className="flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-xs font-semibold text-brand-600 hover:bg-brand-50"
                   >
                     <Eye size={13} /> Preview
                   </button>

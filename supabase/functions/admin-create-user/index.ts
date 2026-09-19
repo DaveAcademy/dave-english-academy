@@ -119,28 +119,63 @@ Deno.serve(async (req: Request) => {
     return json({ error: createError.message }, status, origin);
   }
 
-  if (studentId !== undefined && created.user) {
-    const { error: linkError, count } = await adminClient
-      .from("students")
-      .update({ profile_id: created.user.id }, { count: "exact" })
-      .eq("id", studentId)
-      .is("profile_id", null);
+  // Invariant: every student-role login must end up pointing at exactly one
+  // students row, created here if the caller didn't pick an existing one -
+  // never left to a later, optional, manual step. There is no other path
+  // in the app that can link an already-created orphaned account.
+  if (role === "student" && created.user) {
+    if (studentId !== undefined) {
+      const { error: linkError, count } = await adminClient
+        .from("students")
+        .update({ profile_id: created.user.id }, { count: "exact" })
+        .eq("id", studentId)
+        .is("profile_id", null);
 
-    if (linkError || count === 0) {
-      // The login account already exists at this point - don't fail the
-      // whole request, just report that linking didn't happen so the
-      // admin can retry linking separately rather than losing the account.
-      return json(
-        {
-          email: created.user.email ?? email,
-          password,
-          full_name: full_name ?? "",
-          role,
-          linkWarning: "Account created, but linking to that student failed (it may already be linked).",
-        },
-        200,
-        origin,
-      );
+      if (linkError || count === 0) {
+        // The login account already exists at this point - don't fail the
+        // whole request, just report that linking didn't happen so the
+        // admin can retry linking separately rather than losing the account.
+        return json(
+          {
+            email: created.user.email ?? email,
+            password,
+            full_name: full_name ?? "",
+            role,
+            linkWarning: "Account created, but linking to that student failed (it may already be linked).",
+          },
+          200,
+          origin,
+        );
+      }
+    } else {
+      // No existing roster row selected - create one instead of leaving
+      // the login unlinked. level/payment_deadline take safe placeholder
+      // defaults; monthly_fee/status/join_date fall back to their own
+      // table defaults. Same shape as StudentForm's "Add Student" - an
+      // admin can edit these afterward via the Students page.
+      const { error: createStudentError } = await adminClient
+        .from("students")
+        .insert({
+          real_name: full_name,
+          level: "A",
+          payment_deadline: 1,
+          profile_id: created.user.id,
+        });
+
+      if (createStudentError) {
+        return json(
+          {
+            email: created.user.email ?? email,
+            password,
+            full_name: full_name ?? "",
+            role,
+            linkWarning: "Account created, but the student record could not be created automatically: " +
+              createStudentError.message,
+          },
+          200,
+          origin,
+        );
+      }
     }
   }
 

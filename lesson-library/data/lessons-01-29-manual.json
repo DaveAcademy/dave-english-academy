@@ -1,0 +1,793 @@
+{
+ "source": "lesson-library/pdf/Lesson_001..029_*.pdf via pdfjs text extraction + mechanical block parsing, human-reviewed per task log",
+ "note": "Manual-grade content only unless stated. No invented keys. Fill/order/match blocks excluded (unrecoverable keys or ambiguous layout).",
+ "lessons": [
+  {
+   "n": 1,
+   "file": "Lesson_001_Hello_Nice_to_Meet_You.pdf",
+   "wrong": [
+    {
+     "wrong": "My name Ali.",
+     "right": "My name is Ali.",
+     "note": "\"is\" so'zini tushirib qoldirmang."
+    }
+   ],
+   "challenge": "Write a 4-line mini dialogue: introduce yourself AND ask your partner's name and how they feel. 4 qatorli mini-dialog yozing. Translate your dialogue into Uzbek.",
+   "read": {
+    "passage": "Aziz: Hello! My name is Aziz. How are you? Malika: Hi, Aziz! I'm great, thank you. What is your name again? Aziz: My name is Aziz. Nice to meet you! Malika: Nice to meet you too. Goodbye!",
+    "qs": [
+     "What is the boy's name? → ______________",
+     "How does Malika feel? → ______________"
+    ]
+   },
+   "quiz": [
+    "Translate: Salom → ______",
+    "Translate: Xayr → ______",
+    "\"My name ___ Malika.\" (is/am)",
+    "\"How ___ you?\" (is/are)",
+    "Write 2 sentences introducing yourself."
+   ],
+   "circle": [
+    "\"What is your name?\" → a) I am fine b) My name is Ali c) Goodbye",
+    "You meet your teacher at 8 AM: a) Good evening b) Good morning c) Goodbye"
+   ],
+   "tf": [
+    "\"Good evening\" means \"Xayrli tong.\" T / F",
+    "We say \"Goodbye\" when we leave. T / F",
+    "\"How are you?\" asks about someone's name. T / F"
+   ]
+  },
+  {
+   "n": 2,
+   "file": "Lesson_002_How_Old_Are_You.pdf",
+   "wrong": [
+    {
+     "wrong": "I am nine.",
+     "right": "I am nine years old.",
+     "note": "To'liq gapda \"years old\" ni unutmang."
+    }
+   ],
+   "challenge": "Write the ages of 4 family members in full sentences. 4 ta oila a'zoingizning yoshini to'liq gaplarda yozing.",
+   "read": {
+    "passage": "My name is Malika. I am nine years old. My brother is six years old, and my sister is twelve. Today is my birthday! I have a big cake and ten balloons.",
+    "qs": [
+     "How old is Malika? → ______________",
+     "How many balloons does she have? → ______________"
+    ]
+   },
+   "quiz": [
+    "Write the number: 9 = ______",
+    "Write the number: 12 = ______",
+    "Translate: Necha yoshdasiz? → ______",
+    "Translate: Men o'n yoshdaman. → ______",
+    "Write 2 sentences about your age and your friend's age."
+   ],
+   "circle": [
+    "8 = a) seven b) eight",
+    "\"How old are you?\" → a) I'm fine b) I'm ten"
+   ],
+   "tf": [
+    "\"Ten\" is a number. T / F",
+    "\"How old are you?\" asks about age. T / F",
+    "\"Young\" means old. T / F"
+   ]
+  },
+  {
+   "n": 3,
+   "file": "Lesson_003_Colors_All_Around.pdf",
+   "wrong": [
+    {
+     "wrong": "It red.",
+     "right": "It is red.",
+     "note": "\"is\" so'zini tushirib qoldirmang."
+    }
+   ],
+   "challenge": "Draw a picture and write 4 sentences describing the colors in it. Rasm chizing va undagi ranglar haqida 4 gap yozing.",
+   "read": {
+    "passage": "Look at my picture! The sky is blue and the sun is yellow. The grass is green, and there is a red flower. My cat is black and white. It's a colorful picture!",
+    "qs": [
+     "What color is the sun? → ______________",
+     "What colors is the cat? → ______________"
+    ]
+   },
+   "quiz": [
+    "The sky is ___. (blue/red)",
+    "Snow is ___. (white/black)",
+    "Translate: qizil → ______",
+    "Translate: yashil → ______",
+    "Write 2 sentences describing colors you see today."
+   ],
+   "circle": [
+    "Snow is ___. a) white b) black",
+    "The apple is ___. a) red b) blue"
+   ],
+   "tf": [
+    "Grass is usually blue. T / F",
+    "The sun is usually yellow. T / F",
+    "\"What color is it?\" asks about color. T / F"
+   ]
+  },
+  {
+   "n": 4,
+   "file": "Lesson_004_Classroom_Language.pdf",
+   "wrong": [],
+   "challenge": "Write 5 classroom instructions a teacher might say. O'qituvchi aytadigan 5 ta buyruqni yozing.",
+   "read": {
+    "passage": "It's Monday morning. The teacher says, \"Open your books, please.\" Ali opens his book. Then the teacher says, \"Look at the board.\" Everyone looks at the board. \"Can I have a pencil?\" Malika asks. The teacher gives her a pencil.",
+    "qs": [
+     "What does the teacher say first? → ______________",
+     "What does Malika ask for? → ______________"
+    ]
+   },
+   "quiz": [
+    "___ your book. (Open/Opens)",
+    "Can I ___ a pencil? (has/have)",
+    "Translate: Turing! → ______",
+    "Translate: Eshiting! → ______",
+    "Write 2 classroom instructions."
+   ],
+   "circle": [
+    "You want to sit down. Say: a) Sit down b) Stand up",
+    "You want to ask for a pencil politely. Say: a) Can I have a pencil, please? b) Pencil!"
+   ],
+   "tf": [
+    "A pencil is used for writing. T / F",
+    "\"Sit down\" means \"Turing.\" T / F",
+    "The board is usually at the front of class. T / F"
+   ]
+  },
+  {
+   "n": 5,
+   "file": "Lesson_005_Numbers_20_100_and_More.pdf",
+   "wrong": [],
+   "challenge": "Say your phone number out loud in English, digit by digit. Write it too! Telefon raqamingizni ingliz tilida ayting va yozing.",
+   "read": {
+    "passage": "My school is big. There are one hundred students in my school. My classroom has thirty desks. My book has sixty pages. My phone number has ten digits!",
+    "qs": [
+     "How many students are in the school? → ______________",
+     "How many pages does the book have? → ______________"
+    ]
+   },
+   "quiz": [
+    "Write in words: 30 = ______",
+    "Write in words: 70 = ______",
+    "Translate: yuz → ______",
+    "Translate: Nechta kitobingiz bor? → ______",
+    "Write your phone number in words."
+   ],
+   "circle": [
+    "100 = a) ten b) hundred",
+    "45 = a) forty-five b) fifty-four"
+   ],
+   "tf": [
+    "\"Hundred\" means T / F",
+    "\"How many\" is used with plural nouns. T / F",
+    "21 is \"twenty-one\". T / F"
+   ]
+  },
+  {
+   "n": 6,
+   "file": "Lesson_006_Asking_Questions_The_Toolbox.pdf",
+   "wrong": [
+    {
+     "wrong": "This is what?",
+     "right": "What is this?",
+     "note": "Savol so'zi gapning boshida keladi."
+    }
+   ],
+   "challenge": "Write 5 questions using different question words. Turli savol so'zlari bilan 5 ta savol yozing.",
+   "read": {
+    "passage": "Read and Answer Ali asks Malika questions. \"Who is your teacher?\" \"Mrs. Ana.\" \"Where do you live?\" \"In Tashkent.\" \"What is your favorite color?\" \"Blue!\"",
+    "qs": [
+     "Where does Malika live? → ______________"
+    ]
+   },
+   "quiz": [
+    "Translate: kim → ______",
+    "Translate: qayerda → ______"
+   ],
+   "circle": [
+    "\"___ is your birthday?\" a) When b) Who"
+   ],
+   "tf": [
+    "True or False?",
+    "\"Who\" asks about a person. T / F"
+   ]
+  },
+  {
+   "n": 7,
+   "file": "Lesson_007_Numbers_Colors_Games_Day.pdf",
+   "wrong": [],
+   "challenge": "Make up your own number-color sentence for 5 different objects. 5 ta narsa uchun o'zingiz son- rang gap tuzing.",
+   "read": null,
+   "quiz": [
+    "Write: 4 yellow pencils (in Uzbek) → ______"
+   ],
+   "circle": [
+    "\"two ___ balls\" a) blue b) blues",
+    "apples / three / red → ______________________"
+   ],
+   "tf": []
+  },
+  {
+   "n": 8,
+   "file": "Lesson_008_Speaking_Circle_Introducing_Yourself.pdf",
+   "wrong": [],
+   "challenge": "Write a full 6-sentence self-introduction like Malika's. Malikaning matni kabi 6 gapli tanishtiruv yozing.",
+   "read": {
+    "passage": "Read and Answer Hi! My name is Malika. I am nine years old. I live in Bukhara. My favorite color is purple. I like reading books and drawing. Nice to meet you!",
+    "qs": [
+     "What are Malika's hobbies? → ______________"
+    ]
+   },
+   "quiz": [
+    "Write your own full introduction (4-6 sentences)."
+   ],
+   "circle": [],
+   "tf": [
+    "True or False?",
+    "\"Hobby\" means something you do for fun. T / F"
+   ]
+  },
+  {
+   "n": 9,
+   "file": "Lesson_009_Animals.pdf",
+   "wrong": [
+    {
+     "wrong": "It is a elephant.",
+     "right": "It is an elephant.",
+     "note": "Unli tovush oldidan \"an\" ishlatiladi."
+    }
+   ],
+   "challenge": "Write 4 sentences: \"It is a/an...\" for 4 different animals. 4 ta hayvon uchun \"It is a/an...\" bilan 4 gap yozing. Write 1 question and answer using \"Is it a...?\" \"Is it a...?\" bilan 1 savol-javob yozing.",
+   "read": {
+    "passage": "Aziz: Look! Is it a lion? Malika: No, it isn't. It is a cat. It is small. Aziz: Oh! And is it a horse over there? Malika: Yes, it is! It is big and brown.",
+    "qs": [
+     "Is the first animal a lion? → ______________",
+     "What color is the horse? → ______________"
+    ]
+   },
+   "quiz": [
+    "Translate: Mushuk → ______",
+    "Translate: Fil → ______",
+    "\"It ___ a bird.\" (is/am)",
+    "\"Is it a horse?\" \"Yes, ___ ___.\"",
+    "Write 2 sentences using \"It is a...\""
+   ],
+   "circle": [
+    "\"Is it a cat?\" (picture of a dog) → a) Yes, it is b) No, it isn't c) It is fine",
+    "A big animal with a trunk: a) rabbit b) elephant c) bird"
+   ],
+   "tf": [
+    "A fish can fly. T / F",
+    "An elephant is a big animal. T / F",
+    "We say \"an cat.\" T / F"
+   ]
+  },
+  {
+   "n": 10,
+   "file": "Lesson_010_Can_You_Abilities.pdf",
+   "wrong": [
+    {
+     "wrong": "I can to swim.",
+     "right": "I can swim.",
+     "note": "\"can\" dan keyin \"to\" kelmaydi."
+    }
+   ],
+   "challenge": "Write 3 things you can do and 2 things you can't do. Uddalaydigan 3 va uddalamaydigan 2 ish yozing. Write 1 question and answer using \"Can you...?\" \"Can you...?\" bilan 1 savol-javob yozing.",
+   "read": {
+    "passage": "Aziz: Can you swim, Malika? Malika: Yes, I can! I can swim well. Can you climb trees? Aziz: No, I can't climb. But I can run very fast! Malika: Great! Let's play in the park.",
+    "qs": [
+     "Can Malika swim? → ______________",
+     "What can Aziz do well? → ______________"
+    ]
+   },
+   "quiz": [
+    "Translate: Suzmoq → ______",
+    "Translate: Sakramoq → ______",
+    "\"I ___ swim.\" (can/is)",
+    "\"Can you run?\" \"Yes, ___ ___.\"",
+    "Write 2 sentences about what you can do."
+   ],
+   "circle": [
+    "\"Can you swim?\" → a) It is a fish b) Yes, I can c) I am ten",
+    "To move on one leg: a) climb b) hop c) catch"
+   ],
+   "tf": [
+    "Fish can climb trees. T / F",
+    "\"Can't\" is short for \"can not.\" T / F",
+    "We say \"I can to swim.\" T / F"
+   ]
+  },
+  {
+   "n": 11,
+   "file": "Lesson_011_Where_Are_You_From.pdf",
+   "wrong": [
+    {
+     "wrong": "I am Uzbekistan.",
+     "right": "I am from Uzbekistan.",
+     "note": "\"from\" so'zini tushirib qoldirmang."
+    }
+   ],
+   "challenge": "Name 3 more countries not in this lesson and their capital cities, if you know them. Yana 3 ta davlat va (bilsangiz) poytaxtlarini ayting. Write 3 sentences about a country you'd like to visit.",
+   "read": {
+    "passage": "Aziz: Hello! Where are you from? Minji: I'm from Korea. And you? Aziz: I'm from Uzbekistan. I live in Tashkent. Minji: Tashkent is a beautiful capital city!",
+    "qs": [
+     "Where is Minji from? → ______________",
+     "Where does Aziz live? → ______________"
+    ]
+   },
+   "quiz": [
+    "Translate: Davlat → ______",
+    "Translate: Poytaxt → ______",
+    "\"I ___ from Uzbekistan.\" (am/is)",
+    "\"She ___ in London.\" (live/lives)",
+    "Write 2 sentences saying where you are from and where you live."
+   ],
+   "circle": [
+    "\"Where are you from?\" → a) I am fine b) I am from Uzbekistan c) My name is Ali",
+    "Tashkent is the ___ of Uzbekistan: a) country b) capital city c) nationality"
+   ],
+   "tf": [
+    "Tashkent is the capital city of Uzbekistan. T / F",
+    "\"Nationality\" means the same as \"city.\" T / F",
+    "We say \"I am from\" + a country name. T / F"
+   ]
+  },
+  {
+   "n": 12,
+   "file": "Lesson_012_My_Family.pdf",
+   "wrong": [
+    {
+     "wrong": "This is her brother",
+     "right": "This is his brother.",
+     "note": "\"his\" va \"her\" ni aralashtirmang."
+    }
+   ],
+   "challenge": "Write 4 sentences introducing 4 family members using \"my.\" \"my\" bilan 4 ta oila a'zosini tanishtiruvchi 4 ta gap yozing. Write 1 sentence about where your parents are from (remember Lesson 11!).",
+   "read": {
+    "passage": "Aziz: This is my family. This is my mother and this is my father. Minji: How many people are in your family? Aziz: Five. My parents, my brother, my sister, and me. Minji: Nice! This is my grandmother. She lives with us.",
+    "qs": [
+     "How many people are in Aziz's family? → ______________",
+     "Who lives with Minji? → ______________"
+    ]
+   },
+   "quiz": [
+    "Translate: Ona → ______",
+    "Translate: Aka/Uka → ______",
+    "\"This is ___ father.\" (my/his, about yourself)",
+    "\"This is ___ sister.\" (her, about a girl's sister)",
+    "Write 2 sentences introducing 2 family members."
+   ],
+   "circle": [
+    "A boy talking about his mother says: a) This is her mother b) This is my mother c) This is your mother",
+    "Talking about a friend's sister: a) This is my sister b) This is her sister c) This is our sister"
+   ],
+   "tf": [
+    "\"His\" is used when talking about a boy's things. T / F",
+    "\"Grandmother\" and \"grandfather\" are parents' parents. T / F",
+    "\"This is her mother\" is correct for a girl talking about her own mother. T / F"
+   ]
+  },
+  {
+   "n": 13,
+   "file": "Lesson_013_Have_Has_Describing_Possessions.pdf",
+   "wrong": [
+    {
+     "wrong": "He have a dog.",
+     "right": "He has a dog.",
+     "note": "\"He/she/it\" bilan doim \"has\" ishlatiladi, \"have\" emas."
+    }
+   ],
+   "challenge": "Write 4 sentences describing a family member using have/has (things they own AND how they look). Oila a'zoingiz haqida have/has bilan 4 gap yozing.",
+   "read": {
+    "passage": "This is my friend Malika. She has curly hair and glasses. She has a small white cat, but she doesn't have a dog. Malika has two brothers and one sister.",
+    "qs": [
+     "Does Malika have a dog? → ______________",
+     "How many brothers does she have? → ______________"
+    ]
+   },
+   "quiz": [
+    "She ___ a bike. (have/has)",
+    "___ you have a dog? (Do/Does)",
+    "Translate: Uning iti bor. → ______",
+    "Translate: Menda velosiped yo'q. → ______",
+    "Write 2 sentences about what you have."
+   ],
+   "circle": [
+    "He ___ a dog. a) have b) has",
+    "___ they have a ball? a) Do b) Does"
+   ],
+   "tf": [
+    "\"He have a dog\" is correct English. T / F",
+    "We use \"has\" with he/she/it. T / F",
+    "\"Do you have a bike?\" is a correct question. T / F"
+   ]
+  },
+  {
+   "n": 14,
+   "file": "Lesson_014_Days_and_Months.pdf",
+   "wrong": [
+    {
+     "wrong": "today is monday.",
+     "right": "Today is M onday.",
+     "note": "Kun nomlarini katta harf bilan yozing."
+    }
+   ],
+   "challenge": "Write all 7 days of the week in order from memory. Hafta kunlarini yodda tartib bilan yozing. Write 1 sentence for each: today, tomorrow, yesterday.",
+   "read": {
+    "passage": "Aziz: What day is it today? Malika: It's Wednesday. We have English class today! Aziz: Great! And tomorrow is Thursday - we visit my grandmother. Malika: Nice! Yesterday was Tuesday, and I had a math test.",
+    "qs": [
+     "What day is it in the story? → ______________",
+     "What day was yesterday? → ______________"
+    ]
+   },
+   "quiz": [
+    "Translate: Hafta → ______",
+    "Translate: Bugun → ______",
+    "\"Today ___ Monday.\" (is/are)",
+    "Write the day after Sunday.",
+    "Write 2 sentences using \"today\" and \"tomorrow.\""
+   ],
+   "circle": [
+    "The day after Friday is: a) Thursday b) Saturday c) Monday",
+    "\"What day is it today?\" → a) It's fine b) It's Sunday c) It's a week"
+   ],
+   "tf": [
+    "There are 7 days in a week. T / F",
+    "Saturday comes before Friday. T / F",
+    "\"Yesterday\" means the day before today. T / F"
+   ]
+  },
+  {
+   "n": 15,
+   "file": "Lesson_015_Describing_People_Adjectives.pdf",
+   "wrong": [
+    {
+     "wrong": "She kind.",
+     "right": "She is kind.",
+     "note": "\"is\" so'zini tushirib qoldirmang."
+    }
+   ],
+   "challenge": "Describe 3 family members using 2 adjectives each. 3 oila a'zosini 2 tadan sifat bilan tasvirlang. Write 2 sentences describing yourself!",
+   "read": {
+    "passage": "Aziz: This is my father. He is tall and strong. Minji: What is your mother like? Aziz: She is kind and beautiful. And funny too! Minji: Your family sounds happy!",
+    "qs": [
+     "What is Aziz's father like? → ______________",
+     "What is Aziz's mother like? → ______________"
+    ]
+   },
+   "quiz": [
+    "Translate: Mehribon → ______",
+    "Translate: Baxtli → ______",
+    "\"He ___ tall.\" (is/am)",
+    "\"What ___ she like?\" (is/are)",
+    "Write 2 sentences describing a family member."
+   ],
+   "circle": [
+    "Opposite of \"tall\": a) young b) short c) kind",
+    "\"What is he like?\" → a) He is Monday b) He is funny c) He is a country"
+   ],
+   "tf": [
+    "\"Happy\" and \"sad\" mean the same thing. T / F",
+    "\"Tall\" describes height. T / F",
+    "We say \"She is beautiful\" about a person. T / F"
+   ]
+  },
+  {
+   "n": 16,
+   "file": "Lesson_016_All_About_Me_My_Introduction.pdf",
+   "wrong": [
+    {
+     "wrong": "I like sing.",
+     "right": "I like to sing.",
+     "note": "Fe'ldan oldin \"to\" qo'ying."
+    }
+   ],
+   "challenge": "Write your own 5-sentence introduction like Malika's. Malikaning matniga o'xshab, o'zingiz haqingizda 5 gap yozing. Add one adjective and one family member to your introduction.",
+   "read": {
+    "passage": "Hello! My name is Malika. I am from Uzbekistan and I live in Tashkent. I am eleven years old. I like music and I like to sing. My favorite subject is English. I want to be a singer!",
+    "qs": [
+     "What does Malika like? → ______________",
+     "What does she want to be? → ______________"
+    ]
+   },
+   "quiz": [
+    "Translate: Sevimli → ______",
+    "Translate: Mashg'ulot → ______",
+    "\"I ___ to dance.\" (like/likes)",
+    "\"My favorite sport ___ football.\" (is/am)",
+    "Write 2 sentences about what you like."
+   ],
+   "circle": [
+    "\"What do you like?\" → a) I am ten b) I like music c) This is my mother",
+    "\"I want to be a...\" → a) football b) teacher c) Monday"
+   ],
+   "tf": [
+    "\"I like to sing\" needs the word \"to.\" T / F",
+    "\"Hobby\" means the same as \"family.\" T / F",
+    "We can say \"My favorite color is...\" T / F"
+   ]
+  },
+  {
+   "n": 17,
+   "file": "Lesson_017_Family_Tree_Workshop.pdf",
+   "wrong": [],
+   "challenge": null,
+   "read": null,
+   "quiz": [
+    "Translate: Amaki → ______",
+    "Translate: Amakivachcha → ______",
+    "Write 2 sentences about your family tree using \"my/his/her.\""
+   ],
+   "circle": [],
+   "tf": []
+  },
+  {
+   "n": 18,
+   "file": "Lesson_018_Speaking_Circle_All_About_My_Family.pdf",
+   "wrong": [],
+   "challenge": null,
+   "read": {
+    "passage": "This is my family. My mother is kind, and my father is strong. I have one brother and one sister. My aunt and uncle live near us, so we see our cousins every week. We are very close, and I am proud of my family.",
+    "qs": [
+     "How many brothers/sisters does the writer have? → ______",
+     "Who does the writer see every week? → ______"
+    ]
+   },
+   "quiz": [
+    "Translate: Sevmoq → ______",
+    "Translate: Birga → ______",
+    "Write 3 sentences about your family (name, adjective, and something you love)."
+   ],
+   "circle": [],
+   "tf": []
+  },
+  {
+   "n": 19,
+   "file": "Lesson_019_My_School.pdf",
+   "wrong": [],
+   "challenge": "Write 4 sentences about your school like the reading text. Matn kabi maktabingiz haqida 4 gap yozing. Write your school timetable for 3 days using \"I have...\" \"I have...\" bilan 3 kunlik dars jadvalingizni yozing.",
+   "read": {
+    "passage": "This is my school. It is big. This is my classroom, and this is my teacher, Mrs. Karimova. My favorite subject is English. At break time, I play with my friends at the playground.",
+    "qs": [
+     "What is the teacher's name? → ______________",
+     "What does the writer do at break time? → ______________"
+    ]
+   },
+   "quiz": [
+    "Translate: Maktab → ______",
+    "Translate: O'qituvchi → ______",
+    "\"This ___ my classroom.\" (is/am)",
+    "\"I ___ English on Monday.\" (have/has)",
+    "Write 2 sentences about your school."
+   ],
+   "circle": [
+    "A place with books: a) gym b) library c) playground",
+    "\"English is my favorite ___.\" → a) teacher b) subject c) break time"
+   ],
+   "tf": [
+    "We read books in the library. T / F",
+    "\"Gym\" means the same as \"playground.\" T / F",
+    "\"Break time\" is a time to study. T / F"
+   ]
+  },
+  {
+   "n": 20,
+   "file": "Lesson_020_Speaking_Circle_All_About_My_Life.pdf",
+   "wrong": [],
+   "challenge": null,
+   "read": null,
+   "quiz": [
+    "Translate: Faxrlanuvchi → ______",
+    "Translate: Eng yaqin do'st → ______",
+    "Write your full self-introduction from"
+   ],
+   "circle": [],
+   "tf": []
+  },
+  {
+   "n": 21,
+   "file": "Lesson_021_Daily_Routine.pdf",
+   "wrong": [
+    {
+     "wrong": "I wake up 7.",
+     "right": "I wake up at 7.",
+     "note": "Aniq vaqt bilan \"at\" ishlatiladi."
+    }
+   ],
+   "challenge": "Write your own \"My Day\" text like Malika's, with at least 6 sentences. Malikaning matniga o'xshab, kamida 6 gapli \"Mening kunim\" matnini yozing. Write 2 questions to ask a partner about their routine.",
+   "read": null,
+   "quiz": [
+    "Translate: Uyg'onmoq → ______",
+    "Translate: Uxlashga yotmoq → ______",
+    "\"I ___ up at 7.\" (wake/wakes)",
+    "\"What time do you ___ breakfast?\" (have/has)",
+    "Write 2 sentences about your morning routine."
+   ],
+   "circle": [
+    "\"What time do you wake up?\" → a) I am fine b) I wake up at 7 c) It is Monday",
+    "Before school we usually: a) go to bed b) have breakfast c) have dinner"
+   ],
+   "tf": []
+  },
+  {
+   "n": 22,
+   "file": "Lesson_022_Telling_the_Time.pdf",
+   "wrong": [
+    {
+     "wrong": "Half past three.",
+     "right": "It's half past three.",
+     "note": "\"It's\" so'zini tushirib qoldirmang."
+    }
+   ],
+   "challenge": "Write your school timetable with exact times (quarter past, half past...). Dars jadvalingizni aniq vaqtlar bilan yozing. Draw 4 clock faces and write the time under each.",
+   "read": null,
+   "quiz": [
+    "Translate: Yarim → ______",
+    "Translate: Ertalab → ______",
+    "Write the time: 3:30 → ______",
+    "Write the time: 5:15 → ______",
+    "Write 2 sentences using \"What time is it?\""
+   ],
+   "circle": [
+    "\"What time is it?\" → a) It's Monday b) It's four o'clock c) It's sunny",
+    "15 minutes after 3:00 is: a) half past three b) quarter past three c) quarter to three"
+   ],
+   "tf": []
+  },
+  {
+   "n": 23,
+   "file": "Lesson_023_Food_and_Drinks.pdf",
+   "wrong": [
+    {
+     "wrong": "I no like milk.",
+     "right": "I don't like milk.",
+     "note": "Salbiy gapda \"don't\" ishlatiladi."
+    }
+   ],
+   "challenge": "Write 3 things you like and 2 things you don't like to eat. Yoqtiradigan 3 va yoqtirmaydigan 2 ovqatni yozing. Write a question to ask a partner using \"Do you like...?\" \"Do you like...?\" bilan juftingizga savol yozing.",
+   "read": null,
+   "quiz": [
+    "Translate: Non → ______",
+    "Translate: Suv → ______",
+    "\"I ___ like milk.\" (don't/isn't)",
+    "\"Do you like tea?\" \"Yes, I ___.\"",
+    "Write 2 sentences about food you like and don't like."
+   ],
+   "circle": [
+    "\"Do you like tea?\" → a) It's Monday b) Yes, I do c) I am ten",
+    "Something you drink: a) bread b) water c) cheese"
+   ],
+   "tf": []
+  },
+  {
+   "n": 24,
+   "file": "Lesson_024_At_the_Restaurant.pdf",
+   "wrong": [
+    {
+     "wrong": "Give me water.",
+     "right": "Can I have water, please?",
+     "note": "Har doim \"please\" deng."
+    }
+   ],
+   "challenge": "Write a mini restaurant dialogue: waiter, customer, order, bill. Kichik restoran dialogini yozing: ofitsiant, mijoz, buyurtma, hisob.",
+   "read": null,
+   "quiz": [
+    "Translate: Och → ______",
+    "Translate: Mazali → ______",
+    "\"Can I ___ some water?\" (have/has)",
+    "\"I'd ___ tea, please.\" (like/likes)",
+    "Write 2 sentences ordering food politely."
+   ],
+   "circle": [
+    "Polite way to ask for food: a) Give me rice b) Can I have rice, please? c) Rice!",
+    "The person who brings your food: a) menu b) waiter c) bill"
+   ],
+   "tf": []
+  },
+  {
+   "n": 25,
+   "file": "Lesson_025_Shopping_for_Clothes.pdf",
+   "wrong": [
+    {
+     "wrong": "This shoes.",
+     "right": "These shoes.",
+     "note": "Ko'plikda \"these/those\" ishlatiladi."
+    }
+   ],
+   "challenge": "Write 4 sentences describing clothes with color, price, and this/that. Rang, narx va this/that bilan 4 gap yozing.",
+   "read": null,
+   "quiz": [
+    "Translate: Qimmat → ______",
+    "Translate: Arzon → ______",
+    "\"___ shoes are new.\" (This/These)",
+    "\"How much ___ it?\" (is/are)",
+    "Write 2 sentences about clothes and prices."
+   ],
+   "circle": [
+    "Opposite of \"expensive\": a) price b) cheap c) dress",
+    "\"How much is it?\" → a) It's Monday b) It's 30,000 som c) It's blue"
+   ],
+   "tf": []
+  },
+  {
+   "n": 26,
+   "file": "Lesson_026_Weather_and_Seasons.pdf",
+   "wrong": [
+    {
+     "wrong": "Sunny today.",
+     "right": "It's sunny today.",
+     "note": "\"It's\" so'zini tushirib qoldirmang."
+    }
+   ],
+   "challenge": "Write 4 sentences: one about the weather in each season. Har bir fasl haqida 1 tadan, jami 4 gap yozing.",
+   "read": null,
+   "quiz": [
+    "Translate: Yomg'irli → ______",
+    "Translate: Yoz → ______",
+    "\"___ sunny today.\" (It's/Is)",
+    "\"___ winter, it's cold.\" (In/On)",
+    "Write 2 sentences about your favorite season."
+   ],
+   "circle": [
+    "Season after spring: a) winter b) summer c) autumn",
+    "\"What's the weather like?\" → a) It's Monday b) It's sunny c) It's ten"
+   ],
+   "tf": []
+  },
+  {
+   "n": 27,
+   "file": "Lesson_027_Action_Games_Workshop.pdf",
+   "wrong": [],
+   "challenge": null,
+   "read": null,
+   "quiz": [
+    "Translate: Qarsak chalmoq → ______",
+    "Translate: Cho'zilmoq → ______",
+    "Write 2 sentences using \"I can\" with today's action words."
+   ],
+   "circle": [],
+   "tf": []
+  },
+  {
+   "n": 28,
+   "file": "Lesson_028_Speaking_Circle_My_Day.pdf",
+   "wrong": [],
+   "challenge": null,
+   "read": null,
+   "quiz": [
+    "Translate: Odatda → ______",
+    "Translate: Band → ______",
+    "Write 3 sentences describing your day using frequency words."
+   ],
+   "circle": [],
+   "tf": []
+  },
+  {
+   "n": 29,
+   "file": "Lesson_029_My_House.pdf",
+   "wrong": [
+    {
+     "wrong": "There is two bedrooms.",
+     "right": "There are two bedrooms.",
+     "note": "Ko'plikda \"are\" ishlatiladi."
+    }
+   ],
+   "challenge": "Write 5 sentences describing your house using \"There is/There are.\" Uyingizni \"There is/There are\" bilan 5 gapda tasvirlang.",
+   "read": null,
+   "quiz": [
+    "Translate: Oshxona → ______",
+    "Translate: Bog' → ______",
+    "\"There ___ a kitchen.\" (is/are)",
+    "\"There ___ two bedrooms.\" (is/are)",
+    "Write 2 sentences about your house."
+   ],
+   "circle": [
+    "You cook food here: a) bedroom b) kitchen c) garden",
+    "\"There ___ a living room.\" → a) are b) is c) am"
+   ],
+   "tf": []
+  }
+ ]
+}

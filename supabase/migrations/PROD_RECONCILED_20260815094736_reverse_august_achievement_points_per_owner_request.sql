@@ -1,0 +1,36 @@
+-- RECONCILIATION ARTIFACT — DOCUMENTATION ONLY. NOT APPLIED VIA `supabase db push`.
+-- Original prod migration: 20260815094736_0134_reverse_august_achievement_points_per_owner_request
+-- (applied directly to project usqzcsoolkbuxyiiawmx, no local file existed).
+-- Confidence: RECONSTRUCTED FROM RESULTING DATA STATE, NOT RECOVERED ORIGINAL SOURCE.
+--   Inferred purely from resulting rows already present in point_transactions:
+--     131 rows, category_key = 'achievement_bonus', is_reversal = true,
+--     points sum = -2185, reason (identical across all 131 rows) =
+--       'Reversal: achievement bonus points removed per owner request
+--        (system auto-awards excluded from ranking for now)'
+--     created_at = 2026-08-15 (uniform batch timestamp)
+--   This migration is the data-reversal companion to 0135
+--   (PROD_RECONCILED_20260815095157_pause_automatic_point_awards.sql), which
+--   removed the point-award side effect of achievement unlocks going forward;
+--   this migration appears to retroactively reverse the already-awarded
+--   achievement_bonus points from earlier in the cycle. Exact original filter
+--   predicates cannot be confirmed; documents behavior/result only.
+
+-- Likely original shape (reconstructed):
+-- insert into public.point_transactions
+--   (student_id, level, group_name, category_id, category_key, points, reason,
+--    lesson_date, awarded_by, is_reversal, reversed_transaction_id, is_system_award)
+-- select
+--   pt.student_id, pt.level, pt.group_name, pt.category_id, pt.category_key,
+--   -pt.points,
+--   'Reversal: achievement bonus points removed per owner request (system auto-awards excluded from ranking for now)',
+--   pt.lesson_date, <owner/admin profile id>, true, pt.id, pt.is_system_award
+-- from public.point_transactions pt
+-- where pt.category_key = 'achievement_bonus'
+--   and pt.is_reversal = false
+--   and not exists (
+--     select 1 from public.point_transactions r
+--     where r.reversed_transaction_id = pt.id
+--   );
+--
+-- Verified resulting aggregate (queried 2026-08-15 from live prod data):
+--   category_key='achievement_bonus', is_reversal=true -> count=131, sum(points)=-2185

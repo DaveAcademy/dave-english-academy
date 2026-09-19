@@ -1,0 +1,670 @@
+// MyHomework.jsx - premium student homework portal
+// Preserves authoritative backend: useAcademy (level filter, homeworkStatus/homeworkSubmissionFiles/lessons),
+// storageBridge via getAttachmentUrl (viewing existing files), removeMyHomeworkSubmissionFile.
+// Homework points remain MANUAL only (score/feedback rendered, never auto-awarded).
+// Adds: 6-stage status mapping, progress indicators, valid/invalid submission distinction,
+// premium empty state, 320px+ mobile, motion-safe animations, >=44px tap targets.
+
+import { useState, useMemo, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import {
+  BookOpen, Download, MessageSquare, X, Image as ImageIcon,
+  Clock, CheckCircle2, AlertCircle, Award, FileText, Sparkles,
+  PenTool, Target, ChevronRight, Lock, Languages, Gamepad2, Swords,
+} from 'lucide-react';
+import {
+  LESSON_STATUS, teacherPaceFor, lessonCapFor, progressByLessonNumber,
+  lessonStatusFor, translatedLessonTitle,
+} from '../../../lib/lessonLogic';
+import { useAcademy } from '../../../lib/AcademyDataContext';
+import { levelToken } from '../../../lib/levels';
+import {
+  listHomeworkStages,
+  listHomeworkQuestions,
+  getHomeworkStageProgress,
+} from '../../../lib/db';
+import { getAttachmentUrl } from '../../../lib/db';
+import LessonSectionTabs from '../../../components/lesson/LessonSectionTabs';
+import HomeworkStages from '../components/HomeworkStages';
+import StatusPill from '../../../components/StatusPill';
+import ErrorBanner from '../../../components/ErrorBanner';
+import { SkeletonList } from '../../../components/Skeleton';
+
+const PILL_TONE = { graded: 'brand', awaitingGrading: 'success', notSubmitted: 'neutral' };
+
+// 6-stage journey labels — derived from authoritative fields (score/feedback/status/files)
+// without inventing new writes. Ranges kept read-only.
+function deriveJourney(status, hasSubmission, graded) {
+  const raw = String(status?.status || '').toLowerCase();
+  if (graded) {
+    const fb = String(status?.feedback || '').toLowerCase();
+    const needsFix = raw.includes('needs') || raw.includes('correction') || fb.includes('correction') || fb.includes('revise') || (status?.score != null && status.score < 60);
+    if (needsFix) return { key: 'needsCorrection', tone: 'danger', labelKey: 'needsCorrection' };
+    if (status?.score >= 85) return { key: 'completed', tone: 'brand', labelKey: 'completed' };
+    return { key: 'approved', tone: 'success', labelKey: 'approved' };
+  }
+  if (hasSubmission) {
+    if (raw.includes('review') || raw.includes('checking')) return { key: 'underReview', tone: 'info', labelKey: 'underReview' };
+    return { key: 'submitted', tone: 'success', labelKey: 'submittedLabel' };
+  }
+  return { key: 'notSubmitted', tone: 'neutral', labelKey: 'notSubmitted' };
+}
+
+const JOURNEY_ORDER = ['notSubmitted', 'submitted', 'underReview', 'approved', 'needsCorrection', 'completed'];
+
+export default function MyHomework() {
+  const { t } = useTranslation(['homework', 'common', 'portal']);
+  const {
+    students, homework, homeworkStatus, homeworkSubmissionFiles, lessons,
+    curriculumProgress, lessonProgress,
+    removeMyHomeworkSubmissionFile, loading,
+  } = useAcademy();
+  const { me } = useAcademy(); // single source, no fallback
+  const [actionError, setActionError] = useState(null);
+  const [stageData, setStageData] = useState({});
+  const [activeHomeworkStage, setActiveHomeworkStage] = useState(null);
+
+  // Teacher-assigned rows only: standard lesson-homework rows carry a
+  // lesson_id and live in the lesson-hub section (never duplicated here).
+  const myHomework = useMemo(() => {
+    if (!me) return [];
+    return [...homework]
+      .filter((h) => !h.lesson_id && (!h.level || h.level === me.level))
+      .sort((a, b) => new Date(b.due_date) - new Date(a.due_date));
+  }, [homework, me]);
+
+  const statusFor = (homeworkId) => homeworkStatus.find((s) => s.homework_id === homeworkId && s.student_id === me?.id);
+  const submittedFilesFor = (homeworkId) =>
+    homeworkSubmissionFiles.filter((f) => f.homework_id === homeworkId && f.student_id === me?.id).sort((a, b) => a.position - b.position);
+  const lessonOf = (lessonId) => (lessonId ? lessons.find((l) => l.id === lessonId) : null);
+
+  const pillOf = (status, homeworkId) => {
+    if (status?.score != null) return 'graded';
+    if (status?.answer_file_url || submittedFilesFor(homeworkId).length > 0) return 'awaitingGrading';
+    return 'notSubmitted';
+  };
+
+  const isOverdue = (dueDateStr) => {
+    if (!dueDateStr) return false;
+    const [y, m, d] = dueDateStr.split('-').map(Number);
+    if (!y || !m || !d) return false;
+    const due = new Date(y, m - 1, d);
+    const today = new Date();
+    const todayLocal = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    return todayLocal > due;
+  };
+
+  // --- Lesson homework (derived, no new rows) ---------------------------
+  // One homework hub per lesson the student can see — same scope, order,
+  // and unlock rules as MyLessons (lessonLogic.js). Standard lesson
+  // homework is therefore automatically available without any per-student
+  // teacher assignment; teacher-assigned rows (myHomework above) stay a
+  // separate section below for special assignments.
+  const lessonPace = teacherPaceFor(curriculumProgress, me?.level);
+  const lessonCap = lessonCapFor(curriculumProgress, me?.level);
+  const lessonItems = useMemo(() => {
+    if (!me) return [];
+    return [...lessons]
+      .filter((l) => (!l.group_name && !l.level) || l.group_name === me.group_name || l.level === me.level)
+      .sort((a, b) => {
+        const an = a.curriculum_lessons?.lesson_number;
+        const bn = b.curriculum_lessons?.lesson_number;
+        if (an != null && bn != null) return an - bn;
+        if (an != null) return -1;
+        if (bn != null) return 1;
+        return new Date(b.created_at) - new Date(a.created_at);
+      });
+  }, [lessons, me]);
+  const lessonProgressByNum = useMemo(
+    () => progressByLessonNumber(lessonProgress, lessonItems),
+    [lessonProgress, lessonItems]
+  );
+  const lessonHwStatus = (lesson) => lessonStatusFor(lesson, lessonPace, lessonProgressByNum, lessonCap);
+  const linkedHomeworkFor = (lessonId) =>
+    homework.filter((h) => h.lesson_id === lessonId && (!h.level || h.level === me?.level));
+  // The standard (reusable, non-assignment) homework row for a lesson, if seeded.
+  const standardHomeworkFor = (lessonId) => linkedHomeworkFor(lessonId)[0] || null;
+  const lessonTitleOf = (lesson) =>
+    translatedLessonTitle(t, lesson.curriculum_lessons?.lesson_number, lesson.topic || lesson.curriculum_lessons?.title || '');
+  const vocabCountOf = (lesson) => lesson.lesson_vocabulary?.[0]?.count ?? 0;
+
+  const handleOpenFile = async (path) => {
+    setActionError(null);
+    try {
+      const url = await getAttachmentUrl(path);
+      if (url) window.open(url, '_blank', 'noopener');
+      else setActionError(t('openFileFailed'));
+    } catch { setActionError(t('openFileFailed')); }
+  };
+
+  const handleRemoveSubmitted = async (id) => {
+    setActionError(null);
+    try { await removeMyHomeworkSubmissionFile(id); } catch { setActionError(t('removeImageFailed')); }
+  };
+
+  // overview stats
+  const stats = useMemo(() => {
+    let submitted = 0; let graded = 0;
+    for (const h of myHomework) {
+      const s = statusFor(h.id);
+      const hasSub = Boolean(s?.answer_file_url) || submittedFilesFor(h.id).length > 0;
+      if (hasSub) submitted += 1;
+      if (s?.score != null) graded += 1;
+    }
+    const total = myHomework.length;
+    const remaining = Math.max(0, total - submitted);
+    return { total, submitted, graded, remaining };
+  }, [myHomework, homeworkStatus, homeworkSubmissionFiles]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const completionPct = stats.total ? Math.round((stats.submitted / stats.total) * 100) : 0;
+
+  // Load four-stage homework data (Vocabulary, Sentences, Quizzes, Review)
+  // Read-only: existing journey/scoring untouched. If the stage tables/RPCs
+  // are absent, the calls throw, are caught per homework, and the stage
+  // block below stays hidden — the existing homework UI keeps working.
+  useEffect(() => {
+    if (!me || myHomework.length === 0) return;
+    let cancelled = false;
+    const loadHomeworkStages = async () => {
+      for (const h of myHomework) {
+        if (cancelled) return;
+        try {
+          const stages = await listHomeworkStages(h.id);
+          const progressRows = await getHomeworkStageProgress(h.id, me.id);
+          // RPC returns an array of per-stage rows; index by stage_id.
+          const progress = {};
+          for (const p of Array.isArray(progressRows) ? progressRows : []) {
+            if (p && p.stage_id != null) progress[p.stage_id] = p;
+          }
+          const questionsMap = {};
+          for (const s of stages || []) {
+            try {
+              questionsMap[s.id] = await listHomeworkQuestions(s.id);
+            } catch {
+              questionsMap[s.id] = [];
+            }
+          }
+          if (!cancelled) setStageData(prev => ({ ...prev, [h.id]: { stages: stages || [], questions: questionsMap, progress } }));
+        } catch (e) {
+          console.error(`Failed to load stages for homework ${h.id}:`, e);
+        }
+      }
+    };
+    loadHomeworkStages();
+    return () => { cancelled = true; };
+  }, [myHomework, me]);
+
+  if (!me) {
+    return (
+      <div className="rounded-xl border border-ink/[0.06] bg-white p-10 text-center shadow-card">
+        <p className="font-display text-lg font-semibold text-ink">{t('notLinkedYet')}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-w-0">
+      <header className="mb-6">
+        <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="font-display text-2xl font-bold tracking-tight text-ink">{t('myTitle')}</h1>
+            <p className="mt-1 max-w-[60ch] text-sm leading-relaxed text-ink/55">{t('mySubtitle')}</p>
+          </div>
+          <div className="w-full sm:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:order-2">
+            <div className="flex-1 rounded-xl border border-ink/[0.06] bg-white p-3 shadow-card">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-ink/40">{t('portal:mpHomeworkProgress')}</p>
+              <p className="mt-1 font-display text-2xl font-bold text-ink">
+                {t('portal:mpFilterSubmitted')}: {stats.submitted} / {stats.total}
+              </p>
+            </div>
+            <div className="flex-1 rounded-xl border border-ink/[0.06] bg-white p-3 shadow-card">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-ink/40">{t('portal:mpFilterTodo')}</p>
+              <p className="mt-1 font-display text-2xl font-bold text-ink/60">
+                {stats.remaining}
+              </p>
+            </div>
+            <div className="flex-1 rounded-xl border border-ink/[0.06] bg-white p-3 shadow-card">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-ink/40">{t('portal:mpFilterGraded')}</p>
+              <p className="mt-1 font-display text-2xl font-bold text-brand-600">
+                {stats.graded}
+              </p>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <LessonSectionTabs />
+      <ErrorBanner>{actionError}</ErrorBanner>
+
+      {loading ? (
+        <SkeletonList count={3} />
+      ) : (
+        <>
+          {/* Standard lesson homework — one hub per lesson, derived from
+              lessons (no assignment rows needed). Click a card to open the
+              lesson hub with PDF, vocabulary, practice, and quiz. */}
+          {lessonItems.length > 0 && (
+            <section aria-label={t('homework:lessonHomeworkTitle')} className="mb-6">
+              <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+                <div>
+                  <h2 className="font-display text-lg font-bold tracking-tight text-ink">{t('homework:lessonHomeworkTitle')}</h2>
+                  <p className="mt-0.5 text-sm text-ink/55">{t('homework:lessonHomeworkSubtitle')}</p>
+                </div>
+                <Link to="/my-lessons" className="text-xs font-semibold text-brand-600 hover:underline">
+                  {t('homework:allLessons')}
+                </Link>
+              </div>
+              <div className="space-y-3">
+                {lessonItems.map((l) => {
+                  const num = l.curriculum_lessons?.lesson_number;
+                  const lst = lessonHwStatus(l);
+                  const locked = lst === 'locked';
+                  const linked = linkedHomeworkFor(l.id);
+                  const linkedDone = linked.filter((h) => {
+                    const s = statusFor(h.id);
+                    return s?.score != null || Boolean(s?.answer_file_url) || submittedFilesFor(h.id).length > 0;
+                  }).length;
+                  const vocabCount = vocabCountOf(l);
+                  const standardHw = standardHomeworkFor(l.id);
+                  return (
+                    <article
+                      key={l.id}
+                      className={`overflow-hidden rounded-2xl border bg-white shadow-card transition-shadow hover:shadow-[0_4px_24px_rgba(27,36,48,0.08)] ${locked ? 'border-ink/[0.06] opacity-90' : lst === LESSON_STATUS.COMPLETED ? 'border-active/20' : 'border-ink/[0.06]'}`}
+                    >
+                      <div className={`h-1 w-full ${lst === LESSON_STATUS.COMPLETED ? 'bg-active' : lst === LESSON_STATUS.IN_PROGRESS ? 'bg-brand-500' : 'bg-ink/5'}`} />
+                      <div className="p-3 sm:p-4">
+                        <div className="flex items-start gap-3">
+                          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl font-display text-sm font-bold ring-1 ${lst === LESSON_STATUS.COMPLETED ? 'bg-active/10 text-active ring-active/20' : locked ? 'bg-ink/5 text-ink/40 ring-ink/10' : 'bg-brand-50 text-brand-700 ring-brand-100'}`}>
+                            {locked ? <Lock size={16} /> : (num ?? <BookOpen size={18} />)}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <Link to={`/my-lessons/${l.id}`} className="break-words font-display text-[15px] font-bold leading-tight text-ink hover:text-brand-600 hover:underline sm:text-base">
+                                {num != null ? `#${num} · ` : ''}{lessonTitleOf(l)}
+                              </Link>
+                              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-bold ring-1 ${lst === LESSON_STATUS.COMPLETED ? 'bg-active/10 text-active ring-active/20' : lst === LESSON_STATUS.IN_PROGRESS ? 'bg-brand-50 text-brand-700 ring-brand-100' : locked ? 'bg-ink/5 text-ink/50 ring-ink/10' : 'bg-ink/5 text-ink/60 ring-ink/10'}`}>
+                                {lst === 'locked' ? t('homework:lhLocked') : lst === LESSON_STATUS.COMPLETED ? t('homework:lhCompleted') : lst === LESSON_STATUS.IN_PROGRESS ? t('homework:lhInProgress') : t('homework:lhNotStarted')}
+                              </span>
+                            </div>
+                            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink/50">
+                              {vocabCount > 0 && (
+                                <span className="inline-flex items-center gap-1"><Languages size={12} className="text-ink/30" />{t('homework:lhWords', { count: vocabCount })}</span>
+                              )}
+                              {linked.length > 0 && (
+                                <span className="inline-flex items-center gap-1"><FileText size={11} className="text-ink/30" />{t('homework:lhAssignments', { done: linkedDone, total: linked.length })}</span>
+                              )}
+                            </div>
+                          </div>
+                          <Link to={`/my-lessons/${l.id}`} aria-label={t('homework:openLesson')} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-ink/10 text-ink/50 transition-colors hover:bg-brand-50 hover:text-brand-600">
+                            <ChevronRight size={16} />
+                          </Link>
+                        </div>
+                        {!locked && (
+                          <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-ink/5 pt-3">
+                            <Link to={`/my-lessons/${l.id}`} className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl bg-ink px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-ink/90">
+                              <BookOpen size={13} /> {t('homework:openLesson')}
+                            </Link>
+                            {standardHw ? (
+                              <>
+                                {[
+                                  { key: 'vocabulary', icon: Languages, label: t('homework:lhVocabulary') },
+                                  { key: 'grammar', icon: PenTool, label: t('homework:lhSentences') },
+                                  { key: 'practice', icon: Target, label: t('homework:lhQuizzes') },
+                                  { key: 'review', icon: Sparkles, label: t('homework:lhReview') },
+                                ].map(({ key, icon: StageIcon, label }) => {
+                                  const isActive = activeHomeworkStage?.lessonId === l.id && activeHomeworkStage?.stageKey === key;
+                                  return (
+                                    <button
+                                      key={key}
+                                      onClick={() => setActiveHomeworkStage(isActive ? null : { lessonId: l.id, stageKey: key })}
+                                      className={`inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors ${isActive ? 'border-brand-300 bg-brand-50 text-brand-700' : 'border-ink/10 bg-white text-ink/70 hover:bg-ink/5'}`}
+                                    >
+                                      <StageIcon size={13} /> {label}
+                                    </button>
+                                  );
+                                })}
+                              </>
+                            ) : (
+                              <>
+                                <Link to={`/my-vocabulary?lesson=${l.id}`} className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-ink/10 bg-white px-3 py-2 text-xs font-semibold text-ink/70 transition-colors hover:bg-ink/5">
+                                  <Languages size={13} /> {t('homework:lhVocabulary')}
+                                </Link>
+                                <Link to="/grammar-battle" className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-ink/10 bg-white px-3 py-2 text-xs font-semibold text-ink/70 transition-colors hover:bg-ink/5">
+                                  <Swords size={13} /> {t('homework:lhGrammar')}
+                                </Link>
+                                <Link to="/games" className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-ink/10 bg-white px-3 py-2 text-xs font-semibold text-ink/70 transition-colors hover:bg-ink/5">
+                                  <Gamepad2 size={13} /> {t('homework:lhPractice')}
+                                </Link>
+                              </>
+                            )}
+                          </div>
+                        )}
+                        {!locked && standardHw && activeHomeworkStage?.lessonId === l.id && (
+                          <div className="mt-3 rounded-xl bg-paper/50 p-3 ring-1 ring-ink/[0.04]">
+                            <HomeworkStages homeworkId={standardHw.id} studentId={me?.id} focusStageKey={activeHomeworkStage.stageKey} />
+                          </div>
+                        )}
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+          {myHomework.length === 0 ? (
+            lessonItems.length > 0 ? (
+              <p className="rounded-xl border border-ink/[0.06] bg-white px-4 py-3 text-center text-xs text-ink/45 shadow-card">
+                {t('homework:noTeacherHomework')}
+              </p>
+            ) : (
+        <div className="overflow-hidden rounded-2xl border border-ink/[0.06] bg-white shadow-card">
+          <div className="bg-gradient-to-br from-brand-50 via-white to-paper px-6 py-10 text-center sm:px-10 sm:py-12">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-card ring-1 ring-ink/[0.06]">
+              <Sparkles className="text-brand-500" size={22} aria-hidden="true" />
+            </div>
+            <h2 className="mx-auto mt-4 max-w-[28ch] font-display text-xl font-bold leading-tight text-ink">
+              {t('portal:mpJourneyStart')}
+            </h2>
+            <p className="mx-auto mt-2 max-w-[42ch] text-sm leading-relaxed text-ink/55">
+              {t('portal:mpJourneyHint')}
+            </p>
+            <div className="mx-auto mt-6 flex max-w-[36ch] items-center justify-center gap-2 rounded-full border border-brand-100 bg-brand-50 px-4 py-2">
+              <BookOpen size={14} className="text-brand-600" />
+              <span className="text-xs font-semibold text-brand-700">{t('portal:mpNoHomeworkAssigned')}</span>
+            </div>
+            <div className="mt-6 flex flex-wrap justify-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-ink px-3 py-1 text-xs font-semibold text-white"><FileText size={12} /> {t('portal:mpPdfIncluded')}</span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-ink/10 bg-white px-3 py-1 text-xs font-semibold text-ink/60"><Award size={12} /> {t('portal:mpManualGrading')}</span>
+            </div>
+          </div>
+          <div className="grid gap-0 border-t border-ink/5 bg-paper/60 sm:grid-cols-3">
+            {[
+              { n: '01', t2: 'Download', d: 'Open the lesson PDF' },
+              { n: '02', t2: 'Submit', d: 'Complete your assignment' },
+              { n: '03', t2: 'Feedback', d: 'Teacher points & notes' },
+            ].map((s) => (
+              <div key={s.n} className="px-6 py-4 text-center sm:border-r sm:border-ink/5 sm:last:border-0">
+                <p className="font-display text-xs font-bold tracking-widest text-brand-600">{s.n}</p>
+                <p className="mt-0.5 text-sm font-semibold text-ink">{s.t2}</p>
+                <p className="text-xs text-ink/45">{s.d}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+          )
+        ) : (
+        <>
+          <div className="mb-3">
+            <h2 className="font-display text-lg font-bold tracking-tight text-ink">{t('homework:teacherHomeworkTitle')}</h2>
+            <p className="mt-0.5 text-sm text-ink/55">{t('homework:teacherHomeworkSubtitle')}</p>
+          </div>
+          <div className="space-y-3">
+            {myHomework.map((h, idx) => {
+              const status = statusFor(h.id) || { status: 'Assigned' };
+              const graded = status.score != null;
+              const pill = pillOf(status, h.id);
+              const overdue = isOverdue(h.due_date);
+              const lesson = lessonOf(h.lesson_id);
+              const submittedFiles = submittedFilesFor(h.id);
+              const hasSubmission = submittedFiles.length > 0 || Boolean(status.answer_file_url);
+              const journey = deriveJourney(status, hasSubmission, graded);
+              const curIndex = JOURNEY_ORDER.indexOf(journey.key);
+              const isValidSubmission = hasSubmission && submittedFiles.length > 0;
+              const isInvalidSubmission = hasSubmission && submittedFiles.length === 0 && Boolean(status.answer_file_url);
+
+              return (
+                <article
+                  key={h.id}
+                  className={`group overflow-hidden rounded-2xl border bg-white shadow-card transition-shadow hover:shadow-[0_4px_24px_rgba(27,36,48,0.08)] ${overdue && !graded ? 'border-inactive/20' : 'border-ink/[0.06]'}`}
+                  style={{ animation: `slideUp 0.35s ease-out both`, animationDelay: `${Math.min(idx * 40, 200)}ms` }}
+                >
+                  {/* top accent for overdue/graded */}
+                  <div className={`h-1 w-full ${graded ? 'bg-brand-500' : hasSubmission ? 'bg-active' : overdue ? 'bg-inactive' : 'bg-ink/5'}`} />
+
+                  <div className="p-3 sm:p-4">
+                    {/* header row */}
+                    <div className="flex items-start gap-3">
+                      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ring-1 ${graded ? 'bg-brand-50 text-brand-600 ring-brand-100' : hasSubmission ? 'bg-emerald-50 text-emerald-600 ring-emerald-100' : 'bg-paper text-ink/40 ring-ink/5'}`}>
+                        {graded ? <Award size={18} /> : hasSubmission ? <CheckCircle2 size={18} /> : <BookOpen size={18} />}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <h2 className="break-words font-display text-[15px] font-bold leading-tight text-ink sm:text-base">{h.title}</h2>
+                          {/* prominent status badge using granular journey status */}
+                          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-bold ring-1 ${
+                            journey.tone === 'brand' ? 'bg-brand-50 text-brand-700 ring-brand-100' :
+                            journey.tone === 'success' ? 'bg-emerald-50 text-emerald-700 ring-emerald-100' :
+                            journey.tone === 'danger' ? 'bg-red-50 text-red-600 ring-red-100' :
+                            journey.tone === 'info' ? 'bg-sky-50 text-sky-700 ring-sky-100' :
+                            'bg-ink/5 text-ink/60 ring-ink/10'
+                          }`}>
+                            {journey.key === 'notSubmitted' ? t('portal:mpNotSubmitted') :
+                             journey.key === 'submitted' ? t('portal:mpFilterSubmitted') :
+                             journey.key === 'underReview' ? t('portal:mpJourneyReviewing') :
+                             journey.key === 'needsCorrection' ? t('portal:mpJourneyNeedsCorrection') :
+                             journey.key === 'approved' ? t('portal:mpJourneyGreatWork') :
+                             t('portal:mpJourneyCompleted')}
+                          </span>
+                          {graded && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-bold text-brand-700 ring-1 ring-brand-100">
+                              <Award size={10} /> {t('scoreOutOf', { score: status.score })}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink/50">
+                          <span className="inline-flex items-center gap-1">
+                            <Clock size={12} className="text-ink/30" />
+                            {overdue ? (
+                              <span className="font-semibold text-inactive">{t('dueDateOverdue', { date: h.due_date })}</span>
+                            ) : (
+                              <span>{t('due', { date: h.due_date })}</span>
+                            )}
+                          </span>
+                          {lesson ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-paper px-2 py-0.5 font-medium text-ink/60">
+                              <FileText size={11} /> {t('portal:mpLessonShort', { number: lesson.curriculum_lessons?.lesson_number ?? '·', topic: lesson.topic })}
+                            </span>
+                          ) : h.lesson_id ? (
+                            <span className="text-ink/30">{t('noLinkedLesson')}</span>
+                          ) : null}
+                          {h.level && <span className="rounded-full bg-ink px-1.5 py-0.5 text-[10px] font-bold text-white">{levelToken(h.level)}</span>}
+                        </div>
+
+                        {/* lesson PDF meta */}
+                        {lesson?.pdf_path && (
+                          <p className="mt-1 text-xs text-ink/40">{t('portal:mpLessonPdfHint', { topic: lesson.topic })}</p>
+                        )}
+                      </div>
+                    </div>
+
+                     {/* requirement */}
+                     {h.description && (
+                       <div className="mt-3 rounded-xl border border-ink/[0.06] bg-paper/60 px-3 py-2.5">
+                         <p className="text-[11px] font-bold uppercase tracking-wide text-ink/40">What to do</p>
+                         <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-ink/75">{h.description}</p>
+                       </div>
+                     )}
+                     {/* Lesson PDF hint — make action explicit */}
+                      {lesson?.pdf_path && !graded && (
+                        <div className="mt-3 flex items-center gap-2 rounded-xl border border-brand-100 bg-brand-50 px-3 py-2.5">
+                          <FileText size={14} className="shrink-0 text-brand-600" />
+                          <p className="text-xs font-medium leading-relaxed text-brand-800">{t('portal:mpLessonPdfHint', { topic: lesson.topic })} — download the PDF and complete it by hand.</p>
+                        </div>
+                      )}
+
+                    {/* status journey */}
+                    <div className="mt-3 rounded-xl bg-ink/[0.02] px-3 py-2.5 ring-1 ring-ink/[0.04]">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="text-[11px] font-bold uppercase tracking-wide text-ink/40">{t('portal:mpStatus')}</p>
+                        <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${journey.tone === 'brand' ? 'bg-brand-50 text-brand-700 ring-1 ring-brand-100' : journey.tone === 'success' ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100' : journey.tone === 'danger' ? 'bg-red-50 text-red-600 ring-1 ring-red-100' : journey.tone === 'info' ? 'bg-sky-50 text-sky-700 ring-1 ring-sky-100' : 'bg-ink/5 text-ink/60'}`}>
+                          {journey.key === 'notSubmitted' ? t('portal:mpNotSubmitted') : journey.key === 'submitted' ? t('portal:mpFilterSubmitted') : journey.key === 'underReview' ? t('portal:mpJourneyReviewing') : journey.key === 'needsCorrection' ? t('portal:mpJourneyNeedsCorrection') : journey.key === 'approved' ? t('portal:mpJourneyGreatWork') : t('portal:mpJourneyCompleted')}
+                        </span>
+                      </div>
+                      <div className="mt-2 flex items-center gap-1">
+                        {JOURNEY_ORDER.map((k) => {
+                          const i = JOURNEY_ORDER.indexOf(k);
+                          const active = i <= curIndex;
+                          const isCurrent = i === curIndex;
+                          return (
+                            <div key={k} className="flex flex-1 items-center gap-1">
+                              <div className={`h-1.5 flex-1 rounded-full transition-colors ${active ? (journey.tone === 'danger' ? 'bg-inactive' : journey.tone === 'brand' ? 'bg-brand-500' : 'bg-active') : 'bg-ink/10'} ${isCurrent ? 'ring-2 ring-ink/10' : ''}`} />
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <p className="mt-1.5 text-xs leading-relaxed text-ink/50">
+                        {journey.key === 'notSubmitted' && t('portal:mpJourneyUpload')}
+                        {journey.key === 'submitted' && t('portal:mpJourneyReceived')}
+                        {journey.key === 'underReview' && t('portal:mpJourneyReviewing')}
+                        {journey.key === 'approved' && t('portal:mpJourneyGreatWork')}
+                        {journey.key === 'needsCorrection' && t('portal:mpJourneyNeedsCorrection')}
+                        {journey.key === 'completed' && t('portal:mpJourneyCompleted')}
+                      </p>
+</div>
+
+                  {/* four-stage homework content (read-only; hidden when no stage data) */}
+                  {stageData[h.id] && (stageData[h.id].stages || []).length > 0 && (
+                    <div className="mt-3 rounded-xl bg-white p-4 shadow-card">
+                      <h3 className="font-display text-sm font-semibold text-ink uppercase tracking-wider mb-3">
+                        {t('homework:stageTitle')}
+                      </h3>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {stageData[h.id].stages.map((s) => {
+                          const config = {
+                            vocabulary: { icon: BookOpen, iconClass: 'text-brand-500', label: 'Vocabulary' },
+                            grammar: { icon: PenTool, iconClass: 'text-amber-500', label: 'Grammar' },
+                            practice: { icon: Target, iconClass: 'text-emerald-500', label: 'Practice' },
+                            review: { icon: Sparkles, iconClass: 'text-violet-500', label: 'Review' },
+                          }[s.stage_key] || { icon: BookOpen, iconClass: 'text-ink/40', label: s.stage_key || 'Stage' };
+                          const StageIcon = config.icon;
+                          const progressRow = (stageData[h.id].progress || {})[s.id] || {};
+                          const totalPoints = Number(progressRow.total_points) || 0;
+                          const progressPct = totalPoints > 0
+                            ? Math.round(((Number(progressRow.points_earned) || 0) / totalPoints) * 100)
+                            : 0;
+                          const questions = (stageData[h.id].questions || {})[s.id] || [];
+                          const answeredCount = Number(progressRow.answered_count) || 0;
+                          const totalQuestions = Number(progressRow.questions_count) || questions.length;
+                          return (
+                            <div
+                              key={s.id}
+                              className="group border rounded-lg border-ink/10 bg-white p-3 hover:bg-brand-50 transition-colors"
+                            >
+                              <div className="flex items-center gap-2 mb-2">
+                                <StageIcon
+                                  size={16}
+                                  className={config.iconClass}
+                                />
+                                <span className="font-semibold text-ink">{s.title || config.label}</span>
+                              </div>
+                              <p className="text-xs text-ink/50">
+                                {s.title}
+                              </p>
+                              <div className="text-xs text-ink/50">
+                                {progressPct}% complete
+                              </div>
+                              <div className="mt-1">
+                                <span className={`text-[10px] font-bold rounded-full px-1.5 py-0.5 ${
+                                  progressPct >= 100 ? 'bg-brand-100 text-brand-700' :
+                                  progressPct >= 50 ? 'bg-emerald-100 text-emerald-700' :
+                                  'bg-ink/5 text-ink/50'
+                                }`}>
+                                  {progressPct === 0 ? 'Not Started' :
+                                   progressPct < 100 ? 'In Progress' : 'Completed'}
+                                </span>
+                              </div>
+                              <div className="mt-1 text-[10px] text-ink/40">
+                                {answeredCount}/{totalQuestions} answered
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                   {/* submission summary + valid/invalid */}
+                  <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                       <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-semibold ring-1 ${hasSubmission ? (isValidSubmission ? 'bg-emerald-50 text-emerald-700 ring-emerald-100' : 'bg-amber-50 text-amber-700 ring-amber-200') : 'bg-ink/5 text-ink/50 ring-ink/10'}`}>
+                         {hasSubmission ? <CheckCircle2 size={12} /> : <AlertCircle size={12} />}
+                         {hasSubmission ? (submittedFiles.length > 0 ? t('portal:mpImagesSubmitted', { count: submittedFiles.length }) : t('portal:mpSubmissionOnFile')) : t('portal:mpNoSubmissionYet')}
+                         {isInvalidSubmission && t('portal:mpLegacyFileOnly')}
+                       </span>
+                       {status.submitted_at && <span className="text-ink/40">{t('portal:mpSubmittedOn', { date: new Date(status.submitted_at).toLocaleDateString() })}</span>}
+                       {hasSubmission && !graded && <span className="font-medium text-amber-700">{t('portal:mpJourneyReceived')}</span>}
+                       {hasSubmission && graded && <span className="text-ink/30">{t('portal:mpValidSubmission')}</span>}
+                       {!hasSubmission && overdue && <span className="font-semibold text-inactive">{t('portal:mpDeadlinePassedInline')}</span>}
+                     </div>
+                      {/* teacher feedback */}
+                    {graded && status.feedback && (
+                      <div className="mt-3 rounded-xl border border-brand-100 bg-brand-50 px-3 py-3">
+                        <p className="text-[11px] font-bold uppercase tracking-wide text-brand-700/70">{t('portal:teacherFeedbackLabel')}</p>
+                        <p className="mt-1 text-sm leading-relaxed text-brand-800">{status.feedback}</p>
+                        <p className="mt-2 text-[11px] font-medium text-brand-600/70">{t('portal:mpTeacherFeedbackHint')}</p>
+                      </div>
+                    )}
+
+                    {overdue && !graded && (
+                      <p className="mt-3 rounded-lg bg-inactive/5 px-3 py-2 text-xs font-semibold leading-relaxed text-inactive ring-1 ring-inactive/10">{t('deadlinePassedWarning')}</p>
+                    )}
+
+                    {submittedFiles.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {submittedFiles.map((f, i) => (
+                          <span key={f.id} className="inline-flex items-center gap-1 rounded-xl border border-ink/10 bg-white px-2.5 py-1.5 text-xs font-medium text-ink/70 shadow-sm">
+                            <button onClick={() => handleOpenFile(f.file_url)} className="inline-flex items-center gap-1 hover:text-brand-600 hover:underline">
+                              <ImageIcon size={12} /> {t('imageN', { n: i + 1 })}
+                            </button>
+                            {!graded && (
+                              <button onClick={() => handleRemoveSubmitted(f.id)} aria-label={t('removeImage')} className="ml-1 inline-flex h-6 w-6 items-center justify-center rounded-full text-ink/40 hover:bg-ink/5 hover:text-inactive">
+                                <X size={12} />
+                              </button>
+                            )}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                     <div className="mt-3 flex flex-wrap items-center gap-2">
+                        {h.file_url && (
+                          <button
+                            onClick={() => handleOpenFile(h.file_url)}
+                            className="inline-flex min-h-[44px] min-w-0 max-w-full items-center gap-1.5 rounded-xl border border-brand-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-brand-700 shadow-sm transition-colors hover:bg-brand-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                          >
+                            <Download size={14} className="shrink-0" /> <span className="min-w-0 max-w-[52vw] truncate sm:max-w-[240px]">{h.file_name || t('homeworkFileDefault')}</span>
+                          </button>
+                        )}
+                      {status.answer_file_url && (
+                        <button onClick={() => handleOpenFile(status.answer_file_url)} className="inline-flex min-h-[44px] items-center px-3 py-2.5 text-xs font-medium text-ink/50 hover:text-brand-600 hover:underline">
+                          {t('viewMySubmission')}
+                        </button>
+                      )}
+                      {lesson && (
+                        <Link
+                          to={`/my-lessons/${lesson.id}`}
+                          className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl bg-ink px-3.5 py-2.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-ink/90"
+                        >
+                          <BookOpen size={14} /> {t('homework:openLesson')}
+                        </Link>
+                      )}
+                      <Link
+                        to={`/chat?type=homework&id=${h.id}`}
+                        className="ml-auto inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-ink/10 bg-white px-3.5 py-2.5 text-xs font-semibold text-ink/70 shadow-sm transition-colors hover:bg-ink/5"
+                      >
+                        <MessageSquare size={14} /> {t('discuss')}
+                      </Link>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </>
+            )}
+          </>
+        )}
+    </div>
+  );
+}
