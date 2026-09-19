@@ -76,6 +76,16 @@ check(grade('multiple_choice', { selected_value: 'today is monday.' }, { correct
 check(grade('translation', { answer: 'mother' }, { target_text: 'Mother' }) === true, 't2 translation case-insensitive');
 check(grade('fill_blank', { answer: 'SATURDAY' }, { answer: 'Saturday' }) === true, 't2 fill case-insensitive');
 check(grade('ordering', { order: ['He', 'has', 'a', 'dog.'] }, { correct_order: ['He', 'has', 'a', 'dog.'] }) === true, 't2 ordering');
+// Tests 5-6 shapes: past-tense verbs, -ing forms, multi-token ordering,
+// sentence translations with question marks.
+check(grade('multiple_choice', { selected_value: 'played' }, { correct_value: 'played' }) === true, 't5 mc past verb');
+check(grade('fill_blank', { answer: 'WENT' }, { answer: 'went' }) === true, 't5 fill past verb case-insensitive');
+check(grade('translation', { answer: 'how many eggs are there?' }, { target_text: 'How many eggs are there?' }) === true, 't5 translation sentence');
+check(grade('ordering', { order: ['I', 'went', 'to', 'the', 'market', 'yesterday.'] }, { correct_order: ['I', 'went', 'to', 'the', 'market', 'yesterday.'] }) === true, 't5 six-token ordering');
+check(grade('fill_blank', { answer: 'swiming' }, { answer: 'swimming' }) === false, 't6 misspelled -ing rejected');
+check(grade('translation', { answer: 'Bigger' }, { target_text: 'bigger' }) === true, 't6 comparative case-insensitive');
+check(grade('ordering', { order: ['On', 'Saturday', 'I', 'went', 'fishing.'] }, { correct_order: ['On', 'Saturday', 'I', 'went', 'fishing.'] }) === true, 't6 weekend ordering');
+check(grade('fill_blank', { answer: '' }, { answer: 'never' }) === false, 't6 empty fill rejected');
 const pct = (raw, total) => Math.round((raw * 100) / total);
 check(pct(27, 34) === 79, '27/34 -> 79%');
 check(pct(34, 34) === 100, '34/34 -> 100%');

@@ -7,7 +7,7 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const TESTS = [1, 2, 3, 4].map((n) => JSON.parse(readFileSync(`${root}/src/features/onlineTests/data/test${n}.json`, 'utf8')));
+const TESTS = [1, 2, 3, 4, 5, 6].map((n) => JSON.parse(readFileSync(`${root}/src/features/onlineTests/data/test${n}.json`, 'utf8')));
 
 let failures = 0;
 function check(cond, msg) {
@@ -15,7 +15,7 @@ function check(cond, msg) {
   else console.log(`ok ${msg}`);
 }
 
-const EXPECTED_RANGE = { 1: [1, 10], 2: [11, 20], 3: [21, 30], 4: [31, 40] };
+const EXPECTED_RANGE = { 1: [1, 10], 2: [11, 20], 3: [21, 30], 4: [31, 40], 5: [41, 50], 6: [51, 60] };
 const allPrompts = new Set();
 for (const test of TESTS) {
 const T = `t${test.test_number}`;
@@ -79,8 +79,8 @@ const missing = [];
 // frozen and must not be modified here.
 if (test.test_number >= 3) {
   for (let n = test.lesson_from; n <= test.lesson_to; n++) if (!seenLessons.has(n)) missing.push(n);
+  check(missing.length === 0, `${T} every lesson ${test.lesson_from}-${test.lesson_to} represented${missing.length ? ' (missing ' + missing.join(',') + ')' : ''}`);
 }
-check(missing.length === 0, `${T} every lesson ${test.lesson_from}-${test.lesson_to} represented${missing.length ? ' (missing ' + missing.join(',') + ')' : ''}`);
 }
 }
 
