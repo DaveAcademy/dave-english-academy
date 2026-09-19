@@ -80,5 +80,10 @@
   "expired": "Expired",
   "dueDateOverdue": "Overdue since {{date}}",
   "deadlinePassedWarning": "The deadline for this exam has passed. Check with your teacher.",
-  "openFileFailed": "Could not open this file. Please try again."
+  "openFileFailed": "Could not open this file. Please try again.",
+  "awaitingTeacher": "Awaiting teacher grading",
+  "inClassNote": "This exam takes place in class — nothing to submit here. Your score will appear below after grading.",
+  "feedbackShowMore": "Show more",
+  "feedbackShowLess": "Show less",
+  "bestScoreLabel": "Best"
 }

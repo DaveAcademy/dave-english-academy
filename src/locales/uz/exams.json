@@ -80,5 +80,10 @@
   "expired": "Muddati o'tgan",
   "dueDateOverdue": "{{date}} dan beri muddati o'tgan",
   "deadlinePassedWarning": "Bu imtihonning muddati o'tgan. O'qituvchingiz bilan gaplashing.",
-  "openFileFailed": "Faylni ochib bo'lmadi. Qaytadan urinib ko'ring."
+  "openFileFailed": "Faylni ochib bo'lmadi. Qaytadan urinib ko'ring.",
+  "awaitingTeacher": "O'qituvchi bahosi kutilmoqda",
+  "inClassNote": "Bu imtihon sinfda topshiriladi — bu yerda hech narsa yuborish shart emas. Baholashdan keyin balingiz pastda ko'rinadi.",
+  "feedbackShowMore": "Batafsil",
+  "feedbackShowLess": "Yopish",
+  "bestScoreLabel": "Eng yaxshi"
 }

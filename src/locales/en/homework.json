@@ -74,5 +74,11 @@
   "lhHideQA": "Hide questions",
   "teacherHomeworkTitle": "Teacher assignments",
   "teacherHomeworkSubtitle": "Special homework assigned by your teacher.",
-  "noTeacherHomework": "No teacher assignments right now — your lesson homework above is always available."
+  "noTeacherHomework": "No teacher assignments right now — your lesson homework above is always available.",
+  "lessonModelNote": "Step-by-step practice for this lesson — stages unlock as you finish. Answers are checked instantly where possible.",
+  "teacherModelNote": "Special assignments from your teacher — upload your work below. Grading is manual.",
+  "reviewFinalNote": "Final stage — review everything and finish strong.",
+  "completedDetail": "{correct} correct out of {answered} answered",
+  "completedNext": "Your teacher reviews written answers — check back soon for feedback.",
+  "stagesProgressLabel": "{done} of {total} stages"
 }

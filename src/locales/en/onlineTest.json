@@ -89,5 +89,11 @@
   "unpublishedTitle": "No tests available yet",
   "unpublishedBody": "Online tests will appear here once published. Check back soon.",
   "notLinkedYet": "Not linked yet",
-  "tryAgain": "Try again"
+  "tryAgain": "Try again",
+  "matchingTapHint": "Tap a word on the left, then its match on the right. Tap a matched word to undo.",
+  "bestResult": "Best {pct}%",
+  "attemptsCount": "{count} attempts",
+  "previousBest": "Previous best: {pct}% · {date}",
+  "newBestBadge": "New best!",
+  "reviewSuggestion": "Keep practicing {stage}."
 }

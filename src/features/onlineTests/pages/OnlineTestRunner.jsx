@@ -5,7 +5,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, CheckCircle2, XCircle, Minus, Flag } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle2, XCircle, Minus, Flag, Trophy, Timer } from 'lucide-react';
 import { useAcademy } from '../../../lib/AcademyDataContext';
 import {
   listOnlineTests, startOnlineTestAttempt, getOnlineTestAttempt,
@@ -64,7 +64,7 @@ function questionPromptText(item) {
   return p.instruction || '';
 }
 
-function ResultView({ t, dateLocale, items, answers, meta }) {
+function ResultView({ t, dateLocale, items, answers, meta, prevBest }) {
   const total = items.length;
   const correct = items.filter((it) => answers[String(it.id)]?.is_correct === true).length;
   const incorrect = items.filter((it) => answers[String(it.id)]?.is_correct === false).length;
@@ -77,6 +77,19 @@ function ResultView({ t, dateLocale, items, answers, meta }) {
     }
     return m;
   }, [items, answers]);
+  const currentPct = meta.percentage ?? Math.round((correct / Math.max(total, 1)) * 100);
+  const isNewBest = prevBest != null && currentPct > prevBest.pct;
+  const weakest = useMemo(() => {
+    let key = null;
+    let ratio = 2;
+    for (const s of STAGE_ORDER) {
+      const st = byStage[s];
+      if (!st || !st.total) continue;
+      const r = st.correct / st.total;
+      if (r < ratio) { ratio = r; key = s; }
+    }
+    return key;
+  }, [byStage]);
   return (
     <div className="space-y-4">
       <div className="overflow-hidden rounded-2xl border border-brand-200 bg-white p-5 text-center shadow-card sm:p-6">
@@ -88,14 +101,31 @@ function ResultView({ t, dateLocale, items, answers, meta }) {
           {t('correctCount', { count: correct })} · {t('incorrectCount', { count: incorrect })}
           {meta.submitted_at ? ` · ${t('completedOn', { date: formatDateOnly(meta.submitted_at, dateLocale) })}` : ''}
         </p>
+        {isNewBest && (
+          <p className="mx-auto mt-2 inline-flex items-center gap-1 rounded-full bg-brand-600 px-3 py-1 text-xs font-bold text-white">
+            <Trophy size={12} aria-hidden /> {t('newBestBadge')}
+          </p>
+        )}
+        {prevBest != null && !isNewBest && (
+          <p className="mt-2 text-xs font-semibold text-ink/55">{t('previousBest', { pct: prevBest.pct, date: formatDateOnly(prevBest.date, dateLocale) })}</p>
+        )}
         <div className="mx-auto mt-4 grid max-w-md grid-cols-2 gap-2 sm:grid-cols-4">
           {STAGE_ORDER.map((s) => (
             <div key={s} className="rounded-xl bg-paper px-2 py-2.5">
               <p className="text-[10px] font-bold uppercase tracking-wide text-ink/45">{stageKey(t, s)}</p>
               <p className="mt-0.5 font-display text-base font-bold text-ink">{t('stageScore', { correct: byStage[s]?.correct ?? 0, total: byStage[s]?.total ?? 0 })}</p>
+              <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-ink/10" role="presentation">
+                <div
+                  className={`h-full rounded-full ${weakest === s ? 'bg-inactive' : 'bg-brand-500'}`}
+                  style={{ width: `${byStage[s]?.total ? Math.round((byStage[s].correct / byStage[s].total) * 100) : 0}%` }}
+                />
+              </div>
             </div>
           ))}
         </div>
+        {weakest && incorrect > 0 && (
+          <p className="mx-auto mt-3 max-w-md text-xs leading-relaxed text-ink/55">{t('reviewSuggestion', { stage: stageKey(t, weakest) })}</p>
+        )}
       </div>
       <ol className="space-y-2">
         {items.map((it, idx) => {
@@ -138,6 +168,8 @@ export default function OnlineTestRunner() {
   const [error, setError] = useState(null);
   const [saveState, setSaveState] = useState('saved');
   const [confirming, setConfirming] = useState(false);
+  const [prevBest, setPrevBest] = useState(null);
+  const [hiddenExamples, setHiddenExamples] = useState({});
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [warn5, setWarn5] = useState(false);
   const [warn1, setWarn1] = useState(false);
@@ -250,6 +282,18 @@ export default function OnlineTestRunner() {
     try {
       // Flush pending debounced saves first.
       Object.values(saveTimers.current).forEach(clearTimeout);
+      // Previous best (excluding this attempt) for result context only.
+      let prev = null;
+      try {
+        const mine = await listMyOnlineTestAttempts(Number(testId));
+        const others = (mine || []).filter((a) => a.status === 'submitted' && String(a.attempt_id) !== String(attempt.id));
+        if (others.length) {
+          const best = others.reduce((m, a) => (Number(a.percentage) || 0) > (Number(m.percentage) || 0) ? a : m, others[0]);
+          prev = { pct: Number(best.percentage) || 0, date: best.submitted_at };
+        }
+      } catch {
+        prev = null;
+      }
       const data = await submitOnlineTestAttempt(attempt.id);
       const fresh = await getOnlineTestAttempt(attempt.id);
       const flags = {};
@@ -257,6 +301,7 @@ export default function OnlineTestRunner() {
         flags[itemId] = { answer: rec?.answer ?? null, is_correct: rec?.is_correct ?? null };
       }
       setAttempt({ ...fresh.attempt, _flags: flags, _result: data });
+      setPrevBest(prev);
       setMode('result');
     } catch {
       setError(t('submitFailed'));
@@ -355,7 +400,7 @@ export default function OnlineTestRunner() {
         <button type="button" onClick={() => navigate('/online-tests')} className="mb-3 inline-flex items-center gap-1 text-xs font-bold text-ink/60 hover:text-ink">
           <ArrowLeft size={14} /> {t('back')}
         </button>
-        <ResultView t={t} dateLocale={dateLocale} items={items} answers={flags} meta={attempt} />
+        <ResultView t={t} dateLocale={dateLocale} items={items} answers={flags} meta={attempt} prevBest={prevBest} />
         <button
           type="button"
           onClick={async () => { setQIdx(0); await start(); }}
@@ -382,18 +427,24 @@ export default function OnlineTestRunner() {
       <div className="mb-3 flex items-center justify-between gap-2">
         <p className="text-xs font-bold text-ink/50">{test?.title} · {t('questionOf', { current: qIdx + 1, total: flat.length })}</p>
         <div className="flex items-center gap-2">
-          {remainingMs != null && (
-            <span
-              role="timer"
-              className={`rounded-full px-2.5 py-1 text-[11px] font-bold tabular-nums ${
-                warningLevel(remainingMs) === 'warn1' || warningLevel(remainingMs) === 'expired'
-                  ? 'bg-inactive/10 text-inactive'
-                  : 'bg-ink/[0.06] text-ink/70'
-              }`}
-            >
-              {t('timeLeft', { time: formatCountdown(remainingMs) })}
-            </span>
-          )}
+          {remainingMs != null && (() => {
+            const level = warningLevel(remainingMs);
+            return (
+              <span
+                role="timer"
+                className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold tabular-nums ${
+                  level === 'warn1' || level === 'expired'
+                    ? 'bg-inactive/10 text-inactive motion-safe:animate-pulse'
+                    : level === 'warn5'
+                      ? 'bg-amber-100 text-amber-800'
+                      : 'bg-ink/[0.06] text-ink/70'
+                }`}
+              >
+                <Timer size={12} aria-hidden />
+                {t('timeLeft', { time: formatCountdown(remainingMs) })}
+              </span>
+            );
+          })()}
           <span className={`text-[11px] font-bold ${saveState === 'error' ? 'text-inactive' : 'text-ink/40'}`}>
             {saveState === 'saving' ? t('saving') : saveState === 'error' ? t('saveFailed') : t('saved')}
           </span>
@@ -426,7 +477,12 @@ export default function OnlineTestRunner() {
       </div>
       <ErrorBanner>{error}</ErrorBanner>
       {current && flat.findIndex((it) => it._stage === currentStage) === qIdx && (
-        <ExampleBox stage={currentStage} t={t} />
+        <ExampleBox
+          stage={currentStage}
+          t={t}
+          collapsed={!!hiddenExamples[currentStage]}
+          onToggle={() => setHiddenExamples((prev) => ({ ...prev, [currentStage]: !prev[currentStage] }))}
+        />
       )}
       {current && (
         <div key={current.id} className="rounded-2xl border border-ink/[0.06] bg-white p-4 shadow-card sm:p-5">

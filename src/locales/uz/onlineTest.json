@@ -89,5 +89,11 @@
   "unpublishedTitle": "Hali testlar mavjud emas",
   "unpublishedBody": "Onlayn testlar e'lon qilingach shu yerda paydo bo'ladi. Tez orada qaytib keling.",
   "notLinkedYet": "Hali bog'lanmagan",
-  "tryAgain": "Qayta urinish"
+  "tryAgain": "Qayta urinish",
+  "matchingTapHint": "Avval chapdagi so'zni, keyin uning juftini bosing. Juftlikni bekor qilish uchun bosilgan so'zni qayta bosing.",
+  "bestResult": "Eng yaxshi {pct}%",
+  "attemptsCount": "{count} ta urinish",
+  "previousBest": "Oldingi eng yaxshi: {pct}% · {date}",
+  "newBestBadge": "Yangi rekord!",
+  "reviewSuggestion": "{stage} bo'limini mashq qilishda davom eting."
 }

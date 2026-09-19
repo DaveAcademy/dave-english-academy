@@ -64,6 +64,9 @@ export default function MyHomework() {
   const [actionError, setActionError] = useState(null);
   const [stageData, setStageData] = useState({});
   const [activeHomeworkStage, setActiveHomeworkStage] = useState(null);
+  // Per-lesson four-stage progress summaries (read-only prefetch so cards
+  // show overall progress without expanding every accordion).
+  const [lessonStageProgress, setLessonStageProgress] = useState({});
 
   // Teacher-assigned rows only: standard lesson-homework rows carry a
   // lesson_id and live in the lesson-hub section (never duplicated here).
@@ -195,6 +198,40 @@ export default function MyHomework() {
     return () => { cancelled = true; };
   }, [myHomework, me]);
 
+  useEffect(() => {
+    if (!me) return;
+    let cancelled = false;
+    const loadLessonProgress = async () => {
+      const items = lessonItems.map((l) => ({ lesson: l, hw: standardHomeworkFor(l.id) })).filter((x) => x.hw);
+      const results = await Promise.all(items.map(async ({ lesson, hw }) => {
+        try {
+          const [stages, rows] = await Promise.all([
+            listHomeworkStages(hw.id),
+            getHomeworkStageProgress(hw.id, me.id),
+          ]);
+          const list = stages || [];
+          const byId = {};
+          for (const p of Array.isArray(rows) ? rows : []) {
+            if (p && p.stage_id != null) byId[p.stage_id] = p;
+          }
+          const done = list.filter((s) => byId[s.id]?.status === 'completed').length;
+          return [hw.id, { done, total: list.length }];
+        } catch {
+          return null;
+        }
+      }));
+      if (cancelled) return;
+      const next = {};
+      for (const r of results) {
+        if (r) next[r[0]] = r[1];
+      }
+      setLessonStageProgress(next);
+    };
+    loadLessonProgress();
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lessonItems, me, homework]);
+
   if (!me) {
     return (
       <div className="rounded-xl border border-ink/[0.06] bg-white p-10 text-center shadow-card">
@@ -250,6 +287,9 @@ export default function MyHomework() {
                 <div>
                   <h2 className="font-display text-lg font-bold tracking-tight text-ink">{t('homework:lessonHomeworkTitle')}</h2>
                   <p className="mt-0.5 text-sm text-ink/55">{t('homework:lessonHomeworkSubtitle')}</p>
+                  <p className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-2.5 py-1 text-[11px] font-semibold text-brand-700 ring-1 ring-brand-100">
+                    <BookOpen size={11} aria-hidden /> {t('homework:lessonModelNote')}
+                  </p>
                 </div>
                 <Link to="/my-lessons" className="text-xs font-semibold text-brand-600 hover:underline">
                   {t('homework:allLessons')}
@@ -295,6 +335,30 @@ export default function MyHomework() {
                                 <span className="inline-flex items-center gap-1"><FileText size={11} className="text-ink/30" />{t('homework:lhAssignments', { done: linkedDone, total: linked.length })}</span>
                               )}
                             </div>
+                            {(() => {
+                              const prog = standardHw ? lessonStageProgress[standardHw.id] : null;
+                              if (!prog || !prog.total) return null;
+                              const complete = prog.done >= prog.total;
+                              return (
+                                <div
+                                  className="mt-1.5 flex items-center gap-1.5"
+                                  role="img"
+                                  aria-label={t('homework:stagesProgressLabel', { done: prog.done, total: prog.total })}
+                                >
+                                  <span className="flex items-center gap-1" aria-hidden>
+                                    {Array.from({ length: prog.total }).map((_, i) => (
+                                      <span
+                                        key={i}
+                                        className={`h-1.5 rounded-full ${i < prog.done ? 'w-5 bg-brand-500' : 'w-1.5 bg-ink/10'}`}
+                                      />
+                                    ))}
+                                  </span>
+                                  <span className={`text-[11px] font-bold tabular-nums ${complete ? 'text-active' : 'text-ink/45'}`}>
+                                    {prog.done}/{prog.total}
+                                  </span>
+                                </div>
+                              );
+                            })()}
                           </div>
                           <Link to={`/my-lessons/${l.id}`} aria-label={t('homework:openLesson')} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-ink/10 text-ink/50 transition-colors hover:bg-brand-50 hover:text-brand-600">
                             <ChevronRight size={16} />
@@ -308,11 +372,11 @@ export default function MyHomework() {
                             {standardHw ? (
                               <>
                                 {[
-                                  { key: 'vocabulary', icon: Languages, label: t('homework:lhVocabulary') },
-                                  { key: 'grammar', icon: PenTool, label: t('homework:lhSentences') },
-                                  { key: 'practice', icon: Target, label: t('homework:lhQuizzes') },
-                                  { key: 'review', icon: Sparkles, label: t('homework:lhReview') },
-                                ].map(({ key, icon: StageIcon, label }) => {
+                                  { key: 'vocabulary', icon: Languages, label: t('homework:lhVocabulary'), tint: 'text-brand-500' },
+                                  { key: 'grammar', icon: PenTool, label: t('homework:lhSentences'), tint: 'text-amber-500' },
+                                  { key: 'practice', icon: Target, label: t('homework:lhQuizzes'), tint: 'text-emerald-500' },
+                                  { key: 'review', icon: Sparkles, label: t('homework:lhReview'), tint: 'text-violet-500' },
+                                ].map(({ key, icon: StageIcon, label, tint }) => {
                                   const isActive = activeHomeworkStage?.lessonId === l.id && activeHomeworkStage?.stageKey === key;
                                   return (
                                     <button
@@ -320,7 +384,7 @@ export default function MyHomework() {
                                       onClick={() => setActiveHomeworkStage(isActive ? null : { lessonId: l.id, stageKey: key })}
                                       className={`inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors ${isActive ? 'border-brand-300 bg-brand-50 text-brand-700' : 'border-ink/10 bg-white text-ink/70 hover:bg-ink/5'}`}
                                     >
-                                      <StageIcon size={13} /> {label}
+                                      <StageIcon size={13} className={isActive ? undefined : tint} /> {label}
                                     </button>
                                   );
                                 })}
@@ -340,11 +404,11 @@ export default function MyHomework() {
                             )}
                           </div>
                         )}
-                        {!locked && standardHw && activeHomeworkStage?.lessonId === l.id && (
-                          <div className="mt-3 rounded-xl bg-paper/50 p-3 ring-1 ring-ink/[0.04]">
-                            <HomeworkStages homeworkId={standardHw.id} studentId={me?.id} focusStageKey={activeHomeworkStage.stageKey} />
-                          </div>
-                        )}
+                         {!locked && standardHw && activeHomeworkStage?.lessonId === l.id && (
+                           <div className="mt-3 border-t border-ink/5 pt-3">
+                             <HomeworkStages homeworkId={standardHw.id} studentId={me?.id} focusStageKey={activeHomeworkStage.stageKey} />
+                           </div>
+                         )}
                       </div>
                     </article>
                   );
@@ -398,6 +462,9 @@ export default function MyHomework() {
           <div className="mb-3">
             <h2 className="font-display text-lg font-bold tracking-tight text-ink">{t('homework:teacherHomeworkTitle')}</h2>
             <p className="mt-0.5 text-sm text-ink/55">{t('homework:teacherHomeworkSubtitle')}</p>
+            <p className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-ink/[0.04] px-2.5 py-1 text-[11px] font-semibold text-ink/60 ring-1 ring-ink/10">
+              <Award size={11} aria-hidden /> {t('homework:teacherModelNote')}
+            </p>
           </div>
           <div className="space-y-3">
             {myHomework.map((h, idx) => {
@@ -432,20 +499,14 @@ export default function MyHomework() {
                         <div className="flex flex-wrap items-center gap-1.5">
                           <h2 className="break-words font-display text-[15px] font-bold leading-tight text-ink sm:text-base">{h.title}</h2>
                           {/* prominent status badge using granular journey status */}
-                          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-bold ring-1 ${
-                            journey.tone === 'brand' ? 'bg-brand-50 text-brand-700 ring-brand-100' :
-                            journey.tone === 'success' ? 'bg-emerald-50 text-emerald-700 ring-emerald-100' :
-                            journey.tone === 'danger' ? 'bg-red-50 text-red-600 ring-red-100' :
-                            journey.tone === 'info' ? 'bg-sky-50 text-sky-700 ring-sky-100' :
-                            'bg-ink/5 text-ink/60 ring-ink/10'
-                          }`}>
+                          <StatusPill tone={journey.tone}>
                             {journey.key === 'notSubmitted' ? t('portal:mpNotSubmitted') :
                              journey.key === 'submitted' ? t('portal:mpFilterSubmitted') :
                              journey.key === 'underReview' ? t('portal:mpJourneyReviewing') :
                              journey.key === 'needsCorrection' ? t('portal:mpJourneyNeedsCorrection') :
                              journey.key === 'approved' ? t('portal:mpJourneyGreatWork') :
                              t('portal:mpJourneyCompleted')}
-                          </span>
+                          </StatusPill>
                           {graded && (
                             <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-bold text-brand-700 ring-1 ring-brand-100">
                               <Award size={10} /> {t('scoreOutOf', { score: status.score })}
@@ -498,9 +559,9 @@ export default function MyHomework() {
                     <div className="mt-3 rounded-xl bg-ink/[0.02] px-3 py-2.5 ring-1 ring-ink/[0.04]">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <p className="text-[11px] font-bold uppercase tracking-wide text-ink/40">{t('portal:mpStatus')}</p>
-                        <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${journey.tone === 'brand' ? 'bg-brand-50 text-brand-700 ring-1 ring-brand-100' : journey.tone === 'success' ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100' : journey.tone === 'danger' ? 'bg-red-50 text-red-600 ring-1 ring-red-100' : journey.tone === 'info' ? 'bg-sky-50 text-sky-700 ring-1 ring-sky-100' : 'bg-ink/5 text-ink/60'}`}>
+                        <StatusPill tone={journey.tone}>
                           {journey.key === 'notSubmitted' ? t('portal:mpNotSubmitted') : journey.key === 'submitted' ? t('portal:mpFilterSubmitted') : journey.key === 'underReview' ? t('portal:mpJourneyReviewing') : journey.key === 'needsCorrection' ? t('portal:mpJourneyNeedsCorrection') : journey.key === 'approved' ? t('portal:mpJourneyGreatWork') : t('portal:mpJourneyCompleted')}
-                        </span>
+                        </StatusPill>
                       </div>
                       <div className="mt-2 flex items-center gap-1">
                         {JOURNEY_ORDER.map((k) => {

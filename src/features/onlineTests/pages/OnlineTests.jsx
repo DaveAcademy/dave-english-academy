@@ -101,12 +101,14 @@ export default function OnlineTests() {
             const active = attempts.find((a) => a.status === 'in_progress');
             const submitted = attempts.filter((a) => a.status === 'submitted');
             const latest = submitted[0] || null;
+            const best = submitted.length ? Math.max(...submitted.map((a) => Number(a.percentage) || 0)) : null;
+            const completed = latest != null;
             return (
               <section key={test.id} aria-label={test.title} className="overflow-hidden rounded-2xl border border-ink/[0.06] bg-white p-4 shadow-card sm:p-5">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-600 text-white"><ClipboardList size={18} /></span>
+                      <span className={`flex h-10 w-10 items-center justify-center rounded-xl text-white ${completed ? 'bg-active' : 'bg-brand-600'}`}><ClipboardList size={18} /></span>
                       <p className="font-display text-base font-bold text-ink">{test.title}</p>
                       {active
                         ? <StatusPill tone="info">{t('inProgress')}</StatusPill>
@@ -116,11 +118,19 @@ export default function OnlineTests() {
                       {t('lessonsRange', { from: test.lesson_from, to: test.lesson_to })} · {t('stages')}
                     </p>
                     <p className="mt-0.5 text-xs text-ink/50">{t('autoGraded')}</p>
+                    {submitted.length > 0 && (
+                      <p className="mt-0.5 text-xs font-semibold text-ink/55">{t('attemptsCount', { count: submitted.length })}</p>
+                    )}
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-2">
                     {latest && (
                       <p className="font-display text-lg font-bold text-brand-600">
                         {t('rawScore', { correct: latest.raw_score, total: 34 })} <span className="text-sm font-semibold text-ink/40">{t('percentScore', { pct: latest.percentage })}</span>
+                      </p>
+                    )}
+                    {best != null && (
+                      <p className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-1 text-[11px] font-bold text-brand-700 ring-1 ring-brand-100">
+                        <Trophy size={11} aria-hidden /> {t('bestResult', { pct: best })}
                       </p>
                     )}
                     <button

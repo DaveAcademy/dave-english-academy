@@ -5,6 +5,7 @@
 // explicit key, otherwise left for teacher review. Points stay manual.
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { CheckCircle2, BookOpen, PenTool, Target, Sparkles, Lock } from 'lucide-react';
 import {
   listHomeworkStages,
@@ -27,6 +28,7 @@ const STAGE_META = {
 };
 
 export function HomeworkStages({ homeworkId, studentId, focusStageKey }) {
+  const { t } = useTranslation(['homework']);
   const [stages, setStages] = useState([]);
   const [stageProgress, setStageProgress] = useState({});
   const [questions, setQuestions] = useState({});
@@ -180,6 +182,9 @@ export function HomeworkStages({ homeworkId, studentId, focusStageKey }) {
   const visibleStages = stages.filter((s) => (questions[s.id] || []).length > 0 || s.is_required !== false);
   const allCompleted =
     visibleStages.length > 0 && visibleStages.every((s) => stageProgress[s.id]?.status === 'completed');
+  const answeredTotal = visibleStages.reduce((n, s) => n + (questions[s.id] || []).length, 0);
+  const answeredCount = Object.keys(answers).length;
+  const correctCount = Object.values(answers).filter((a) => a && a.is_correct === true).length;
 
   return (
     <div className="space-y-3">
@@ -195,12 +200,19 @@ export function HomeworkStages({ homeworkId, studentId, focusStageKey }) {
         const isActive = activeStage === stage.id;
         const isLocked = status === 'locked';
         const isCompleted = status === 'completed';
+        const isReview = stage.stage_key === 'review';
         const answeredCount = stageQuestions.filter((q) => answers[q.id]).length;
         return (
           <div
             key={stage.id}
             className={`rounded-xl border bg-white p-3 shadow-card sm:p-4 ${
-              isActive ? 'border-brand-300 ring-2 ring-brand-100' : isCompleted ? 'border-active/20' : 'border-ink/10'
+              isActive
+                ? isReview
+                  ? 'border-violet-300 ring-2 ring-violet-100'
+                  : 'border-brand-300 ring-2 ring-brand-100'
+                : isCompleted
+                  ? 'border-active/20'
+                  : 'border-ink/10'
             } ${isLocked ? 'opacity-70' : ''}`}
           >
             <button
@@ -226,6 +238,11 @@ export function HomeworkStages({ homeworkId, studentId, focusStageKey }) {
                 {isLocked ? 'Locked' : isCompleted ? 'Done' : status === 'in_progress' ? 'In progress' : 'Start'}
               </span>
             </button>
+            {isReview && !isCompleted && (
+              <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-violet-600">
+                <Sparkles size={12} aria-hidden /> {t('reviewFinalNote')}
+              </p>
+            )}
             {!isLocked && isActive && (
               <div className="mt-3 space-y-4 border-t border-ink/5 pt-3">
                 {stageQuestions.length === 0 ? (
@@ -255,6 +272,11 @@ export function HomeworkStages({ homeworkId, studentId, focusStageKey }) {
         <div className="rounded-xl border border-active/20 bg-active/5 p-4 text-center">
           <CheckCircle2 size={22} className="mx-auto text-active" />
           <p className="mt-1 font-display text-base font-bold text-ink">Lesson practice complete!</p>
+          <p className="mt-0.5 text-xs font-semibold tabular-nums text-ink/60">
+            {t('completedDetail', { correct: correctCount, answered: answeredCount })}
+            {answeredTotal > 0 ? ` · ${answeredCount}/${answeredTotal}` : ''}
+          </p>
+          <p className="mt-1 text-xs text-ink/55">{t('completedNext')}</p>
           <p className="text-xs text-ink/55">Great job — your teacher reviews written answers manually.</p>
         </div>
       )}

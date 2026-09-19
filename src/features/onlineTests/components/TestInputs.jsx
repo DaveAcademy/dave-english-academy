@@ -1,7 +1,7 @@
 // TestInputs.jsx — controlled inputs for the 5 deterministic Online Test
 // question types. Emits server-compatible answer shapes; never grades.
 // Forked patterns (not imports) from homework's QuestionRenderer inputs.
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 function isEmpty(value, qtype) {
   if (!value) return true;
@@ -40,33 +40,82 @@ function MultipleChoiceInput({ prompt, value, onChange, disabled }) {
   );
 }
 
-function MatchingInput({ prompt, value, onChange, disabled }) {
+function MatchingInput({ prompt, value, onChange, disabled, t }) {
   const left = prompt.left || [];
   const right = prompt.right || [];
+  const [selLeft, setSelLeft] = useState(null);
   const pairMap = useMemo(() => Object.fromEntries((value?.pairs || []).filter(([l]) => l)), [value]);
-  const setPair = (l, r) => {
-    const next = { ...pairMap, [l]: r };
-    onChange({ pairs: left.map((k) => [k, next[k] || null]) });
+  const pairedRight = useMemo(() => new Set(Object.values(pairMap).filter(Boolean)), [pairMap]);
+  const emit = (next) => onChange({ pairs: left.map((k) => [k, next[k] || null]) });
+  const tapLeft = (l) => {
+    if (disabled) return;
+    if (pairMap[l]) {
+      const next = { ...pairMap };
+      delete next[l];
+      emit(next);
+      if (selLeft === l) setSelLeft(null);
+      return;
+    }
+    setSelLeft(selLeft === l ? null : l);
   };
+  const tapRight = (r) => {
+    if (disabled || selLeft == null || pairedRight.has(r)) return;
+    emit({ ...pairMap, [selLeft]: r });
+    setSelLeft(null);
+  };
+  const rightDisabled = (r) => disabled || pairedRight.has(r) || selLeft == null;
   return (
-    <div className="grid gap-2">
-      {left.map((l) => (
-        <div key={l} className="flex items-center gap-2">
-          <span className="min-w-0 flex-1 truncate rounded-lg bg-paper px-3 py-2 text-sm font-semibold text-ink">{l}</span>
-          <span aria-hidden="true" className="text-ink/30">→</span>
-          <select
-            disabled={disabled}
-            value={pairMap[l] || ''}
-            onChange={(e) => setPair(l, e.target.value || null)}
-            className="min-h-[44px] min-w-0 flex-1 rounded-xl border border-ink/10 bg-white px-2 py-2 text-sm text-ink"
-          >
-            <option value="">—</option>
-            {right.map((r) => (
-              <option key={r} value={r}>{r}</option>
-            ))}
-          </select>
+    <div>
+      <p className="mb-2 text-xs text-ink/45">{t('matchingTapHint')}</p>
+      <div className="grid grid-cols-2 gap-2">
+        <div className="space-y-2">
+          {left.map((l) => {
+            const paired = Boolean(pairMap[l]);
+            const selected = selLeft === l;
+            return (
+              <button
+                key={l}
+                type="button"
+                disabled={disabled}
+                aria-pressed={selected}
+                onClick={() => tapLeft(l)}
+                className={`min-h-[44px] w-full rounded-xl border px-2 py-2 text-left text-sm font-semibold transition-colors ${
+                  selected
+                    ? 'border-brand-500 bg-brand-50 text-brand-800'
+                    : paired
+                      ? 'border-active/40 bg-active/10 text-active'
+                      : 'border-ink/10 bg-white text-ink hover:bg-ink/[0.03]'
+                }`}
+              >
+                <span className="block truncate">{l}</span>
+                {paired && <span className="block truncate text-[11px] font-medium opacity-80">→ {pairMap[l]}</span>}
+              </button>
+            );
+          })}
         </div>
-      ))}
+        <div className="space-y-2">
+          {right.map((r) => {
+            const taken = pairedRight.has(r);
+            return (
+              <button
+                key={r}
+                type="button"
+                disabled={rightDisabled(r)}
+                onClick={() => tapRight(r)}
+                className={`min-h-[44px] w-full rounded-xl border px-2 py-2 text-left text-sm font-medium transition-colors ${
+                  taken
+                    ? 'border-active/40 bg-active/10 text-active'
+                    : selLeft != null
+                      ? 'border-ink/15 bg-white text-ink hover:border-brand-300 hover:bg-brand-50/50'
+                      : 'border-ink/10 bg-white text-ink/40'
+                }`}
+              >
+                <span className="block truncate">{r}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
@@ -164,7 +213,7 @@ export function TestQuestionInput({ item, value, onChange, disabled, t }) {
     case 'multiple_choice':
       return <MultipleChoiceInput prompt={prompt} value={value} onChange={onChange} disabled={disabled} />;
     case 'matching':
-      return <MatchingInput prompt={prompt} value={value} onChange={onChange} disabled={disabled} />;
+      return <MatchingInput prompt={prompt} value={value} onChange={onChange} disabled={disabled} t={t} />;
     case 'ordering':
       return <OrderingInput prompt={prompt} value={value} onChange={onChange} disabled={disabled} t={t} />;
     case 'fill_blank':

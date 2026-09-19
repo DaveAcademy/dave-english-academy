@@ -7,7 +7,7 @@ import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   FileCheck2, Download, Clock, Award, CalendarDays,
-  TrendingUp, AlertTriangle, Timer, Sparkles,
+  TrendingUp, AlertTriangle, Timer, Sparkles, FileText,
 } from 'lucide-react';
 import { useAcademy } from '../../../lib/AcademyDataContext';
 import { getAttachmentUrl } from '../../../lib/db';
@@ -18,7 +18,37 @@ import StatusPill from '../../../components/StatusPill';
 import ErrorBanner from '../../../components/ErrorBanner';
 import { SkeletonList } from '../../../components/Skeleton';
 
-const STATUS_TONE = { graded: 'brand', upcoming: 'info', expired: 'danger', resultPending: 'neutral', notSubmitted: 'neutral' };
+const STATUS_TONE = { graded: 'brand', upcoming: 'info', expired: 'neutral', resultPending: 'neutral', notSubmitted: 'neutral' };
+
+// Exam file extension for the type chip (e.g. "PDF"). Never invented:
+// empty when the file name carries no usable extension.
+function fileExt(name) {
+  const parts = String(name || '').split('.');
+  const ext = parts.length > 1 ? parts.pop().trim().toUpperCase() : '';
+  return ext && ext.length <= 4 && /^[A-Z0-9]+$/.test(ext) ? ext : '';
+}
+
+function FeedbackText({ text, t }) {
+  const [expanded, setExpanded] = useState(false);
+  const COLLAPSE_AT = 200;
+  if (text.length <= COLLAPSE_AT) {
+    return <p className="mt-3 rounded-xl border border-brand-100 bg-brand-50 px-3 py-2.5 text-sm leading-relaxed text-brand-800">{text}</p>;
+  }
+  return (
+    <div className="mt-3 rounded-xl border border-brand-100 bg-brand-50 px-3 py-2.5">
+      <p className="text-sm leading-relaxed text-brand-800">
+        {expanded ? text : `${text.slice(0, COLLAPSE_AT)}…`}
+      </p>
+      <button
+        type="button"
+        onClick={() => setExpanded(!expanded)}
+        className="mt-1.5 text-xs font-bold text-brand-600 hover:underline"
+      >
+        {expanded ? t('feedbackShowLess') : t('feedbackShowMore')}
+      </button>
+    </div>
+  );
+}
 
 function countdownLabel(targetDateStr, t) {
   if (!targetDateStr) return null;
@@ -90,6 +120,18 @@ export default function MyExams() {
   const upcomingExams = useMemo(() => myExams.filter(isUpcoming), [myExams]);
   const pastExams = useMemo(() => myExams.filter((e) => !isUpcoming(e)), [myExams]);
   const gradedCount = useMemo(() => myExams.filter((e) => scoreFor(e.id)?.score != null).length, [myExams, examScores]); // eslint-disable-line react-hooks/exhaustive-deps
+  const bestPct = useMemo(() => {
+    const vals = myExams
+      .map((e) => {
+        const s = scoreFor(e.id)?.score;
+        if (s == null) return null;
+        const max = Number(e.max_score) || 100;
+        return Math.round((Number(s) / max) * 100);
+      })
+      .filter((v) => v != null);
+    if (!vals.length) return null;
+    return Math.max(...vals);
+  }, [myExams, examScores]); // eslint-disable-line react-hooks/exhaustive-deps
   const avgScore = useMemo(() => {
     const vals = myExams
       .map((e) => {
@@ -129,6 +171,12 @@ export default function MyExams() {
                 <div className="rounded-xl border border-ink/[0.06] bg-white px-3 py-2 shadow-card text-center">
                   <p className="text-[11px] font-bold uppercase tracking-wide text-ink/40">{t('portal:mpAverageLabel')}</p>
                   <p className="font-display text-lg font-bold text-ink">{avgScore}%</p>
+                </div>
+              )}
+              {bestPct != null && (
+                <div className="rounded-xl border border-ink/[0.06] bg-white px-3 py-2 shadow-card text-center">
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-ink/40">{t('bestScoreLabel')}</p>
+                  <p className="font-display text-lg font-bold text-brand-600">{bestPct}%</p>
                 </div>
               )}
             </div>
@@ -189,9 +237,9 @@ export default function MyExams() {
                             <div className="flex flex-wrap items-center gap-1.5">
                               <p className="break-words font-display text-[15px] font-bold leading-tight text-ink sm:text-base">{e.title}</p>
                               {(e.exam_type === 'Written' || e.exam_type === 'Oral') && (
-                                <span className="rounded-full bg-ink px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">{t(`examType.${e.exam_type}`)}</span>
+                                <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white ${e.exam_type === 'Oral' ? 'bg-violet-500' : 'bg-brand-600'}`}>{t(`examType.${e.exam_type}`)}</span>
                               )}
-                              <StatusPill tone={STATUS_TONE[status]}>{t(status)}</StatusPill>
+                              <StatusPill tone={STATUS_TONE[status]}>{status === 'expired' ? t('awaitingTeacher') : t(status)}</StatusPill>
                             </div>
                             <div className="mt-1.5 flex flex-wrap items-center gap-2">
                               <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-2.5 py-1 text-xs font-bold text-brand-700 ring-1 ring-brand-100">
@@ -203,9 +251,12 @@ export default function MyExams() {
                                 <span className="text-xs text-ink/40">· {t('dueDate', { date: formatDateOnly(e.deadline.slice(0, 10), dateLocale) })}</span>
                               )}
                             </div>
-                            <div className="mt-2 rounded-xl border border-amber-100 bg-amber-50/70 px-3 py-2">
-                              <p className="text-xs font-semibold text-amber-800">{t('portal:mpPreparation')}</p>
-                              <p className="mt-0.5 text-xs leading-relaxed text-amber-700/80">{t('portal:mpReviewBefore', { date: formatDateOnly(e.exam_date, dateLocale) })}</p>
+                            <div className="mt-2 flex items-start gap-2 rounded-xl border border-ink/[0.06] bg-paper/60 px-3 py-2">
+                              <CalendarDays size={14} className="mt-0.5 shrink-0 text-brand-600" aria-hidden />
+                              <div>
+                                <p className="text-xs font-bold text-ink">{t('portal:mpPreparation')}</p>
+                                <p className="mt-0.5 text-xs leading-relaxed text-ink/60">{t('portal:mpReviewBefore', { date: formatDateOnly(e.exam_date, dateLocale) })}</p>
+                              </div>
                             </div>
                             {e.description && <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-ink/65">{e.description}</p>}
                           </div>
@@ -213,8 +264,13 @@ export default function MyExams() {
 
                         <div className="mt-3 flex flex-wrap items-center gap-2">
                           {e.file_url && (
-                            <button onClick={() => handleOpenFile(e.file_url)} className="inline-flex min-h-[44px] min-w-0 max-w-full items-center gap-1.5 rounded-xl border border-brand-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-brand-700 shadow-sm hover:bg-brand-50">
-                              <Download size={14} className="shrink-0" /> <span className="min-w-0 max-w-[52vw] truncate sm:max-w-[220px]">{e.file_name || t('examFileDefault')}</span>
+                            <button onClick={() => handleOpenFile(e.file_url)} className="inline-flex min-h-[44px] min-w-0 max-w-full items-center gap-1.5 rounded-xl bg-brand-600 px-3.5 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-brand-700">
+                              <FileText size={14} className="shrink-0" aria-hidden />
+                              <span className="min-w-0 max-w-[52vw] truncate sm:max-w-[220px]">{e.file_name || t('examFileDefault')}</span>
+                              {fileExt(e.file_name) && (
+                                <span className="shrink-0 rounded-md bg-white/20 px-1.5 py-0.5 text-[10px] font-extrabold tracking-wide">{fileExt(e.file_name)}</span>
+                              )}
+                              <Download size={13} className="shrink-0 opacity-80" aria-hidden />
                             </button>
                           )}
                         </div>
@@ -260,10 +316,10 @@ export default function MyExams() {
                           <div className="flex flex-wrap items-center gap-1.5">
                             <p className="break-words font-display text-[15px] font-bold leading-tight text-ink sm:text-base">{e.title}</p>
                             {(e.exam_type === 'Written' || e.exam_type === 'Oral') && (
-                              <span className="rounded-full bg-ink/5 px-2 py-0.5 text-[10px] font-bold text-ink/50">{t(`examType.${e.exam_type}`)}</span>
+                              <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ring-1 ${e.exam_type === 'Oral' ? 'bg-violet-50 text-violet-700 ring-violet-200' : 'bg-brand-50 text-brand-700 ring-brand-100'}`}>{t(`examType.${e.exam_type}`)}</span>
                             )}
-                            <StatusPill tone={STATUS_TONE[status]}>{t(status)}</StatusPill>
-                          </div>
+                            <StatusPill tone={STATUS_TONE[status]}>{status === 'expired' ? t('awaitingTeacher') : t(status)}</StatusPill>
+                           </div>
                           <p className="mt-1 flex flex-wrap items-center gap-1 text-xs text-ink/50">
                             <Clock size={11} className="text-ink/30" /> {formatDateOnly(e.exam_date, dateLocale)} · {t('outOfScore', { max: e.max_score })}
                             {e.deadline && !isOral && (
@@ -287,6 +343,11 @@ export default function MyExams() {
                             </div>
                           )}
                           {expired && <p className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-inactive"><AlertTriangle size={12} /> {t('deadlinePassedWarning')}</p>}
+                          {!graded && !expired && (
+                            <p className="mt-2 flex items-start gap-1.5 text-xs leading-relaxed text-ink/55">
+                              <FileCheck2 size={12} className="mt-0.5 shrink-0 text-ink/35" aria-hidden /> {t('inClassNote')}
+                            </p>
+                          )}
                         </div>
                         {graded && (
                           <div className="hidden shrink-0 text-right sm:block">
@@ -297,13 +358,18 @@ export default function MyExams() {
                       </div>
 
                       {result?.feedback && (
-                        <p className="mt-3 rounded-xl border border-brand-100 bg-brand-50 px-3 py-2.5 text-sm leading-relaxed text-brand-800">{result.feedback}</p>
+                        <FeedbackText text={result.feedback} t={t} />
                       )}
 
                       <div className="mt-3 flex flex-wrap items-center gap-2">
                         {e.file_url && (
-                          <button onClick={() => handleOpenFile(e.file_url)} className="inline-flex min-h-[44px] min-w-0 max-w-full items-center gap-1.5 rounded-xl border border-brand-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-brand-700 shadow-sm hover:bg-brand-50">
-                            <Download size={14} className="shrink-0" /> <span className="min-w-0 max-w-[52vw] truncate sm:max-w-[220px]">{e.file_name || t('examFileDefault')}</span>
+                          <button onClick={() => handleOpenFile(e.file_url)} className="inline-flex min-h-[44px] min-w-0 max-w-full items-center gap-1.5 rounded-xl bg-brand-600 px-3.5 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-brand-700">
+                            <FileText size={14} className="shrink-0" aria-hidden />
+                            <span className="min-w-0 max-w-[52vw] truncate sm:max-w-[220px]">{e.file_name || t('examFileDefault')}</span>
+                            {fileExt(e.file_name) && (
+                              <span className="shrink-0 rounded-md bg-white/20 px-1.5 py-0.5 text-[10px] font-extrabold tracking-wide">{fileExt(e.file_name)}</span>
+                            )}
+                            <Download size={13} className="shrink-0 opacity-80" aria-hidden />
                           </button>
                         )}
                       </div>

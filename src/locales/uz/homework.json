@@ -74,5 +74,11 @@
   "lhHideQA": "Savollarni yashirish",
   "teacherHomeworkTitle": "O'qituvchi topshiriqlari",
   "teacherHomeworkSubtitle": "O'qituvchingiz bergan maxsus vazifalar.",
-  "noTeacherHomework": "Hozircha o'qituvchi topshiriqlari yo'q — yuqoridagi dars vazifalari doimo mavjud."
+  "noTeacherHomework": "Hozircha o'qituvchi topshiriqlari yo'q — yuqoridagi dars vazifalari doimo mavjud.",
+  "lessonModelNote": "Bu dars uchun bosqichma-bosqich mashqlar — yakunlaganingiz sari keyingi bosqich ochiladi. Javoblar imkoni boricha avtomatik tekshiriladi.",
+  "teacherModelNote": "O‘qituvchingizdan maxsus topshiriqlar — ishingizni pastga yuklang. Baholash qo‘lda amalga oshiriladi.",
+  "reviewFinalNote": "Yakuniy bosqich — hammasini takrorlang va kuchli yakunlang.",
+  "completedDetail": "Javob berilgan {answered} tadan {correct} tasi to‘g‘ri",
+  "completedNext": "O‘qituvchingiz yozma javoblarni tekshiradi — izoh uchun tez orada qayting.",
+  "stagesProgressLabel": "{total} bosqichdan {done} tasi"
 }
