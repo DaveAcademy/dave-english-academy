@@ -55,13 +55,12 @@ function answerSummary(item, raw) {
   return (raw.answer || '').trim() || null;
 }
 
-function questionPromptText(item) {
+function questionPromptText(item, t) {
   const p = item.prompt || {};
   if (p.question) return p.question;
   if (p.template) return p.template;
   if (p.source_text) return p.source_text;
-  if (p.instruction && item.question_type === 'ordering') return p.instruction;
-  return p.instruction || '';
+  return instructionFor(item, t);
 }
 
 function ResultView({ t, dateLocale, items, answers, meta, prevBest }) {
@@ -140,7 +139,7 @@ function ResultView({ t, dateLocale, items, answers, meta, prevBest }) {
                   : <Minus size={16} className="mt-0.5 shrink-0 text-ink/30" aria-label={t('unanswered')} />}
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-semibold text-ink/45">{idx + 1} · {stageKey(t, it.stage)}</p>
-                <p className="truncate text-sm font-semibold text-ink">{questionPromptText(it)}</p>
+                <p className="truncate text-sm font-semibold text-ink">{questionPromptText(it, t)}</p>
                 <p className="truncate text-xs text-ink/55">{t('yourAnswer')}: {summary ?? t('unanswered')}</p>
               </div>
             </li>
