@@ -46,3 +46,12 @@ export async function listMyOnlineTestAttempts(testId) {
   if (error) throw error;
   return data || [];
 }
+
+// Derived leaderboard over submitted attempts. Read-only; the server
+// computes rank/average/best from stored graded results. No arguments,
+// no client-provided scores.
+export async function getOnlineExamRanking() {
+  const { data, error } = await supabase.rpc('get_online_exam_ranking');
+  if (error) throw error;
+  return data || [];
+}

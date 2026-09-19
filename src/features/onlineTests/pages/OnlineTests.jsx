@@ -3,9 +3,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { ClipboardList, Play, RotateCcw, Eye, Sparkles } from 'lucide-react';
+import { ClipboardList, Play, RotateCcw, Eye, Sparkles, Trophy } from 'lucide-react';
 import { useAcademy } from '../../../lib/AcademyDataContext';
 import { listOnlineTests, listMyOnlineTestAttempts } from '../lib/onlineTestApi';
+import OnlineExamRanking from '../components/OnlineExamRanking';
 import StatusPill from '../../../components/StatusPill';
 import ErrorBanner from '../../../components/ErrorBanner';
 import { SkeletonList } from '../../../components/Skeleton';
@@ -19,6 +20,7 @@ export default function OnlineTests() {
   const [tests, setTests] = useState(null);
   const [history, setHistory] = useState({});
   const [error, setError] = useState(null);
+  const [tab, setTab] = useState('tests');
 
   const load = useCallback(async () => {
     setError(null);
@@ -57,8 +59,30 @@ export default function OnlineTests() {
         <p className="mt-1 max-w-[60ch] text-sm leading-relaxed text-ink/55">{t('subtitle')}</p>
       </header>
       <ErrorBanner>{error}</ErrorBanner>
+      <div className="mb-4 inline-flex rounded-full bg-ink/[0.05] p-1" role="tablist" aria-label={t('title')}>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === 'tests'}
+          onClick={() => setTab('tests')}
+          className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold transition-colors ${tab === 'tests' ? 'bg-white text-ink shadow-sm' : 'text-ink/50 hover:text-ink/70'}`}
+        >
+          <ClipboardList size={13} aria-hidden /> {t('testsTab')}
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === 'ranking'}
+          onClick={() => setTab('ranking')}
+          className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold transition-colors ${tab === 'ranking' ? 'bg-white text-ink shadow-sm' : 'text-ink/50 hover:text-ink/70'}`}
+        >
+          <Trophy size={13} aria-hidden /> {t('rankingTab')}
+        </button>
+      </div>
 
-      {tests === null ? (
+      {tab === 'ranking' ? (
+        <OnlineExamRanking />
+      ) : tests === null ? (
         <SkeletonList count={3} />
       ) : tests.length === 0 ? (
         <div className="overflow-hidden rounded-2xl border border-ink/[0.06] bg-white shadow-card">
