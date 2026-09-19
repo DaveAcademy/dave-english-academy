@@ -57,4 +57,8 @@ as $$
 $$;
 
 revoke execute on function public.get_online_exam_ranking() from public;
+-- Supabase default privileges also grant new functions to anon +
+-- authenticated explicitly; strip anon so only signed-in users (and
+-- internal roles) can read the ranking.
+revoke all on function public.get_online_exam_ranking() from anon;
 grant execute on function public.get_online_exam_ranking() to authenticated;
