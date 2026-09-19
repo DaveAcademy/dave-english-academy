@@ -47,6 +47,8 @@ const MyLessons = lazy(() => import('./features/lessons/pages/MyLessons'));
 const MyVocabulary = lazy(() => import('./features/dictionary/pages/MyVocabulary'));
 const Dictionary = lazy(() => import('./features/dictionary/pages/Dictionary'));
 const MyRanking = lazy(() => import('./features/rankings/pages/MyRanking'));
+const OnlineTests = lazy(() => import('./features/onlineTests/pages/OnlineTests'));
+const OnlineTestRunner = lazy(() => import('./features/onlineTests/pages/OnlineTestRunner'));
 const MyCertificates = lazy(() => import('./features/certificates/pages/MyCertificates'));
 const PetCollection = lazy(() => import('./pages/portal/PetCollection'));
 // Avatar temporarily hidden (unfinished) - import kept for later restore.
@@ -151,6 +153,8 @@ function RoutedContent({ isStudent }) {
             <Route path="/dashboard-v3" element={<PortalHomeV3 />} />
             <Route path="/progress" element={<MyProgress />} />
             <Route path="/my-exams" element={<MyExams />} />
+            <Route path="/online-tests" element={<OnlineTests />} />
+            <Route path="/online-tests/:testId" element={<OnlineTestRunner />} />
             <Route path="/my-homework" element={<MyHomework />} />
             <Route path="/my-lessons" element={<MyLessons />} />
             <Route path="/my-lessons/:id" element={<LessonHub />} />

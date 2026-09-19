@@ -7,7 +7,7 @@
 import * as React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { LayoutDashboard, TrendingUp, FileCheck2, BookOpen, Library, Award, Trophy, Settings, MessageSquare, Languages, Gamepad2, Sparkles, PawPrint, Shirt } from 'lucide-react';
+import { LayoutDashboard, TrendingUp, FileCheck2, BookOpen, Library, Award, Trophy, Settings, MessageSquare, Languages, Gamepad2, Sparkles, PawPrint, Shirt, ClipboardList } from 'lucide-react';
 import { useAuth } from '../../lib/AuthContext';
 import { useAcademy } from '../../lib/AcademyDataContext';
 
@@ -30,6 +30,7 @@ const PORTAL_NAV_ITEMS = [
   { to: '/my-lessons', label: 'myLessonsFull', shortLabel: 'lessonsShort', Icon: Library, lessonsGroup: true },
   { to: '/my-homework', label: 'myHomeworkFull', shortLabel: 'homeworkShort', Icon: BookOpen, lessonsGroup: true },
   { to: '/my-exams', label: 'myExamsFull', shortLabel: 'examsShort', Icon: FileCheck2, lessonsGroup: true },
+  { to: '/online-tests', label: 'onlineTestsFull', shortLabel: 'onlineTestsShort', Icon: ClipboardList },
   { to: '/dictionary', label: 'dictionary', shortLabel: 'dictionaryShort', Icon: Languages },
   { to: '/games', label: 'gameCenterFull', shortLabel: 'gameCenterShort', Icon: Gamepad2 },
   // Avatar temporarily hidden (unfinished) - page, components, RPCs, tables

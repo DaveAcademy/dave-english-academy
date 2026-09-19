@@ -39,6 +39,8 @@ import enGroups from '../locales/en/groups.json';
 import uzGroups from '../locales/uz/groups.json';
 import enPayments from '../locales/en/payments.json';
 import uzPayments from '../locales/uz/payments.json';
+import enOnlineTest from '../locales/en/onlineTest.json';
+import uzOnlineTest from '../locales/uz/onlineTest.json';
 
 const LANGUAGE_KEY = 'dave-academy-language';
 const storedLanguage = localStorage.getItem(LANGUAGE_KEY);
@@ -73,6 +75,7 @@ i18n.use(initReactI18next).init({
       dictionary: enDictionary,
       groups: enGroups,
       payments: enPayments,
+      onlineTest: enOnlineTest,
     },
     uz: {
       common: uzCommon,
@@ -91,6 +94,7 @@ i18n.use(initReactI18next).init({
       dictionary: uzDictionary,
       groups: uzGroups,
       payments: uzPayments,
+      onlineTest: uzOnlineTest,
     },
   },
   lng: storedLanguage || 'en',
