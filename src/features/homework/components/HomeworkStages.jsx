@@ -17,6 +17,7 @@ import {
   autoGradeHomeworkAnswerById,
 } from '../../../lib/db';
 import QuestionRenderer from './QuestionRenderer';
+import { initialActiveStageId } from '../../../lib/homeworkStageSelect';
 
 const STAGE_META = {
   vocabulary: { icon: BookOpen, iconClass: 'text-brand-500', label: 'Vocabulary' },
@@ -34,6 +35,14 @@ export function HomeworkStages({ homeworkId, studentId, focusStageKey }) {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+
+  // Latest requested focus stage, mirrored for the async loader below.
+  // Read (not a dep) so a stage-button click never triggers a full reload —
+  // the focus effect handles post-load activation without refetching.
+  const focusKeyRef = useRef(focusStageKey);
+  useEffect(() => {
+    focusKeyRef.current = focusStageKey;
+  }, [focusStageKey]);
 
   const loadData = useCallback(async () => {
     if (!homeworkId || !studentId) return;
@@ -77,8 +86,11 @@ export function HomeworkStages({ homeworkId, studentId, focusStageKey }) {
       }
       setAnswers(aMap);
 
-      const firstIncomplete = list.find((s) => (progressMap[s.id]?.status || 'not_started') !== 'completed');
-      setActiveStage((firstIncomplete || list[0] || {}).id ?? null);
+      // Initial selection honors the requested focus stage when usable;
+      // otherwise first unlocked incomplete, else first incomplete.
+      // (A bare firstIncomplete pick could land on a locked stage and leave
+      // the just-opened panel collapsed with no visible questions.)
+      setActiveStage(initialActiveStageId(list, progressMap, focusKeyRef.current));
     } catch (e) {
       setError('Could not load practice questions.');
     } finally {
@@ -101,6 +113,11 @@ export function HomeworkStages({ homeworkId, studentId, focusStageKey }) {
   // respect locking; a locked stage is never opened early. Each key is applied
   // once, so later user-driven stage changes are not overridden on re-render.
   const appliedFocusRef = useRef(null);
+  // A different homework row is a fresh context — allow its focus key to
+  // apply even if an identical key was consumed for the previous homework.
+  useEffect(() => {
+    appliedFocusRef.current = null;
+  }, [homeworkId]);
   useEffect(() => {
     if (!focusStageKey || stages.length === 0 || appliedFocusRef.current === focusStageKey) return;
     const target = stages.find((s) => s.stage_key === focusStageKey);
