@@ -66,7 +66,16 @@ check(grade('translation', { answer: '“Xayrli tong!”' }, { target_text: 'Xay
 check(grade('essay', { answer: 'x' }, { answer: 'x' }) === false, 'unknown type incorrect');
 check(grade('multiple_choice', null, { correct_value: 'is' }) === false, 'null answer incorrect');
 
-// Scoring math: raw correct/34, percentage rounding.
+// Test 2 shapes: slash-valued matching pairs, capitalization correction,
+// single-word translations with apostrophes.
+check(grade('matching',
+  { pairs: [['Son', "O'g'il"], ['Mother', 'Ona']] },
+  { pairs: [['Mother', 'Ona'], ['Son', "O'g'il"]] }) === true, 't2 matching slash values');
+check(grade('multiple_choice', { selected_value: 'Today is Monday.' }, { correct_value: 'Today is Monday.' }) === true, 't2 capitalization correction');
+check(grade('multiple_choice', { selected_value: 'today is monday.' }, { correct_value: 'Today is Monday.' }) === false, 't2 case-sensitive mc');
+check(grade('translation', { answer: 'mother' }, { target_text: 'Mother' }) === true, 't2 translation case-insensitive');
+check(grade('fill_blank', { answer: 'SATURDAY' }, { answer: 'Saturday' }) === true, 't2 fill case-insensitive');
+check(grade('ordering', { order: ['He', 'has', 'a', 'dog.'] }, { correct_order: ['He', 'has', 'a', 'dog.'] }) === true, 't2 ordering');
 const pct = (raw, total) => Math.round((raw * 100) / total);
 check(pct(27, 34) === 79, '27/34 -> 79%');
 check(pct(34, 34) === 100, '34/34 -> 100%');

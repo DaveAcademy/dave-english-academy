@@ -1,12 +1,13 @@
-// Online Test 1 content contract: 34 frozen items, valid shapes, no key
-// leakage into prompt_data, no duplicates. Source: data/test1.json, the
-// same file the content migration is generated from.
+// Online Test content contract (tests 1-2): 34 frozen items each, valid
+// shapes, no key leakage into prompt_data, no duplicates within or across
+// tests. Source: data/test{N}.json, the same files content migrations are
+// generated from.
 import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const test = JSON.parse(readFileSync(root + '/src/features/onlineTests/data/test1.json', 'utf8'));
+const TESTS = [1, 2].map((n) => JSON.parse(readFileSync(`${root}/src/features/onlineTests/data/test${n}.json`, 'utf8')));
 
 let failures = 0;
 function check(cond, msg) {
@@ -14,28 +15,35 @@ function check(cond, msg) {
   else console.log(`ok ${msg}`);
 }
 
-check(test.test_number === 1 && test.lesson_from === 1 && test.lesson_to === 10, 'test 1 covers lessons 1-10');
-check(test.items.length === 34, `34 items (got ${test.items.length})`);
+const EXPECTED_RANGE = { 1: [1, 10], 2: [11, 20] };
+const allPrompts = new Set();
+for (const test of TESTS) {
+const T = `t${test.test_number}`;
+check(test.lesson_from === EXPECTED_RANGE[test.test_number][0] && test.lesson_to === EXPECTED_RANGE[test.test_number][1], `${T} covers lessons ${test.lesson_from}-${test.lesson_to}`);
+check(test.items.length === 34, `${T} 34 items (got ${test.items.length})`);
 const byStage = {};
 for (const it of test.items) byStage[it.stage] = (byStage[it.stage] || 0) + 1;
-check(byStage.vocabulary === 10, 'vocabulary x10');
-check(byStage.grammar === 10, 'grammar x10');
-check(byStage.sentences === 8, 'sentences x8');
-check(byStage.writing === 6, 'writing x6');
+check(byStage.vocabulary === 10, `${T} vocabulary x10`);
+check(byStage.grammar === 10, `${T} grammar x10`);
+check(byStage.sentences === 8, `${T} sentences x8`);
+check(byStage.writing === 6, `${T} writing x6`);
 
 const STAGES = ['vocabulary', 'grammar', 'sentences', 'writing'];
 const QTYPES = ['multiple_choice', 'matching', 'ordering', 'fill_blank', 'translation'];
 const seenPos = new Set();
 const seenPrompt = new Set();
 for (const it of test.items) {
-  const id = `${it.stage}#${it.position}`;
+  const id = `${T} ${it.stage}#${it.position}`;
   check(STAGES.includes(it.stage) && QTYPES.includes(it.qtype), `${id} valid stage/qtype`);
   check(!seenPos.has(id), `${id} unique position`);
   seenPos.add(id);
   const ptext = JSON.stringify(it.prompt);
   check(!seenPrompt.has(ptext), `${id} prompt not duplicated`);
   seenPrompt.add(ptext);
-  check(/^L(10|[1-9])\b/.test(it.source_ref || ''), `${id} source_ref in L1-L10`);
+  check(!allPrompts.has(ptext), `${id} prompt not reused across tests`);
+  allPrompts.add(ptext);
+  const lesson = Number((it.source_ref || '').match(/^L(\d+)/)?.[1]);
+  check(lesson >= test.lesson_from && lesson <= test.lesson_to, `${id} source in range`);
   const k = it.key || {};
   if (it.qtype === 'multiple_choice') {
     check(typeof k.correct_value === 'string' && (it.prompt.options || []).includes(k.correct_value), `${id} mc key is one of options`);
@@ -61,6 +69,7 @@ for (const it of test.items) {
   if (it.qtype === 'fill_blank' || it.qtype === 'translation') {
     check(!('answer' in it.prompt), `${id} prompt has no .answer`);
   }
+}
 }
 
 console.log(failures === 0 ? 'ALL ONLINE-TEST-CONTENT CHECKS PASS' : `${failures} FAILURES`);
