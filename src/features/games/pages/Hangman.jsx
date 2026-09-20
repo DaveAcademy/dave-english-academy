@@ -77,30 +77,46 @@ function Gallows({ wrongCount, phase }) {
         @keyframes hangSwing { 0%{ transform: translateY(14px) rotate(0deg);} 25%{transform: translateY(14px) rotate(2deg);} 50%{transform: translateY(14px) rotate(-1.6deg);} 75%{transform: translateY(14px) rotate(1deg);} 100%{transform: translateY(14px) rotate(0deg);} }
         @keyframes hangRopeSwing { 0%{transform: rotate(0deg);} 25%{transform: rotate(1.2deg);} 50%{transform: rotate(-1deg);} 75%{transform: rotate(0.6deg);} 100%{transform: rotate(0deg);} }
         .hang-death.hang-figure {
-          animation: hangDeath 1.4s cubic-bezier(0.34,1.56,0.64,1) both 0s,
-            hangRopeDeath 1.4s cubic-bezier(0.34,1.56,0.64,1) both 0s;
+          animation: hangDeath 1.8s cubic-bezier(0.34,1.56,0.64,1) both 0s,
+            hangRopeDeath 1.8s cubic-bezier(0.34,1.56,0.64,1) both 0s;
         }
 
         @keyframes hangDeath {
           0%   { transform: translateY(0) rotate(0deg); }
-          10%  { transform: translateY(-2px) rotate(1deg); }
-          20%  { transform: translateY(1px) rotate(0.5deg); }
-          25%  { transform: translateY(3px) rotate(2deg); }
-          35%  { transform: translateY(10px) rotate(5deg); }
-          45%  { transform: translateY(14px) rotate(8deg); }
-          55%  { transform: translateY(14px) rotate(4deg); }
-          65%  { transform: translateY(14px) rotate(1deg); }
-          75%  { transform: translateY(14px) rotate(0.5deg); }
-          100% { transform: translateY(14px) rotate(0deg); }
+          5%   { transform: translateY(-2px) rotate(0deg); }
+          10%  { transform: translateY(0) rotate(0deg); }
+          15%  { transform: translateY(-2px) rotate(0deg); }
+          20%  { transform: translateY(0) rotate(0deg); }
+          25%  { transform: translateY(0) rotate(0deg); }
+          30%  { transform: translateY(-3px) rotate(0deg); }
+          35%  { transform: scale(1.0) rotate(0deg); }
+          40%  { transform: translateY(8px) rotate(5deg); }
+          45%  { transform: translateY(16px) rotate(15deg); }
+          50%  { transform: translateY(20px) rotate(25deg); }
+          55%  { transform: translateY(20px) rotate(20deg); }
+          60%  { transform: translateY(18px) rotate(12deg); }
+          65%  { transform: translateY(14px) rotate(6deg); }
+          70%  { transform: translateY(10px) rotate(2deg); }
+          75%  { transform: translateY(8px) rotate(1deg); }
+          80%  { transform: translateY(6px) rotate(0.5deg); }
+          85%  { transform: translateY(4px) rotate(0.2deg); }
+          90%  { transform: translateY(2px) rotate(0.1deg); }
+          95%  { transform: translateY(1px) rotate(0.05deg); }
+          100% { transform: translateY(0) rotate(0deg); }
         }
 
         @keyframes hangRopeDeath {
           0%   { transform: rotate(0deg); }
-          15%  { transform: rotate(1deg); }
-          30%  { transform: rotate(-1deg); }
-          45%  { transform: rotate(1deg); }
-          60%  { transform: rotate(-0.5deg); }
-          75%  { transform: rotate(0deg); }
+          10%  { transform: rotate(0deg); }
+          15%  { transform: rotate(-5deg); }
+          25%  { transform: rotate(5deg); }
+          35%  { transform: rotate(-3deg); }
+          45%  { transform: rotate(3deg); }
+          55%  { transform: rotate(-2deg); }
+          65%  { transform: rotate(2deg); }
+          75%  { transform: rotate(-1deg); }
+          85%  { transform: rotate(1deg); }
+          95%  { transform: rotate(0deg); }
           100% { transform: rotate(0deg); }
         }
 
