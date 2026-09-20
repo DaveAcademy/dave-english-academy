@@ -28,6 +28,7 @@ function Gallows({ wrongCount, phase }) {
   const showLegs = wrongCount >= 4;
   const complete = wrongCount >= 5;
   const hanging = phase === 'hanging' || phase === 'settled';
+  const isDeath = wrongCount >= 5 && phase === 'hanging';
   return (
     <div className="mx-auto w-full max-w-[220px] sm:max-w-[240px]" aria-hidden="true">
       <svg viewBox="0 0 200 180" className="h-[150px] w-full sm:h-[170px]" role="img">
@@ -40,7 +41,7 @@ function Gallows({ wrongCount, phase }) {
         <g className={hanging ? 'hang-rope' : ''} style={hanging ? { transformOrigin: '125px 15px' } : undefined}>
           <line x1="125" y1="15" x2="125" y2={complete ? 38 : 32} stroke="#c9a86a" strokeWidth="3" strokeLinecap="round" />
           {/* character group */}
-          <g className={hanging ? 'hang-figure' : complete ? 'hang-complete' : ''}>
+          <g className={`${hanging ? 'hang-figure' : ''}${isDeath ? ' hang-death' : ''}`}>
             {showHead && <circle cx="125" cy="52" r="16" fill="#fff7ed" stroke="#44403c" strokeWidth="2.2" className={wrongCount === 1 ? 'hang-part-in' : ''} />}
             {showHead && (
               <>
@@ -75,9 +76,38 @@ function Gallows({ wrongCount, phase }) {
         @keyframes hangDrop { from { transform: translateY(-10px); } to { transform: translateY(14px); } }
         @keyframes hangSwing { 0%{ transform: translateY(14px) rotate(0deg);} 25%{transform: translateY(14px) rotate(2deg);} 50%{transform: translateY(14px) rotate(-1.6deg);} 75%{transform: translateY(14px) rotate(1deg);} 100%{transform: translateY(14px) rotate(0deg);} }
         @keyframes hangRopeSwing { 0%{transform: rotate(0deg);} 25%{transform: rotate(1.2deg);} 50%{transform: rotate(-1deg);} 75%{transform: rotate(0.6deg);} 100%{transform: rotate(0deg);} }
+        .hang-death.hang-figure {
+          animation: hangDeath 1.4s cubic-bezier(0.34,1.56,0.64,1) both 0s,
+            hangRopeDeath 1.4s cubic-bezier(0.34,1.56,0.64,1) both 0s;
+        }
+
+        @keyframes hangDeath {
+          0%   { transform: translateY(0) rotate(0deg); }
+          10%  { transform: translateY(-2px) rotate(1deg); }
+          20%  { transform: translateY(1px) rotate(0.5deg); }
+          25%  { transform: translateY(3px) rotate(2deg); }
+          35%  { transform: translateY(10px) rotate(5deg); }
+          45%  { transform: translateY(14px) rotate(8deg); }
+          55%  { transform: translateY(14px) rotate(4deg); }
+          65%  { transform: translateY(14px) rotate(1deg); }
+          75%  { transform: translateY(14px) rotate(0.5deg); }
+          100% { transform: translateY(14px) rotate(0deg); }
+        }
+
+        @keyframes hangRopeDeath {
+          0%   { transform: rotate(0deg); }
+          15%  { transform: rotate(1deg); }
+          30%  { transform: rotate(-1deg); }
+          45%  { transform: rotate(1deg); }
+          60%  { transform: rotate(-0.5deg); }
+          75%  { transform: rotate(0deg); }
+          100% { transform: rotate(0deg); }
+        }
+
         @media (prefers-reduced-motion: reduce) {
           .hang-part-in, .hang-complete, .hang-figure, .hang-rope { animation: none !important; }
           .hang-figure { transform: translateY(14px) !important; }
+          .hang-death.hang-figure { animation: none !important; }
         }
       `}</style>
     </div>
