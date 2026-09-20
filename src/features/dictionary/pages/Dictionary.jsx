@@ -58,7 +58,7 @@ export default function Dictionary() {
       {tab === 'challenge' && <ChallengeTab me={me} t={t} />}
       {tab === 'progress' && <ProgressTab me={me} t={t} />}
       {tab === 'leaderboard' && <LeaderboardTab me={me} t={t} />}
-      {tab === 'search' && <SearchTab t={t} />}
+      {tab === 'search' && <SearchTab me={me} t={t} />}
     </div>
   );
 }

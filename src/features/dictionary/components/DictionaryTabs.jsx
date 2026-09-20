@@ -12,10 +12,13 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Search as SearchIcon, X, Volume2, Sparkles, Trophy, TrendingUp,
+  Bookmark, BookmarkCheck, Plus, Check,
 } from 'lucide-react';
 import {
   getDueReviews, scheduleReview, getMySummary, getLeaderboard,
-  searchUnified,
+  searchUnified, startWords, listLessonFavorites, listEntryFavorites,
+  addLessonFavorite, addEntryFavorite, removeLessonFavorite,
+  removeEntryFavorite, DAILY_LIMIT,
 } from '../api/dictionaryBridge';
 import { formatStudentDisplayName } from '../../../lib/gameRecordFormat';
 import { levelToken } from '../../../lib/levels';
@@ -291,13 +294,47 @@ function LevelChip({ active, onClick, label }) {
   );
 }
 
-// ===================== SEARCH (unified RPC, migration 0183) =====================
-export function SearchTab({ t }) {
+// ===================== SEARCH (unified RPC, ranked server-side) =====================
+// Search results are actionable: every row can be added to SRS learning
+// (start_dictionary_words, same path as Learn) and saved via the shared
+// student_vocabulary_favorites table. General entries need the post-P0
+// RPC fields (entry_id); when the backend predates them, Add/Save stay
+// hidden for those rows instead of pretending to work.
+export function SearchTab({ me, t }) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [error, setError] = useState(false);
+  const [startedLesson, setStartedLesson] = useState(() => new Set());
+  const [startedEntry, setStartedEntry] = useState(() => new Set());
+  const [savedLesson, setSavedLesson] = useState(() => new Set());
+  const [savedEntry, setSavedEntry] = useState(() => new Set());
+  const [newToday, setNewToday] = useState(0);
+  const [busyId, setBusyId] = useState(null);
+
+  useEffect(() => {
+    if (!me) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const [due, lessonFav, entryFav, summary] = await Promise.all([
+          getDueReviews(me.id, 100).catch(() => []),
+          listLessonFavorites(me.id).catch(() => []),
+          listEntryFavorites(me.id).catch(() => []),
+          getMySummary().catch(() => null),
+        ]);
+        if (cancelled) return;
+        setStartedLesson(new Set((due || []).map((r) => r.lesson_vocabulary_id).filter(Boolean)));
+        setStartedEntry(new Set((due || []).map((r) => r.dictionary_entry_id).filter((v) => v != null)));
+        setSavedLesson(new Set((lessonFav || []).map((r) => r.vocabulary_id)));
+        setSavedEntry(new Set((entryFav || []).map((r) => r.dictionary_entry_id)));
+        const s = Array.isArray(summary) ? summary[0] : summary;
+        setNewToday(Number(s?.new_today) || 0);
+      } catch { /* cards stay usable; actions surface their own errors */ }
+    })();
+    return () => { cancelled = true; };
+  }, [me]);
 
   useEffect(() => {
     const q = query.trim();
@@ -322,6 +359,72 @@ export function SearchTab({ t }) {
     }, 300);
     return () => clearTimeout(handle);
   }, [query]);
+
+  const limitReached = newToday >= DAILY_LIMIT;
+
+  const addToStartedSet = (entry) => {
+    if (entry.source_type === 'dictionary_entries' && entry.entry_id != null) {
+      setStartedEntry((prev) => new Set(prev).add(entry.entry_id));
+    } else {
+      setStartedLesson((prev) => new Set(prev).add(entry.id));
+    }
+  };
+
+  const markStarted = (entry) => {
+    addToStartedSet(entry);
+    setNewToday((n) => n + 1);
+  };
+
+  const handleAdd = async (entry, status, setStatus) => {
+    if (!me || busyId) return;
+    const isEntry = entry.source_type === 'dictionary_entries';
+    if (isEntry && entry.entry_id == null) return;
+    setBusyId(entry.id);
+    setStatus({ kind: 'adding' });
+    try {
+      const created = await (isEntry
+        ? startWords([], [entry.entry_id])
+        : startWords([entry.id], []));
+      if ((created || 0) > 0) {
+        markStarted(entry);
+        setStatus({ kind: 'added' });
+      } else if (limitReached) {
+        setStatus({ kind: 'limit' });
+      } else {
+        // Server created nothing while allowance remains: already started.
+        addToStartedSet(entry);
+        setStatus({ kind: 'have' });
+      }
+    } catch {
+      setStatus({ kind: 'error' });
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleToggleSave = async (entry, saved) => {
+    if (!me || busyId) return;
+    const isEntry = entry.source_type === 'dictionary_entries';
+    const key = isEntry ? entry.entry_id : entry.id;
+    if (isEntry && key == null) return;
+    setBusyId(entry.id);
+    try {
+      if (saved) {
+        await (isEntry ? removeEntryFavorite(me.id, key) : removeLessonFavorite(me.id, key));
+        (isEntry ? setSavedEntry : setSavedLesson)((prev) => {
+          const next = new Set(prev);
+          next.delete(key);
+          return next;
+        });
+      } else {
+        await (isEntry ? addEntryFavorite(me.id, key) : addLessonFavorite(me.id, key));
+        (isEntry ? setSavedEntry : setSavedLesson)((prev) => new Set(prev).add(key));
+      }
+    } catch { /* unique-constraint races stay as-is; next reload reconciles */ }
+    finally {
+      setBusyId(null);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -362,25 +465,69 @@ export function SearchTab({ t }) {
       )}
       {!loading && results.length > 0 && (
         <div className="space-y-3">
-          {results.map((entry) => (
-            <SearchResultCard key={entry.id} entry={entry} t={t} />
-          ))}
+          {results.map((entry) => {
+            const isEntry = entry.source_type === 'dictionary_entries';
+            const started = isEntry
+              ? entry.entry_id != null && startedEntry.has(entry.entry_id)
+              : startedLesson.has(entry.id);
+            const saved = isEntry
+              ? entry.entry_id != null && savedEntry.has(entry.entry_id)
+              : savedLesson.has(entry.id);
+            // General entries need the post-P0 RPC field; without it the
+            // actions cannot address the word, so they stay hidden.
+            const canAct = !isEntry || entry.entry_id != null;
+            return (
+              <SearchResultRow
+                key={`${entry.source_type}:${entry.entry_id ?? entry.id}`}
+                entry={entry}
+                t={t}
+                started={started}
+                saved={saved}
+                canAct={canAct && !!me}
+                limitReached={limitReached}
+                busy={busyId === entry.id}
+                onAdd={handleAdd}
+                onToggleSave={handleToggleSave}
+              />
+            );
+          })}
         </div>
       )}
     </div>
   );
 }
 
-function SearchResultCard({ entry, t }) {
+function SearchResultRow({ entry, t, started, saved, canAct, limitReached, busy, onAdd, onToggleSave }) {
+  const [status, setStatus] = useState({ kind: 'idle' });
+  const added = started || status.kind === 'added' || status.kind === 'have';
+  return (
+    <SearchResultCard
+      entry={entry}
+      t={t}
+      added={added}
+      saved={saved}
+      canAct={canAct}
+      limitReached={limitReached}
+      busy={busy}
+      status={status.kind}
+      onAdd={() => onAdd(entry, status, setStatus)}
+      onToggleSave={() => onToggleSave(entry, saved)}
+    />
+  );
+}
+
+function SearchResultCard({ entry, t, added, saved, canAct, limitReached, busy, status, onAdd, onToggleSave }) {
   return (
     <div className="overflow-hidden rounded-xl border border-ink/[0.06] bg-white p-4 shadow-card">
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
         <h3 className="break-words font-display text-lg font-bold text-ink">{entry.english}</h3>
         {entry.part_of_speech && <Pill text={entry.part_of_speech} />}
         {entry.lesson_number != null && <Pill text={`${t('lesson')} ${entry.lesson_number}`} color="slate" />}
+        {added && <Pill text={t('learningLabel')} color="green" />}
+        {saved && <Pill text={t('savedLabel')} color="amber" />}
         <button
           type="button"
-          onClick={() => { if (!playAudio(entry.id, entry.source_type, entry.english)) showSpeechFallback(); }}
+          onClick={() => { if (!playAudio(entry.entry_id ?? entry.id, entry.source_type, entry.english)) showSpeechFallback(); }}
           aria-label={t('pronunciation')}
           title={t('pronunciation')}
           className="ml-auto flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600 hover:bg-brand-100"
@@ -396,6 +543,44 @@ function SearchResultCard({ entry, t }) {
           {entry.example && <p className="mt-1 break-words text-sm text-ink">{entry.example}</p>}
           {entry.example_uzbek && <p className="mt-0.5 break-words text-sm text-ink/60">{entry.example_uzbek}</p>}
         </div>
+      )}
+      {canAct && (
+        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-ink/5 pt-3">
+          {added ? (
+            <span className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl bg-emerald-50 px-4 text-sm font-semibold text-emerald-700">
+              <Check size={15} aria-hidden /> {status === 'added' ? t('addedToLearning') : t('alreadyLearning')}
+            </span>
+          ) : (
+            <button
+              type="button"
+              onClick={onAdd}
+              disabled={busy || limitReached}
+              aria-label={t('addToLearning')}
+              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 disabled:opacity-50"
+            >
+              <Plus size={15} aria-hidden /> {status === 'adding' ? t('adding') : t('addToLearning')}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onToggleSave}
+            disabled={busy}
+            aria-pressed={!!saved}
+            aria-label={saved ? t('unsaveWord') : t('saveWord')}
+            title={saved ? t('unsaveWord') : t('saveWord')}
+            className={`ml-auto flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full transition-colors disabled:opacity-50 ${
+              saved ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-ink/[0.04] text-ink/50 hover:bg-ink/[0.08] hover:text-ink'
+            }`}
+          >
+            {saved ? <BookmarkCheck size={17} aria-hidden /> : <Bookmark size={17} aria-hidden />}
+          </button>
+        </div>
+      )}
+      {canAct && !added && limitReached && (
+        <p className="mt-2 text-xs text-ink/50">{t('dailyLimitReached')}</p>
+      )}
+      {canAct && status === 'error' && (
+        <p className="mt-2 text-xs font-medium text-red-600">{t('addFailed')}</p>
       )}
     </div>
   );

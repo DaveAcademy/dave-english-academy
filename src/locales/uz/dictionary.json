@@ -64,5 +64,15 @@
   "yourRank": "Sizning o'rningiz",
   "masteredWordsShort": "o'zlashtirilgan",
   "noRankingsYet": "Hali reyting bo'sh",
-  "masterWordsToRank": "Reytingga kirish uchun so'zlarni o'zlashtiring."
+  "masterWordsToRank": "Reytingga kirish uchun so'zlarni o'zlashtiring.",
+
+  "addToLearning": "O'rganishga qo'shish",
+  "addedToLearning": "O'rganishga qo'shildi",
+  "alreadyLearning": "Allaqachon o'rganilmoqda",
+  "dailyLimitReached": "Kunlik limit tugadi — ertaga qayting",
+  "addFailed": "Qo'shib bo'lmadi — qayta urining",
+  "saveWord": "So'zni saqlash",
+  "unsaveWord": "Saqlanganlardan olish",
+  "savedLabel": "Saqlangan",
+  "learningLabel": "O'rganilmoqda"
 }

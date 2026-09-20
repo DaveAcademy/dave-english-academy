@@ -64,5 +64,15 @@
   "yourRank": "Your rank",
   "masteredWordsShort": "mastered",
   "noRankingsYet": "No one has ranked yet",
-  "masterWordsToRank": "Master words to appear on the ranking."
+  "masterWordsToRank": "Master words to appear on the ranking.",
+
+  "addToLearning": "Add to learning",
+  "addedToLearning": "Added to my learning",
+  "alreadyLearning": "Already in my learning",
+  "dailyLimitReached": "Daily limit reached — come back tomorrow",
+  "addFailed": "Couldn't add — try again",
+  "saveWord": "Save word",
+  "unsaveWord": "Remove from saved",
+  "savedLabel": "Saved",
+  "learningLabel": "Learning"
 }

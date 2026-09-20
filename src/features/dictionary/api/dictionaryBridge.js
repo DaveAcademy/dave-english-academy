@@ -25,10 +25,19 @@ export function getNextWords(studentId, limit = DAILY_LIMIT) {
   return rpc('get_next_dictionary_words', { p_student_id: studentId, p_limit: limit });
 }
 
-// Creates NEW rows for the chosen words. Returns how many were actually
-// created (server clamps to the remaining daily allowance).
-export function startWords(wordIds) {
-  return rpc('start_dictionary_words', { p_word_ids: wordIds });
+// Creates NEW rows for the chosen words (lesson vocabulary ids and/or
+// general dictionary entry ids). Returns how many were actually created
+// (server clamps to the remaining daily allowance; 0 means the limit is
+// reached or everything was already started). Falls back to the
+// pre-P0 single-argument form while the backend migration is rolling
+// out (lesson words only; entries require the new backend).
+export async function startWords(wordIds = [], entryIds = []) {
+  try {
+    return await rpc('start_dictionary_words', { p_word_ids: wordIds, p_entry_ids: entryIds });
+  } catch (e) {
+    if (entryIds.length) throw e;
+    return rpc('start_dictionary_words', { p_word_ids: wordIds });
+  }
 }
 
 // Words currently due for review (first exposure included).
@@ -63,9 +72,69 @@ export function getStudentDetail(studentId) {
 }
 
 // Unified search across curriculum lesson vocabulary and general dictionary
-// entries (search_dictionary_unified, migration 0183). Returns rows shaped
-// { id, english, uzbek, pronunciation, part_of_speech, example, source_type,
-// lesson_number } - lesson_number is null for general entries.
+// entries (search_dictionary_unified). Returns rows shaped
+// { id, english, uzbek, pronunciation, part_of_speech, example,
+// example_uzbek, source_type, lesson_number, audio_path, entry_id } -
+// lesson_number/example_uzbek/entry_id are null for whichever source does
+// not provide them. Results are server-ranked: exact, prefix, trigram,
+// substring.
 export function searchUnified(query, limit = 20) {
   return rpc('search_dictionary_unified', { p_query: query, p_limit: limit });
+}
+
+// ---------- Saved words (student_vocabulary_favorites, extended for
+// general entries - same table, same RLS, no second favorites system) ----------
+
+// Lesson-vocabulary favorites for one student: [{ vocabulary_id, ... }].
+export async function listLessonFavorites(studentId) {
+  const { data, error } = await supabase
+    .from('student_vocabulary_favorites')
+    .select('vocabulary_id')
+    .eq('student_id', studentId)
+    .not('vocabulary_id', 'is', null);
+  if (error) throw error;
+  return data || [];
+}
+
+// General-entry favorites for one student: [{ dictionary_entry_id, ... }].
+export async function listEntryFavorites(studentId) {
+  const { data, error } = await supabase
+    .from('student_vocabulary_favorites')
+    .select('dictionary_entry_id')
+    .eq('student_id', studentId)
+    .not('dictionary_entry_id', 'is', null);
+  if (error) throw error;
+  return data || [];
+}
+
+export async function addLessonFavorite(studentId, vocabularyId) {
+  const { error } = await supabase
+    .from('student_vocabulary_favorites')
+    .insert({ student_id: studentId, vocabulary_id: vocabularyId });
+  if (error) throw error;
+}
+
+export async function addEntryFavorite(studentId, entryId) {
+  const { error } = await supabase
+    .from('student_vocabulary_favorites')
+    .insert({ student_id: studentId, dictionary_entry_id: entryId });
+  if (error) throw error;
+}
+
+export async function removeLessonFavorite(studentId, vocabularyId) {
+  const { error } = await supabase
+    .from('student_vocabulary_favorites')
+    .delete()
+    .eq('student_id', studentId)
+    .eq('vocabulary_id', vocabularyId);
+  if (error) throw error;
+}
+
+export async function removeEntryFavorite(studentId, entryId) {
+  const { error } = await supabase
+    .from('student_vocabulary_favorites')
+    .delete()
+    .eq('student_id', studentId)
+    .eq('dictionary_entry_id', entryId);
+  if (error) throw error;
 }
