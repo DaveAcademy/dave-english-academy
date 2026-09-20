@@ -101,5 +101,18 @@
   "noWordsYet": "No vocabulary words yet",
   "noWordsYetHint": "Learn words in the Dictionary to start building knowledge.",
   "noWordsInState": "No words here yet",
-  "noWordsInStateHint": "Words appear here as your evidence grows."
+  "noWordsInStateHint": "Words appear here as your evidence grows.",
+  "recoTitle": "What should I study?",
+  "recoHeadline": "{{count}} {{state}} words",
+  "reco_lapsed": "These words were previously learned but need review again. Review starts with the most overdue words.",
+  "reco_learning": "Keep practicing these words to strengthen your knowledge.",
+  "reco_new": "These words have not been demonstrated successfully yet. Start learning them.",
+  "reco_demonstrated": "You have shown these words across activities. Keep reviewing to build retention.",
+  "reco_known": "These words show strong knowledge. Review them occasionally to keep them.",
+  "recoAllGood": "Your vocabulary is in good shape.",
+  "recoAllGoodHint": "Keep reviewing to maintain your knowledge.",
+  "actLearn": "Start learning",
+  "actPractice": "Practice these words",
+  "actReview": "Review",
+  "actReviewAgain": "Review again"
 }

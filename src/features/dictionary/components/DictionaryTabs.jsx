@@ -321,7 +321,14 @@ const KNOWLEDGE_META = {
 };
 const KNOWLEDGE_ORDER = ['KNOWN', 'DEMONSTRATED', 'LEARNING', 'NEW', 'LAPSED'];
 
-export function WordsTab({ me, t }) {
+// Priority order only - no scores. Lapsed recovery first, maintenance last.
+const ACTION_PRIORITY = ['LAPSED', 'LEARNING', 'NEW', 'DEMONSTRATED', 'KNOWN'];
+// State -> existing Dictionary tab. Review serves due-first SRS order, so
+// lapsed/due words surface naturally; Learn serves today's new words.
+const STATE_ACTION_TAB = { NEW: 'learn', LEARNING: 'review', DEMONSTRATED: 'review', KNOWN: 'review', LAPSED: 'review' };
+const STATE_ACTION_KEY = { NEW: 'actLearn', LEARNING: 'actPractice', DEMONSTRATED: 'actReview', KNOWN: 'actReview', LAPSED: 'actReviewAgain' };
+
+export function WordsTab({ me, t, onAction }) {
   const [rows, setRows] = useState([]);
   const [uzbekById, setUzbekById] = useState({});
   const [filter, setFilter] = useState(null);
@@ -370,6 +377,11 @@ export function WordsTab({ me, t }) {
   const counts = {};
   for (const r of rows) counts[r.knowledge_state] = (counts[r.knowledge_state] || 0) + 1;
   const visible = filter ? rows.filter((r) => r.knowledge_state === filter) : rows;
+  const priority = ACTION_PRIORITY.find((st) => (counts[st] || 0) > 0) || null;
+
+  const goAction = (state) => {
+    if (onAction && STATE_ACTION_TAB[state]) onAction(STATE_ACTION_TAB[state]);
+  };
 
   return (
     <div className="space-y-3">
@@ -377,6 +389,30 @@ export function WordsTab({ me, t }) {
         <p className="font-display text-sm font-semibold text-ink">{t('howMeasuredTitle')}</p>
         <p className="mt-1 text-xs leading-relaxed text-ink/55">{t('howMeasuredBody')}</p>
       </div>
+
+      {priority ? (
+        <div className="rounded-xl border border-brand-200 bg-brand-50/60 p-4 shadow-card">
+          <p className="text-[11px] font-medium uppercase tracking-wide text-brand-600">{t('recoTitle')}</p>
+          <p className="mt-1 font-display text-base font-bold text-ink">
+            {t('recoHeadline', { count: counts[priority], state: t(KNOWLEDGE_META[priority].labelKey) })}
+          </p>
+          <p className="mt-0.5 text-xs leading-relaxed text-ink/55">{t(`reco_${priority.toLowerCase()}`)}</p>
+          <button
+            type="button"
+            onClick={() => goAction(priority)}
+            className="mt-3 inline-flex min-h-[44px] items-center rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white shadow-sm hover:bg-brand-700"
+          >
+            {t(STATE_ACTION_KEY[priority])}
+          </button>
+        </div>
+      ) : (
+        rows.length > 0 && (
+          <div className="rounded-xl border border-ink/[0.06] bg-white p-4 text-center shadow-card">
+            <p className="font-display text-base font-semibold text-ink">{t('recoAllGood')}</p>
+            <p className="mt-1 text-xs text-ink/50">{t('recoAllGoodHint')}</p>
+          </div>
+        )
+      )}
 
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
         {KNOWLEDGE_ORDER.map((st) => {
@@ -412,6 +448,7 @@ export function WordsTab({ me, t }) {
               uzbek={uzbekById[r.vocabulary_id]}
               open={openId === r.vocabulary_id}
               onToggle={() => setOpenId(openId === r.vocabulary_id ? null : r.vocabulary_id)}
+              onAction={() => goAction(r.knowledge_state)}
               t={t}
             />
           ))}
@@ -421,7 +458,7 @@ export function WordsTab({ me, t }) {
   );
 }
 
-function WordKnowledgeCard({ row, uzbek, open, onToggle, t }) {
+function WordKnowledgeCard({ row, uzbek, open, onToggle, onAction, t }) {
   const meta = KNOWLEDGE_META[row.knowledge_state] || KNOWLEDGE_META.NEW;
   const ev = row._ev;
   const systems = ev ? [
@@ -466,6 +503,15 @@ function WordKnowledgeCard({ row, uzbek, open, onToggle, t }) {
           )}
           {(row.retention_interval_days || 0) > 0 && (
             <p className="mt-2 text-[11px] text-ink/40">{t('retentionDays', { count: row.retention_interval_days })}</p>
+          )}
+          {onAction && (
+            <button
+              type="button"
+              onClick={onAction}
+              className="mt-3 inline-flex min-h-[44px] items-center rounded-xl bg-ink px-4 text-xs font-semibold text-white hover:bg-ink/90"
+            >
+              {t(STATE_ACTION_KEY[row.knowledge_state] || 'actReview')}
+            </button>
           )}
         </div>
       )}

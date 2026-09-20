@@ -101,5 +101,18 @@
   "noWordsYet": "Hali so'zlar yo'q",
   "noWordsYetHint": "Bilimni shakllantirish uchun Lug'atda so'z o'rganing.",
   "noWordsInState": "Bu yerda hali so'z yo'q",
-  "noWordsInStateHint": "Dalillar ko'paygani sayin so'zlar shu yerda paydo bo'ladi."
+  "noWordsInStateHint": "Dalillar ko'paygani sayin so'zlar shu yerda paydo bo'ladi.",
+  "recoTitle": "Nimani o'rganish kerak?",
+  "recoHeadline": "{{count}} ta {{state}} so'z",
+  "reco_lapsed": "Bu so'zlar avval o'rganilgan edi, ularni qayta ko'rib chiqing. Takrorlash eng kechikkan so'zlardan boshlanadi.",
+  "reco_learning": "Bilimingizni mustahkamlash uchun bu so'zlarni mashq qilishda davom eting.",
+  "reco_new": "Bu so'zlar hali muvaffaqiyatli namoyish etilmagan. Ularni o'rganishni boshlang.",
+  "reco_demonstrated": "Siz bu so'zlarni turli mashqlarda ko'rsatdingiz. Esda saqlash uchun takrorlang.",
+  "reco_known": "Bu so'zlar yaxshi bilingan. Ularni saqlab qolish uchun vaqti-vaqti bilan takrorlang.",
+  "recoAllGood": "Lug'atingiz yaxshi holatda.",
+  "recoAllGoodHint": "Bilimingizni saqlash uchun takrorlashda davom eting.",
+  "actLearn": "O'rganishni boshlash",
+  "actPractice": "Shu so'zlarni mashq qilish",
+  "actReview": "Takrorlash",
+  "actReviewAgain": "Qayta takrorlash"
 }
