@@ -15,7 +15,7 @@ import {
   Bookmark, BookmarkCheck, Plus, Check,
 } from 'lucide-react';
 import {
-  getDueReviews, scheduleReview, getMySummary, getLeaderboard,
+  getDueReviews, scheduleReview, getMySummary, getMyWordsKnown, getLeaderboard,
   searchUnified, startWords, listLessonFavorites, listEntryFavorites,
   addLessonFavorite, addEntryFavorite, removeLessonFavorite,
   removeEntryFavorite, DAILY_LIMIT,
@@ -146,6 +146,7 @@ export function ChallengeTab({ me, t }) {
 // ===================== PROGRESS =====================
 export function ProgressTab({ me, t }) {
   const [stats, setStats] = useState(null);
+  const [wordsKnown, setWordsKnown] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
@@ -153,8 +154,16 @@ export function ProgressTab({ me, t }) {
     if (!me) return;
     let cancelled = false;
     setLoading(true);
-    getMySummary()
-      .then((s) => { if (!cancelled) setStats(Array.isArray(s) ? s[0] : s); })
+    Promise.all([
+      getMySummary(),
+      getMyWordsKnown().catch(() => null),
+    ])
+      .then(([s, k]) => {
+        if (cancelled) return;
+        setStats(Array.isArray(s) ? s[0] : s);
+        const row = Array.isArray(k) ? k[0] : k;
+        setWordsKnown(row || null);
+      })
       .catch(() => { if (!cancelled) setError(true); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
@@ -184,6 +193,9 @@ export function ProgressTab({ me, t }) {
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {wordsKnown && (
+          <StatBox label={t('wordsKnown')} value={wordsKnown.known_count} tone="text-brand-600" />
+        )}
         <StatBox label={t('state_mastered')} value={stats.mastered_count} tone="text-emerald-600" />
         <StatBox label={t('state_reviewing')} value={stats.reviewing_count} tone="text-brand-600" />
         <StatBox label={t('state_learning')} value={stats.learning_count + (stats.new_count || 0)} tone="text-amber-600" />

@@ -56,6 +56,12 @@ export function getMySummary() {
   return rpc('get_my_dictionary_summary');
 }
 
+// Words Known (Phase 4): caller's KNOWN-word count from the knowledge
+// read model. Returns { known_count, mapped_count }.
+export function getMyWordsKnown() {
+  return rpc('get_my_words_known');
+}
+
 // Academy-wide ranking by mastered count. level: null = all levels.
 export function getLeaderboard(level = null) {
   return rpc('get_dictionary_leaderboard', { p_level: level });

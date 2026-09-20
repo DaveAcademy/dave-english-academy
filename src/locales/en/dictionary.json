@@ -74,5 +74,6 @@
   "saveWord": "Save word",
   "unsaveWord": "Remove from saved",
   "savedLabel": "Saved",
-  "learningLabel": "Learning"
+  "learningLabel": "Learning",
+  "wordsKnown": "Words known"
 }

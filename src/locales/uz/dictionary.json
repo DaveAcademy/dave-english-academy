@@ -74,5 +74,6 @@
   "saveWord": "So'zni saqlash",
   "unsaveWord": "Saqlanganlardan olish",
   "savedLabel": "Saqlangan",
-  "learningLabel": "O'rganilmoqda"
+  "learningLabel": "O'rganilmoqda",
+  "wordsKnown": "Biladigan so'zlar"
 }
