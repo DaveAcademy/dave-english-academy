@@ -89,11 +89,11 @@ values ((select id from public.online_tests where test_number = 10), 'grammar', 
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
-values ((select id from public.online_tests where test_number = 10), 'sentences', 'ordering', 1, '{"instruction":"Put the words in order.","tokens":["He","was","born","in","1980."]}'::jsonb, '{"correct_order":["He","was","born","in","1980."]}'::jsonb, 1, 'L91 people')
+values ((select id from public.online_tests where test_number = 10), 'sentences', 'ordering', 1, '{"instruction":"Put the words in order.","tokens":["In","the","end,","they","found","it."]}'::jsonb, '{"correct_order":["In","the","end,","they","found","it."]}'::jsonb, 1, 'L94 storytelling')
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
-values ((select id from public.online_tests where test_number = 10), 'sentences', 'ordering', 2, '{"instruction":"Put the words in order.","tokens":["I","was","reading","when","it","rang."]}'::jsonb, '{"correct_order":["I","was","reading","when","it","rang."]}'::jsonb, 1, 'L92 story')
+values ((select id from public.online_tests where test_number = 10), 'sentences', 'ordering', 2, '{"instruction":"Put the words in order.","tokens":["The","narrator","tells","the","story."]}'::jsonb, '{"correct_order":["The","narrator","tells","the","story."]}'::jsonb, 1, 'L93 documentary')
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)

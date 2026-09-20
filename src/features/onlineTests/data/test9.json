@@ -4,39 +4,632 @@
   "lesson_from": 81,
   "lesson_to": 90,
   "items": [
-    { "stage": "vocabulary", "qtype": "multiple_choice", "position": 1, "source_ref": "L81 technology", "prompt": { "question": "What does “Qurilma” mean in English?", "options": ["device", "screen", "battery", "search"] }, "key": { "correct_value": "device" } },
-    { "stage": "vocabulary", "qtype": "multiple_choice", "position": 2, "source_ref": "L82 social media", "prompt": { "question": "What does “Izoh” mean in English?", "options": ["comment", "profile", "share", "private"] }, "key": { "correct_value": "comment" } },
-    { "stage": "vocabulary", "qtype": "multiple_choice", "position": 3, "source_ref": "L83 opinions", "prompt": { "question": "What does “Chunki” mean in English?", "options": ["because", "opinion", "probably", "certainly"] }, "key": { "correct_value": "because" } },
-    { "stage": "vocabulary", "qtype": "matching", "position": 4, "source_ref": "L85 environment", "prompt": { "instruction": "Match each environment word with its Uzbek word.", "left": ["pollution", "recycle", "rubbish", "nature"], "right": ["Ifloslanish", "Qayta ishlash", "Axlat", "Tabiat"] }, "key": { "pairs": [["pollution", "Ifloslanish"], ["recycle", "Qayta ishlash"], ["rubbish", "Axlat"], ["nature", "Tabiat"]] } },
-    { "stage": "vocabulary", "qtype": "multiple_choice", "position": 5, "source_ref": "L84 agreement", "prompt": { "question": "What does “Biroq” mean in English?", "options": ["however", "exactly", "perhaps", "in fact"] }, "key": { "correct_value": "however" } },
-    { "stage": "vocabulary", "qtype": "multiple_choice", "position": 6, "source_ref": "L86 conditional", "prompt": { "question": "What does “Agar” mean in English?", "options": ["if", "will", "probably", "instead"] }, "key": { "correct_value": "if" } },
-    { "stage": "vocabulary", "qtype": "matching", "position": 7, "source_ref": "L87 debate", "prompt": { "instruction": "Match each debate word with its Uzbek word.", "left": ["debate", "reason", "support", "conclusion"], "right": ["Munozara", "Sabab", "Qo'llab-quvvatlamoq", "Xulosa"] }, "key": { "pairs": [["debate", "Munozara"], ["reason", "Sabab"], ["support", "Qo'llab-quvvatlamoq"], ["conclusion", "Xulosa"]] } },
-    { "stage": "vocabulary", "qtype": "multiple_choice", "position": 8, "source_ref": "L89 city-country", "prompt": { "question": "What does “Tinch” mean in English?", "options": ["peaceful", "crowded", "noisy", "convenient"] }, "key": { "correct_value": "peaceful" } },
-    { "stage": "vocabulary", "qtype": "multiple_choice", "position": 9, "source_ref": "L90 cultures", "prompt": { "question": "What does “Festival” mean in English?", "options": ["festival", "culture", "custom", "exchange"] }, "key": { "correct_value": "festival" } },
-    { "stage": "vocabulary", "qtype": "multiple_choice", "position": 10, "source_ref": "L88 opinions", "prompt": { "question": "What does “Hurmat” mean in English?", "options": ["respect", "opinion", "reason", "conclusion"] }, "key": { "correct_value": "respect" } },
-    { "stage": "grammar", "qtype": "multiple_choice", "position": 1, "source_ref": "L81 present perfect", "prompt": { "question": "I ___ used this app.", "options": ["have", "has"] }, "key": { "correct_value": "have" } },
-    { "stage": "grammar", "qtype": "multiple_choice", "position": 2, "source_ref": "L81 present perfect correction", "prompt": { "question": "Which sentence is correct?", "options": ["I have download it.", "I have downloaded it.", "I has downloaded it."] }, "key": { "correct_value": "I have downloaded it." } },
-    { "stage": "grammar", "qtype": "multiple_choice", "position": 3, "source_ref": "L82 social media", "prompt": { "question": "You ___ share your password.", "options": ["shouldn't", "should"] }, "key": { "correct_value": "shouldn't" } },
-    { "stage": "grammar", "qtype": "multiple_choice", "position": 4, "source_ref": "L83 opinions", "prompt": { "question": "___ my opinion, it's great.", "options": ["In", "On"] }, "key": { "correct_value": "In" } },
-    { "stage": "grammar", "qtype": "multiple_choice", "position": 5, "source_ref": "L84 agreement", "prompt": { "question": "I completely ___.", "options": ["agree", "disagree"] }, "key": { "correct_value": "agree" } },
-    { "stage": "grammar", "qtype": "multiple_choice", "position": 6, "source_ref": "L86 conditional", "prompt": { "question": "If you study, you ___ pass.", "options": ["will", "does"] }, "key": { "correct_value": "will" } },
-    { "stage": "grammar", "qtype": "multiple_choice", "position": 7, "source_ref": "L86 conditional correction", "prompt": { "question": "Which sentence is correct?", "options": ["If it will rain, I stay.", "If it rains, I will stay.", "If it rains, I stay."] }, "key": { "correct_value": "If it rains, I will stay." } },
-    { "stage": "grammar", "qtype": "multiple_choice", "position": 8, "source_ref": "L89 city-country", "prompt": { "question": "An ___ of the village is fresh air.", "options": ["advantage", "disadvantage"] }, "key": { "correct_value": "advantage" } },
-    { "stage": "grammar", "qtype": "multiple_choice", "position": 9, "source_ref": "L90 cultures", "prompt": { "question": "It is a ___ to drink tea.", "options": ["tradition", "traditional"] }, "key": { "correct_value": "tradition" } },
-    { "stage": "grammar", "qtype": "multiple_choice", "position": 10, "source_ref": "L87 debate", "prompt": { "question": "Give me a ___.", "options": ["reason", "reasons"] }, "key": { "correct_value": "reason" } },
-    { "stage": "sentences", "qtype": "ordering", "position": 1, "source_ref": "L81 present perfect", "prompt": { "instruction": "Put the words in order.", "tokens": ["I", "have", "downloaded", "that", "app."] }, "key": { "correct_order": ["I", "have", "downloaded", "that", "app."] } },
-    { "stage": "sentences", "qtype": "ordering", "position": 2, "source_ref": "L83 opinions", "prompt": { "instruction": "Put the words in order.", "tokens": ["I", "think", "English", "is", "important."] }, "key": { "correct_order": ["I", "think", "English", "is", "important."] } },
-    { "stage": "sentences", "qtype": "fill_blank", "position": 3, "source_ref": "L84 agreement", "prompt": { "instruction": "Fill in the blank.", "template": "I'm afraid I ___." }, "key": { "answer": "disagree" } },
-    { "stage": "sentences", "qtype": "fill_blank", "position": 4, "source_ref": "L85 environment", "prompt": { "instruction": "Fill in the blank.", "template": "We should ___ plastic." }, "key": { "answer": "recycle" } },
-    { "stage": "sentences", "qtype": "ordering", "position": 5, "source_ref": "L89 city-country", "prompt": { "instruction": "Put the words in order.", "tokens": ["The", "countryside", "is", "peaceful."] }, "key": { "correct_order": ["The", "countryside", "is", "peaceful."] } },
-    { "stage": "sentences", "qtype": "fill_blank", "position": 6, "source_ref": "L90 cultures", "prompt": { "instruction": "Fill in the blank.", "template": "___ Japan, people bow." }, "key": { "answer": "In" } },
-    { "stage": "sentences", "qtype": "fill_blank", "position": 7, "source_ref": "L82 social media", "prompt": { "instruction": "Fill in the blank.", "template": "Keep your profile ___." }, "key": { "answer": "private" } },
-    { "stage": "sentences", "qtype": "ordering", "position": 8, "source_ref": "L87 debate", "prompt": { "instruction": "Put the words in order.", "tokens": ["I", "am", "against", "this", "idea."] }, "key": { "correct_order": ["I", "am", "against", "this", "idea."] } },
-    { "stage": "writing", "qtype": "translation", "position": 1, "source_ref": "L81 technology", "prompt": { "instruction": "Translate into English.", "source_text": "Qurilma", "direction": "uz2en" }, "key": { "target_text": "device" } },
-    { "stage": "writing", "qtype": "translation", "position": 2, "source_ref": "L83 opinions", "prompt": { "instruction": "Translate into English.", "source_text": "Sport qiziqarli.", "direction": "uz2en" }, "key": { "target_text": "Sport is fun." } },
-    { "stage": "writing", "qtype": "translation", "position": 3, "source_ref": "L84 agreement", "prompt": { "instruction": "Translate into English.", "source_text": "Siz bilan to'liq roziman.", "direction": "uz2en" }, "key": { "target_text": "I completely agree with you." } },
-    { "stage": "writing", "qtype": "ordering", "position": 4, "source_ref": "L85 environment", "prompt": { "instruction": "Put the words in order.", "tokens": ["We", "should", "recycle", "more."] }, "key": { "correct_order": ["We", "should", "recycle", "more."] } },
-    { "stage": "writing", "qtype": "translation", "position": 5, "source_ref": "L86 conditional", "prompt": { "instruction": "Translate into English.", "source_text": "Bashorat qilmoq", "direction": "uz2en" }, "key": { "target_text": "predict" } },
-    { "stage": "writing", "qtype": "translation", "position": 6, "source_ref": "L82 social media", "prompt": { "instruction": "Translate into English.", "source_text": "Parol", "direction": "uz2en" }, "key": { "target_text": "password" } }
+    {
+      "stage": "vocabulary",
+      "qtype": "multiple_choice",
+      "position": 1,
+      "source_ref": "L81 technology",
+      "prompt": {
+        "question": "What does “Qurilma” mean in English?",
+        "options": [
+          "device",
+          "screen",
+          "battery",
+          "search"
+        ]
+      },
+      "key": {
+        "correct_value": "device"
+      }
+    },
+    {
+      "stage": "vocabulary",
+      "qtype": "multiple_choice",
+      "position": 2,
+      "source_ref": "L82 social media",
+      "prompt": {
+        "question": "What does “Izoh” mean in English?",
+        "options": [
+          "comment",
+          "profile",
+          "share",
+          "private"
+        ]
+      },
+      "key": {
+        "correct_value": "comment"
+      }
+    },
+    {
+      "stage": "vocabulary",
+      "qtype": "multiple_choice",
+      "position": 3,
+      "source_ref": "L83 opinions",
+      "prompt": {
+        "question": "What does “Chunki” mean in English?",
+        "options": [
+          "because",
+          "opinion",
+          "probably",
+          "certainly"
+        ]
+      },
+      "key": {
+        "correct_value": "because"
+      }
+    },
+    {
+      "stage": "vocabulary",
+      "qtype": "matching",
+      "position": 4,
+      "source_ref": "L85 environment",
+      "prompt": {
+        "instruction": "Match each environment word with its Uzbek word.",
+        "left": [
+          "pollution",
+          "recycle",
+          "rubbish",
+          "nature"
+        ],
+        "right": [
+          "Ifloslanish",
+          "Qayta ishlash",
+          "Axlat",
+          "Tabiat"
+        ]
+      },
+      "key": {
+        "pairs": [
+          [
+            "pollution",
+            "Ifloslanish"
+          ],
+          [
+            "recycle",
+            "Qayta ishlash"
+          ],
+          [
+            "rubbish",
+            "Axlat"
+          ],
+          [
+            "nature",
+            "Tabiat"
+          ]
+        ]
+      }
+    },
+    {
+      "stage": "vocabulary",
+      "qtype": "multiple_choice",
+      "position": 5,
+      "source_ref": "L84 agreement",
+      "prompt": {
+        "question": "What does “Biroq” mean in English?",
+        "options": [
+          "however",
+          "exactly",
+          "perhaps",
+          "in fact"
+        ]
+      },
+      "key": {
+        "correct_value": "however"
+      }
+    },
+    {
+      "stage": "vocabulary",
+      "qtype": "multiple_choice",
+      "position": 6,
+      "source_ref": "L86 conditional",
+      "prompt": {
+        "question": "What does “Agar” mean in English?",
+        "options": [
+          "if",
+          "will",
+          "probably",
+          "instead"
+        ]
+      },
+      "key": {
+        "correct_value": "if"
+      }
+    },
+    {
+      "stage": "vocabulary",
+      "qtype": "matching",
+      "position": 7,
+      "source_ref": "L87 debate",
+      "prompt": {
+        "instruction": "Match each debate word with its Uzbek word.",
+        "left": [
+          "debate",
+          "reason",
+          "support",
+          "conclusion"
+        ],
+        "right": [
+          "Munozara",
+          "Sabab",
+          "Qo'llab-quvvatlamoq",
+          "Xulosa"
+        ]
+      },
+      "key": {
+        "pairs": [
+          [
+            "debate",
+            "Munozara"
+          ],
+          [
+            "reason",
+            "Sabab"
+          ],
+          [
+            "support",
+            "Qo'llab-quvvatlamoq"
+          ],
+          [
+            "conclusion",
+            "Xulosa"
+          ]
+        ]
+      }
+    },
+    {
+      "stage": "vocabulary",
+      "qtype": "multiple_choice",
+      "position": 8,
+      "source_ref": "L89 city-country",
+      "prompt": {
+        "question": "What does “Tinch” mean in English?",
+        "options": [
+          "peaceful",
+          "crowded",
+          "noisy",
+          "convenient"
+        ]
+      },
+      "key": {
+        "correct_value": "peaceful"
+      }
+    },
+    {
+      "stage": "vocabulary",
+      "qtype": "multiple_choice",
+      "position": 9,
+      "source_ref": "L90 cultures",
+      "prompt": {
+        "question": "What does “Festival” mean in English?",
+        "options": [
+          "festival",
+          "culture",
+          "custom",
+          "exchange"
+        ]
+      },
+      "key": {
+        "correct_value": "festival"
+      }
+    },
+    {
+      "stage": "vocabulary",
+      "qtype": "multiple_choice",
+      "position": 10,
+      "source_ref": "L88 opinions",
+      "prompt": {
+        "question": "What does “Hurmat” mean in English?",
+        "options": [
+          "respect",
+          "opinion",
+          "reason",
+          "conclusion"
+        ]
+      },
+      "key": {
+        "correct_value": "respect"
+      }
+    },
+    {
+      "stage": "grammar",
+      "qtype": "multiple_choice",
+      "position": 1,
+      "source_ref": "L81 present perfect",
+      "prompt": {
+        "question": "I ___ used this app.",
+        "options": [
+          "have",
+          "has"
+        ]
+      },
+      "key": {
+        "correct_value": "have"
+      }
+    },
+    {
+      "stage": "grammar",
+      "qtype": "multiple_choice",
+      "position": 2,
+      "source_ref": "L81 present perfect correction",
+      "prompt": {
+        "question": "Which sentence is correct?",
+        "options": [
+          "I have download it.",
+          "I have downloaded it.",
+          "I has downloaded it."
+        ]
+      },
+      "key": {
+        "correct_value": "I have downloaded it."
+      }
+    },
+    {
+      "stage": "grammar",
+      "qtype": "multiple_choice",
+      "position": 3,
+      "source_ref": "L82 social media",
+      "prompt": {
+        "question": "You ___ share your password.",
+        "options": [
+          "shouldn't",
+          "should"
+        ]
+      },
+      "key": {
+        "correct_value": "shouldn't"
+      }
+    },
+    {
+      "stage": "grammar",
+      "qtype": "multiple_choice",
+      "position": 4,
+      "source_ref": "L83 opinions",
+      "prompt": {
+        "question": "___ my opinion, it's great.",
+        "options": [
+          "In",
+          "On"
+        ]
+      },
+      "key": {
+        "correct_value": "In"
+      }
+    },
+    {
+      "stage": "grammar",
+      "qtype": "multiple_choice",
+      "position": 5,
+      "source_ref": "L84 agreement",
+      "prompt": {
+        "question": "I completely ___.",
+        "options": [
+          "agree",
+          "disagree"
+        ]
+      },
+      "key": {
+        "correct_value": "agree"
+      }
+    },
+    {
+      "stage": "grammar",
+      "qtype": "multiple_choice",
+      "position": 6,
+      "source_ref": "L86 conditional",
+      "prompt": {
+        "question": "If you study, you ___ pass.",
+        "options": [
+          "will",
+          "does"
+        ]
+      },
+      "key": {
+        "correct_value": "will"
+      }
+    },
+    {
+      "stage": "grammar",
+      "qtype": "multiple_choice",
+      "position": 7,
+      "source_ref": "L86 conditional correction",
+      "prompt": {
+        "question": "Which sentence is correct?",
+        "options": [
+          "If it will rain, I stay.",
+          "If it rains, I will stay.",
+          "If it rains, I stay."
+        ]
+      },
+      "key": {
+        "correct_value": "If it rains, I will stay."
+      }
+    },
+    {
+      "stage": "grammar",
+      "qtype": "multiple_choice",
+      "position": 8,
+      "source_ref": "L89 city-country",
+      "prompt": {
+        "question": "An ___ of the village is fresh air.",
+        "options": [
+          "advantage",
+          "disadvantage"
+        ]
+      },
+      "key": {
+        "correct_value": "advantage"
+      }
+    },
+    {
+      "stage": "grammar",
+      "qtype": "multiple_choice",
+      "position": 9,
+      "source_ref": "L90 cultures",
+      "prompt": {
+        "question": "It is a ___ to drink tea.",
+        "options": [
+          "tradition",
+          "traditional"
+        ]
+      },
+      "key": {
+        "correct_value": "tradition"
+      }
+    },
+    {
+      "stage": "grammar",
+      "qtype": "multiple_choice",
+      "position": 10,
+      "source_ref": "L87 debate",
+      "prompt": {
+        "question": "Give me a ___.",
+        "options": [
+          "reason",
+          "reasons"
+        ]
+      },
+      "key": {
+        "correct_value": "reason"
+      }
+    },
+    {
+      "stage": "sentences",
+      "qtype": "ordering",
+      "position": 1,
+      "source_ref": "L88 opinions",
+      "prompt": {
+        "instruction": "Put the words in order.",
+        "tokens": [
+          "Respect",
+          "different",
+          "views."
+        ]
+      },
+      "key": {
+        "correct_order": [
+          "Respect",
+          "different",
+          "views."
+        ]
+      }
+    },
+    {
+      "stage": "sentences",
+      "qtype": "ordering",
+      "position": 2,
+      "source_ref": "L83 opinions",
+      "prompt": {
+        "instruction": "Put the words in order.",
+        "tokens": [
+          "I",
+          "think",
+          "English",
+          "is",
+          "important."
+        ]
+      },
+      "key": {
+        "correct_order": [
+          "I",
+          "think",
+          "English",
+          "is",
+          "important."
+        ]
+      }
+    },
+    {
+      "stage": "sentences",
+      "qtype": "fill_blank",
+      "position": 3,
+      "source_ref": "L84 agreement",
+      "prompt": {
+        "instruction": "Fill in the blank.",
+        "template": "I'm afraid I ___."
+      },
+      "key": {
+        "answer": "disagree"
+      }
+    },
+    {
+      "stage": "sentences",
+      "qtype": "fill_blank",
+      "position": 4,
+      "source_ref": "L85 environment",
+      "prompt": {
+        "instruction": "Fill in the blank.",
+        "template": "We should ___ plastic."
+      },
+      "key": {
+        "answer": "recycle"
+      }
+    },
+    {
+      "stage": "sentences",
+      "qtype": "ordering",
+      "position": 5,
+      "source_ref": "L89 city-country",
+      "prompt": {
+        "instruction": "Put the words in order.",
+        "tokens": [
+          "The",
+          "countryside",
+          "is",
+          "peaceful."
+        ]
+      },
+      "key": {
+        "correct_order": [
+          "The",
+          "countryside",
+          "is",
+          "peaceful."
+        ]
+      }
+    },
+    {
+      "stage": "sentences",
+      "qtype": "fill_blank",
+      "position": 6,
+      "source_ref": "L90 cultures",
+      "prompt": {
+        "instruction": "Fill in the blank.",
+        "template": "___ Japan, people bow."
+      },
+      "key": {
+        "answer": "In"
+      }
+    },
+    {
+      "stage": "sentences",
+      "qtype": "fill_blank",
+      "position": 7,
+      "source_ref": "L82 social media",
+      "prompt": {
+        "instruction": "Fill in the blank.",
+        "template": "Keep your profile ___."
+      },
+      "key": {
+        "answer": "private"
+      }
+    },
+    {
+      "stage": "sentences",
+      "qtype": "ordering",
+      "position": 8,
+      "source_ref": "L87 debate",
+      "prompt": {
+        "instruction": "Put the words in order.",
+        "tokens": [
+          "I",
+          "am",
+          "against",
+          "this",
+          "idea."
+        ]
+      },
+      "key": {
+        "correct_order": [
+          "I",
+          "am",
+          "against",
+          "this",
+          "idea."
+        ]
+      }
+    },
+    {
+      "stage": "writing",
+      "qtype": "translation",
+      "position": 1,
+      "source_ref": "L88 opinions",
+      "prompt": {
+        "instruction": "Translate into English.",
+        "source_text": "Xulosa",
+        "direction": "uz2en"
+      },
+      "key": {
+        "target_text": "conclusion"
+      }
+    },
+    {
+      "stage": "writing",
+      "qtype": "translation",
+      "position": 2,
+      "source_ref": "L83 opinions",
+      "prompt": {
+        "instruction": "Translate into English.",
+        "source_text": "Sport qiziqarli.",
+        "direction": "uz2en"
+      },
+      "key": {
+        "target_text": "Sport is fun."
+      }
+    },
+    {
+      "stage": "writing",
+      "qtype": "translation",
+      "position": 3,
+      "source_ref": "L84 agreement",
+      "prompt": {
+        "instruction": "Translate into English.",
+        "source_text": "Siz bilan to'liq roziman.",
+        "direction": "uz2en"
+      },
+      "key": {
+        "target_text": "I completely agree with you."
+      }
+    },
+    {
+      "stage": "writing",
+      "qtype": "ordering",
+      "position": 4,
+      "source_ref": "L85 environment",
+      "prompt": {
+        "instruction": "Put the words in order.",
+        "tokens": [
+          "We",
+          "should",
+          "recycle",
+          "more."
+        ]
+      },
+      "key": {
+        "correct_order": [
+          "We",
+          "should",
+          "recycle",
+          "more."
+        ]
+      }
+    },
+    {
+      "stage": "writing",
+      "qtype": "translation",
+      "position": 5,
+      "source_ref": "L86 conditional",
+      "prompt": {
+        "instruction": "Translate into English.",
+        "source_text": "Bashorat qilmoq",
+        "direction": "uz2en"
+      },
+      "key": {
+        "target_text": "predict"
+      }
+    },
+    {
+      "stage": "writing",
+      "qtype": "translation",
+      "position": 6,
+      "source_ref": "L82 social media",
+      "prompt": {
+        "instruction": "Translate into English.",
+        "source_text": "Parol",
+        "direction": "uz2en"
+      },
+      "key": {
+        "target_text": "password"
+      }
+    }
   ]
 }

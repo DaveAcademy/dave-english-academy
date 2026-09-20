@@ -4,39 +4,647 @@
   "lesson_from": 21,
   "lesson_to": 30,
   "items": [
-    { "stage": "vocabulary", "qtype": "multiple_choice", "position": 1, "source_ref": "L21 routine", "prompt": { "question": "What does “Uyg'onmoq” mean in English?", "options": ["Wake up", "Get up", "Go to bed", "Have breakfast"] }, "key": { "correct_value": "Wake up" } },
-    { "stage": "vocabulary", "qtype": "multiple_choice", "position": 2, "source_ref": "L22 time", "prompt": { "question": "What does “Yarim” mean in English?", "options": ["Half past", "Quarter past", "Quarter to", "O'clock"] }, "key": { "correct_value": "Half past" } },
-    { "stage": "vocabulary", "qtype": "multiple_choice", "position": 3, "source_ref": "L23 food", "prompt": { "question": "What does “Non” mean in English?", "options": ["Bread", "Rice", "Milk", "Cheese"] }, "key": { "correct_value": "Bread" } },
-    { "stage": "vocabulary", "qtype": "matching", "position": 4, "source_ref": "L26 weather", "prompt": { "instruction": "Match each weather word with its Uzbek word.", "left": ["Sunny", "Rainy", "Snowy", "Windy"], "right": ["Quyoshli", "Yomg'irli", "Qorli", "Shamolli"] }, "key": { "pairs": [["Sunny", "Quyoshli"], ["Rainy", "Yomg'irli"], ["Snowy", "Qorli"], ["Windy", "Shamolli"]] } },
-    { "stage": "vocabulary", "qtype": "multiple_choice", "position": 5, "source_ref": "L24 restaurant", "prompt": { "question": "What does “Och” mean in English?", "options": ["Hungry", "Thirsty", "Delicious", "Please"] }, "key": { "correct_value": "Hungry" } },
-    { "stage": "vocabulary", "qtype": "multiple_choice", "position": 6, "source_ref": "L25 clothes", "prompt": { "question": "What does “Arzon” mean in English?", "options": ["Cheap", "Expensive", "Price", "Dress"] }, "key": { "correct_value": "Cheap" } },
-    { "stage": "vocabulary", "qtype": "matching", "position": 7, "source_ref": "L29 rooms", "prompt": { "instruction": "Match each room with its Uzbek word.", "left": ["Kitchen", "Bedroom", "Garden", "Bathroom"], "right": ["Oshxona", "Yotoqxona", "Bog'", "Hammomxona"] }, "key": { "pairs": [["Kitchen", "Oshxona"], ["Bedroom", "Yotoqxona"], ["Garden", "Bog'"], ["Bathroom", "Hammomxona"]] } },
-    { "stage": "vocabulary", "qtype": "multiple_choice", "position": 8, "source_ref": "L28 frequency", "prompt": { "question": "What does “Odatda” mean in English?", "options": ["Usually", "Sometimes", "Always", "Never"] }, "key": { "correct_value": "Usually" } },
-    { "stage": "vocabulary", "qtype": "multiple_choice", "position": 9, "source_ref": "L27 actions", "prompt": { "question": "What does “Qarsak chalmoq” mean in English?", "options": ["Clap", "Skip", "Stretch", "Spin around"] }, "key": { "correct_value": "Clap" } },
-    { "stage": "vocabulary", "qtype": "multiple_choice", "position": 10, "source_ref": "L30 furniture", "prompt": { "question": "What does “mirror” mean in Uzbek?", "options": ["Oyna", "Stol", "Shkaf", "Gilam"] }, "key": { "correct_value": "Oyna" } },
-    { "stage": "grammar", "qtype": "multiple_choice", "position": 1, "source_ref": "L21 routine", "prompt": { "question": "I ___ up at 7.", "options": ["wake", "wakes"] }, "key": { "correct_value": "wake" } },
-    { "stage": "grammar", "qtype": "multiple_choice", "position": 2, "source_ref": "L22 time correction", "prompt": { "question": "Which sentence is correct?", "options": ["Half past three.", "It's half past three.", "Is half past three."] }, "key": { "correct_value": "It's half past three." } },
-    { "stage": "grammar", "qtype": "multiple_choice", "position": 3, "source_ref": "L23 likes", "prompt": { "question": "I ___ like milk.", "options": ["don't", "isn't"] }, "key": { "correct_value": "don't" } },
-    { "stage": "grammar", "qtype": "multiple_choice", "position": 4, "source_ref": "L23 likes correction", "prompt": { "question": "Which sentence is correct?", "options": ["I no like milk.", "I don't like milk.", "I doesn't like milk."] }, "key": { "correct_value": "I don't like milk." } },
-    { "stage": "grammar", "qtype": "multiple_choice", "position": 5, "source_ref": "L24 restaurant", "prompt": { "question": "Can I ___ some water?", "options": ["have", "has"] }, "key": { "correct_value": "have" } },
-    { "stage": "grammar", "qtype": "multiple_choice", "position": 6, "source_ref": "L25 demonstratives", "prompt": { "question": "___ shoes are new.", "options": ["This", "These"] }, "key": { "correct_value": "These" } },
-    { "stage": "grammar", "qtype": "multiple_choice", "position": 7, "source_ref": "L29 there-is", "prompt": { "question": "There ___ a kitchen.", "options": ["is", "are"] }, "key": { "correct_value": "is" } },
-    { "stage": "grammar", "qtype": "multiple_choice", "position": 8, "source_ref": "L29 there-are", "prompt": { "question": "There ___ two bedrooms.", "options": ["is", "are"] }, "key": { "correct_value": "are" } },
-    { "stage": "grammar", "qtype": "multiple_choice", "position": 9, "source_ref": "L26 weather", "prompt": { "question": "___ sunny today.", "options": ["It's", "Is"] }, "key": { "correct_value": "It's" } },
-    { "stage": "grammar", "qtype": "multiple_choice", "position": 10, "source_ref": "L21 routine correction", "prompt": { "question": "Which sentence is correct?", "options": ["I wake up 7.", "I wake up at 7.", "I wakes up at 7."] }, "key": { "correct_value": "I wake up at 7." } },
-    { "stage": "sentences", "qtype": "ordering", "position": 1, "source_ref": "L21 routine", "prompt": { "instruction": "Put the words in order.", "tokens": ["I", "wake", "up", "at", "7."] }, "key": { "correct_order": ["I", "wake", "up", "at", "7."] } },
-    { "stage": "sentences", "qtype": "ordering", "position": 2, "source_ref": "L22 time", "prompt": { "instruction": "Put the words in order.", "tokens": ["What", "time", "is", "it?"] }, "key": { "correct_order": ["What", "time", "is", "it?"] } },
-    { "stage": "sentences", "qtype": "fill_blank", "position": 3, "source_ref": "L24 restaurant", "prompt": { "instruction": "Fill in the blank.", "template": "Can I have rice, ___?" }, "key": { "answer": "please" } },
-    { "stage": "sentences", "qtype": "fill_blank", "position": 4, "source_ref": "L25 opposites", "prompt": { "instruction": "Fill in the blank.", "template": "The opposite of “expensive” is ___." }, "key": { "answer": "cheap" } },
-    { "stage": "sentences", "qtype": "ordering", "position": 5, "source_ref": "L26 weather", "prompt": { "instruction": "Put the words in order.", "tokens": ["It", "is", "sunny", "today."] }, "key": { "correct_order": ["It", "is", "sunny", "today."] } },
-    { "stage": "sentences", "qtype": "fill_blank", "position": 6, "source_ref": "L29 there-are", "prompt": { "instruction": "Fill in the blank.", "template": "There ___ two windows." }, "key": { "answer": "are" } },
-    { "stage": "sentences", "qtype": "ordering", "position": 7, "source_ref": "L27 actions", "prompt": { "instruction": "Put the words in order.", "tokens": ["Touch", "your", "toes."] }, "key": { "correct_order": ["Touch", "your", "toes."] } },
-    { "stage": "sentences", "qtype": "ordering", "position": 8, "source_ref": "L30 furniture", "prompt": { "instruction": "Put the words in order.", "tokens": ["Sit", "on", "the", "sofa."] }, "key": { "correct_order": ["Sit", "on", "the", "sofa."] } },
-    { "stage": "writing", "qtype": "translation", "position": 1, "source_ref": "L21 routine", "prompt": { "instruction": "Translate into English.", "source_text": "Uyg'onmoq", "direction": "uz2en" }, "key": { "target_text": "Wake up" } },
-    { "stage": "writing", "qtype": "translation", "position": 2, "source_ref": "L22 time", "prompt": { "instruction": "Translate into English.", "source_text": "Ertalab", "direction": "uz2en" }, "key": { "target_text": "Morning" } },
-    { "stage": "writing", "qtype": "translation", "position": 3, "source_ref": "L23 food", "prompt": { "instruction": "Translate into English.", "source_text": "Suv", "direction": "uz2en" }, "key": { "target_text": "Water" } },
-    { "stage": "writing", "qtype": "ordering", "position": 4, "source_ref": "L24 restaurant correction", "prompt": { "instruction": "Put the words in order.", "tokens": ["Can", "I", "have", "water,", "please."] }, "key": { "correct_order": ["Can", "I", "have", "water,", "please."] } },
-    { "stage": "writing", "qtype": "translation", "position": 5, "source_ref": "L30 furniture", "prompt": { "instruction": "Translate into English.", "source_text": "Gilam", "direction": "uz2en" }, "key": { "target_text": "carpet" } },
-    { "stage": "writing", "qtype": "translation", "position": 6, "source_ref": "L26 seasons", "prompt": { "instruction": "Translate into English.", "source_text": "Yoz", "direction": "uz2en" }, "key": { "target_text": "Summer" } }
+    {
+      "stage": "vocabulary",
+      "qtype": "multiple_choice",
+      "position": 1,
+      "source_ref": "L28 frequency",
+      "prompt": {
+        "question": "What does “Band” mean in English?",
+        "options": [
+          "Busy",
+          "Free",
+          "Early",
+          "Late"
+        ]
+      },
+      "key": {
+        "correct_value": "Busy"
+      }
+    },
+    {
+      "stage": "vocabulary",
+      "qtype": "multiple_choice",
+      "position": 2,
+      "source_ref": "L22 time",
+      "prompt": {
+        "question": "What does “Yarim” mean in English?",
+        "options": [
+          "Half past",
+          "Quarter past",
+          "Quarter to",
+          "O'clock"
+        ]
+      },
+      "key": {
+        "correct_value": "Half past"
+      }
+    },
+    {
+      "stage": "vocabulary",
+      "qtype": "multiple_choice",
+      "position": 3,
+      "source_ref": "L23 food",
+      "prompt": {
+        "question": "What does “Non” mean in English?",
+        "options": [
+          "Bread",
+          "Rice",
+          "Milk",
+          "Cheese"
+        ]
+      },
+      "key": {
+        "correct_value": "Bread"
+      }
+    },
+    {
+      "stage": "vocabulary",
+      "qtype": "matching",
+      "position": 4,
+      "source_ref": "L26 weather",
+      "prompt": {
+        "instruction": "Match each weather word with its Uzbek word.",
+        "left": [
+          "Sunny",
+          "Rainy",
+          "Snowy",
+          "Windy"
+        ],
+        "right": [
+          "Quyoshli",
+          "Yomg'irli",
+          "Qorli",
+          "Shamolli"
+        ]
+      },
+      "key": {
+        "pairs": [
+          [
+            "Sunny",
+            "Quyoshli"
+          ],
+          [
+            "Rainy",
+            "Yomg'irli"
+          ],
+          [
+            "Snowy",
+            "Qorli"
+          ],
+          [
+            "Windy",
+            "Shamolli"
+          ]
+        ]
+      }
+    },
+    {
+      "stage": "vocabulary",
+      "qtype": "multiple_choice",
+      "position": 5,
+      "source_ref": "L24 restaurant",
+      "prompt": {
+        "question": "What does “Och” mean in English?",
+        "options": [
+          "Hungry",
+          "Thirsty",
+          "Delicious",
+          "Please"
+        ]
+      },
+      "key": {
+        "correct_value": "Hungry"
+      }
+    },
+    {
+      "stage": "vocabulary",
+      "qtype": "multiple_choice",
+      "position": 6,
+      "source_ref": "L25 clothes",
+      "prompt": {
+        "question": "What does “Arzon” mean in English?",
+        "options": [
+          "Cheap",
+          "Expensive",
+          "Price",
+          "Dress"
+        ]
+      },
+      "key": {
+        "correct_value": "Cheap"
+      }
+    },
+    {
+      "stage": "vocabulary",
+      "qtype": "matching",
+      "position": 7,
+      "source_ref": "L29 rooms",
+      "prompt": {
+        "instruction": "Match each room with its Uzbek word.",
+        "left": [
+          "Kitchen",
+          "Bedroom",
+          "Garden",
+          "Bathroom"
+        ],
+        "right": [
+          "Oshxona",
+          "Yotoqxona",
+          "Bog'",
+          "Hammomxona"
+        ]
+      },
+      "key": {
+        "pairs": [
+          [
+            "Kitchen",
+            "Oshxona"
+          ],
+          [
+            "Bedroom",
+            "Yotoqxona"
+          ],
+          [
+            "Garden",
+            "Bog'"
+          ],
+          [
+            "Bathroom",
+            "Hammomxona"
+          ]
+        ]
+      }
+    },
+    {
+      "stage": "vocabulary",
+      "qtype": "multiple_choice",
+      "position": 8,
+      "source_ref": "L28 frequency",
+      "prompt": {
+        "question": "What does “Odatda” mean in English?",
+        "options": [
+          "Usually",
+          "Sometimes",
+          "Always",
+          "Never"
+        ]
+      },
+      "key": {
+        "correct_value": "Usually"
+      }
+    },
+    {
+      "stage": "vocabulary",
+      "qtype": "multiple_choice",
+      "position": 9,
+      "source_ref": "L27 actions",
+      "prompt": {
+        "question": "What does “Qarsak chalmoq” mean in English?",
+        "options": [
+          "Clap",
+          "Skip",
+          "Stretch",
+          "Spin around"
+        ]
+      },
+      "key": {
+        "correct_value": "Clap"
+      }
+    },
+    {
+      "stage": "vocabulary",
+      "qtype": "multiple_choice",
+      "position": 10,
+      "source_ref": "L30 furniture",
+      "prompt": {
+        "question": "What does “mirror” mean in Uzbek?",
+        "options": [
+          "Oyna",
+          "Stol",
+          "Shkaf",
+          "Gilam"
+        ]
+      },
+      "key": {
+        "correct_value": "Oyna"
+      }
+    },
+    {
+      "stage": "grammar",
+      "qtype": "multiple_choice",
+      "position": 1,
+      "source_ref": "L21 routine",
+      "prompt": {
+        "question": "I ___ up at 7.",
+        "options": [
+          "wake",
+          "wakes"
+        ]
+      },
+      "key": {
+        "correct_value": "wake"
+      }
+    },
+    {
+      "stage": "grammar",
+      "qtype": "multiple_choice",
+      "position": 2,
+      "source_ref": "L22 time correction",
+      "prompt": {
+        "question": "Which sentence is correct?",
+        "options": [
+          "Half past three.",
+          "It's half past three.",
+          "Is half past three."
+        ]
+      },
+      "key": {
+        "correct_value": "It's half past three."
+      }
+    },
+    {
+      "stage": "grammar",
+      "qtype": "multiple_choice",
+      "position": 3,
+      "source_ref": "L23 likes",
+      "prompt": {
+        "question": "I ___ like milk.",
+        "options": [
+          "don't",
+          "isn't"
+        ]
+      },
+      "key": {
+        "correct_value": "don't"
+      }
+    },
+    {
+      "stage": "grammar",
+      "qtype": "multiple_choice",
+      "position": 4,
+      "source_ref": "L23 likes correction",
+      "prompt": {
+        "question": "Which sentence is correct?",
+        "options": [
+          "I no like milk.",
+          "I don't like milk.",
+          "I doesn't like milk."
+        ]
+      },
+      "key": {
+        "correct_value": "I don't like milk."
+      }
+    },
+    {
+      "stage": "grammar",
+      "qtype": "multiple_choice",
+      "position": 5,
+      "source_ref": "L27 actions",
+      "prompt": {
+        "question": "They ___ stretch.",
+        "options": [
+          "can",
+          "cans"
+        ]
+      },
+      "key": {
+        "correct_value": "can"
+      }
+    },
+    {
+      "stage": "grammar",
+      "qtype": "multiple_choice",
+      "position": 6,
+      "source_ref": "L25 demonstratives",
+      "prompt": {
+        "question": "___ shoes are new.",
+        "options": [
+          "This",
+          "These"
+        ]
+      },
+      "key": {
+        "correct_value": "These"
+      }
+    },
+    {
+      "stage": "grammar",
+      "qtype": "multiple_choice",
+      "position": 7,
+      "source_ref": "L29 there-is",
+      "prompt": {
+        "question": "There ___ a kitchen.",
+        "options": [
+          "is",
+          "are"
+        ]
+      },
+      "key": {
+        "correct_value": "is"
+      }
+    },
+    {
+      "stage": "grammar",
+      "qtype": "multiple_choice",
+      "position": 8,
+      "source_ref": "L29 there-are",
+      "prompt": {
+        "question": "There ___ two bedrooms.",
+        "options": [
+          "is",
+          "are"
+        ]
+      },
+      "key": {
+        "correct_value": "are"
+      }
+    },
+    {
+      "stage": "grammar",
+      "qtype": "multiple_choice",
+      "position": 9,
+      "source_ref": "L26 weather",
+      "prompt": {
+        "question": "___ sunny today.",
+        "options": [
+          "It's",
+          "Is"
+        ]
+      },
+      "key": {
+        "correct_value": "It's"
+      }
+    },
+    {
+      "stage": "grammar",
+      "qtype": "multiple_choice",
+      "position": 10,
+      "source_ref": "L21 routine correction",
+      "prompt": {
+        "question": "Which sentence is correct?",
+        "options": [
+          "I wake up 7.",
+          "I wake up at 7.",
+          "I wakes up at 7."
+        ]
+      },
+      "key": {
+        "correct_value": "I wake up at 7."
+      }
+    },
+    {
+      "stage": "sentences",
+      "qtype": "ordering",
+      "position": 1,
+      "source_ref": "L21 routine",
+      "prompt": {
+        "instruction": "Put the words in order.",
+        "tokens": [
+          "I",
+          "wake",
+          "up",
+          "at",
+          "7."
+        ]
+      },
+      "key": {
+        "correct_order": [
+          "I",
+          "wake",
+          "up",
+          "at",
+          "7."
+        ]
+      }
+    },
+    {
+      "stage": "sentences",
+      "qtype": "ordering",
+      "position": 2,
+      "source_ref": "L22 time",
+      "prompt": {
+        "instruction": "Put the words in order.",
+        "tokens": [
+          "What",
+          "time",
+          "is",
+          "it?"
+        ]
+      },
+      "key": {
+        "correct_order": [
+          "What",
+          "time",
+          "is",
+          "it?"
+        ]
+      }
+    },
+    {
+      "stage": "sentences",
+      "qtype": "fill_blank",
+      "position": 3,
+      "source_ref": "L24 restaurant",
+      "prompt": {
+        "instruction": "Fill in the blank.",
+        "template": "Can I have rice, ___?"
+      },
+      "key": {
+        "answer": "please"
+      }
+    },
+    {
+      "stage": "sentences",
+      "qtype": "fill_blank",
+      "position": 4,
+      "source_ref": "L25 opposites",
+      "prompt": {
+        "instruction": "Fill in the blank.",
+        "template": "The opposite of “expensive” is ___."
+      },
+      "key": {
+        "answer": "cheap"
+      }
+    },
+    {
+      "stage": "sentences",
+      "qtype": "ordering",
+      "position": 5,
+      "source_ref": "L28 frequency",
+      "prompt": {
+        "instruction": "Put the words in order.",
+        "tokens": [
+          "I",
+          "usually",
+          "wake",
+          "up",
+          "at",
+          "7."
+        ]
+      },
+      "key": {
+        "correct_order": [
+          "I",
+          "usually",
+          "wake",
+          "up",
+          "at",
+          "7."
+        ]
+      }
+    },
+    {
+      "stage": "sentences",
+      "qtype": "fill_blank",
+      "position": 6,
+      "source_ref": "L29 there-are",
+      "prompt": {
+        "instruction": "Fill in the blank.",
+        "template": "There ___ two windows."
+      },
+      "key": {
+        "answer": "are"
+      }
+    },
+    {
+      "stage": "sentences",
+      "qtype": "ordering",
+      "position": 7,
+      "source_ref": "L27 actions",
+      "prompt": {
+        "instruction": "Put the words in order.",
+        "tokens": [
+          "Touch",
+          "your",
+          "toes."
+        ]
+      },
+      "key": {
+        "correct_order": [
+          "Touch",
+          "your",
+          "toes."
+        ]
+      }
+    },
+    {
+      "stage": "sentences",
+      "qtype": "ordering",
+      "position": 8,
+      "source_ref": "L30 furniture",
+      "prompt": {
+        "instruction": "Put the words in order.",
+        "tokens": [
+          "Sit",
+          "on",
+          "the",
+          "sofa."
+        ]
+      },
+      "key": {
+        "correct_order": [
+          "Sit",
+          "on",
+          "the",
+          "sofa."
+        ]
+      }
+    },
+    {
+      "stage": "writing",
+      "qtype": "translation",
+      "position": 1,
+      "source_ref": "L21 routine",
+      "prompt": {
+        "instruction": "Translate into English.",
+        "source_text": "Uyg'onmoq",
+        "direction": "uz2en"
+      },
+      "key": {
+        "target_text": "Wake up"
+      }
+    },
+    {
+      "stage": "writing",
+      "qtype": "translation",
+      "position": 2,
+      "source_ref": "L22 time",
+      "prompt": {
+        "instruction": "Translate into English.",
+        "source_text": "Ertalab",
+        "direction": "uz2en"
+      },
+      "key": {
+        "target_text": "Morning"
+      }
+    },
+    {
+      "stage": "writing",
+      "qtype": "translation",
+      "position": 3,
+      "source_ref": "L23 food",
+      "prompt": {
+        "instruction": "Translate into English.",
+        "source_text": "Suv",
+        "direction": "uz2en"
+      },
+      "key": {
+        "target_text": "Water"
+      }
+    },
+    {
+      "stage": "writing",
+      "qtype": "ordering",
+      "position": 4,
+      "source_ref": "L24 restaurant correction",
+      "prompt": {
+        "instruction": "Put the words in order.",
+        "tokens": [
+          "Can",
+          "I",
+          "have",
+          "water,",
+          "please."
+        ]
+      },
+      "key": {
+        "correct_order": [
+          "Can",
+          "I",
+          "have",
+          "water,",
+          "please."
+        ]
+      }
+    },
+    {
+      "stage": "writing",
+      "qtype": "translation",
+      "position": 5,
+      "source_ref": "L30 furniture",
+      "prompt": {
+        "instruction": "Translate into English.",
+        "source_text": "Gilam",
+        "direction": "uz2en"
+      },
+      "key": {
+        "target_text": "carpet"
+      }
+    },
+    {
+      "stage": "writing",
+      "qtype": "translation",
+      "position": 6,
+      "source_ref": "L26 seasons",
+      "prompt": {
+        "instruction": "Translate into English.",
+        "source_text": "Yoz",
+        "direction": "uz2en"
+      },
+      "key": {
+        "target_text": "Summer"
+      }
+    }
   ]
 }

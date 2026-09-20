@@ -4,39 +4,652 @@
   "lesson_from": 41,
   "lesson_to": 50,
   "items": [
-    { "stage": "vocabulary", "qtype": "multiple_choice", "position": 1, "source_ref": "L41 past verbs", "prompt": { "question": "What does “Tomosha qildi” mean in English?", "options": ["watched", "played", "cleaned", "helped"] }, "key": { "correct_value": "watched" } },
-    { "stage": "vocabulary", "qtype": "multiple_choice", "position": 2, "source_ref": "L42 irregular verbs", "prompt": { "question": "What does “Bordi” mean in English?", "options": ["went", "saw", "came", "took"] }, "key": { "correct_value": "went" } },
-    { "stage": "vocabulary", "qtype": "multiple_choice", "position": 3, "source_ref": "L43 food", "prompt": { "question": "What does “Shakar” mean in English?", "options": ["sugar", "rice", "milk", "cheese"] }, "key": { "correct_value": "sugar" } },
-    { "stage": "vocabulary", "qtype": "matching", "position": 4, "source_ref": "L46 jobs", "prompt": { "instruction": "Match each job with its Uzbek word.", "left": ["doctor", "teacher", "nurse", "driver"], "right": ["Shifokor", "O'qituvchi", "Hamshira", "Haydovchi"] }, "key": { "pairs": [["doctor", "Shifokor"], ["teacher", "O'qituvchi"], ["nurse", "Hamshira"], ["driver", "Haydovchi"]] } },
-    { "stage": "vocabulary", "qtype": "multiple_choice", "position": 5, "source_ref": "L44 containers", "prompt": { "question": "What does “Quti” mean in English?", "options": ["box", "bottle", "packet", "litre"] }, "key": { "correct_value": "box" } },
-    { "stage": "vocabulary", "qtype": "multiple_choice", "position": 6, "source_ref": "L45 supermarket", "prompt": { "question": "What does “Chek” mean in English?", "options": ["receipt", "cashier", "discount", "bag"] }, "key": { "correct_value": "receipt" } },
-    { "stage": "vocabulary", "qtype": "matching", "position": 7, "source_ref": "L49 continuous", "prompt": { "instruction": "Match each action with its Uzbek word.", "left": ["reading", "running", "eating", "writing"], "right": ["O'qimoqda", "Yugurmoqda", "Yemoqda", "Yozmoqda"] }, "key": { "pairs": [["reading", "O'qimoqda"], ["running", "Yugurmoqda"], ["eating", "Yemoqda"], ["writing", "Yozmoqda"]] } },
-    { "stage": "vocabulary", "qtype": "multiple_choice", "position": 8, "source_ref": "L48 yesterday", "prompt": { "question": "What does “Kecha oqshom” mean in English?", "options": ["last night", "yesterday", "last week", "stayed"] }, "key": { "correct_value": "last night" } },
-    { "stage": "vocabulary", "qtype": "multiple_choice", "position": 9, "source_ref": "L50 plans", "prompt": { "question": "What does “Reja” mean in English?", "options": ["plan", "visit", "buy", "meet"] }, "key": { "correct_value": "plan" } },
-    { "stage": "vocabulary", "qtype": "multiple_choice", "position": 10, "source_ref": "L47 supermarket", "prompt": { "question": "What does “Qaytim” mean in English?", "options": ["change", "discount", "receipt", "cashier"] }, "key": { "correct_value": "change" } },
-    { "stage": "grammar", "qtype": "multiple_choice", "position": 1, "source_ref": "L41 past simple", "prompt": { "question": "I ___ football yesterday.", "options": ["played", "play"] }, "key": { "correct_value": "played" } },
-    { "stage": "grammar", "qtype": "multiple_choice", "position": 2, "source_ref": "L41 past correction", "prompt": { "question": "Which sentence is correct?", "options": ["I play football yesterday.", "I played football yesterday.", "I plays football yesterday."] }, "key": { "correct_value": "I played football yesterday." } },
-    { "stage": "grammar", "qtype": "multiple_choice", "position": 3, "source_ref": "L42 irregular", "prompt": { "question": "She ___ her friend at school.", "options": ["saw", "see"] }, "key": { "correct_value": "saw" } },
-    { "stage": "grammar", "qtype": "multiple_choice", "position": 4, "source_ref": "L43 some-any correction", "prompt": { "question": "Which sentence is correct?", "options": ["I have any bread.", "I have some bread.", "I has some bread."] }, "key": { "correct_value": "I have some bread." } },
-    { "stage": "grammar", "qtype": "multiple_choice", "position": 5, "source_ref": "L44 how-many", "prompt": { "question": "How ___ apples are there?", "options": ["many", "much"] }, "key": { "correct_value": "many" } },
-    { "stage": "grammar", "qtype": "multiple_choice", "position": 6, "source_ref": "L44 how-many correction", "prompt": { "question": "Which sentence is correct?", "options": ["How much apples are there?", "How many apples are there?", "How many apples is there?"] }, "key": { "correct_value": "How many apples are there?" } },
-    { "stage": "grammar", "qtype": "multiple_choice", "position": 7, "source_ref": "L46 jobs", "prompt": { "question": "What ___ your father do?", "options": ["does", "do"] }, "key": { "correct_value": "does" } },
-    { "stage": "grammar", "qtype": "multiple_choice", "position": 8, "source_ref": "L49 continuous", "prompt": { "question": "She ___ cooking dinner.", "options": ["is", "are"] }, "key": { "correct_value": "is" } },
-    { "stage": "grammar", "qtype": "multiple_choice", "position": 9, "source_ref": "L50 going-to", "prompt": { "question": "I ___ going to study.", "options": ["am", "is"] }, "key": { "correct_value": "am" } },
-    { "stage": "grammar", "qtype": "multiple_choice", "position": 10, "source_ref": "L50 going-to correction", "prompt": { "question": "Which sentence is correct?", "options": ["I going to study.", "I am going to study.", "I is going to study."] }, "key": { "correct_value": "I am going to study." } },
-    { "stage": "sentences", "qtype": "ordering", "position": 1, "source_ref": "L41 past simple", "prompt": { "instruction": "Put the words in order.", "tokens": ["I", "played", "football", "yesterday."] }, "key": { "correct_order": ["I", "played", "football", "yesterday."] } },
-    { "stage": "sentences", "qtype": "ordering", "position": 2, "source_ref": "L42 irregular", "prompt": { "instruction": "Put the words in order.", "tokens": ["I", "went", "to", "the", "market", "yesterday."] }, "key": { "correct_order": ["I", "went", "to", "the", "market", "yesterday."] } },
-    { "stage": "sentences", "qtype": "fill_blank", "position": 3, "source_ref": "L43 some-any", "prompt": { "instruction": "Fill in the blank.", "template": "There aren't ___ eggs." }, "key": { "answer": "any" } },
-    { "stage": "sentences", "qtype": "fill_blank", "position": 4, "source_ref": "L45 supermarket", "prompt": { "instruction": "Fill in the blank.", "template": "___ I have a bottle of milk?" }, "key": { "answer": "Can" } },
-    { "stage": "sentences", "qtype": "ordering", "position": 5, "source_ref": "L46 jobs", "prompt": { "instruction": "Put the words in order.", "tokens": ["What", "does", "your", "father", "do?"] }, "key": { "correct_order": ["What", "does", "your", "father", "do?"] } },
-    { "stage": "sentences", "qtype": "fill_blank", "position": 6, "source_ref": "L48 yesterday", "prompt": { "instruction": "Fill in the past verb.", "template": "Last week we ___ (go) to Tashkent." }, "key": { "answer": "went" } },
-    { "stage": "sentences", "qtype": "ordering", "position": 7, "source_ref": "L47 supermarket", "prompt": { "instruction": "Put the words in order.", "tokens": ["I'd", "like", "a", "bag,", "please."] }, "key": { "correct_order": ["I'd", "like", "a", "bag,", "please."] } },
-    { "stage": "sentences", "qtype": "ordering", "position": 8, "source_ref": "L50 going-to", "prompt": { "instruction": "Put the words in order.", "tokens": ["I", "am", "going", "to", "study."] }, "key": { "correct_order": ["I", "am", "going", "to", "study."] } },
-    { "stage": "writing", "qtype": "translation", "position": 1, "source_ref": "L41 past simple", "prompt": { "instruction": "Translate into English.", "source_text": "Kecha futbol o'ynadim.", "direction": "uz2en" }, "key": { "target_text": "I played football yesterday." } },
-    { "stage": "writing", "qtype": "translation", "position": 2, "source_ref": "L42 irregular", "prompt": { "instruction": "Translate into English.", "source_text": "Kecha bozorga bordim.", "direction": "uz2en" }, "key": { "target_text": "I went to the market yesterday." } },
-    { "stage": "writing", "qtype": "translation", "position": 3, "source_ref": "L44 how-many", "prompt": { "instruction": "Translate into English.", "source_text": "Nechta tuxum bor?", "direction": "uz2en" }, "key": { "target_text": "How many eggs are there?" } },
-    { "stage": "writing", "qtype": "ordering", "position": 4, "source_ref": "L49 continuous correction", "prompt": { "instruction": "Put the words in order to fix the sentence.", "tokens": ["She", "is", "cooking", "dinner."] }, "key": { "correct_order": ["She", "is", "cooking", "dinner."] } },
-    { "stage": "writing", "qtype": "translation", "position": 5, "source_ref": "L46 jobs", "prompt": { "instruction": "Translate into English.", "source_text": "Shifokor", "direction": "uz2en" }, "key": { "target_text": "doctor" } },
-    { "stage": "writing", "qtype": "translation", "position": 6, "source_ref": "L44 quantities", "prompt": { "instruction": "Translate into English.", "source_text": "Bir oz", "direction": "uz2en" }, "key": { "target_text": "a little" } }
+    {
+      "stage": "vocabulary",
+      "qtype": "multiple_choice",
+      "position": 1,
+      "source_ref": "L48 yesterday",
+      "prompt": {
+        "question": "What does “Qoldi” mean in English?",
+        "options": [
+          "stayed",
+          "went out",
+          "got up",
+          "yesterday"
+        ]
+      },
+      "key": {
+        "correct_value": "stayed"
+      }
+    },
+    {
+      "stage": "vocabulary",
+      "qtype": "multiple_choice",
+      "position": 2,
+      "source_ref": "L42 irregular verbs",
+      "prompt": {
+        "question": "What does “Bordi” mean in English?",
+        "options": [
+          "went",
+          "saw",
+          "came",
+          "took"
+        ]
+      },
+      "key": {
+        "correct_value": "went"
+      }
+    },
+    {
+      "stage": "vocabulary",
+      "qtype": "multiple_choice",
+      "position": 3,
+      "source_ref": "L43 food",
+      "prompt": {
+        "question": "What does “Shakar” mean in English?",
+        "options": [
+          "sugar",
+          "rice",
+          "milk",
+          "cheese"
+        ]
+      },
+      "key": {
+        "correct_value": "sugar"
+      }
+    },
+    {
+      "stage": "vocabulary",
+      "qtype": "matching",
+      "position": 4,
+      "source_ref": "L46 jobs",
+      "prompt": {
+        "instruction": "Match each job with its Uzbek word.",
+        "left": [
+          "doctor",
+          "teacher",
+          "nurse",
+          "driver"
+        ],
+        "right": [
+          "Shifokor",
+          "O'qituvchi",
+          "Hamshira",
+          "Haydovchi"
+        ]
+      },
+      "key": {
+        "pairs": [
+          [
+            "doctor",
+            "Shifokor"
+          ],
+          [
+            "teacher",
+            "O'qituvchi"
+          ],
+          [
+            "nurse",
+            "Hamshira"
+          ],
+          [
+            "driver",
+            "Haydovchi"
+          ]
+        ]
+      }
+    },
+    {
+      "stage": "vocabulary",
+      "qtype": "multiple_choice",
+      "position": 5,
+      "source_ref": "L44 containers",
+      "prompt": {
+        "question": "What does “Quti” mean in English?",
+        "options": [
+          "box",
+          "bottle",
+          "packet",
+          "litre"
+        ]
+      },
+      "key": {
+        "correct_value": "box"
+      }
+    },
+    {
+      "stage": "vocabulary",
+      "qtype": "multiple_choice",
+      "position": 6,
+      "source_ref": "L45 supermarket",
+      "prompt": {
+        "question": "What does “Chek” mean in English?",
+        "options": [
+          "receipt",
+          "cashier",
+          "discount",
+          "bag"
+        ]
+      },
+      "key": {
+        "correct_value": "receipt"
+      }
+    },
+    {
+      "stage": "vocabulary",
+      "qtype": "matching",
+      "position": 7,
+      "source_ref": "L49 continuous",
+      "prompt": {
+        "instruction": "Match each action with its Uzbek word.",
+        "left": [
+          "reading",
+          "running",
+          "eating",
+          "writing"
+        ],
+        "right": [
+          "O'qimoqda",
+          "Yugurmoqda",
+          "Yemoqda",
+          "Yozmoqda"
+        ]
+      },
+      "key": {
+        "pairs": [
+          [
+            "reading",
+            "O'qimoqda"
+          ],
+          [
+            "running",
+            "Yugurmoqda"
+          ],
+          [
+            "eating",
+            "Yemoqda"
+          ],
+          [
+            "writing",
+            "Yozmoqda"
+          ]
+        ]
+      }
+    },
+    {
+      "stage": "vocabulary",
+      "qtype": "multiple_choice",
+      "position": 8,
+      "source_ref": "L48 yesterday",
+      "prompt": {
+        "question": "What does “Kecha oqshom” mean in English?",
+        "options": [
+          "last night",
+          "yesterday",
+          "last week",
+          "stayed"
+        ]
+      },
+      "key": {
+        "correct_value": "last night"
+      }
+    },
+    {
+      "stage": "vocabulary",
+      "qtype": "multiple_choice",
+      "position": 9,
+      "source_ref": "L50 plans",
+      "prompt": {
+        "question": "What does “Reja” mean in English?",
+        "options": [
+          "plan",
+          "visit",
+          "buy",
+          "meet"
+        ]
+      },
+      "key": {
+        "correct_value": "plan"
+      }
+    },
+    {
+      "stage": "vocabulary",
+      "qtype": "multiple_choice",
+      "position": 10,
+      "source_ref": "L47 supermarket",
+      "prompt": {
+        "question": "What does “Qaytim” mean in English?",
+        "options": [
+          "change",
+          "discount",
+          "receipt",
+          "cashier"
+        ]
+      },
+      "key": {
+        "correct_value": "change"
+      }
+    },
+    {
+      "stage": "grammar",
+      "qtype": "multiple_choice",
+      "position": 1,
+      "source_ref": "L41 past simple",
+      "prompt": {
+        "question": "I ___ football yesterday.",
+        "options": [
+          "played",
+          "play"
+        ]
+      },
+      "key": {
+        "correct_value": "played"
+      }
+    },
+    {
+      "stage": "grammar",
+      "qtype": "multiple_choice",
+      "position": 2,
+      "source_ref": "L41 past correction",
+      "prompt": {
+        "question": "Which sentence is correct?",
+        "options": [
+          "I play football yesterday.",
+          "I played football yesterday.",
+          "I plays football yesterday."
+        ]
+      },
+      "key": {
+        "correct_value": "I played football yesterday."
+      }
+    },
+    {
+      "stage": "grammar",
+      "qtype": "multiple_choice",
+      "position": 3,
+      "source_ref": "L42 irregular",
+      "prompt": {
+        "question": "She ___ her friend at school.",
+        "options": [
+          "saw",
+          "see"
+        ]
+      },
+      "key": {
+        "correct_value": "saw"
+      }
+    },
+    {
+      "stage": "grammar",
+      "qtype": "multiple_choice",
+      "position": 4,
+      "source_ref": "L43 some-any correction",
+      "prompt": {
+        "question": "Which sentence is correct?",
+        "options": [
+          "I have any bread.",
+          "I have some bread.",
+          "I has some bread."
+        ]
+      },
+      "key": {
+        "correct_value": "I have some bread."
+      }
+    },
+    {
+      "stage": "grammar",
+      "qtype": "multiple_choice",
+      "position": 5,
+      "source_ref": "L45 supermarket",
+      "prompt": {
+        "question": "I'd ___ a kilo of apples, please.",
+        "options": [
+          "like",
+          "want"
+        ]
+      },
+      "key": {
+        "correct_value": "like"
+      }
+    },
+    {
+      "stage": "grammar",
+      "qtype": "multiple_choice",
+      "position": 6,
+      "source_ref": "L44 how-many correction",
+      "prompt": {
+        "question": "Which sentence is correct?",
+        "options": [
+          "How much apples are there?",
+          "How many apples are there?",
+          "How many apples is there?"
+        ]
+      },
+      "key": {
+        "correct_value": "How many apples are there?"
+      }
+    },
+    {
+      "stage": "grammar",
+      "qtype": "multiple_choice",
+      "position": 7,
+      "source_ref": "L46 jobs",
+      "prompt": {
+        "question": "What ___ your father do?",
+        "options": [
+          "does",
+          "do"
+        ]
+      },
+      "key": {
+        "correct_value": "does"
+      }
+    },
+    {
+      "stage": "grammar",
+      "qtype": "multiple_choice",
+      "position": 8,
+      "source_ref": "L49 continuous",
+      "prompt": {
+        "question": "She ___ cooking dinner.",
+        "options": [
+          "is",
+          "are"
+        ]
+      },
+      "key": {
+        "correct_value": "is"
+      }
+    },
+    {
+      "stage": "grammar",
+      "qtype": "multiple_choice",
+      "position": 9,
+      "source_ref": "L50 going-to",
+      "prompt": {
+        "question": "I ___ going to study.",
+        "options": [
+          "am",
+          "is"
+        ]
+      },
+      "key": {
+        "correct_value": "am"
+      }
+    },
+    {
+      "stage": "grammar",
+      "qtype": "multiple_choice",
+      "position": 10,
+      "source_ref": "L50 going-to correction",
+      "prompt": {
+        "question": "Which sentence is correct?",
+        "options": [
+          "I going to study.",
+          "I am going to study.",
+          "I is going to study."
+        ]
+      },
+      "key": {
+        "correct_value": "I am going to study."
+      }
+    },
+    {
+      "stage": "sentences",
+      "qtype": "ordering",
+      "position": 1,
+      "source_ref": "L41 past simple",
+      "prompt": {
+        "instruction": "Put the words in order.",
+        "tokens": [
+          "I",
+          "played",
+          "football",
+          "yesterday."
+        ]
+      },
+      "key": {
+        "correct_order": [
+          "I",
+          "played",
+          "football",
+          "yesterday."
+        ]
+      }
+    },
+    {
+      "stage": "sentences",
+      "qtype": "ordering",
+      "position": 2,
+      "source_ref": "L42 irregular",
+      "prompt": {
+        "instruction": "Put the words in order.",
+        "tokens": [
+          "I",
+          "went",
+          "to",
+          "the",
+          "market",
+          "yesterday."
+        ]
+      },
+      "key": {
+        "correct_order": [
+          "I",
+          "went",
+          "to",
+          "the",
+          "market",
+          "yesterday."
+        ]
+      }
+    },
+    {
+      "stage": "sentences",
+      "qtype": "fill_blank",
+      "position": 3,
+      "source_ref": "L43 some-any",
+      "prompt": {
+        "instruction": "Fill in the blank.",
+        "template": "There aren't ___ eggs."
+      },
+      "key": {
+        "answer": "any"
+      }
+    },
+    {
+      "stage": "sentences",
+      "qtype": "fill_blank",
+      "position": 4,
+      "source_ref": "L45 supermarket",
+      "prompt": {
+        "instruction": "Fill in the blank.",
+        "template": "___ I have a bottle of milk?"
+      },
+      "key": {
+        "answer": "Can"
+      }
+    },
+    {
+      "stage": "sentences",
+      "qtype": "ordering",
+      "position": 5,
+      "source_ref": "L46 jobs",
+      "prompt": {
+        "instruction": "Put the words in order.",
+        "tokens": [
+          "What",
+          "does",
+          "your",
+          "father",
+          "do?"
+        ]
+      },
+      "key": {
+        "correct_order": [
+          "What",
+          "does",
+          "your",
+          "father",
+          "do?"
+        ]
+      }
+    },
+    {
+      "stage": "sentences",
+      "qtype": "fill_blank",
+      "position": 6,
+      "source_ref": "L48 yesterday",
+      "prompt": {
+        "instruction": "Fill in the past verb.",
+        "template": "Last week we ___ (go) to Tashkent."
+      },
+      "key": {
+        "answer": "went"
+      }
+    },
+    {
+      "stage": "sentences",
+      "qtype": "ordering",
+      "position": 7,
+      "source_ref": "L47 supermarket",
+      "prompt": {
+        "instruction": "Put the words in order.",
+        "tokens": [
+          "I'd",
+          "like",
+          "a",
+          "bag,",
+          "please."
+        ]
+      },
+      "key": {
+        "correct_order": [
+          "I'd",
+          "like",
+          "a",
+          "bag,",
+          "please."
+        ]
+      }
+    },
+    {
+      "stage": "sentences",
+      "qtype": "ordering",
+      "position": 8,
+      "source_ref": "L50 going-to",
+      "prompt": {
+        "instruction": "Put the words in order.",
+        "tokens": [
+          "I",
+          "am",
+          "going",
+          "to",
+          "study."
+        ]
+      },
+      "key": {
+        "correct_order": [
+          "I",
+          "am",
+          "going",
+          "to",
+          "study."
+        ]
+      }
+    },
+    {
+      "stage": "writing",
+      "qtype": "translation",
+      "position": 1,
+      "source_ref": "L47 supermarket",
+      "prompt": {
+        "instruction": "Translate into English.",
+        "source_text": "Mana qaytimingiz.",
+        "direction": "uz2en"
+      },
+      "key": {
+        "target_text": "Here's your change."
+      }
+    },
+    {
+      "stage": "writing",
+      "qtype": "translation",
+      "position": 2,
+      "source_ref": "L42 irregular",
+      "prompt": {
+        "instruction": "Translate into English.",
+        "source_text": "Kecha bozorga bordim.",
+        "direction": "uz2en"
+      },
+      "key": {
+        "target_text": "I went to the market yesterday."
+      }
+    },
+    {
+      "stage": "writing",
+      "qtype": "translation",
+      "position": 3,
+      "source_ref": "L44 how-many",
+      "prompt": {
+        "instruction": "Translate into English.",
+        "source_text": "Nechta tuxum bor?",
+        "direction": "uz2en"
+      },
+      "key": {
+        "target_text": "How many eggs are there?"
+      }
+    },
+    {
+      "stage": "writing",
+      "qtype": "ordering",
+      "position": 4,
+      "source_ref": "L49 continuous correction",
+      "prompt": {
+        "instruction": "Put the words in order to fix the sentence.",
+        "tokens": [
+          "She",
+          "is",
+          "cooking",
+          "dinner."
+        ]
+      },
+      "key": {
+        "correct_order": [
+          "She",
+          "is",
+          "cooking",
+          "dinner."
+        ]
+      }
+    },
+    {
+      "stage": "writing",
+      "qtype": "translation",
+      "position": 5,
+      "source_ref": "L46 jobs",
+      "prompt": {
+        "instruction": "Translate into English.",
+        "source_text": "Shifokor",
+        "direction": "uz2en"
+      },
+      "key": {
+        "target_text": "doctor"
+      }
+    },
+    {
+      "stage": "writing",
+      "qtype": "translation",
+      "position": 6,
+      "source_ref": "L44 quantities",
+      "prompt": {
+        "instruction": "Translate into English.",
+        "source_text": "Bir oz",
+        "direction": "uz2en"
+      },
+      "key": {
+        "target_text": "a little"
+      }
+    }
   ]
 }

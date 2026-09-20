@@ -9,7 +9,7 @@ values (6, 'Test 6', 51, 60, true)
 on conflict (test_number) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
-values ((select id from public.online_tests where test_number = 6), 'vocabulary', 'multiple_choice', 1, '{"question":"What does “Tezroq” mean in English?","options":["faster","bigger","slower","taller"]}'::jsonb, '{"correct_value":"faster"}'::jsonb, 1, 'L51 comparatives')
+values ((select id from public.online_tests where test_number = 6), 'vocabulary', 'multiple_choice', 1, '{"question":"What does “Sayil” mean in English?","options":["picnic","concert","ticket","together"]}'::jsonb, '{"correct_value":"picnic"}'::jsonb, 1, 'L54 plans')
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
@@ -17,7 +17,7 @@ values ((select id from public.online_tests where test_number = 6), 'vocabulary'
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
-values ((select id from public.online_tests where test_number = 6), 'vocabulary', 'multiple_choice', 3, '{"question":"What does “Taklif qilmoq” mean in English?","options":["invite","join","agree","come"]}'::jsonb, '{"correct_value":"invite"}'::jsonb, 1, 'L53 invitations')
+values ((select id from public.online_tests where test_number = 6), 'vocabulary', 'multiple_choice', 3, '{"question":"What does “Zerikarli” mean in English?","options":["boring","hobby","usually","sometimes"]}'::jsonb, '{"correct_value":"boring"}'::jsonb, 1, 'L55 free time')
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
@@ -45,7 +45,7 @@ values ((select id from public.online_tests where test_number = 6), 'vocabulary'
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
-values ((select id from public.online_tests where test_number = 6), 'vocabulary', 'multiple_choice', 10, '{"question":"What does “Band” mean in English?","options":["busy","free","sure","sorry"]}'::jsonb, '{"correct_value":"busy"}'::jsonb, 1, 'L53 invitations')
+values ((select id from public.online_tests where test_number = 6), 'vocabulary', 'multiple_choice', 10, '{"question":"What does “Eslab qolmoq” mean in English?","options":["remember","happen","review","plan"]}'::jsonb, '{"correct_value":"remember"}'::jsonb, 1, 'L60 review')
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
@@ -69,7 +69,7 @@ values ((select id from public.online_tests where test_number = 6), 'grammar', '
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
-values ((select id from public.online_tests where test_number = 6), 'grammar', 'multiple_choice', 6, '{"question":"I ___ do my homework.","options":["always","never"]}'::jsonb, '{"correct_value":"always"}'::jsonb, 1, 'L57 frequency')
+values ((select id from public.online_tests where test_number = 6), 'grammar', 'multiple_choice', 6, '{"question":"___ Friday I go to the club.","options":["On","In"]}'::jsonb, '{"correct_value":"On"}'::jsonb, 1, 'L58 week')
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)

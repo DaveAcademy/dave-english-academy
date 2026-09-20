@@ -74,13 +74,17 @@ for (const it of test.items) {
 }
 {
 const missing = [];
-// Full-range coverage is enforced for Tests 3+ (task requirement).
-// Test 1 predates this rule and has a known L8 gap; Test 1 content is
-// frozen and must not be modified here.
-if (test.test_number >= 3) {
-  for (let n = test.lesson_from; n <= test.lesson_to; n++) if (!seenLessons.has(n)) missing.push(n);
-  check(missing.length === 0, `${T} every lesson ${test.lesson_from}-${test.lesson_to} represented${missing.length ? ' (missing ' + missing.join(',') + ')' : ''}`);
+// Full-range coverage enforced for all Tests 1-10 (rebalance 2026-10:
+// every lesson 1-100 represented, 3-4 items per lesson).
+for (let n = test.lesson_from; n <= test.lesson_to; n++) if (!seenLessons.has(n)) missing.push(n);
+check(missing.length === 0, `${T} every lesson ${test.lesson_from}-${test.lesson_to} represented${missing.length ? ' (missing ' + missing.join(',') + ')' : ''}`);
+const perLesson = {};
+for (const it of test.items) {
+  const ln = Number((it.source_ref || '').match(/^L(\d+)/)?.[1]);
+  perLesson[ln] = (perLesson[ln] || 0) + 1;
 }
+const unbalanced = Object.entries(perLesson).filter(([, c]) => c < 3 || c > 4);
+check(unbalanced.length === 0, `${T} 3-4 items per lesson${unbalanced.length ? ' (off: ' + unbalanced.map(([l, c]) => `L${l}=${c}`).join(',') + ')' : ''}`);
 }
 }
 

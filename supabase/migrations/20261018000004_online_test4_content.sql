@@ -17,7 +17,7 @@ values ((select id from public.online_tests where test_number = 4), 'vocabulary'
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
-values ((select id from public.online_tests where test_number = 4), 'vocabulary', 'matching', 3, '{"instruction":"Match each preposition with its Uzbek word.","left":["in","on","under","behind"],"right":["Ichida","Ustida","Tagida","Orqasida"]}'::jsonb, '{"pairs":[["in","Ichida"],["on","Ustida"],["under","Tagida"],["behind","Orqasida"]]}'::jsonb, 1, 'L34 prepositions')
+values ((select id from public.online_tests where test_number = 4), 'vocabulary', 'matching', 3, '{"instruction":"Match each review word with its Uzbek word.","left":["Routine","Furniture","Price","Street"],"right":["Tartib","Mebel","Narx","Ko''cha"]}'::jsonb, '{"pairs":[["Routine","Tartib"],["Furniture","Mebel"],["Price","Narx"],["Street","Ko''cha"]]}'::jsonb, 1, 'L40 review')
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
@@ -29,7 +29,7 @@ values ((select id from public.online_tests where test_number = 4), 'vocabulary'
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
-values ((select id from public.online_tests where test_number = 4), 'vocabulary', 'multiple_choice', 6, '{"question":"What does “Parda” mean in English?","options":["curtains","shelf","wall","floor"]}'::jsonb, '{"correct_value":"curtains"}'::jsonb, 1, 'L35 room')
+values ((select id from public.online_tests where test_number = 4), 'vocabulary', 'multiple_choice', 6, '{"question":"What does “Ko''cha” mean in English?","options":["street","map","corner","shop"]}'::jsonb, '{"correct_value":"street"}'::jsonb, 1, 'L37 map')
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
@@ -53,7 +53,7 @@ values ((select id from public.online_tests where test_number = 4), 'grammar', '
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
-values ((select id from public.online_tests where test_number = 4), 'grammar', 'multiple_choice', 2, '{"question":"Which sentence is correct?","options":["Where the pen is?","Where is the pen?","Where are the pen?"]}'::jsonb, '{"correct_value":"Where is the pen?"}'::jsonb, 1, 'L31 where correction')
+values ((select id from public.online_tests where test_number = 4), 'grammar', 'multiple_choice', 2, '{"question":"There ___ two sofas.","options":["is","are"]}'::jsonb, '{"correct_value":"are"}'::jsonb, 1, 'L33 furniture')
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
@@ -77,7 +77,7 @@ values ((select id from public.online_tests where test_number = 4), 'grammar', '
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
-values ((select id from public.online_tests where test_number = 4), 'grammar', 'multiple_choice', 8, '{"question":"How much ___ the shoes?","options":["is","are"]}'::jsonb, '{"correct_value":"are"}'::jsonb, 1, 'L39 prices')
+values ((select id from public.online_tests where test_number = 4), 'grammar', 'multiple_choice', 8, '{"question":"The bank is ___ the corner.","options":["on","at"]}'::jsonb, '{"correct_value":"on"}'::jsonb, 1, 'L38 town')
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)

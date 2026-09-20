@@ -89,7 +89,7 @@ values ((select id from public.online_tests where test_number = 9), 'grammar', '
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
-values ((select id from public.online_tests where test_number = 9), 'sentences', 'ordering', 1, '{"instruction":"Put the words in order.","tokens":["I","have","downloaded","that","app."]}'::jsonb, '{"correct_order":["I","have","downloaded","that","app."]}'::jsonb, 1, 'L81 present perfect')
+values ((select id from public.online_tests where test_number = 9), 'sentences', 'ordering', 1, '{"instruction":"Put the words in order.","tokens":["Respect","different","views."]}'::jsonb, '{"correct_order":["Respect","different","views."]}'::jsonb, 1, 'L88 opinions')
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
@@ -121,7 +121,7 @@ values ((select id from public.online_tests where test_number = 9), 'sentences',
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
-values ((select id from public.online_tests where test_number = 9), 'writing', 'translation', 1, '{"instruction":"Translate into English.","source_text":"Qurilma","direction":"uz2en"}'::jsonb, '{"target_text":"device"}'::jsonb, 1, 'L81 technology')
+values ((select id from public.online_tests where test_number = 9), 'writing', 'translation', 1, '{"instruction":"Translate into English.","source_text":"Xulosa","direction":"uz2en"}'::jsonb, '{"target_text":"conclusion"}'::jsonb, 1, 'L88 opinions')
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)

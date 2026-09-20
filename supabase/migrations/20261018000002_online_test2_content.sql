@@ -21,7 +21,7 @@ values ((select id from public.online_tests where test_number = 2), 'vocabulary'
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
-values ((select id from public.online_tests where test_number = 2), 'vocabulary', 'matching', 4, '{"instruction":"Match each family member with its Uzbek word.","left":["Mother","Father","Son","Daughter"],"right":["Ona","Ota","O''g''il","Qiz"]}'::jsonb, '{"pairs":[["Mother","Ona"],["Father","Ota"],["Son","O''g''il"],["Daughter","Qiz"]]}'::jsonb, 1, 'L12 family')
+values ((select id from public.online_tests where test_number = 2), 'vocabulary', 'matching', 4, '{"instruction":"Match each family word with its Uzbek word.","left":["kind","strong","close","proud"],"right":["mehribon","kuchli","yaqin","faxrlanuvchi"]}'::jsonb, '{"pairs":[["kind","mehribon"],["strong","kuchli"],["close","yaqin"],["proud","faxrlanuvchi"]]}'::jsonb, 1, 'L18 family')
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
@@ -53,7 +53,7 @@ values ((select id from public.online_tests where test_number = 2), 'grammar', '
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
-values ((select id from public.online_tests where test_number = 2), 'grammar', 'multiple_choice', 2, '{"question":"She ___ in London.","options":["live","lives"]}'::jsonb, '{"correct_value":"lives"}'::jsonb, 1, 'L11 live')
+values ((select id from public.online_tests where test_number = 2), 'grammar', 'multiple_choice', 2, '{"question":"Talking about your own uncle: This is ___ amaki.","options":["my","his"]}'::jsonb, '{"correct_value":"my"}'::jsonb, 1, 'L17 possessives family')
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
@@ -65,7 +65,7 @@ values ((select id from public.online_tests where test_number = 2), 'grammar', '
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
-values ((select id from public.online_tests where test_number = 2), 'grammar', 'multiple_choice', 5, '{"question":"___ you have a dog?","options":["Do","Does"]}'::jsonb, '{"correct_value":"Do"}'::jsonb, 1, 'L13 do-questions')
+values ((select id from public.online_tests where test_number = 2), 'grammar', 'multiple_choice', 5, '{"question":"I ___ proud of my family.","options":["am","is"]}'::jsonb, '{"correct_value":"am"}'::jsonb, 1, 'L20 be-verb pride')
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
@@ -85,7 +85,7 @@ values ((select id from public.online_tests where test_number = 2), 'grammar', '
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
-values ((select id from public.online_tests where test_number = 2), 'grammar', 'multiple_choice', 10, '{"question":"Talking about a boy''s brother. Which sentence is correct?","options":["This is her brother.","This is his brother.","This is my brother."]}'::jsonb, '{"correct_value":"This is his brother."}'::jsonb, 1, 'L12 possessives correction')
+values ((select id from public.online_tests where test_number = 2), 'grammar', 'multiple_choice', 10, '{"question":"My mother ___ kind.","options":["is","are"]}'::jsonb, '{"correct_value":"is"}'::jsonb, 1, 'L18 be-verb family')
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
@@ -105,7 +105,7 @@ values ((select id from public.online_tests where test_number = 2), 'sentences',
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
-values ((select id from public.online_tests where test_number = 2), 'sentences', 'ordering', 5, '{"instruction":"Put the words in order.","tokens":["I","like","to","sing."]}'::jsonb, '{"correct_order":["I","like","to","sing."]}'::jsonb, 1, 'L16 likes')
+values ((select id from public.online_tests where test_number = 2), 'sentences', 'ordering', 5, '{"instruction":"Put the words in order.","tokens":["This","is","my","uncle."]}'::jsonb, '{"correct_order":["This","is","my","uncle."]}'::jsonb, 1, 'L17 family tree')
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
@@ -133,7 +133,7 @@ values ((select id from public.online_tests where test_number = 2), 'writing', '
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
-values ((select id from public.online_tests where test_number = 2), 'writing', 'ordering', 4, '{"instruction":"Put the words in order to fix the sentence.","tokens":["She","is","kind."]}'::jsonb, '{"correct_order":["She","is","kind."]}'::jsonb, 1, 'L15 adjectives correction')
+values ((select id from public.online_tests where test_number = 2), 'writing', 'ordering', 4, '{"instruction":"Put the words in order.","tokens":["He","has","a","bike."]}'::jsonb, '{"correct_order":["He","has","a","bike."]}'::jsonb, 1, 'L13 have-has')
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)

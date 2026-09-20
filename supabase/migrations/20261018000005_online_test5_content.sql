@@ -9,7 +9,7 @@ values (5, 'Test 5', 41, 50, true)
 on conflict (test_number) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
-values ((select id from public.online_tests where test_number = 5), 'vocabulary', 'multiple_choice', 1, '{"question":"What does “Tomosha qildi” mean in English?","options":["watched","played","cleaned","helped"]}'::jsonb, '{"correct_value":"watched"}'::jsonb, 1, 'L41 past verbs')
+values ((select id from public.online_tests where test_number = 5), 'vocabulary', 'multiple_choice', 1, '{"question":"What does “Qoldi” mean in English?","options":["stayed","went out","got up","yesterday"]}'::jsonb, '{"correct_value":"stayed"}'::jsonb, 1, 'L48 yesterday')
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
@@ -65,7 +65,7 @@ values ((select id from public.online_tests where test_number = 5), 'grammar', '
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
-values ((select id from public.online_tests where test_number = 5), 'grammar', 'multiple_choice', 5, '{"question":"How ___ apples are there?","options":["many","much"]}'::jsonb, '{"correct_value":"many"}'::jsonb, 1, 'L44 how-many')
+values ((select id from public.online_tests where test_number = 5), 'grammar', 'multiple_choice', 5, '{"question":"I''d ___ a kilo of apples, please.","options":["like","want"]}'::jsonb, '{"correct_value":"like"}'::jsonb, 1, 'L45 supermarket')
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
@@ -121,7 +121,7 @@ values ((select id from public.online_tests where test_number = 5), 'sentences',
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
-values ((select id from public.online_tests where test_number = 5), 'writing', 'translation', 1, '{"instruction":"Translate into English.","source_text":"Kecha futbol o''ynadim.","direction":"uz2en"}'::jsonb, '{"target_text":"I played football yesterday."}'::jsonb, 1, 'L41 past simple')
+values ((select id from public.online_tests where test_number = 5), 'writing', 'translation', 1, '{"instruction":"Translate into English.","source_text":"Mana qaytimingiz.","direction":"uz2en"}'::jsonb, '{"target_text":"Here''s your change."}'::jsonb, 1, 'L47 supermarket')
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)

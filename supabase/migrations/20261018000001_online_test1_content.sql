@@ -41,15 +41,15 @@ values ((select id from public.online_tests where test_number = 1), 'vocabulary'
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
-values ((select id from public.online_tests where test_number = 1), 'vocabulary', 'multiple_choice', 9, '{"question":"What does “Elephant” mean?","options":["Fil","Arslon","Quyon","Ot"]}'::jsonb, '{"correct_value":"Fil"}'::jsonb, 1, 'L9 animals')
+values ((select id from public.online_tests where test_number = 1), 'vocabulary', 'multiple_choice', 9, '{"question":"What does “sariq” mean in English?","options":["yellow","red","blue","green"]}'::jsonb, '{"correct_value":"yellow"}'::jsonb, 1, 'L7 colors games day')
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
-values ((select id from public.online_tests where test_number = 1), 'vocabulary', 'multiple_choice', 10, '{"question":"What does “stul” mean in English?","options":["chair","book","pencil","board"]}'::jsonb, '{"correct_value":"chair"}'::jsonb, 1, 'L4 classroom')
+values ((select id from public.online_tests where test_number = 1), 'vocabulary', 'multiple_choice', 10, '{"question":"What does “Nice to meet you” mean?","options":["Tanishganimdan xursandman","Xayrli tong","Yaxshiman, rahmat","Xayr"]}'::jsonb, '{"correct_value":"Tanishganimdan xursandman"}'::jsonb, 1, 'L8 introductions')
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
-values ((select id from public.online_tests where test_number = 1), 'grammar', 'multiple_choice', 1, '{"question":"My name ___ Malika.","options":["is","am"]}'::jsonb, '{"correct_value":"is"}'::jsonb, 1, 'L1 be-verb')
+values ((select id from public.online_tests where test_number = 1), 'grammar', 'multiple_choice', 1, '{"question":"It ___ an elephant.","options":["is","are"]}'::jsonb, '{"correct_value":"is"}'::jsonb, 1, 'L9 be-verb animals')
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
@@ -57,7 +57,7 @@ values ((select id from public.online_tests where test_number = 1), 'grammar', '
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
-values ((select id from public.online_tests where test_number = 1), 'grammar', 'multiple_choice', 3, '{"question":"It ___ a bird.","options":["is","am"]}'::jsonb, '{"correct_value":"is"}'::jsonb, 1, 'L9 it-is')
+values ((select id from public.online_tests where test_number = 1), 'grammar', 'multiple_choice', 3, '{"question":"These ___ red apples.","options":["are","is"]}'::jsonb, '{"correct_value":"are"}'::jsonb, 1, 'L7 plural games day')
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
@@ -65,7 +65,7 @@ values ((select id from public.online_tests where test_number = 1), 'grammar', '
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
-values ((select id from public.online_tests where test_number = 1), 'grammar', 'multiple_choice', 5, '{"question":"Which sentence is correct?","options":["My name Ali.","My name is Ali.","My name are Ali."]}'::jsonb, '{"correct_value":"My name is Ali."}'::jsonb, 1, 'L1 be-verb correction')
+values ((select id from public.online_tests where test_number = 1), 'grammar', 'multiple_choice', 5, '{"question":"I ___ ten years old.","options":["am","is"]}'::jsonb, '{"correct_value":"am"}'::jsonb, 1, 'L2 be-verb age')
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
@@ -73,11 +73,11 @@ values ((select id from public.online_tests where test_number = 1), 'grammar', '
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
-values ((select id from public.online_tests where test_number = 1), 'grammar', 'multiple_choice', 7, '{"question":"Which sentence is correct?","options":["I can to swim.","I can swim.","I can swimming."]}'::jsonb, '{"correct_value":"I can swim."}'::jsonb, 1, 'L10 can correction')
+values ((select id from public.online_tests where test_number = 1), 'grammar', 'multiple_choice', 7, '{"question":"Which sentence is correct?","options":["I am twenty years old.","I am twenty year old.","I twenty years old."]}'::jsonb, '{"correct_value":"I am twenty years old."}'::jsonb, 1, 'L5 numbers correction')
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
-values ((select id from public.online_tests where test_number = 1), 'grammar', 'multiple_choice', 8, '{"question":"It is ___ elephant.","options":["a","an"]}'::jsonb, '{"correct_value":"an"}'::jsonb, 1, 'L9 articles')
+values ((select id from public.online_tests where test_number = 1), 'grammar', 'multiple_choice', 8, '{"question":"I am ___ student.","options":["a","an"]}'::jsonb, '{"correct_value":"a"}'::jsonb, 1, 'L8 articles self-intro')
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
@@ -93,7 +93,7 @@ values ((select id from public.online_tests where test_number = 1), 'sentences',
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
-values ((select id from public.online_tests where test_number = 1), 'sentences', 'ordering', 2, '{"instruction":"Put the words in order.","tokens":["How","are","you?"]}'::jsonb, '{"correct_order":["How","are","you?"]}'::jsonb, 1, 'L1 greetings')
+values ((select id from public.online_tests where test_number = 1), 'sentences', 'ordering', 2, '{"instruction":"Put the words in order.","tokens":["Nice","to","meet","you."]}'::jsonb, '{"correct_order":["Nice","to","meet","you."]}'::jsonb, 1, 'L8 introductions')
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
@@ -129,7 +129,7 @@ values ((select id from public.online_tests where test_number = 1), 'writing', '
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
-values ((select id from public.online_tests where test_number = 1), 'writing', 'translation', 3, '{"instruction":"Translate into English.","source_text":"Mushuk","direction":"uz2en"}'::jsonb, '{"target_text":"Cat"}'::jsonb, 1, 'L2 age')
+values ((select id from public.online_tests where test_number = 1), 'writing', 'translation', 3, '{"instruction":"Translate into English.","source_text":"Suzmoq","direction":"uz2en"}'::jsonb, '{"target_text":"Swim"}'::jsonb, 1, 'L10 abilities')
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
@@ -141,5 +141,5 @@ values ((select id from public.online_tests where test_number = 1), 'writing', '
 on conflict (test_id, stage, position) do nothing;
 
 insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)
-values ((select id from public.online_tests where test_number = 1), 'writing', 'translation', 6, '{"instruction":"Translate into English.","source_text":"tort","direction":"uz2en"}'::jsonb, '{"target_text":"cake"}'::jsonb, 1, 'L2 age')
+values ((select id from public.online_tests where test_number = 1), 'writing', 'translation', 6, '{"instruction":"Translate into English.","source_text":"Fil","direction":"uz2en"}'::jsonb, '{"target_text":"Elephant"}'::jsonb, 1, 'L9 animals')
 on conflict (test_id, stage, position) do nothing;
