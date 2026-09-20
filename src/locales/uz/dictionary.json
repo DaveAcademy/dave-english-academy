@@ -6,6 +6,7 @@
   "tab_challenge": "Sinov",
   "tab_progress": "Jarayon",
   "tab_leaderboard": "Reyting",
+  "tab_knowledge": "Lug'at reytingi",
   "tab_search": "Qidiruv",
 
   "lesson": "Dars",
@@ -75,5 +76,8 @@
   "unsaveWord": "Saqlanganlardan olish",
   "savedLabel": "Saqlangan",
   "learningLabel": "O'rganilmoqda",
-  "wordsKnown": "Biladigan so'zlar"
+  "wordsKnown": "Biladigan so'zlar",
+  "knownWordsShort": "biladi",
+  "knowledgeEmptyHint": "Bu reytingga kirish uchun so'zlarni biling.",
+  "retry": "Qayta urinish"
 }

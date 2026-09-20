@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import {
   getDueReviews, scheduleReview, getMySummary, getMyWordsKnown, getLeaderboard,
+  getKnowledgeRanking,
   searchUnified, startWords, listLessonFavorites, listEntryFavorites,
   addLessonFavorite, addEntryFavorite, removeLessonFavorite,
   removeEntryFavorite, DAILY_LIMIT,
@@ -303,6 +304,91 @@ function LevelChip({ active, onClick, label }) {
     >
       {label}
     </button>
+  );
+}
+
+// ===================== KNOWLEDGE RANKING (Phase 5, KNOWN count only) =====================
+// Same visual language as LeaderboardTab, separate metric: Words Known
+// from get_vocabulary_knowledge_ranking(). No XP/points/search inputs.
+export function KnowledgeRankingTab({ me, t }) {
+  const [level, setLevel] = useState(null);
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  const reload = useCallback(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(false);
+    getKnowledgeRanking(level)
+      .then((r) => { if (!cancelled) setRows(r || []); })
+      .catch(() => { if (!cancelled) setError(true); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [level]);
+
+  useEffect(() => { const cancel = reload(); return cancel; }, [reload]);
+
+  const myRow = me ? rows.find((r) => r.student_id === me.id) : null;
+
+  return (
+    <div className="space-y-3">
+      <div className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1">
+        <LevelChip active={level === null} onClick={() => setLevel(null)} label={t('allLevels')} />
+        {LEVELS.map((l) => (
+          <LevelChip key={l} active={level === l} onClick={() => setLevel(l)} label={l} />
+        ))}
+      </div>
+
+      {myRow && (
+        <div className="rounded-xl border border-brand-200 bg-brand-50/60 p-3 shadow-card">
+          <p className="text-[11px] font-medium uppercase tracking-wide text-brand-600">{t('yourRank')}</p>
+          <p className="mt-0.5 text-sm font-semibold text-ink">
+            #{myRow.rank} · {myRow.known_words} {t('knownWordsShort')}
+          </p>
+        </div>
+      )}
+
+      {loading ? <SkeletonRows count={5} /> : error ? (
+        <div className="space-y-2">
+          <ErrorBanner />
+          <button
+            type="button"
+            onClick={reload}
+            className="w-full rounded-xl border border-ink/[0.06] bg-white py-2.5 text-sm font-semibold text-brand-700 shadow-sm hover:bg-brand-50"
+          >
+            {t('retry')}
+          </button>
+        </div>
+      ) : rows.length === 0 ? (
+        <EmptyState Icon={Trophy} title={t('noRankingsYet')} hint={t('knowledgeEmptyHint')} />
+      ) : (
+        <div className="overflow-hidden rounded-xl border border-ink/[0.06] bg-white shadow-card">
+          {rows.map((r, i) => (
+            <div
+              key={r.student_id}
+              className={`flex items-center gap-3 border-ink/[0.04] px-4 py-2.5 ${i > 0 ? 'border-t' : ''} ${
+                me && r.student_id === me.id ? 'bg-brand-50/50' : ''
+              }`}
+            >
+              <span className={`w-7 flex-shrink-0 text-center font-display text-sm font-bold ${
+                r.rank === 1 ? 'text-amber-500' : r.rank <= 3 ? 'text-brand-500' : 'text-ink/40'
+              }`}>
+                {r.rank}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-ink">
+                  {formatStudentDisplayName(r.real_name, r.english_name)}
+                </p>
+                <p className="text-[11px] text-ink/40">
+                  {r.level ? levelToken(r.level) : '-'} · {r.known_words} {t('knownWordsShort')}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 

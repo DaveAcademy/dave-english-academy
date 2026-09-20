@@ -62,6 +62,12 @@ export function getMyWordsKnown() {
   return rpc('get_my_words_known');
 }
 
+// Vocabulary Knowledge Ranking (Phase 5): academy-wide KNOWN-word
+// counts. level: null = all levels. Rows carry ranks/names only.
+export function getKnowledgeRanking(level = null) {
+  return rpc('get_vocabulary_knowledge_ranking', { p_level: level });
+}
+
 // Academy-wide ranking by mastered count. level: null = all levels.
 export function getLeaderboard(level = null) {
   return rpc('get_dictionary_leaderboard', { p_level: level });

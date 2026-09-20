@@ -6,6 +6,7 @@
   "tab_challenge": "Challenge",
   "tab_progress": "Progress",
   "tab_leaderboard": "Ranking",
+  "tab_knowledge": "Word Ranking",
   "tab_search": "Search",
 
   "lesson": "Lesson",
@@ -75,5 +76,8 @@
   "unsaveWord": "Remove from saved",
   "savedLabel": "Saved",
   "learningLabel": "Learning",
-  "wordsKnown": "Words known"
+  "wordsKnown": "Words known",
+  "knownWordsShort": "known",
+  "knowledgeEmptyHint": "Know words to appear on this ranking.",
+  "retry": "Try again"
 }

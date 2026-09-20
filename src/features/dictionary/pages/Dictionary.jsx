@@ -20,10 +20,10 @@ import {
   Pill, EmptyState, ErrorBanner, SkeletonRows,
 } from '../components/shared';
 import {
-  ChallengeTab, ProgressTab, LeaderboardTab, SearchTab,
+  ChallengeTab, ProgressTab, LeaderboardTab, KnowledgeRankingTab, SearchTab,
 } from '../components/DictionaryTabs';
 
-const TABS = ['learn', 'review', 'challenge', 'progress', 'leaderboard', 'search'];
+const TABS = ['learn', 'review', 'challenge', 'progress', 'leaderboard', 'knowledge', 'search'];
 
 export default function Dictionary() {
   const { t } = useTranslation('dictionary');
@@ -58,6 +58,7 @@ export default function Dictionary() {
       {tab === 'challenge' && <ChallengeTab me={me} t={t} />}
       {tab === 'progress' && <ProgressTab me={me} t={t} />}
       {tab === 'leaderboard' && <LeaderboardTab me={me} t={t} />}
+      {tab === 'knowledge' && <KnowledgeRankingTab me={me} t={t} />}
       {tab === 'search' && <SearchTab me={me} t={t} />}
     </div>
   );
