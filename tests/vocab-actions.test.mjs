@@ -15,7 +15,7 @@ function check(cond, msg) {
 
 const tabs = read('src/features/dictionary/components/DictionaryTabs.jsx');
 check(tabs.includes(`const ACTION_PRIORITY = ['LAPSED', 'LEARNING', 'NEW', 'DEMONSTRATED', 'KNOWN']`), 'priority LAPSED>LEARNING>NEW>DEMONSTRATED>KNOWN');
-check(tabs.includes(`NEW: 'learn'`) && tabs.includes(`LAPSED: 'review'`), 'states map to existing flows');
+check(tabs.includes(`onAction(state)`) && read('src/features/dictionary/pages/Dictionary.jsx').includes('runStateAction'), 'states fetch server scope first');
 for (const k of ['actLearn', 'actPractice', 'actReview', 'actReviewAgain']) {
   check(tabs.includes(k), `action key ${k} used`);
 }
@@ -27,7 +27,7 @@ check(tabs.includes('export function WordsTab({ me, t, onAction })'), 'words tab
 check(!tabs.match(/Math\.max\(.*systems|score\s*=|weight/i), 'no numerical recommendation score');
 
 const page = read('src/features/dictionary/pages/Dictionary.jsx');
-check(page.includes('onAction={setTab}'), 'actions route to existing tabs');
+check(page.includes('onAction={runStateAction}'), 'actions fetch server scope first');
 
 const en = JSON.parse(read('src/locales/en/dictionary.json'));
 const uz = JSON.parse(read('src/locales/uz/dictionary.json'));

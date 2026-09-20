@@ -323,9 +323,9 @@ const KNOWLEDGE_ORDER = ['KNOWN', 'DEMONSTRATED', 'LEARNING', 'NEW', 'LAPSED'];
 
 // Priority order only - no scores. Lapsed recovery first, maintenance last.
 const ACTION_PRIORITY = ['LAPSED', 'LEARNING', 'NEW', 'DEMONSTRATED', 'KNOWN'];
-// State -> existing Dictionary tab. Review serves due-first SRS order, so
-// lapsed/due words surface naturally; Learn serves today's new words.
-const STATE_ACTION_TAB = { NEW: 'learn', LEARNING: 'review', DEMONSTRATED: 'review', KNOWN: 'review', LAPSED: 'review' };
+// State -> action label. Navigation target is decided by the parent from
+// the state (NEW/LEARNING -> Learn, others -> Review) after fetching the
+// server-selected set.
 const STATE_ACTION_KEY = { NEW: 'actLearn', LEARNING: 'actPractice', DEMONSTRATED: 'actReview', KNOWN: 'actReview', LAPSED: 'actReviewAgain' };
 
 export function WordsTab({ me, t, onAction }) {
@@ -380,7 +380,7 @@ export function WordsTab({ me, t, onAction }) {
   const priority = ACTION_PRIORITY.find((st) => (counts[st] || 0) > 0) || null;
 
   const goAction = (state) => {
-    if (onAction && STATE_ACTION_TAB[state]) onAction(STATE_ACTION_TAB[state]);
+    if (onAction) onAction(state);
   };
 
   return (

@@ -114,5 +114,11 @@
   "actLearn": "Start learning",
   "actPractice": "Practice these words",
   "actReview": "Review",
-  "actReviewAgain": "Review again"
+  "actReviewAgain": "Review again",
+  "scopeLearnHeadline": "{{count}} words selected for learning",
+  "scopeReviewHeadline": "{{due}} of {{count}} words due for review",
+  "scopeEmptyTitle": "No words in this set right now",
+  "scopeEmptyHint": "Try another action or come back later.",
+  "scopeAddFirstHint": "These words need to be added to learning first.",
+  "addFailedHint": "Please try again in a moment."
 }

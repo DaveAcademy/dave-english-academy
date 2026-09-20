@@ -13,7 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { Volume2, Check } from 'lucide-react';
 import { useAcademy } from '../../../lib/AcademyDataContext';
 import {
-  getNextWords, startWords, getDueReviews, scheduleReview, DAILY_LIMIT,
+  getNextWords, startWords, getDueReviews, scheduleReview, getActionScope, DAILY_LIMIT,
 } from '../api/dictionaryBridge';
 import {
   QUALITY, STATE_META, speak, showSpeechFallback,
@@ -29,6 +29,29 @@ export default function Dictionary() {
   const { t } = useTranslation('dictionary');
   const { me, students } = useAcademy();
   const [tab, setTab] = useState('learn');
+  // Scoped action set: { tab: 'learn'|'review', state, rows|null }.
+  // Temporary UI state only - cleared on manual tab navigation, so a
+  // stale scope can never leak into normal Learn/Review.
+  const [scope, setScope] = useState(null);
+
+  const goTab = (key) => {
+    setScope(null);
+    setTab(key);
+  };
+
+  // State action from My Words: fetch the server-selected set first, then
+  // open the flow with exactly that set (never an unscoped queue).
+  const runStateAction = useCallback(async (state) => {
+    const dest = state === 'NEW' || state === 'LEARNING' ? 'learn' : 'review';
+    setScope({ tab: dest, state, rows: null });
+    setTab(dest);
+    try {
+      const rows = (await getActionScope(state)) || [];
+      setScope({ tab: dest, state, rows });
+    } catch {
+      setScope({ tab: dest, state, rows: false });
+    }
+  }, []);
 
   return (
     <div className="space-y-4">
@@ -41,7 +64,7 @@ export default function Dictionary() {
         {TABS.map((key) => (
           <button
             key={key}
-            onClick={() => setTab(key)}
+            onClick={() => goTab(key)}
             className={`flex-shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
               tab === key
                 ? 'bg-brand-600 text-white shadow-sm'
@@ -53,13 +76,17 @@ export default function Dictionary() {
         ))}
       </div>
 
-      {tab === 'learn' && <LearnTab me={me} t={t} />}
-      {tab === 'review' && <ReviewTab me={me} t={t} />}
+      {tab === 'learn' && (scope && scope.tab === 'learn'
+        ? <ScopedLearnContent scope={scope} t={t} onRetry={() => runStateAction(scope.state)} />
+        : <LearnTab me={me} t={t} />)}
+      {tab === 'review' && (scope && scope.tab === 'review'
+        ? <ScopedReviewContent scope={scope} t={t} onRetry={() => runStateAction(scope.state)} />
+        : <ReviewTab me={me} t={t} />)}
       {tab === 'challenge' && <ChallengeTab me={me} t={t} />}
       {tab === 'progress' && <ProgressTab me={me} t={t} />}
       {tab === 'leaderboard' && <LeaderboardTab me={me} t={t} />}
       {tab === 'knowledge' && <KnowledgeRankingTab me={me} t={t} />}
-      {tab === 'words' && <WordsTab me={me} t={t} onAction={setTab} />}
+      {tab === 'words' && <WordsTab me={me} t={t} onAction={runStateAction} />}
       {tab === 'search' && <SearchTab me={me} t={t} />}
     </div>
   );
@@ -283,5 +310,199 @@ function GradeButton({ label, quality, cls, onPick, disabled }) {
     >
       {label}
     </button>
+  );
+}
+
+// ---------- Scoped Learn: reveal + add ONLY the server-selected set ----------
+// Rows arrive shaped like Learn candidates (id = vocabulary_id). Adding
+// goes through startWords, so the daily cap and duplicates stay enforced
+// server-side exactly as in normal Learn.
+function ScopedLearnContent({ scope, t, onRetry }) {
+  const [revealed, setRevealed] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [addedCount, setAddedCount] = useState(0);
+  const [failed, setFailed] = useState(false);
+
+  if (scope.rows == null) return <SkeletonRows count={3} />;
+  if (scope.rows === false) {
+    return (
+      <div className="space-y-2">
+        <ErrorBanner />
+        <button
+          type="button"
+          onClick={onRetry}
+          className="w-full rounded-xl border border-ink/[0.06] bg-white py-2.5 text-sm font-semibold text-brand-700 shadow-sm hover:bg-brand-50"
+        >
+          {t('retry')}
+        </button>
+      </div>
+    );
+  }
+  if (!scope.rows.length) {
+    return <EmptyState Icon={Check} title={t('scopeEmptyTitle')} hint={t('scopeEmptyHint')} />;
+  }
+  if (addedCount > 0 || failed) {
+    return (
+      <EmptyState
+        Icon={Check}
+        title={failed ? t('addFailed') : t('allCaughtUp')}
+        hint={failed ? t('addFailedHint') : t('wordsAdded', { count: addedCount })}
+      />
+    );
+  }
+
+  const list = scope.rows;
+  const handleAdd = async () => {
+    setAdding(true);
+    try {
+      const count = await startWords(list.map((w) => w.vocabulary_id));
+      setAddedCount(count || 0);
+    } catch {
+      setFailed(true);
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      <p className="text-xs text-ink/40">{t('scopeLearnHeadline', { count: list.length })}</p>
+      {list.map((w) => (
+        <LearnWordCard key={w.vocabulary_id} word={{ ...w, id: w.vocabulary_id }} t={t} showUzbek={revealed} />
+      ))}
+      {!revealed ? (
+        <button
+          onClick={() => setRevealed(true)}
+          className="w-full rounded-xl border border-ink/[0.06] bg-brand-50 py-3 text-sm font-semibold text-brand-700 transition-colors hover:bg-brand-100"
+        >
+          {t('revealTranslations')}
+        </button>
+      ) : (
+        <button
+          onClick={handleAdd}
+          disabled={adding}
+          className="w-full rounded-xl bg-brand-600 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 disabled:opacity-50"
+        >
+          {adding ? t('adding') : t('startLearningThese', { count: list.length })}
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ---------- Scoped Review: grade ONLY due rows of the server-selected set ----------
+// Rows with an SRS row id join the grade queue (due-first, server-ordered);
+// rows without one are listed with an inline Add (startWords, server-capped).
+// Normal Review behavior is untouched - this component only renders for scopes.
+function ScopedReviewContent({ scope, t, onRetry }) {
+  const [idx, setIdx] = useState(0);
+  const [showAnswer, setShowAnswer] = useState(false);
+  const [processing, setProcessing] = useState(false);
+  const [done, setDone] = useState(false);
+  const [addedIds, setAddedIds] = useState(() => new Set());
+
+  if (scope.rows == null) return <SkeletonRows count={3} />;
+  if (scope.rows === false) {
+    return (
+      <div className="space-y-2">
+        <ErrorBanner />
+        <button
+          type="button"
+          onClick={onRetry}
+          className="w-full rounded-xl border border-ink/[0.06] bg-white py-2.5 text-sm font-semibold text-brand-700 shadow-sm hover:bg-brand-50"
+        >
+          {t('retry')}
+        </button>
+      </div>
+    );
+  }
+  if (!scope.rows.length) {
+    return <EmptyState Icon={Check} title={t('scopeEmptyTitle')} hint={t('scopeEmptyHint')} />;
+  }
+
+  const queue = scope.rows.filter((r) => r.srs_row_id && r.is_due && !addedIds.has(r.vocabulary_id));
+  const pending = scope.rows.filter((r) => !r.srs_row_id && !addedIds.has(r.vocabulary_id));
+
+  const answer = async (quality) => {
+    const current = queue[idx];
+    if (!current || processing) return;
+    setProcessing(true);
+    try {
+      await scheduleReview(current.srs_row_id, quality);
+      if (idx + 1 >= queue.length) setDone(true);
+      else {
+        setIdx((i) => i + 1);
+        setShowAnswer(false);
+      }
+    } catch {
+      // Transient RPC failure: leave the card in place so the student can retry.
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const addOne = async (row) => {
+    try {
+      await startWords([row.vocabulary_id]);
+      setAddedIds((prev) => new Set(prev).add(row.vocabulary_id));
+    } catch { /* error surfaces on next attempt; list stays */ }
+  };
+
+  const current = queue[idx];
+
+  return (
+    <div className="space-y-3">
+      <p className="text-xs text-ink/40">{t('scopeReviewHeadline', { due: queue.length, count: scope.rows.length })}</p>
+      {current && !done ? (
+        <>
+          <div className="flex items-center justify-between text-xs text-ink/40">
+            <span>{idx + 1} / {queue.length}</span>
+          </div>
+          <div className="rounded-xl border border-ink/[0.06] bg-white p-5 shadow-card">
+            <p className="text-xs uppercase tracking-wide text-ink/40">{t('translateToUzbek')}</p>
+            <p className="mt-1 break-words font-display text-2xl font-bold text-ink">{current.english}</p>
+            {current.pronunciation && <p className="text-xs text-ink/40">/{current.pronunciation}/</p>}
+            {showAnswer && <p className="mt-3 break-words text-lg font-semibold text-brand-700">{current.uzbek}</p>}
+            {showAnswer && current.example && (
+              <p className="mt-2 break-words border-t border-ink/5 pt-2 text-xs text-ink/50">{current.example}</p>
+            )}
+          </div>
+          {!showAnswer ? (
+            <button
+              onClick={() => setShowAnswer(true)}
+              className="w-full rounded-xl border border-ink/[0.06] bg-brand-50 py-3 text-sm font-semibold text-brand-700 transition-colors hover:bg-brand-100"
+            >
+              {t('showAnswer')}
+            </button>
+          ) : (
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <GradeButton label={t('wrong')} quality={QUALITY.WRONG} cls="bg-red-50 text-red-700 hover:bg-red-100" onPick={answer} disabled={processing} t={t} />
+              <GradeButton label={t('hard')} quality={QUALITY.HARD} cls="bg-amber-50 text-amber-700 hover:bg-amber-100" onPick={answer} disabled={processing} t={t} />
+              <GradeButton label={t('correct')} quality={QUALITY.CORRECT} cls="bg-emerald-50 text-emerald-700 hover:bg-emerald-100" onPick={answer} disabled={processing} t={t} />
+              <GradeButton label={t('easy')} quality={QUALITY.EASY} cls="bg-brand-50 text-brand-700 hover:bg-brand-100" onPick={answer} disabled={processing} t={t} />
+            </div>
+          )}
+        </>
+      ) : (
+        <EmptyState Icon={Check} title={t('reviewsComplete')} />
+      )}
+      {pending.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-xs text-ink/40">{t('scopeAddFirstHint')}</p>
+          {pending.map((r) => (
+            <div key={r.vocabulary_id} className="flex items-center gap-2 rounded-xl border border-ink/[0.06] bg-white px-4 py-2.5 shadow-card">
+              <p className="min-w-0 flex-1 truncate text-sm font-medium text-ink">{r.english}</p>
+              <button
+                type="button"
+                onClick={() => addOne(r)}
+                className="inline-flex min-h-[44px] flex-shrink-0 items-center rounded-xl bg-brand-600 px-4 text-xs font-semibold text-white hover:bg-brand-700"
+              >
+                {t('addToLearning')}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

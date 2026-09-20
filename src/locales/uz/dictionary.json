@@ -114,5 +114,11 @@
   "actLearn": "O'rganishni boshlash",
   "actPractice": "Shu so'zlarni mashq qilish",
   "actReview": "Takrorlash",
-  "actReviewAgain": "Qayta takrorlash"
+  "actReviewAgain": "Qayta takrorlash",
+  "scopeLearnHeadline": "O'rganish uchun {{count}} ta so'z tanlandi",
+  "scopeReviewHeadline": "{{count}} ta so'zdan {{due}} tasi takrorlashga tayyor",
+  "scopeEmptyTitle": "Bu to'plamda hozir so'z yo'q",
+  "scopeEmptyHint": "Boshqa amalni sinab ko'ring yoki keyinroq qayting.",
+  "scopeAddFirstHint": "Bu so'zlarni avval o'rganishga qo'shish kerak.",
+  "addFailedHint": "Iltimos, bir ozdan keyin qayta urining."
 }

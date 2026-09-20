@@ -62,6 +62,12 @@ export function getMyWordsKnown() {
   return rpc('get_my_words_known');
 }
 
+// Scoped action set (Phase 14): server-selected vocabulary rows in one
+// knowledge state, shaped for Learn/Review. State validated server-side.
+export function getActionScope(state) {
+  return rpc('get_vocabulary_action_set', { p_state: state });
+}
+
 // Per-word knowledge states (Phase 3 read model). Server-computed;
 // the client only counts/displays the returned labels.
 export function getMyKnowledge() {
