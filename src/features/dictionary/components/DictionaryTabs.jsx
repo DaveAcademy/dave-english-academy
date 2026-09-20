@@ -15,12 +15,13 @@ import {
   Bookmark, BookmarkCheck, Plus, Check,
 } from 'lucide-react';
 import {
-  getDueReviews, scheduleReview, getMySummary, getMyWordsKnown, getLeaderboard,
-  getKnowledgeRanking,
+  getDueReviews, scheduleReview, getMySummary, getMyWordsKnown, getMyKnowledge,
+  getMyEvidence, getLeaderboard, getKnowledgeRanking,
   searchUnified, startWords, listLessonFavorites, listEntryFavorites,
   addLessonFavorite, addEntryFavorite, removeLessonFavorite,
   removeEntryFavorite, DAILY_LIMIT,
 } from '../api/dictionaryBridge';
+import { listAllVocabulary } from '../../../lib/storageBridge';
 import { formatStudentDisplayName } from '../../../lib/gameRecordFormat';
 import { levelToken } from '../../../lib/levels';
 import {
@@ -304,6 +305,171 @@ function LevelChip({ active, onClick, label }) {
     >
       {label}
     </button>
+  );
+}
+
+// ===================== WORDS (Phase 12: knowledge states + evidence) =====================
+// Server-computed knowledge_state labels are displayed as-is; the client
+// only counts rows for the summary. Evidence pills come from the Phase 2
+// read model joined by vocabulary_id. State rules live server-side only.
+const KNOWLEDGE_META = {
+  NEW: { color: 'slate', labelKey: 'kstate_new', descKey: 'kstate_new_desc' },
+  LEARNING: { color: 'amber', labelKey: 'kstate_learning', descKey: 'kstate_learning_desc' },
+  DEMONSTRATED: { color: 'brand', labelKey: 'kstate_demonstrated', descKey: 'kstate_demonstrated_desc' },
+  KNOWN: { color: 'green', labelKey: 'kstate_known', descKey: 'kstate_known_desc' },
+  LAPSED: { color: 'red', labelKey: 'kstate_lapsed', descKey: 'kstate_lapsed_desc' },
+};
+const KNOWLEDGE_ORDER = ['KNOWN', 'DEMONSTRATED', 'LEARNING', 'NEW', 'LAPSED'];
+
+export function WordsTab({ me, t }) {
+  const [rows, setRows] = useState([]);
+  const [uzbekById, setUzbekById] = useState({});
+  const [filter, setFilter] = useState(null);
+  const [openId, setOpenId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  const reload = useCallback(() => {
+    if (!me) return undefined;
+    let cancelled = false;
+    setLoading(true);
+    setError(false);
+    Promise.all([getMyKnowledge(), getMyEvidence(), listAllVocabulary().catch(() => [])])
+      .then(([k, e, v]) => {
+        if (cancelled) return;
+        const evById = {};
+        for (const r of e || []) evById[r.vocabulary_id] = r;
+        const uzById = {};
+        for (const w of v || []) uzById[w.id] = w.uzbek;
+        setRows((k || []).map((r) => ({ ...r, _ev: evById[r.vocabulary_id] || null })));
+        setUzbekById(uzById);
+      })
+      .catch(() => { if (!cancelled) setError(true); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [me]);
+
+  useEffect(() => { const cancel = reload(); return cancel; }, [reload]);
+
+  if (loading) return <SkeletonRows count={5} />;
+  if (error) {
+    return (
+      <div className="space-y-2">
+        <ErrorBanner />
+        <button
+          type="button"
+          onClick={reload}
+          className="w-full rounded-xl border border-ink/[0.06] bg-white py-2.5 text-sm font-semibold text-brand-700 shadow-sm hover:bg-brand-50"
+        >
+          {t('retry')}
+        </button>
+      </div>
+    );
+  }
+
+  const counts = {};
+  for (const r of rows) counts[r.knowledge_state] = (counts[r.knowledge_state] || 0) + 1;
+  const visible = filter ? rows.filter((r) => r.knowledge_state === filter) : rows;
+
+  return (
+    <div className="space-y-3">
+      <div className="rounded-xl border border-ink/[0.06] bg-white p-4 shadow-card">
+        <p className="font-display text-sm font-semibold text-ink">{t('howMeasuredTitle')}</p>
+        <p className="mt-1 text-xs leading-relaxed text-ink/55">{t('howMeasuredBody')}</p>
+      </div>
+
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+        {KNOWLEDGE_ORDER.map((st) => {
+          const meta = KNOWLEDGE_META[st];
+          const active = filter === st;
+          return (
+            <button
+              key={st}
+              type="button"
+              onClick={() => { setFilter(active ? null : st); setOpenId(null); }}
+              aria-pressed={active}
+              className={`rounded-xl border p-3 text-center shadow-card transition-colors ${
+                active ? 'border-brand-300 bg-brand-50' : 'border-ink/[0.06] bg-white hover:bg-ink/[0.02]'
+              }`}
+            >
+              <p className="truncate text-[11px] font-medium uppercase tracking-wide text-ink/40">{t(meta.labelKey)}</p>
+              <p className="mt-0.5 font-display text-xl font-bold text-ink">{counts[st] || 0}</p>
+            </button>
+          );
+        })}
+      </div>
+
+      {rows.length === 0 ? (
+        <EmptyState Icon={Sparkles} title={t('noWordsYet')} hint={t('noWordsYetHint')} />
+      ) : visible.length === 0 ? (
+        <EmptyState Icon={Sparkles} title={t('noWordsInState')} hint={t('noWordsInStateHint')} />
+      ) : (
+        <div className="space-y-2">
+          {visible.map((r) => (
+            <WordKnowledgeCard
+              key={r.vocabulary_id}
+              row={r}
+              uzbek={uzbekById[r.vocabulary_id]}
+              open={openId === r.vocabulary_id}
+              onToggle={() => setOpenId(openId === r.vocabulary_id ? null : r.vocabulary_id)}
+              t={t}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function WordKnowledgeCard({ row, uzbek, open, onToggle, t }) {
+  const meta = KNOWLEDGE_META[row.knowledge_state] || KNOWLEDGE_META.NEW;
+  const ev = row._ev;
+  const systems = ev ? [
+    { label: t('evDictionary'), ok: (ev.dictionary_correct || 0) > 0 },
+    { label: t('evGames'), ok: (ev.game_correct || 0) > 0 },
+    { label: t('evHomework'), ok: (ev.homework_correct || 0) > 0 },
+    { label: t('evTests'), ok: (ev.test_correct || 0) > 0 },
+  ] : [];
+  return (
+    <div className="overflow-hidden rounded-xl border border-ink/[0.06] bg-white shadow-card">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        className="flex w-full items-center gap-2 p-4 text-left"
+      >
+        <div className="min-w-0 flex-1">
+          <p className="break-words font-display text-base font-bold text-ink">{row.english}</p>
+          {uzbek && <p className="break-words text-sm font-medium text-brand-700">{uzbek}</p>}
+        </div>
+        {row.lesson_number != null && (
+          <span className="hidden flex-shrink-0 sm:inline"><Pill text={`${t('lesson')} ${row.lesson_number}`} color="slate" /></span>
+        )}
+        <Pill text={t(meta.labelKey)} color={meta.color} />
+      </button>
+      {open && (
+        <div className="border-t border-ink/5 px-4 py-3">
+          <p className="text-xs leading-relaxed text-ink/55">{t(meta.descKey)}</p>
+          {systems.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {systems.map((s) => (
+                <span
+                  key={s.label}
+                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                    s.ok ? 'bg-emerald-50 text-emerald-700' : 'bg-ink/[0.04] text-ink/40'
+                  }`}
+                >
+                  {s.ok ? <Check size={11} aria-hidden /> : null}{s.label}
+                </span>
+              ))}
+            </div>
+          )}
+          {(row.retention_interval_days || 0) > 0 && (
+            <p className="mt-2 text-[11px] text-ink/40">{t('retentionDays', { count: row.retention_interval_days })}</p>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 

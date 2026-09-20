@@ -62,6 +62,17 @@ export function getMyWordsKnown() {
   return rpc('get_my_words_known');
 }
 
+// Per-word knowledge states (Phase 3 read model). Server-computed;
+// the client only counts/displays the returned labels.
+export function getMyKnowledge() {
+  return rpc('get_my_vocabulary_knowledge');
+}
+
+// Per-word evidence signals (Phase 2 read model) for the explainer UI.
+export function getMyEvidence() {
+  return rpc('get_my_vocabulary_evidence');
+}
+
 // Vocabulary Knowledge Ranking (Phase 5): academy-wide KNOWN-word
 // counts. level: null = all levels. Rows carry ranks/names only.
 export function getKnowledgeRanking(level = null) {
