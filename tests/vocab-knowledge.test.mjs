@@ -1,5 +1,5 @@
-// Vocabulary knowledge Phase 3: derived NEW/LEARNING/DEMONSTRATED/KNOWN/
-// LAPSED read model over Phase 2 evidence + live SRS rows.
+// Vocabulary mastery facets: KNOWN = meaning (EN<->UZ) AND usage (correct
+// EN production). Retention no longer gates KNOWN. SRS untouched.
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -13,41 +13,45 @@ function check(cond, msg) {
   else console.log(`ok ${msg}`);
 }
 
-const MIG = 'supabase/migrations/20261018000017_vocab_knowledge_states.sql';
-check(existsSync(`${root}/${MIG}`), 'knowledge migration exists');
+const MIG = 'supabase/migrations/20261018000022_vocab_mastery_facets.sql';
+check(existsSync(`${root}/${MIG}`), 'mastery migration exists');
 const mig = read(MIG);
 const code = mig.replace(/--[^\n]*/g, ' ').replace(/'([^']|'')*'/g, "''");
-check(mig.includes('get_my_vocabulary_knowledge()'), 'RPC name');
-check(mig.includes('profile_id = auth.uid()'), 'self-only via auth.uid');
-check(!mig.match(/p_student_id/), 'no cross-student parameter');
+check(mig.includes('vocabulary_knowledge_for('), 'helper replaced with facets');
 for (const st of [`'NEW'`, `'LEARNING'`, `'DEMONSTRATED'`, `'KNOWN'`, `'LAPSED'`]) {
   check(mig.includes(st), `state ${st}`);
 }
-check(mig.includes('get_my_vocabulary_evidence()'), 'builds on Phase 2 evidence');
-check(mig.includes('interval_days') && mig.includes('>= 30'), 'retention via SRS interval');
-check(mig.includes(`= 'MASTERED'`), 'MASTERED feeds KNOWN');
-check(mig.includes('>= 2'), 'two-system independence rule');
-check(mig.includes('grant execute on function public.get_my_vocabulary_knowledge() to authenticated'), 'grants');
-for (const bad of ['words_known', 'point_transactions', 'student_xp', 'game_points', 'rank(']) {
-  check(!code.toLowerCase().includes(bad), `no ${bad}`);
-}
-for (const bad of ['\ninsert into', '\nupdate ', '\ndelete from', 'drop table', 'alter table', 'create table']) {
-  check(!code.toLowerCase().includes(bad), `read-only (no ${bad.trim()})`);
-}
-check(!code.includes('exam_scores'), 'exams excluded');
-check(code.includes('hint-blind') || mig.includes('hint-blind'), 'hint limitation documented');
-
-// Transition priority: LAPSED-override first, then MASTERED, then
-// retention-KNOWN, then DEMONSTRATED, with NEW before the LEARNING default.
+// Teacher definition: meaning (EN<->UZ) AND usage (correct EN production).
+check(code.includes('hw_usage') && code.includes('test_usage'), 'usage facet exists');
+check(code.includes('hw_meaning') && code.includes('test_meaning'), 'meaning facet exists');
+check(!code.match(/interval_days[^;]*>= 30/), 'no retention gate on KNOWN');
+check(!code.match(/then\s+""\s*$/m) && !code.includes('MASTERED'), 'no MASTERED shortcut (SRS untouched, not consulted)');
+// Example 1+2: single facet is never KNOWN (KNOWN requires the AND).
+check(mig.includes(`then 'KNOWN'`), 'KNOWN branch exists');
+// Example 4: LAPSED override preserved.
+check(mig.includes(`= 'LAPSED'`), 'LAPSED override preserved');
+// DEMONSTRATED/LEARNING/NEW preserved; multi-system rule intact.
+check(mig.includes('>= 2') && mig.includes(`then 'DEMONSTRATED'`), 'two-system DEMONSTRATED preserved');
+check(mig.includes(`then 'NEW'`) && mig.includes(`else 'LEARNING'`), 'NEW/LEARNING preserved');
+// Priority: LAPSED first, KNOWN before DEMONSTRATED, NEW before LEARNING.
 const iLapsed = mig.indexOf(`= 'LAPSED'`);
-const iMasteredKnown = mig.indexOf(`= 'MASTERED' then 'KNOWN'`);
-const iKnown = mig.indexOf(`then 'KNOWN'`, iMasteredKnown + 1);
+const iKnown = mig.indexOf(`then 'KNOWN'`);
 const iDemo = mig.indexOf(`then 'DEMONSTRATED'`);
 const iNew = mig.indexOf(`then 'NEW'`);
 const iLearning = mig.indexOf(`else 'LEARNING'`);
-check(iLapsed > 0 && iLapsed < iMasteredKnown, 'lapse overrides before KNOWN');
-check(iMasteredKnown < iKnown && iKnown < iDemo, 'KNOWN before DEMONSTRATED');
+check(iLapsed > 0 && iLapsed < iKnown, 'lapse overrides before KNOWN');
+check(iKnown < iDemo, 'KNOWN before DEMONSTRATED');
 check(iDemo < iNew && iNew < iLearning, 'NEW before LEARNING default');
+// Security posture unchanged: helper locked, auth/grants live in wrapper.
+check(code.includes('revoke execute on function public.vocabulary_knowledge_for(bigint)'), 'helper lock preserved');
+check(!code.match(/grant execute/i), 'no new grants');
+const wrap = read('supabase/migrations/20261018000018_vocab_knowledge_count_rank.sql');
+check(wrap.includes('profile_id = auth.uid()'), 'self-only via auth.uid (wrapper)');
+check(wrap.includes('grant execute on function public.get_my_vocabulary_knowledge() to authenticated'), 'wrapper grants intact');
+// Read-only, exams out, hint caveat documented upstream.
+for (const bad of ['\ninsert into', '\nupdate ', '\ndelete from', 'drop table', 'alter table', 'create table', 'point_transactions', 'student_xp', 'exam_scores']) {
+  check(!code.toLowerCase().includes(bad), `clean (no ${bad.trim()})`);
+}
 
-console.log(failures === 0 ? 'ALL VOCAB-KNOWLEDGE CHECKS PASS' : `${failures} FAILURES`);
+console.log(failures === 0 ? 'ALL VOCAB-MASTERY CHECKS PASS' : `${failures} FAILURES`);
 process.exit(failures === 0 ? 0 : 1);

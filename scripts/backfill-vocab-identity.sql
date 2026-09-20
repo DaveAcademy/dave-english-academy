@@ -7,9 +7,13 @@
 --     zero or 2+ candidates are left NULL and reported, never guessed;
 --   * the correct answer cross-check must agree (uzbek for en->uz,
 --     english for uz->en), so snapshot/DB drift never mislinks;
---   * homework: multiple_choice `What does "X" mean?` only;
---   * online tests: vocabulary/multiple_choice word-meaning items only;
---   * sentence/grammar/matching/reading rows are never touched.
+--   * homework: multiple_choice `What does "X" mean?` plus single-word
+--     translation items (either direction; the English side must match a
+--     lesson word and the Uzbek side must agree);
+--   * online tests: vocabulary/multiple_choice word-meaning items plus
+--     single-word writing/translation items (same two-sided rule);
+--   * sentence/grammar/matching/reading/ordering rows are never touched
+--     (whole-sentence tasks cannot attribute to one word).
 -- Ends with mapped/ambiguous/unmapped report SELECTs. Read-only until
 -- the two UPDATEs; run in a transaction to dry-review if desired.
 
@@ -81,6 +85,77 @@ from (select iid, (array_agg(vid))[1] as vid from tmp_ot_cands group by iid havi
 where t.id = u.iid
   and t.vocabulary_id is null;
 
+-- ================= homework translations (single-word, either direction) ===
+-- Sentence targets never match a single lesson word, so they stay NULL
+-- naturally; only genuinely single-word translations can link.
+drop table if exists tmp_hwtr_cands;
+create temp table tmp_hwtr_cands as
+select p.qid, lv.id as vid
+from (
+  select q.id as qid, q.stage_id,
+    q.question_data ->> 'direction' as dir,
+    case when q.question_data ->> 'direction' = 'uz2en'
+      then btrim(q.question_data ->> 'target_text', ' .!?…')
+      else btrim(q.question_data ->> 'source_text', ' .!?…') end as w_en,
+    case when q.question_data ->> 'direction' = 'uz2en'
+      then btrim(q.question_data ->> 'source_text', ' .!?…')
+      else btrim(q.question_data ->> 'target_text', ' .!?…') end as w_uz
+  from public.homework_questions q
+  where q.vocabulary_id is null
+    and q.question_type = 'translation'
+    and q.question_data ->> 'direction' in ('uz2en', 'en2uz')
+) p
+join public.homework_stages s on s.id = p.stage_id
+join public.homework h on h.id = s.homework_id
+join public.lessons l on l.id = h.lesson_id
+join public.lesson_vocabulary lv on lv.lesson_id = l.id
+where p.w_en is not null and p.w_en <> ''
+  and p.w_uz is not null and p.w_uz <> ''
+  and lv.is_active
+  and lower(lv.english) = lower(p.w_en)
+  and lv.uzbek = p.w_uz;
+
+update public.homework_questions q
+set vocabulary_id = u.vid
+from (select qid, (array_agg(vid))[1] as vid from tmp_hwtr_cands group by qid having count(*) = 1) u
+where q.id = u.qid
+  and q.vocabulary_id is null;
+
+-- ================= test writing translations (single-word) ================
+drop table if exists tmp_otw_cands;
+create temp table tmp_otw_cands as
+select p.iid, lv.id as vid
+from (
+  select it.id as iid,
+    nullif(substring(it.source_ref from '^L(\d+)'), '')::int as lnum,
+    it.prompt_data ->> 'direction' as dir,
+    case when it.prompt_data ->> 'direction' = 'uz2en'
+      then btrim(it.answer_key ->> 'target_text', ' .!?…')
+      else btrim(it.prompt_data ->> 'source_text', ' .!?…') end as w_en,
+    case when it.prompt_data ->> 'direction' = 'uz2en'
+      then btrim(it.prompt_data ->> 'source_text', ' .!?…')
+      else btrim(it.answer_key ->> 'target_text', ' .!?…') end as w_uz
+  from public.online_test_items it
+  where it.vocabulary_id is null
+    and it.stage = 'writing'
+    and it.question_type = 'translation'
+    and it.prompt_data ->> 'direction' in ('uz2en', 'en2uz')
+) p
+join public.curriculum_lessons cl on cl.lesson_number = p.lnum
+join public.lessons l on l.curriculum_lesson_id = cl.id
+join public.lesson_vocabulary lv on lv.lesson_id = l.id
+where p.w_en is not null and p.w_en <> ''
+  and p.w_uz is not null and p.w_uz <> ''
+  and lv.is_active
+  and lower(lv.english) = lower(p.w_en)
+  and lv.uzbek = p.w_uz;
+
+update public.online_test_items t
+set vocabulary_id = u.vid
+from (select iid, (array_agg(vid))[1] as vid from tmp_otw_cands group by iid having count(*) = 1) u
+where t.id = u.iid
+  and t.vocabulary_id is null;
+
 -- ================= report =================
 select 'homework' as src,
   (select count(*) from public.homework_questions where vocabulary_id is not null) as mapped,
@@ -102,5 +177,11 @@ select stage as test_stage, count(*) as still_null
 from public.online_test_items where vocabulary_id is null
 group by 1 order by 2 desc;
 
+select 'translation coverage' as note,
+  (select count(*) from public.homework_questions where question_type = 'translation' and vocabulary_id is not null) as hw_tr_mapped,
+  (select count(*) from public.online_test_items where stage = 'writing' and question_type = 'translation' and vocabulary_id is not null) as test_w_mapped;
+
 drop table if exists tmp_hw_cands;
 drop table if exists tmp_ot_cands;
+drop table if exists tmp_hwtr_cands;
+drop table if exists tmp_otw_cands;
