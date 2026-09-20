@@ -12,7 +12,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Search as SearchIcon, X, Volume2, Sparkles, Trophy, TrendingUp,
-  Bookmark, BookmarkCheck, Plus, Check,
+  Bookmark, BookmarkCheck, Plus, Check, Sprout, BookOpen, Award, History, ChevronDown,
 } from 'lucide-react';
 import {
   getDueReviews, scheduleReview, getMySummary, getMyWordsKnown, getMyKnowledge,
@@ -313,11 +313,11 @@ function LevelChip({ active, onClick, label }) {
 // only counts rows for the summary. Evidence pills come from the Phase 2
 // read model joined by vocabulary_id. State rules live server-side only.
 const KNOWLEDGE_META = {
-  NEW: { color: 'slate', labelKey: 'kstate_new', descKey: 'kstate_new_desc' },
-  LEARNING: { color: 'amber', labelKey: 'kstate_learning', descKey: 'kstate_learning_desc' },
-  DEMONSTRATED: { color: 'brand', labelKey: 'kstate_demonstrated', descKey: 'kstate_demonstrated_desc' },
-  KNOWN: { color: 'green', labelKey: 'kstate_known', descKey: 'kstate_known_desc' },
-  LAPSED: { color: 'red', labelKey: 'kstate_lapsed', descKey: 'kstate_lapsed_desc' },
+  NEW: { color: 'slate', dot: 'bg-slate-400', Icon: Sprout, labelKey: 'kstate_new', descKey: 'kstate_new_desc' },
+  LEARNING: { color: 'amber', dot: 'bg-amber-400', Icon: BookOpen, labelKey: 'kstate_learning', descKey: 'kstate_learning_desc' },
+  DEMONSTRATED: { color: 'brand', dot: 'bg-violet-400', Icon: TrendingUp, labelKey: 'kstate_demonstrated', descKey: 'kstate_demonstrated_desc' },
+  KNOWN: { color: 'green', dot: 'bg-emerald-500', Icon: Award, labelKey: 'kstate_known', descKey: 'kstate_known_desc' },
+  LAPSED: { color: 'red', dot: 'bg-orange-400', Icon: History, labelKey: 'kstate_lapsed', descKey: 'kstate_lapsed_desc' },
 };
 const KNOWLEDGE_ORDER = ['KNOWN', 'DEMONSTRATED', 'LEARNING', 'NEW', 'LAPSED'];
 
@@ -378,6 +378,8 @@ export function WordsTab({ me, t, onAction }) {
   for (const r of rows) counts[r.knowledge_state] = (counts[r.knowledge_state] || 0) + 1;
   const visible = filter ? rows.filter((r) => r.knowledge_state === filter) : rows;
   const priority = ACTION_PRIORITY.find((st) => (counts[st] || 0) > 0) || null;
+  const total = rows.length;
+  const pct = (st) => (total > 0 ? Math.round(((counts[st] || 0) / total) * 100) : 0);
 
   const goAction = (state) => {
     if (onAction) onAction(state);
@@ -385,14 +387,47 @@ export function WordsTab({ me, t, onAction }) {
 
   return (
     <div className="space-y-3">
-      <div className="rounded-xl border border-ink/[0.06] bg-white p-4 shadow-card">
-        <p className="font-display text-sm font-semibold text-ink">{t('howMeasuredTitle')}</p>
-        <p className="mt-1 text-xs leading-relaxed text-ink/55">{t('howMeasuredBody')}</p>
+      {/* Hero: vocabulary overview with honest state distribution */}
+      <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-brand-600 via-brand-600 to-brand-700 text-white shadow-card">
+        <div className="p-4 sm:p-5">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-white/60">{t('heroEyebrow')}</p>
+          <h2 className="mt-0.5 font-display text-xl font-bold sm:text-2xl">{t('heroTitle')}</h2>
+          <p className="mt-1 text-xs leading-relaxed text-white/70">{t('heroSubtitle')}</p>
+          <div className="mt-4 flex items-end justify-between gap-3">
+            <div>
+              <p className="font-display text-4xl font-bold leading-none sm:text-5xl">{counts.KNOWN || 0}</p>
+              <p className="mt-1 text-xs font-medium text-white/70">{t('heroKnownLabel')}</p>
+            </div>
+            <p className="pb-1 text-right text-xs font-medium text-white/70">{t('heroTracked', { count: total })}</p>
+          </div>
+          <div
+            className="mt-3 flex h-2.5 w-full overflow-hidden rounded-full bg-white/20"
+            role="img"
+            aria-label={t('heroDistributionLabel')}
+          >
+            {KNOWLEDGE_ORDER.map((st) => (counts[st] || 0) > 0 && (
+              <div
+                key={st}
+                className={`${KNOWLEDGE_META[st].dot} h-full`}
+                style={{ width: `${Math.max(pct(st), 3)}%` }}
+                title={`${t(KNOWLEDGE_META[st].labelKey)}: ${counts[st] || 0}`}
+              />
+            ))}
+          </div>
+          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
+            {KNOWLEDGE_ORDER.map((st) => (
+              <span key={st} className="inline-flex items-center gap-1 text-[11px] font-medium text-white/75">
+                <span className={`${KNOWLEDGE_META[st].dot} h-2 w-2 rounded-full`} aria-hidden />
+                {t(KNOWLEDGE_META[st].labelKey)} · {counts[st] || 0}
+              </span>
+            ))}
+          </div>
+        </div>
       </div>
 
       {priority ? (
-        <div className="rounded-xl border border-brand-200 bg-brand-50/60 p-4 shadow-card">
-          <p className="text-[11px] font-medium uppercase tracking-wide text-brand-600">{t('recoTitle')}</p>
+        <div className="rounded-2xl border border-brand-200 bg-brand-50/60 p-4 shadow-card">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-brand-600">{t('recoTitle')}</p>
           <p className="mt-1 font-display text-base font-bold text-ink">
             {t('recoHeadline', { count: counts[priority], state: t(KNOWLEDGE_META[priority].labelKey) })}
           </p>
@@ -400,7 +435,7 @@ export function WordsTab({ me, t, onAction }) {
           <button
             type="button"
             onClick={() => goAction(priority)}
-            className="mt-3 inline-flex min-h-[44px] items-center rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white shadow-sm hover:bg-brand-700"
+            className="mt-3 inline-flex min-h-[44px] items-center rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
           >
             {t(STATE_ACTION_KEY[priority])}
           </button>
@@ -414,22 +449,29 @@ export function WordsTab({ me, t, onAction }) {
         )
       )}
 
-      <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
         {KNOWLEDGE_ORDER.map((st) => {
           const meta = KNOWLEDGE_META[st];
           const active = filter === st;
+          const StateIcon = meta.Icon;
           return (
             <button
               key={st}
               type="button"
               onClick={() => { setFilter(active ? null : st); setOpenId(null); }}
               aria-pressed={active}
-              className={`rounded-xl border p-3 text-center shadow-card transition-colors ${
-                active ? 'border-brand-300 bg-brand-50' : 'border-ink/[0.06] bg-white hover:bg-ink/[0.02]'
+              className={`rounded-2xl border bg-white p-3 text-left shadow-card transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 ${
+                active ? 'border-brand-400 ring-1 ring-brand-200' : 'border-ink/[0.06] hover:bg-ink/[0.02]'
               }`}
             >
-              <p className="truncate text-[11px] font-medium uppercase tracking-wide text-ink/40">{t(meta.labelKey)}</p>
-              <p className="mt-0.5 font-display text-xl font-bold text-ink">{counts[st] || 0}</p>
+              <span className="flex items-center justify-between gap-2">
+                <span className={`${meta.dot} flex h-7 w-7 items-center justify-center rounded-full text-white`} aria-hidden>
+                  <StateIcon size={14} />
+                </span>
+                <span className="font-display text-xl font-bold text-ink">{counts[st] || 0}</span>
+              </span>
+              <span className="mt-2 block truncate text-[11px] font-bold uppercase tracking-wide text-ink/60">{t(meta.labelKey)}</span>
+              <span className="text-[11px] font-medium text-ink/40">{pct(st)}%</span>
             </button>
           );
         })}
@@ -454,6 +496,13 @@ export function WordsTab({ me, t, onAction }) {
           ))}
         </div>
       )}
+
+      <details className="group rounded-xl border border-ink/[0.06] bg-white px-4 py-3 shadow-card">
+        <summary className="cursor-pointer list-none text-xs font-bold text-ink/60 transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 [&::-webkit-details-marker]:hidden">
+          {t('howMeasuredTitle')}
+        </summary>
+        <p className="mt-1.5 text-xs leading-relaxed text-ink/55">{t('howMeasuredBody')}</p>
+      </details>
     </div>
   );
 }
@@ -473,33 +522,42 @@ function WordKnowledgeCard({ row, uzbek, open, onToggle, onAction, t }) {
         type="button"
         onClick={onToggle}
         aria-expanded={open}
-        className="flex w-full items-center gap-2 p-4 text-left"
+        className="flex w-full items-center gap-2.5 p-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-400"
       >
+        <span className={`${meta.dot} h-2.5 w-2.5 flex-shrink-0 rounded-full`} aria-hidden />
         <div className="min-w-0 flex-1">
           <p className="break-words font-display text-base font-bold text-ink">{row.english}</p>
           {uzbek && <p className="break-words text-sm font-medium text-brand-700">{uzbek}</p>}
+          {row.lesson_number != null && (
+            <p className="mt-0.5 text-[11px] font-medium text-ink/40">{t('lesson')} {row.lesson_number}</p>
+          )}
         </div>
-        {row.lesson_number != null && (
-          <span className="hidden flex-shrink-0 sm:inline"><Pill text={`${t('lesson')} ${row.lesson_number}`} color="slate" /></span>
-        )}
         <Pill text={t(meta.labelKey)} color={meta.color} />
+        <ChevronDown
+          size={16}
+          aria-hidden
+          className={`flex-shrink-0 text-ink/30 transition-transform ${open ? 'rotate-180' : ''}`}
+        />
       </button>
       {open && (
         <div className="border-t border-ink/5 px-4 py-3">
           <p className="text-xs leading-relaxed text-ink/55">{t(meta.descKey)}</p>
           {systems.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {systems.map((s) => (
-                <span
-                  key={s.label}
-                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                    s.ok ? 'bg-emerald-50 text-emerald-700' : 'bg-ink/[0.04] text-ink/40'
-                  }`}
-                >
-                  {s.ok ? <Check size={11} aria-hidden /> : null}{s.label}
-                </span>
-              ))}
-            </div>
+            <>
+              <p className="mt-3 text-[11px] font-bold uppercase tracking-wide text-ink/40">{t('evTitle')}</p>
+              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                {systems.map((s) => (
+                  <span
+                    key={s.label}
+                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                      s.ok ? 'bg-emerald-50 text-emerald-700' : 'bg-ink/[0.04] text-ink/40'
+                    }`}
+                  >
+                    {s.ok ? <Check size={11} aria-hidden /> : null}{s.label}
+                  </span>
+                ))}
+              </div>
+            </>
           )}
           {(row.retention_interval_days || 0) > 0 && (
             <p className="mt-2 text-[11px] text-ink/40">{t('retentionDays', { count: row.retention_interval_days })}</p>
@@ -545,6 +603,14 @@ export function KnowledgeRankingTab({ me, t }) {
 
   return (
     <div className="space-y-3">
+      <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-brand-600 to-brand-700 p-4 text-white shadow-card sm:p-5">
+        <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-white/60">
+          <Trophy size={12} aria-hidden /> {t('rankHeroEyebrow')}
+        </p>
+        <h2 className="mt-0.5 font-display text-xl font-bold sm:text-2xl">{t('rankHeroTitle')}</h2>
+        <p className="mt-1 text-xs leading-relaxed text-white/70">{t('rankHeroSubtitle')}</p>
+      </div>
+
       <div className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1">
         <LevelChip active={level === null} onClick={() => setLevel(null)} label={t('allLevels')} />
         {LEVELS.map((l) => (
