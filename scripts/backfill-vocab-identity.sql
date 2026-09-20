@@ -41,7 +41,7 @@ where p.w is not null
 
 update public.homework_questions q
 set vocabulary_id = u.vid
-from (select qid, min(vid) as vid from tmp_hw_cands group by qid having count(*) = 1) u
+from (select qid, (array_agg(vid))[1] as vid from tmp_hw_cands group by qid having count(*) = 1) u
 where q.id = u.qid
   and q.vocabulary_id is null;
 
@@ -77,7 +77,7 @@ where p.w is not null
 
 update public.online_test_items t
 set vocabulary_id = u.vid
-from (select iid, min(vid) as vid from tmp_ot_cands group by iid having count(*) = 1) u
+from (select iid, (array_agg(vid))[1] as vid from tmp_ot_cands group by iid having count(*) = 1) u
 where t.id = u.iid
   and t.vocabulary_id is null;
 
