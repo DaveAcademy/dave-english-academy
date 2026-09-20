@@ -38,8 +38,9 @@ lines.push(`values (${src.test_number}, ${str(src.title)}, ${src.lesson_from}, $
 lines.push(`on conflict (test_number) do nothing;`);
 lines.push('');
 for (const it of src.items) {
-  lines.push(`insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref)`);
-  lines.push(`values ((select id from public.online_tests where test_number = ${src.test_number}), ${str(it.stage)}, ${str(it.qtype)}, ${it.position}, ${lit(it.prompt)}, ${lit(it.key)}, 1, ${str(it.source_ref)})`);
+  const vocabId = it.vocabulary_id || null;
+  lines.push(`insert into public.online_test_items (test_id, stage, question_type, position, prompt_data, answer_key, points, source_ref, vocabulary_id)`);
+  lines.push(`values ((select id from public.online_tests where test_number = ${src.test_number}), ${str(it.stage)}, ${str(it.qtype)}, ${it.position}, ${lit(it.prompt)}, ${lit(it.key)}, 1, ${str(it.source_ref)}, ${vocabId ? `'${vocabId}'` : 'null'})`);
   lines.push(`on conflict (test_id, stage, position) do nothing;`);
   lines.push('');
 }

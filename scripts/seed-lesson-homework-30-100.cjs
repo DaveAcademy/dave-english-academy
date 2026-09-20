@@ -207,6 +207,10 @@ function buildVocabOnly(n, pairs) {
       question_data: { options: rotated, correct_index: rotated.indexOf(clean[i].u) },
       explanation: `${clean[i].w} — ${clean[i].u}`,
       points: 1,
+      // Direct canonical link (DB mode only): the row this question was
+      // built from. JSON-mode pairs carry no id and stay NULL for the
+      // backfill to resolve. Matching rows stay NULL (multi-word).
+      ...(clean[i].id ? { vocabulary_id: clean[i].id } : {}),
     });
   }
   return out;
@@ -423,8 +427,8 @@ async function main() {
     for (const n of scopeNums) {
       const lid = lessonIdByNum[n];
       if (!lid) continue;
-      const { data: words } = await db.from('lesson_vocabulary').select('english, uzbek').eq('lesson_id', lid).order('english');
-      dbVocabByNum[n] = (words || []).map((w) => ({ w: w.english, u: w.uzbek }));
+      const { data: words } = await db.from('lesson_vocabulary').select('id, english, uzbek').eq('lesson_id', lid).order('english');
+      dbVocabByNum[n] = (words || []).map((w) => ({ w: w.english, u: w.uzbek, id: w.id || null }));
     }
   }
 
