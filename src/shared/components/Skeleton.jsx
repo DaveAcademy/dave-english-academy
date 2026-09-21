@@ -23,7 +23,7 @@ export function SkeletonCard({ lines = 2 }) {
 
 export function SkeletonList({ count = 3, lines = 2 }) {
   return (
-    <div className="space-y-2">
+    <div className="space-y-2" role="status" aria-busy="true">
       {Array.from({ length: count }).map((_, i) => (
         <SkeletonCard key={i} lines={lines} />
       ))}
