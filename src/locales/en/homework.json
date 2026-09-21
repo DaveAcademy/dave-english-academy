@@ -80,5 +80,12 @@
   "reviewFinalNote": "Final stage — review everything and finish strong.",
   "completedDetail": "{correct} correct out of {answered} answered",
   "completedNext": "Your teacher reviews written answers — check back soon for feedback.",
-  "stagesProgressLabel": "{done} of {total} stages"
+  "stagesProgressLabel": "{done} of {total} stages",
+  "ctaStart": "Start",
+  "ctaContinue": "Continue",
+  "ctaReview": "Review",
+  "detailsShow": "Details",
+  "detailsHide": "Hide details",
+  "loadFailed": "Could not load your homework.",
+  "loadFailedHint": "Check your connection and try again."
 }

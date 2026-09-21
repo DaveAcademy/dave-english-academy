@@ -80,5 +80,12 @@
   "reviewFinalNote": "Yakuniy bosqich — hammasini takrorlang va kuchli yakunlang.",
   "completedDetail": "Javob berilgan {answered} tadan {correct} tasi to‘g‘ri",
   "completedNext": "O‘qituvchingiz yozma javoblarni tekshiradi — izoh uchun tez orada qayting.",
-  "stagesProgressLabel": "{total} bosqichdan {done} tasi"
+  "stagesProgressLabel": "{total} bosqichdan {done} tasi",
+  "ctaStart": "Boshlash",
+  "ctaContinue": "Davom etish",
+  "ctaReview": "Ko'rish",
+  "detailsShow": "Tafsilotlar",
+  "detailsHide": "Yashirish",
+  "loadFailed": "Uy vazifalaringizni yuklab bo'lmadi.",
+  "loadFailedHint": "Internet aloqasini tekshirib, qayta urinib ko'ring."
 }

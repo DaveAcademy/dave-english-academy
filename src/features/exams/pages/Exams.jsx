@@ -283,7 +283,14 @@ export default function Exams() {
                 <tr
                   key={e.id}
                   onClick={() => selectExam(e.id)}
-                  className={`cursor-pointer border-b border-ink/5 last:border-0 ${
+                  onKeyDown={(ev) => {
+                    if (ev.key === 'Enter' || ev.key === ' ') {
+                      ev.preventDefault();
+                      selectExam(e.id);
+                    }
+                  }}
+                  tabIndex={0}
+                  className={`cursor-pointer border-b border-ink/5 last:border-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-600 ${
                     selectedExam?.id === e.id ? 'bg-brand-50' : 'hover:bg-ink/5'
                   }`}
                 >
@@ -320,7 +327,7 @@ export default function Exams() {
                           ev.stopPropagation();
                           startEdit(e);
                         }}
-                        className="rounded-lg p-2 text-brand-600 hover:bg-brand-50"
+                        className="rounded-lg p-2 text-brand-600 hover:bg-brand-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-1"
                         aria-label={t('editExamAria')}
                       >
                         <Pencil size={14} />
@@ -330,7 +337,7 @@ export default function Exams() {
                           ev.stopPropagation();
                           setDeletingExam(e);
                         }}
-                        className="rounded-lg p-2 text-red-600 hover:bg-red-50"
+                        className="rounded-lg p-2 text-red-600 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-1"
                         aria-label={t('deleteExamAria')}
                       >
                         <Trash2 size={14} />

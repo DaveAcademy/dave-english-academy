@@ -218,7 +218,7 @@ export function HomeworkStages({ homeworkId, studentId, focusStageKey }) {
             <button
               onClick={() => !isLocked && setActiveStage(isActive ? null : stage.id)}
               disabled={isLocked}
-              className="flex w-full items-center justify-between gap-2 text-left"
+              className="flex w-full items-center justify-between gap-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1"
             >
               <span className="flex min-w-0 items-center gap-2">
                 {isLocked ? <Lock size={16} className="shrink-0 text-ink/30" /> : <StageIcon size={18} className={`shrink-0 ${meta.iconClass}`} />}

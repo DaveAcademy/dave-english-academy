@@ -4,7 +4,7 @@
 // treatment instead of each inventing its own.
 
 export function SkeletonLine({ width = '100%', className = '' }) {
-  return <div className={`h-4 animate-pulse rounded bg-ink/5 ${className}`} style={{ width }} />;
+  return <div className={`h-4 animate-pulse rounded bg-ink/5 motion-reduce:animate-none ${className}`} style={{ width }} />;
 }
 
 // One card-shaped placeholder matching the bordered list-row idiom used
