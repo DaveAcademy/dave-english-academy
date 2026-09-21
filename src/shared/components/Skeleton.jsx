@@ -4,7 +4,7 @@
 // treatment instead of each inventing its own.
 
 export function SkeletonLine({ width = '100%', className = '' }) {
-  return <div className={`h-4 animate-pulse rounded bg-ink/5 ${className}`} style={{ width }} />;
+  return <div className={`h-4 animate-pulse rounded bg-ink/5 motion-reduce:animate-none ${className}`} style={{ width }} />;
 }
 
 // One card-shaped placeholder matching the bordered list-row idiom used
@@ -23,7 +23,7 @@ export function SkeletonCard({ lines = 2 }) {
 
 export function SkeletonList({ count = 3, lines = 2 }) {
   return (
-    <div className="space-y-2">
+    <div className="space-y-2" role="status" aria-busy="true">
       {Array.from({ length: count }).map((_, i) => (
         <SkeletonCard key={i} lines={lines} />
       ))}

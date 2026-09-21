@@ -240,6 +240,8 @@
   "mpYourExamsWillAppear": "Imtihonlaringiz shu yerda paydo bo'ladi",
   "mpWhenTeacherSchedules": "O'qituvchi imtihon belgilasagina u shu yerda ko'rinadi.",
   "mpNoExamsAssigned": "Sizning darajangiz uchun hali imtihon yo'q",
+  "mpExamsLoadFailed": "Imtihonlaringizni yuklab bo'lmadi.",
+  "mpExamsLoadFailedHint": "Internet aloqasini tekshirib, qayta urinib ko'ring.",
   "mpUpcoming": "Yaqinlashayotgani",
   "mpPreparation": "Tayyorgarlik",
   "mpReviewBefore": "Dars va lug'atni {{date}} gacha takrorlang.",

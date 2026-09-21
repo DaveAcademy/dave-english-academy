@@ -240,6 +240,8 @@
   "mpYourExamsWillAppear": "Your exams will appear here",
   "mpWhenTeacherSchedules": "When your teacher schedules an exam, it will show up here.",
   "mpNoExamsAssigned": "No exams assigned for your level yet",
+  "mpExamsLoadFailed": "Could not load your exams.",
+  "mpExamsLoadFailedHint": "Check your connection and try again.",
   "mpUpcoming": "Upcoming",
   "mpPreparation": "Preparation",
   "mpReviewBefore": "Review your lesson notes and vocabulary before {{date}}.",
