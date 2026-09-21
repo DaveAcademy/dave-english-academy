@@ -49,6 +49,7 @@ const GAME_META = [
   { key: 'hangman', i18nKey: 'game:hangmanTitle', icon: '🪢', to: '/hangman' },
   { key: 'word_builder', i18nKey: 'game:wordBuilderTitle', icon: '🧱', to: '/word-builder' },
   { key: 'word_scramble', i18nKey: 'game:wordScrambleTitle', icon: '🔤', to: '/word-scramble' },
+  { key: 'anagram_builder', i18nKey: 'game:anagramBuilderTitle', icon: '🔡', to: '/anagram-builder' },
   { key: 'speed_challenge', i18nKey: 'game:speedChallengeTitle', icon: '⚡', to: '/speed-challenge' },
   { key: 'sentence_scramble', i18nKey: 'game:sentenceScrambleTitle', icon: '📝', to: '/sentence-scramble' },
   { key: 'picture_word', i18nKey: 'game:pictureWordTitle', icon: '✍️', to: '/picture-word' },
