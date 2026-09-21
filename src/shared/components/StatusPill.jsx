@@ -15,5 +15,5 @@ const ALIAS = { good: 'success', watch: 'warning', attention: 'danger' };
 export default function StatusPill({ tone = 'success', children }) {
   const key = ALIAS[tone] || tone;
   const t = TONE[key] || TONE.success;
-  return <span className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-bold ${t.soft} ${t.text}`}>{children}</span>;
+  return <span className={`inline-block max-w-full break-words rounded-full px-2 py-0.5 text-[11px] font-bold ${t.soft} ${t.text}`}>{children}</span>;
 }
