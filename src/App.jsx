@@ -60,6 +60,7 @@ const WordMatch = lazy(() => import('./features/games/pages/WordMatch'));
 const WordScramble = lazy(() => import('./features/games/pages/WordScramble'));
 const SentenceScramble = lazy(() => import('./features/games/pages/SentenceScramble'));
 const WordBuilder = lazy(() => import('./features/games/pages/WordBuilder'));
+const AnagramBuilder = lazy(() => import('./features/games/pages/AnagramBuilder'));
 const PictureWord = lazy(() => import('./features/games/pages/PictureWord'));
 const GrammarBattle = lazy(() => import('./features/games/pages/GrammarBattle'));
 const PictureQuiz = lazy(() => import('./features/games/pages/PictureQuiz'));
@@ -166,6 +167,7 @@ function RoutedContent({ isStudent }) {
             <Route path="/word-match" element={<WordMatch />} />
             <Route path="/speed-challenge" element={<SpeedChallenge />} />
             <Route path="/word-builder" element={<WordBuilder />} />
+            <Route path="/anagram-builder" element={<AnagramBuilder />} />
             <Route path="/sentence-scramble" element={<SentenceScramble />} />
             <Route path="/hangman" element={<Hangman />} />
             <Route path="/grammar-battle" element={<GrammarBattle />} />

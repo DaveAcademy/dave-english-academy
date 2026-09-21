@@ -138,6 +138,15 @@ const GAME_CENTER_ITEMS = [
     iconBg: 'bg-amber-200',
   },
   {
+    key: 'anagram_builder',
+    icon: '🔡',
+    nameKey: 'anagramBuilderTitle',
+    descriptionKey: 'anagramBuilderSubtitle',
+    to: '/anagram-builder',
+    gradient: 'bg-gradient-to-br from-emerald-50 to-green-100',
+    iconBg: 'bg-emerald-200',
+  },
+  {
     key: 'speed_challenge',
     icon: '⚡',
     nameKey: 'speedChallengeTitle',

@@ -18,6 +18,7 @@ import {
 import { formatStudentDisplayName } from '../utils/gameRecordFormat';
 
 const GAME_LABELS = {
+  anagram_builder: 'Anagram Builder',
   word_scramble: 'Word Scramble',
   vocabulary_quiz: 'Vocabulary Quiz',
   word_match: 'Word Match',

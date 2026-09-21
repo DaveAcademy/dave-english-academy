@@ -1378,6 +1378,33 @@ export async function getWordBuilderRound() {
   return splitRoundId(data);
 }
 
+// Anagram Builder round: a single letter pool plus the required word
+// count, minted single-use server-side (get_anagram_builder_round).
+// Returns { roundId, level, letters, target } - never the candidate
+// answers, so the client can only validate submissions, not reveal them.
+export async function getAnagramBuilderRound() {
+  const { data, error } = await supabase.rpc('get_anagram_builder_round');
+  if (error) throw error;
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row || !row.round_id || !row.letters) throw new Error('No anagram round available');
+  return { roundId: row.round_id, level: row.level, letters: row.letters, target: row.target_words };
+}
+
+// Student's own available vocabulary - the same approved source the
+// server validates anagram answers against - used for instant
+// client-side feedback only. Authoritative grading stays server-side.
+export async function listAvailableVocabulary() {
+  const { data, error } = await supabase.rpc('student_available_vocabulary');
+  if (error) throw error;
+  return data || [];
+}
+
+export async function getListeningChallengeRound() {
+  const { data, error } = await supabase.rpc('get_listening_challenge_round');
+  if (error) throw error;
+  return splitRoundId(data);
+}
+
 export async function getSentenceScrambleRound() {
   const { data, error } = await supabase.rpc('get_sentence_scramble_round');
   if (error) throw error;
