@@ -25,10 +25,18 @@
 --    every submitted word server-side (normalize, min length 3,
 --    letter-multiset construction, membership in the student's available
 --    vocabulary, duplicate rejection). Points/levels/sessions/achievements
---    flow through the UNCHANGED shared tail: single-use rounds
---    (consumed_at) + result_payload replay + the partial unique index on
---    (student_id, game_type, level) give exactly-once points, same as
---    every other game. Client-provided scores are never trusted.
+--    flow through the shared tail, whose live production semantics are
+--    preserved VERBATIM for every existing game (verified 2026-09-21 via
+--    pg_get_functiondef on the linked project - see §5): single-use
+--    rounds (consumed_at) + result_payload replay + best-performance
+--    ledger upsert under an advisory lock. Client-provided scores are
+--    never trusted.
+-- PRODUCTION BASELINE (2026-09-21): the live submit_game_round is NEWER
+-- than the repo's 20261003 copy - it advances levels at >=90% (not
+-- 100%), keeps the best score per (student, game, level) with marginal
+-- deltas, and grades word_detective at x4. This migration reproduces
+-- that live body exactly and inserts ONLY anagram_builder handling, so
+-- applying it cannot regress any existing game.
 -- Safe to re-run: CREATE OR REPLACE + IF NOT EXISTS throughout.
 
 -- =====================================================================
@@ -156,7 +164,7 @@ begin
         and char_length(trim(v.english)) >= case when v_attempt = 1 then v_min_letters else greatest(3, v_min_letters - 1) end
         and char_length(trim(v.english)) <= case when v_attempt = 1 then v_max_letters else v_max_letters + 1 end
       order by coalesce(h.times_seen, 0) > 0, h.last_seen_at nulls first, random()
-      limit 30
+      limit 60
     loop
       select count(*) into v_count from (
         select distinct lower(trim(c.english)) as w
@@ -199,6 +207,8 @@ comment on function public.get_anagram_builder_round() is
 
 -- =====================================================================
 -- 4. Tier mapping: active word-retrieval like word_match/word_scramble.
+--    Live production body preserved verbatim; only the anagram_builder
+--    line is added (verified 2026-09-21 via pg_get_functiondef).
 -- =====================================================================
 create or replace function public.game_type_difficulty(p_game_type text)
 returns text
@@ -207,27 +217,28 @@ immutable
 set search_path = 'public'
 as $$
   select case p_game_type
-    when 'picture_quiz'       then 'very_easy'
-    when 'hangman'            then 'easy'
-    when 'vocabulary_quiz'    then 'easy'
-    when 'word_match'         then 'medium'
-    when 'word_scramble'      then 'medium'
-    when 'anagram_builder'    then 'medium'
-    when 'sentence_scramble'  then 'medium_hard'
-    when 'word_builder'       then 'medium_hard'
-    when 'word_detective'     then 'hard'
-    when 'speed_challenge'    then 'hard'
-    when 'grammar_battle'     then 'very_hard'
+    when 'picture_quiz'       then 'very_easy'    -- 5 pts
+    when 'picture_word'       then 'easy'         -- recall (typed) tier
+    when 'hangman'            then 'easy'         -- 10 pts
+    when 'vocabulary_quiz'    then 'easy'         -- 10 pts
+    when 'word_match'         then 'medium'       -- 20 pts
+    when 'word_scramble'      then 'medium'       -- 20 pts
+    when 'anagram_builder'    then 'medium'       -- active recall, like word_match
+    when 'sentence_scramble'  then 'medium_hard'  -- 30 pts
+    when 'word_builder'       then 'medium_hard'  -- 30 pts
+    when 'word_detective'     then 'hard'         -- 40 pts
+    when 'speed_challenge'    then 'hard'         -- 40 pts
+    when 'grammar_battle'     then 'very_hard'    -- 50 pts
     else 'easy'
   end
 $$;
 
 -- =====================================================================
--- 5. submit_game_round + 'anagram_builder' branch. Identical to the
---    authoritative 20261003 version except: whitelist/metric/earned-map
---    entries, letters+target_words in the round fetch, the new grading
---    branch, and the anagram-aware level-up condition. Every other
---    game's path is byte-for-byte the same logic.
+-- 5. submit_game_round + 'anagram_builder' branch. The live production
+--    body (verified 2026-09-21 via pg_get_functiondef) is reproduced
+--    exactly; ONLY anagram_builder handling is inserted (whitelist,
+--    metric key, letters/target_words fetch, grading branch, level-up
+--    branch, earned-map entry). Every other game's path is untouched.
 -- =====================================================================
 create or replace function public.submit_game_round(p_round_id uuid, p_game_type text, p_answers jsonb)
  returns jsonb
@@ -269,6 +280,7 @@ declare
   v_round_ids uuid[];
   v_seen_ids uuid[] := '{}';
   v_result jsonb;
+  v_prior_points integer := 0;
   v_letters text;
   v_target integer;
   v_seed_id uuid;
@@ -415,35 +427,52 @@ begin
       v_wrong_attempts := coalesce(r.wrong_attempts, 0);
       v_results := v_results || jsonb_build_object('content_id', r.content_id, 'correct', v_correct);
     end loop;
-    if p_game_type = 'grammar_battle' then v_pass := v_round_size is not null and v_words_total >= v_round_size; else v_pass := v_words_total > 0 and (v_words_correct::numeric / v_words_total) >= 0.70; end if;
+    v_pass := v_words_total > 0 and (v_words_correct::numeric / v_words_total) >= 0.70;
   end if;
 
   select v_score > coalesce(max(score), -1) into v_is_new_best from public.game_sessions where student_id = v_student_id and game_type = p_game_type;
   insert into public.game_sessions (student_id, game_type, score, words_correct, words_total, level) values (v_student_id, p_game_type, v_score, v_words_correct, v_words_total, v_round_level) returning id into v_session_id;
 
-  -- Level-up: anagram levels on reaching the required word count (its
-  -- vocabulary_ids holds only the seed, so the round-size comparison
-  -- used by the other games does not apply). Other games unchanged.
+  -- Level advancement (live production rule, preserved verbatim for all
+  -- existing games): a completed full round at >=90% advances exactly one
+  -- game level. Anagram rounds store only the seed id in vocabulary_ids,
+  -- so the round-size comparison cannot apply there; reaching the
+  -- required word count is its full-round completion.
   if p_game_type = 'anagram_builder' then
     if v_target > 0 and v_words_correct >= v_target and v_round_level is not null then
       update public.game_level_progress set current_level = v_round_level + 1, best_level_reached = greatest(best_level_reached, v_round_level + 1), updated_at = now() where student_id = v_student_id and game_type = p_game_type and current_level = v_round_level;
       v_leveled_up := found;
     end if;
-  elsif v_round_size is not null and v_words_total = v_round_size and v_words_correct = v_words_total and v_round_level is not null then
+  elsif v_round_size is not null and v_words_total = v_round_size and v_words_total > 0 and v_round_level is not null
+     and (v_words_correct * 10 >= v_words_total * 9) then
     update public.game_level_progress set current_level = v_round_level + 1, best_level_reached = greatest(best_level_reached, v_round_level + 1), updated_at = now() where student_id = v_student_id and game_type = p_game_type and current_level = v_round_level;
     v_leveled_up := found;
   end if;
 
-  -- Authoritative gaming points: one row per genuine completion, idempotent, no mirror to point_transactions
+  -- Best-performance gaming points (live production rule, preserved
+  -- verbatim): one row per (student, game, level) holds the best earned
+  -- score; later submissions only top it up. Reports the marginal delta
+  -- newly earned by this submission, never negative. v_pass does not
+  -- gate points.
   if v_words_total > 0 and v_round_level is not null then
+    -- Serialize concurrent submissions for the same slot so prior-read + upsert cannot double-award delta.
+    perform pg_advisory_xact_lock(hashtext(v_student_id::text || '|' || p_game_type || '|' || v_round_level::text));
     v_tier := public.game_type_difficulty(p_game_type);
     v_is_perfect := v_words_total > 0 and v_words_correct = v_words_total;
-    v_earned := v_words_correct * case p_game_type when 'picture_quiz' then 1 when 'vocabulary_quiz' then 1 when 'hangman' then 1 when 'picture_word' then 1 when 'anagram_builder' then 2 when 'word_match' then 2 when 'word_scramble' then 2 when 'word_builder' then 3 when 'sentence_scramble' then 3 when 'speed_challenge' then 4 when 'grammar_battle' then 5 else 1 end;
+    v_earned := v_words_correct * case p_game_type when 'picture_quiz' then 1 when 'vocabulary_quiz' then 1 when 'hangman' then 1 when 'picture_word' then 1 when 'anagram_builder' then 2 when 'word_detective' then 4 when 'word_match' then 2 when 'word_scramble' then 2 when 'word_builder' then 3 when 'sentence_scramble' then 3 when 'speed_challenge' then 4 when 'grammar_battle' then 5 else 1 end;
+    select coalesce(max(points), 0) into v_prior_points
+      from public.game_points_transactions
+     where student_id = v_student_id and game_type = p_game_type and level = v_round_level
+       and not is_reversal;
     insert into public.game_points_transactions (student_id, game_type, level, tier, points, is_perfect, game_session_id)
     values (v_student_id, p_game_type, v_round_level, v_tier, v_earned, v_is_perfect, v_session_id)
-    on conflict (student_id, game_type, level) where not is_reversal do nothing
+    on conflict (student_id, game_type, level) where not is_reversal do update set
+      points = greatest(game_points_transactions.points, excluded.points),
+      is_perfect = game_points_transactions.is_perfect or excluded.is_perfect,
+      game_session_id = case when excluded.points > game_points_transactions.points then excluded.game_session_id else game_points_transactions.game_session_id end
     returning points into v_points_awarded;
-    -- v_points_awarded is null on conflict -> coalesce to 0 downstream (no increase)
+    -- Report marginal delta (newly earned by this submission), never negative.
+    v_points_awarded := greatest(0, coalesce(v_points_awarded, 0) - coalesce(v_prior_points, 0));
   end if;
 
   select coalesce(sum(points), 0) into v_game_points_total from public.game_points_transactions where student_id = v_student_id and not is_reversal;
