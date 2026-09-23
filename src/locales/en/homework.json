@@ -1,5 +1,8 @@
 {
   "title": "Homework",
+  "rangeLabel": "Lesson range",
+  "rangePrev": "Previous lesson range",
+  "rangeNext": "Next lesson range",
   "subtitle": "Assign homework, attach files, and give feedback.",
   "newHomework": "New homework",
   "titlePlaceholder": "Homework title",

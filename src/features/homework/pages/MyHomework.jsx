@@ -26,6 +26,7 @@ import {
 import { getAttachmentUrl } from '../../../lib/db';
 import LessonSectionTabs from '../../../components/lesson/LessonSectionTabs';
 import HomeworkStages from '../components/HomeworkStages';
+import { HOMEWORK_PAGE_SIZE, paginate, pageRangeLabel } from '../homeworkListPaging';
 import StatusPill from '../../../components/StatusPill';
 import ErrorBanner from '../../../components/ErrorBanner';
 import { SkeletonList } from '../../../components/Skeleton';
@@ -69,6 +70,8 @@ export default function MyHomework() {
   // Lightweight per-homework stage counts (done/total only, no questions)
   // fetched lazily on first open - never prefetched for the whole list.
   const [teacherSummary, setTeacherSummary] = useState({});
+  // Visible window into the lesson-hub list (presentation only).
+  const [lessonRangeIdx, setLessonRangeIdx] = useState(0);
   // Entrance stagger is decorative - reduced-motion users get a stable list.
   const prefersReducedMotion =
     typeof window !== 'undefined' &&
@@ -131,6 +134,11 @@ export default function MyHomework() {
         return new Date(b.created_at) - new Date(a.created_at);
       });
   }, [lessons, me]);
+  // Paginated window into the sequential lesson list (10 hubs at a time).
+  // Slice-only: statuses, progress, grading, and unlock rules all read the
+  // full lessonItems array and are unaffected by the visible window.
+  const lessonRange = paginate(lessonItems, lessonRangeIdx, HOMEWORK_PAGE_SIZE);
+  const visibleLessonItems = lessonRange.items;
   const lessonProgressByNum = useMemo(
     () => progressByLessonNumber(lessonProgress, lessonItems),
     [lessonProgress, lessonItems]
@@ -337,8 +345,49 @@ export default function MyHomework() {
                   {t('homework:allLessons')}
                 </Link>
               </div>
+              {lessonRange.totalPages > 1 && (
+                <div className="mb-3 flex flex-wrap items-center gap-2">
+                  <label htmlFor="hw-lesson-range" className="text-xs font-bold uppercase tracking-wide text-ink/40">
+                    {t('homework:title')}
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setLessonRangeIdx(lessonRange.page - 1)}
+                    disabled={lessonRange.page === 0}
+                    aria-label={t('homework:rangePrev')}
+                    className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-ink/10 bg-white px-3 text-base font-bold text-ink/70 shadow-sm hover:bg-ink/5 disabled:opacity-40"
+                  >
+                    ‹
+                  </button>
+                  <select
+                    id="hw-lesson-range"
+                    aria-label={t('homework:rangeLabel')}
+                    value={lessonRange.page}
+                    onChange={(e) => setLessonRangeIdx(Number(e.target.value))}
+                    className="min-h-[44px] rounded-xl border border-ink/10 bg-white px-3 py-2 text-sm font-bold text-ink shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                  >
+                    {Array.from({ length: lessonRange.totalPages }, (_, p) => {
+                      const win = paginate(lessonItems, p, HOMEWORK_PAGE_SIZE);
+                      return (
+                        <option key={p} value={p}>
+                          {pageRangeLabel(win.items, win.start)}
+                        </option>
+                      );
+                    })}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => setLessonRangeIdx(lessonRange.page + 1)}
+                    disabled={lessonRange.page >= lessonRange.totalPages - 1}
+                    aria-label={t('homework:rangeNext')}
+                    className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-ink/10 bg-white px-3 text-base font-bold text-ink/70 shadow-sm hover:bg-ink/5 disabled:opacity-40"
+                  >
+                    ›
+                  </button>
+                </div>
+              )}
               <div className="space-y-3">
-                {lessonItems.map((l) => {
+                {visibleLessonItems.map((l) => {
                   const num = l.curriculum_lessons?.lesson_number;
                   const lst = lessonHwStatus(l);
                   const locked = lst === 'locked';

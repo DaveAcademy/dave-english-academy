@@ -1,5 +1,8 @@
 {
   "title": "Uy vazifasi",
+  "rangeLabel": "Darslar oralig'i",
+  "rangePrev": "Oldingi darslar",
+  "rangeNext": "Keyingi darslar",
   "subtitle": "Uy vazifasi bering, fayl biriktiring va fikr-mulohaza qoldiring.",
   "newHomework": "Yangi uy vazifasi",
   "titlePlaceholder": "Uy vazifasi nomi",
