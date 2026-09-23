@@ -96,8 +96,8 @@ Deno.serve(async (req: Request) => {
   if (!["teacher", "student"].includes(role ?? "")) {
     return json({ error: "role must be 'teacher' or 'student'" }, 400, origin);
   }
-  if (studentId !== undefined && typeof studentId !== "number") {
-    return json({ error: "student_id must be a number" }, 400, origin);
+  if (studentId !== undefined && !Number.isSafeInteger(studentId)) {
+    return json({ error: "student_id must be an integer" }, 400, origin);
   }
 
   const password = randomPassword();
@@ -110,6 +110,11 @@ Deno.serve(async (req: Request) => {
       password,
       email_confirm: true,
       user_metadata: { full_name: full_name ?? "", role },
+      // Immutable recovery evidence (service-role-only app_metadata): the
+      // student row this login was provisioned for. Students cannot read or
+      // modify app_metadata; self-claim-student reads it server-side and only
+      // links when it identifies exactly one eligible unlinked student.
+      ...(role === "student" && studentId !== undefined ? { app_metadata: { student_id: studentId } } : {}),
     });
 
   if (createError) {
@@ -153,14 +158,16 @@ Deno.serve(async (req: Request) => {
       // defaults; monthly_fee/status/join_date fall back to their own
       // table defaults. Same shape as StudentForm's "Add Student" - an
       // admin can edit these afterward via the Students page.
-      const { error: createStudentError } = await adminClient
+      const { data: newStudent, error: createStudentError } = await adminClient
         .from("students")
         .insert({
           real_name: full_name,
           level: "A",
           payment_deadline: 1,
           profile_id: created.user.id,
-        });
+        })
+        .select("id")
+        .single();
 
       if (createStudentError) {
         return json(
@@ -171,6 +178,27 @@ Deno.serve(async (req: Request) => {
             role,
             linkWarning: "Account created, but the student record could not be created automatically: " +
               createStudentError.message,
+          },
+          200,
+          origin,
+        );
+      }
+
+      // Stamp the same immutable recovery evidence for auto-created roster
+      // rows. The account is already linked here; this only preserves the
+      // association so a later-unlinked row can still be recovered exactly.
+      const { error: evidenceError } = await adminClient.auth.admin.updateUserById(created.user.id, {
+        app_metadata: { student_id: newStudent.id },
+      });
+      if (evidenceError) {
+        return json(
+          {
+            email: created.user.email ?? email,
+            password,
+            full_name: full_name ?? "",
+            role,
+            claimWarning: "Account and student record are linked, but the recovery evidence could not be saved: " +
+              evidenceError.message,
           },
           200,
           origin,

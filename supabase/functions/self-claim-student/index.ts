@@ -1,21 +1,26 @@
 // Self-claim: lets an orphaned student login (an authenticated account whose
-// students.profile_id was never set) recover its student record by matching
-// the architecture's deterministic login-email rule (real_name -> normalized
-// local part @gmail.com). Called once from the portal (useAcademyData) when a
-// student-role user resolves to NO student row.
+// students.profile_id was never set, or was later cleared) recover its
+// student record using ONLY immutable server-side account-creation evidence:
+// the Auth user's app_metadata.student_id, stamped by the admin-create-user
+// Edge Function (service role) when the login is provisioned. Called once
+// from the portal (useAcademyData) when a student-role user resolves to NO
+// student row.
 //
 // Security posture:
 //  - The caller's own JWT is validated server-side (adminClient.auth.getUser);
-//    only their identity and their own email are ever considered.
+//    only their identity is ever considered.
 //  - The caller must hold a 'student' profile, verified via service role.
-//  - The ONLY write is profile_id on the single unlinked Active student whose
-//    derived email uniquely equals the caller's email - no other column, no
-//    other row, no other user's data. Ambiguity or zero matches are refused.
+//  - The ONLY trusted evidence is app_metadata.student_id, which students
+//    cannot read or modify. Browser-supplied IDs, names, emails, roster
+//    order, and user_metadata are never trusted.
+//  - The ONLY write is profile_id on the single evidence-identified student,
+//    and only while it is Active and still unlinked. Ambiguity, missing
+//    evidence, ineligibility, or an existing link are all refused.
 //  - The update is guarded by `profile_id is null`, so a race can never
 //    overwrite an existing link or relink onto a now-claimed student.
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
-import { resolveClaimCandidate } from "./match.mjs";
+import { decideClaim, getIntendedStudentId } from "./claimEvidence.mjs";
 
 const ALLOWED_ORIGINS = [
   "https://dave-english-academy.vercel.app",
@@ -102,27 +107,31 @@ Deno.serve(async (req) => {
     .select("id")
     .eq("profile_id", caller.id)
     .maybeSingle();
-  if (existing) {
-    return json({ claimed: true, student_id: existing.id }, 200, origin);
+  const intendedStudentId = getIntendedStudentId(caller);
+  const preDecision = decideClaim({
+    alreadyLinkedStudentId: existing?.id ?? null,
+    intendedStudentId,
+    studentRow: null,
+  });
+  if (preDecision.claimed) {
+    return json({ claimed: true, student_id: preDecision.student_id }, 200, origin);
+  }
+  if (intendedStudentId === null) {
+    return json({ claimed: false, reason: "no-claim-evidence" }, 200, origin);
   }
 
-  const { data: unlinked, error: listError } = await adminClient
+  const { data: target, error: targetError } = await adminClient
     .from("students")
-    .select("id, real_name, status")
-    .eq("status", "Active")
-    .is("profile_id", null)
-    .order("id");
-  if (listError) {
-    return json({ error: "Could not read roster" }, 500, origin);
+    .select("id, status, profile_id")
+    .eq("id", intendedStudentId)
+    .maybeSingle();
+  if (targetError) {
+    return json({ error: "Could not read student record" }, 500, origin);
   }
 
-  const candidate = resolveClaimCandidate(unlinked ?? [], caller.email);
-  if (!candidate) {
-    return json(
-      { claimed: false, reason: "no-unique-match" },
-      200,
-      origin,
-    );
+  const decision = decideClaim({ intendedStudentId, studentRow: target });
+  if (!decision.claimed) {
+    return json({ claimed: false, reason: decision.reason }, 200, origin);
   }
 
   // Guarded by `profile_id is null` again so a concurrent claim/relink cannot
@@ -130,7 +139,7 @@ Deno.serve(async (req) => {
   const { count, error: updateError } = await adminClient
     .from("students")
     .update({ profile_id: caller.id }, { count: "exact" })
-    .eq("id", candidate.studentId)
+    .eq("id", decision.student_id)
     .is("profile_id", null);
   if (updateError) {
     return json({ error: "Could not link student record" }, 500, origin);
@@ -139,5 +148,5 @@ Deno.serve(async (req) => {
     return json({ claimed: false, reason: "already-claimed" }, 200, origin);
   }
 
-  return json({ claimed: true, student_id: candidate.studentId }, 200, origin);
+  return json({ claimed: true, student_id: decision.student_id }, 200, origin);
 });

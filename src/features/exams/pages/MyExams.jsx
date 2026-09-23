@@ -69,7 +69,7 @@ function countdownLabel(targetDateStr, t) {
 export default function MyExams() {
   const { t, i18n } = useTranslation(['exams', 'common', 'portal', 'dashboard']);
   const dateLocale = i18n.language === 'uz' ? 'uz' : 'en-US';
-  const { me, students, exams, examScores, loading } = useAcademy();
+  const { me, students, exams, examScores, loading, error } = useAcademy();
   const [actionError, setActionError] = useState(null);
 
   const myExams = useMemo(() => {
@@ -146,7 +146,10 @@ export default function MyExams() {
     return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
   }, [myExams, examScores]);
 
-  if (!me) {
+  // State order matters: loading and academy errors must never be mistaken
+  // for a missing student. Only a settled load with no error and no student
+  // row means "not linked yet".
+  if (!me && !loading && !error) {
     return (
       <div className="rounded-xl border border-ink/[0.06] bg-white p-10 text-center shadow-card">
         <p className="font-display text-lg font-semibold text-ink">{t('notLinkedYet')}</p>
