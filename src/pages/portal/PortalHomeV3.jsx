@@ -39,6 +39,7 @@ import { attendanceRate, filterByYearMonth, currentStreak } from '../../utils/at
 import { currentAndPreviousMonth, trendFrom, formatDateOnly, timeOfDayGreeting, formatWeekdayName, formatFullDateNumeric, formatClockTime } from '../../utils/date';
 import { formatUZS } from '../../utils/format';
 import { useLocalClock } from '../../hooks/useLocalClock';
+import ExamCountdown, { isExamUpcoming, examStartMs, formatTashkentTime } from '../../features/exams/components/ExamCountdown';
 import { useLevelUpCelebration } from '../../hooks/useLevelUpCelebration';
 import { nextLearningAction } from '../../shared/utils/recommendation';
 
@@ -126,7 +127,7 @@ function nextStepFor(attendance, homework, exam) {
 }
 
 export default function PortalHomeV3() {
-  const { t, i18n } = useTranslation(['dashboard', 'nav', 'portal']);
+  const { t, i18n } = useTranslation(['dashboard', 'nav', 'portal', 'exams']);
   const dateLocale = i18n.language === 'uz' ? 'uz' : 'en-US';
   const { lessons, attendance, homework, homeworkStatus, exams, examScores, curriculumProgress, lessonProgress, me } = useAcademy();
   const [paymentStatus, setPaymentStatus] = useState(null);
@@ -551,6 +552,64 @@ export default function PortalHomeV3() {
             </div>
             <ArrowRight size={18} className="shrink-0 text-white/80" aria-hidden />
           </Link>
+        );
+      })()}
+
+      {/* ── Upcoming Exams (same authoritative exams data as /my-exams) ── */}
+      {(() => {
+        const startOf = (e) => examStartMs(e) ?? new Date(`${e.exam_date}T00:00:00+05:00`).getTime();
+        const upcomingStudentExams = exams
+          .filter((e) => (e.exam_type === 'Written' || e.exam_type === 'Oral'))
+          .filter((e) => !e.level || e.level === me.level || examScores.some((s) => s.exam_id === e.id && s.student_id === me.id))
+          .filter((e) => isExamUpcoming(e))
+          .sort((a, b) => startOf(a) - startOf(b));
+        return (
+          <div className="mb-6 overflow-hidden rounded-2xl border border-ink/[0.06] bg-white shadow-card">
+            <div className="flex items-center justify-between gap-2 px-4 pt-4 sm:px-5">
+              <p className="flex items-center gap-2 text-sm font-bold text-ink">
+                <CalendarClock size={16} className="text-brand-600" aria-hidden="true" />
+                {t('exams:upcomingExamsTitle')}
+                {upcomingStudentExams.length > 0 && (
+                  <span className="rounded-full bg-brand-50 px-2 py-0.5 text-xs font-bold text-brand-700 ring-1 ring-brand-100">
+                    {upcomingStudentExams.length}
+                  </span>
+                )}
+              </p>
+              <Link to="/my-exams" className="inline-flex items-center gap-1 text-xs font-bold text-brand-600 hover:underline">
+                {t('nav:myExamsFull')} <ArrowRight size={13} aria-hidden="true" />
+              </Link>
+            </div>
+            <div className="space-y-3 px-4 py-4 sm:px-5">
+              {upcomingStudentExams.length === 0 ? (
+                <p className="flex items-center gap-2 rounded-xl bg-paper/60 px-3 py-2.5 text-xs font-semibold text-ink/50">
+                  <CalendarClock size={14} className="shrink-0 text-ink/30" aria-hidden="true" />
+                  {t('exams:cdNoUpcoming')}
+                </p>
+              ) : (
+                upcomingStudentExams.map((e) => (
+                  <div key={e.id} className="rounded-xl border border-ink/[0.06] bg-paper/40 p-3">
+                    <div className="mb-2 flex flex-wrap items-baseline justify-between gap-1">
+                      <p className="text-sm font-bold text-ink">
+                        {e.exam_type === 'Oral' ? t('exams:cdSpeakingExam') : t('exams:cdWritingExam')}
+                        <span className="font-semibold text-ink/50"> · </span>
+                        <span className="font-display">{e.title}</span>
+                      </p>
+                      <p className="text-xs font-semibold text-ink/50">
+                        {formatDateOnly(e.exam_date, dateLocale)}{e.starts_at ? ` · ${formatTashkentTime(e.starts_at)}` : ''}
+                      </p>
+                    </div>
+                    {e.starts_at ? (
+                      <ExamCountdown startsAt={e.starts_at} t={(k, o) => t(`exams:${k}`, o)} size="sm" />
+                    ) : (
+                      <p className="text-xs font-semibold text-ink/50">
+                        {formatDateOnly(e.exam_date, dateLocale)}
+                      </p>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         );
       })()}
 

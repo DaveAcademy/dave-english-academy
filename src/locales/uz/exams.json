@@ -85,5 +85,14 @@
   "inClassNote": "Bu imtihon sinfda topshiriladi — bu yerda hech narsa yuborish shart emas. Baholashdan keyin balingiz pastda ko'rinadi.",
   "feedbackShowMore": "Batafsil",
   "feedbackShowLess": "Yopish",
-  "bestScoreLabel": "Eng yaxshi"
+  "bestScoreLabel": "Eng yaxshi",
+  "examTimeLabel": "Vaqt",
+  "upcomingExamsTitle": "Yaqinlashayotgan imtihonlar",
+  "cdUnitDays": "Kun",
+  "cdUnitHours": "Soat",
+  "cdUnitMinutes": "Daqiqa",
+  "cdStarting": "Imtihon boshlanmoqda",
+  "cdNoUpcoming": "Yaqinlashayotgan imtihonlar yo'q",
+  "cdWritingExam": "Yozma imtihon",
+  "cdSpeakingExam": "Og'zaki imtihon"
 }

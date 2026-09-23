@@ -16,6 +16,7 @@ import { examTypeIcon } from '../../../utils/examLabel';
 import { formatDateOnly } from '../../../utils/date';
 import StatusPill from '../../../components/StatusPill';
 import ErrorBanner from '../../../components/ErrorBanner';
+import ExamCountdown, { isExamUpcoming, formatTashkentTime } from '../components/ExamCountdown';
 import { SkeletonList } from '../../../components/Skeleton';
 
 const STATUS_TONE = { graded: 'brand', upcoming: 'info', expired: 'neutral', resultPending: 'neutral', notSubmitted: 'neutral' };
@@ -88,15 +89,9 @@ export default function MyExams() {
     return 'notSubmitted';
   };
 
-  const isUpcoming = (exam) => {
-    if (!exam.exam_date) return false;
-    const [y, m, d] = exam.exam_date.slice(0, 10).split('-').map(Number);
-    if (!y || !m || !d) return false;
-    const examDay = new Date(y, m - 1, d);
-    const today = new Date();
-    const todayLocal = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    return examDay > todayLocal;
-  };
+  // Exact timestamp when scheduled (starts_at), otherwise the legacy local
+  // calendar-day comparison - shared rule also used by the dashboard card.
+  const isUpcoming = (exam) => isExamUpcoming(exam);
 
   const isOverdue = (exam) => {
     if (!exam.deadline) return false;
@@ -262,7 +257,7 @@ export default function MyExams() {
                             </div>
                             <div className="mt-1.5 flex flex-wrap items-center gap-2">
                               <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-2.5 py-1 text-xs font-bold text-brand-700 ring-1 ring-brand-100">
-                                <CalendarDays size={12} /> {formatDateOnly(e.exam_date, dateLocale)}
+                                <CalendarDays size={12} /> {formatDateOnly(e.exam_date, dateLocale)}{e.starts_at ? ` · ${formatTashkentTime(e.starts_at)}` : ''}
                                 {countdown && <span className="rounded-full bg-white px-1.5 py-0.5 text-[11px] font-bold text-brand-600 ring-1 ring-brand-100">{countdown}</span>}
                               </span>
                               <span className="text-xs text-ink/50">{t('outOfScore', { max: e.max_score })}</span>
@@ -270,6 +265,11 @@ export default function MyExams() {
                                 <span className="text-xs text-ink/40">· {t('dueDate', { date: formatDateOnly(e.deadline.slice(0, 10), dateLocale) })}</span>
                               )}
                             </div>
+                            {e.starts_at && (
+                              <div className="mt-2.5">
+                                <ExamCountdown startsAt={e.starts_at} t={t} size="md" />
+                              </div>
+                            )}
                             <div className="mt-2 flex items-start gap-2 rounded-xl border border-ink/[0.06] bg-paper/60 px-3 py-2">
                               <CalendarDays size={14} className="mt-0.5 shrink-0 text-brand-600" aria-hidden />
                               <div>

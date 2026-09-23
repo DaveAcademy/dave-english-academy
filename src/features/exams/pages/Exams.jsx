@@ -15,6 +15,7 @@ import { getAttachmentUrl } from '../../../lib/db';
 import { LEVELS } from '../../../lib/levels';
 import ExamGradingRoster from '../components/ExamGradingRoster';
 import ExamResultsView from '../components/ExamResultsView';
+import { formatTashkentTime, tashkentDatePart } from '../components/ExamCountdown';
 
 const EXAM_TYPES = ['Written', 'Oral'];
 
@@ -23,6 +24,7 @@ const EMPTY_FORM = {
   level: 'A',
   description: '',
   exam_date: new Date().toISOString().slice(0, 10),
+  exam_time: '',
   deadline: '',
   max_score: 100,
   exam_type: 'Written',
@@ -209,6 +211,9 @@ export default function Exams() {
         level: form.level || null,
         description: form.description || null,
         exam_date: form.exam_date,
+        // Asia/Tashkent is UTC+5 year-round (no DST), so a fixed offset is
+        // exact here - no Date-timezone arithmetic involved.
+        starts_at: form.exam_time ? `${form.exam_date}T${form.exam_time}:00+05:00` : null,
         deadline: form.deadline || null,
         max_score: Number(form.max_score) || 100,
         exam_type: form.exam_type || 'Written',
@@ -233,7 +238,8 @@ export default function Exams() {
       title: exam.title,
       level: exam.level || 'A',
       description: exam.description || '',
-      exam_date: exam.exam_date,
+      exam_date: exam.starts_at ? tashkentDatePart(exam.starts_at) || exam.exam_date : exam.exam_date,
+      exam_time: exam.starts_at ? formatTashkentTime(exam.starts_at) : '',
       deadline: exam.deadline ? exam.deadline.slice(0, 10) : '',
       max_score: exam.max_score,
       exam_type: exam.exam_type || 'Written',
@@ -313,7 +319,7 @@ export default function Exams() {
                   </td>
                   <td className="px-3 py-2 text-ink/70">{t(`examType.${e.exam_type || 'Written'}`)}</td>
                   <td className="px-3 py-2 text-ink/70">{lessonOf(e.lesson_id)?.topic || '—'}</td>
-                  <td className="px-3 py-2 text-ink/70">{e.exam_date}</td>
+                  <td className="px-3 py-2 text-ink/70">{e.exam_date}{e.starts_at ? ` · ${formatTashkentTime(e.starts_at)}` : ''}</td>
                   <td className="px-3 py-2 text-ink/70">{studentCountOf(e)}</td>
                   {section === 'active' && (
                     <td className="px-3 py-2 text-ink/70">
@@ -421,6 +427,15 @@ export default function Exams() {
               type="date"
               value={form.exam_date}
               onChange={(e) => setForm({ ...form, exam_date: e.target.value })}
+              className="input"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-ink/50">{t('examTimeLabel')}</label>
+            <input
+              type="time"
+              value={form.exam_time}
+              onChange={(e) => setForm({ ...form, exam_time: e.target.value })}
               className="input"
             />
           </div>

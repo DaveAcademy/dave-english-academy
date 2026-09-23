@@ -85,5 +85,14 @@
   "inClassNote": "This exam takes place in class — nothing to submit here. Your score will appear below after grading.",
   "feedbackShowMore": "Show more",
   "feedbackShowLess": "Show less",
-  "bestScoreLabel": "Best"
+  "bestScoreLabel": "Best",
+  "examTimeLabel": "Time",
+  "upcomingExamsTitle": "Upcoming Exams",
+  "cdUnitDays": "Days",
+  "cdUnitHours": "Hours",
+  "cdUnitMinutes": "Minutes",
+  "cdStarting": "Exam is starting",
+  "cdNoUpcoming": "No upcoming exams",
+  "cdWritingExam": "Writing Exam",
+  "cdSpeakingExam": "Speaking Exam"
 }
