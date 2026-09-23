@@ -9,9 +9,11 @@ export function SkeletonLine({ width = '100%', className = '' }) {
 
 // One card-shaped placeholder matching the bordered list-row idiom used
 // across the portal (MyHomework/MyCertificates/MyProgress rows).
-export function SkeletonCard({ lines = 2 }) {
+// `radius` lets a caller match its own card geometry (e.g. MyExams uses
+// rounded-2xl) without changing the shared default other pages rely on.
+export function SkeletonCard({ lines = 2, radius = 'rounded-xl' }) {
   return (
-    <div className="rounded-xl border border-ink/[0.06] bg-white p-3 shadow-card sm:p-4">
+    <div className={`${radius} border border-ink/[0.06] bg-white p-3 shadow-card sm:p-4`}>
       <div className="space-y-2">
         {Array.from({ length: lines }).map((_, i) => (
           <SkeletonLine key={i} width={i === 0 ? '55%' : '35%'} />
@@ -21,11 +23,11 @@ export function SkeletonCard({ lines = 2 }) {
   );
 }
 
-export function SkeletonList({ count = 3, lines = 2 }) {
+export function SkeletonList({ count = 3, lines = 2, radius = 'rounded-xl' }) {
   return (
     <div className="space-y-2" role="status" aria-busy="true">
       {Array.from({ length: count }).map((_, i) => (
-        <SkeletonCard key={i} lines={lines} />
+        <SkeletonCard key={i} lines={lines} radius={radius} />
       ))}
     </div>
   );
