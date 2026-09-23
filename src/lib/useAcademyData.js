@@ -127,38 +127,70 @@ export function useAcademyData() {
     return () => { cancelled = true; };
   }, [me]);
 
+  const loadCore = useCallback(async () => {
+    const [s, p, a, le, la, ex, es, hw, hs, cert] = await Promise.all([
+      db.listStudents(),
+      db.listLegacyPaymentsForBackup(),
+      db.listAttendance(),
+      db.listLessons(),
+      db.listLessonAttendance(),
+      db.listExams(),
+      db.listExamScores(),
+      db.listHomework(),
+      db.listHomeworkStatus(),
+      db.listCertificates(),
+    ]);
+    setStudents(s);
+    setPayments(p);
+    setAttendance(a);
+    setLessons(le);
+    setLessonAttendanceState(la);
+    setExams(ex);
+    setExamScoresState(es);
+    setHomework(hw);
+    setHomeworkStatusState(hs);
+    setCertificates(cert);
+  }, []);
+
   useEffect(() => {
     (async () => {
       try {
-        const [s, p, a, le, la, ex, es, hw, hs, cert] = await Promise.all([
-          db.listStudents(),
-          db.listLegacyPaymentsForBackup(),
-          db.listAttendance(),
-          db.listLessons(),
-          db.listLessonAttendance(),
-          db.listExams(),
-          db.listExamScores(),
-          db.listHomework(),
-          db.listHomeworkStatus(),
-          db.listCertificates(),
-        ]);
-        setStudents(s);
-        setPayments(p);
-        setAttendance(a);
-        setLessons(le);
-        setLessonAttendanceState(la);
-        setExams(ex);
-        setExamScoresState(es);
-        setHomework(hw);
-        setHomeworkStatusState(hs);
-        setCertificates(cert);
+        await loadCore();
       } catch (e) {
         setError('Could not load your saved data.');
       } finally {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [loadCore]);
+
+  // Self-claim: an orphaned student login (an authenticated account whose
+  // students.profile_id was never set) would otherwise be stuck on every
+  // student portal page's "not linked yet" empty state forever. The
+  // self-claim-student edge function relinks exactly the student whose
+  // deterministic login email (real_name rule, see
+  // BulkCreateStudentAccounts.jsx) uniquely matches - ambiguous or missing
+  // matches are refused server-side, so me stays null and the admin bulk
+  // account-creation UI remains the fallback. Attempted once per mount;
+  // success refetches the core data so Exams/Homework resolve against me.
+  // Admin/teacher role never reaches this (me stays null for them).
+  const didAttemptSelfClaim = useRef(false);
+  useEffect(() => {
+    if (profile?.role !== 'student' || me !== null || loading || error) return;
+    if (didAttemptSelfClaim.current) return;
+    didAttemptSelfClaim.current = true;
+    (async () => {
+      try {
+        const { data, error: fnError } = await supabase.functions.invoke('self-claim-student', {});
+        if (fnError || !data || data.claimed !== true) return;
+        await loadCore();
+      } catch {
+        // Stay on the honest "not linked yet" state; the admin can relink
+        // through the account-creation UIs instead.
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.role, me, loading, error, loadCore]);
 
   // Loaded separately from the block above on purpose: these tables come
   // from later migrations (0009, 0010). If a migration hasn't been
