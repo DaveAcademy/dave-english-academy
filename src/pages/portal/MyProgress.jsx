@@ -693,9 +693,9 @@ export default function MyProgress() {
                 return (
                   <div key={h.id} className="flex items-start justify-between gap-3 px-4 py-3">
                     <span className="min-w-0 flex-1">
-                      <span className="flex items-center gap-1.5">
+                      <span className="flex min-w-0 items-center gap-1.5">
                         {isDone ? <CheckCircle2 size={14} className="flex-shrink-0 text-active" aria-hidden="true" /> : <Clock size={14} className="flex-shrink-0 text-ink/30" aria-hidden="true" />}
-                        <span className="truncate text-sm font-semibold text-ink">{h.title}</span>
+                        <span className="min-w-0 truncate text-sm font-semibold text-ink">{h.title}</span>
                       </span>
                       {h.statusRow?.feedback && <span className="mt-1 block text-xs text-ink/50">{t('portal:teacherFeedbackLabel', { defaultValue: 'Feedback' })}: {h.statusRow.feedback}</span>}
                       {h.due_date && <span className="mt-0.5 block text-xs text-ink/35">{t('portal:mpDueDate', { date: h.due_date })}</span>}
