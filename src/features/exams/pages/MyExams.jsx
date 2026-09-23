@@ -16,6 +16,7 @@ import { examTypeIcon } from '../../../utils/examLabel';
 import { formatDateOnly } from '../../../utils/date';
 import StatusPill from '../../../components/StatusPill';
 import ErrorBanner from '../../../components/ErrorBanner';
+import ExamInstructions from '../components/ExamInstructions';
 import { SkeletonList } from '../../../components/Skeleton';
 
 const STATUS_TONE = { graded: 'brand', upcoming: 'info', expired: 'neutral', resultPending: 'neutral', notSubmitted: 'neutral' };
@@ -275,6 +276,9 @@ export default function MyExams() {
                               </div>
                             </div>
                             {e.description && <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-ink/65">{e.description}</p>}
+                            {(e.exam_type === 'Written' || e.exam_type === 'Oral') && (
+                              <ExamInstructions kind={e.exam_type === 'Oral' ? 'oral' : 'written'} t={t} />
+                            )}
                           </div>
                         </div>
 
@@ -358,6 +362,7 @@ export default function MyExams() {
                               <p className="mt-1.5 text-[11px] font-medium text-brand-600/70">{t('portal:mpCompletionGraded')}</p>
                             </div>
                           )}
+                          {graded && <ExamInstructions kind="result" t={t} />}
                           {expired && <p className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-inactive"><AlertTriangle size={12} /> {t('deadlinePassedWarning')}</p>}
                           {!graded && !expired && (
                             <p className="mt-2 flex items-start gap-1.5 text-xs leading-relaxed text-ink/55">

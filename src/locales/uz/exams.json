@@ -85,5 +85,37 @@
   "inClassNote": "Bu imtihon sinfda topshiriladi — bu yerda hech narsa yuborish shart emas. Baholashdan keyin balingiz pastda ko'rinadi.",
   "feedbackShowMore": "Batafsil",
   "feedbackShowLess": "Yopish",
-  "bestScoreLabel": "Eng yaxshi"
+  "bestScoreLabel": "Eng yaxshi",
+  "stageUzLabel": "O'zbekcha",
+  "stageHowToLabel": "Qanday bajariladi",
+  "stageSampleLabel": "Misol",
+  "stage": {
+    "written": {
+      "title": "Yozma imtihon — nima kutilayotganini biling",
+      "instruction": "This is a written exam. You will take it in class on the exam date. Read every question carefully and write your answers on the paper.",
+      "instructionUz": "Bu yozma imtihon. Siz uni sinfda, imtihon kunida topshirasiz. Har bir savolni diqqat bilan o'qing va javoblarni qog'ozga yozing.",
+      "howto": "Write each answer on the paper in your own words. Give more attention to the questions you find difficult. Do not talk to other students, and ask the teacher if a question is unclear.",
+      "howtoUz": "Har bir javobni qog'ozga o'z so'zlaringiz bilan yozing. Qiyinroq savollarga ko'proq e'tibor bering. Boshqa o'quvchilar bilan gaplashmang, savol tushunarsiz bo'lsa o'qituvchidan so'rang.",
+      "sample": "A correct task looks like this: on the paper the teacher writes a question such as \u201cWrite three sentences about your best friend.\u201d Your answer is a short written text underneath it.",
+      "sampleUz": "To'g'ri bajarilish misoli: varaqada o'qituvchi, masalan, \u201cEng yaqin do'stingiz haqida uchta gap yozing\u201d degan topshiriq yozadi. Sizning javobingiz esa uning ostiga yozilgan qisqa matndan iborat."
+    },
+    "oral": {
+      "title": "Og'zaki imtihon — nima kutilayotganini biling",
+      "instruction": "This is a speaking exam. The teacher will ask you questions and you answer by speaking in English, out loud.",
+      "instructionUz": "Bu og'zaki imtihon. O'qituvchi sizga savollar beradi, siz esa ingliz tilida baland ovozda javob berasiz.",
+      "howto": "Listen to the whole question before you answer. Speak in full sentences and take a moment to think if you need to. Your spoken answers are graded.",
+      "howtoUz": "Javob berishdan oldin savolni oxirigacha eshiting. To'liq gaplar bilan javob bering va kerak bo'lsa o'ylab olishga vaqt oling. Og'zaki javoblaringiz baholanadi.",
+      "sample": "A correct answer looks like this: the teacher asks \u201cWhat did you do last weekend?\u201d You answer out loud: \u201cLast weekend I visited my grandmother.\u201d",
+      "sampleUz": "To'g'ri javob misoli: o'qituvchi \u201cO'tgan hafta oxirida nima qildingiz?\u201d deb so'raydi. Siz esa: \u201cO'tgan hafta oxirida buvimnikiga bordim\u201d deb javob berasiz."
+    },
+    "result": {
+      "title": "Natijangiz — uni qanday o'qish kerak",
+      "instruction": "This exam is already graded. Your score shows how many points you got out of the maximum, and the bar shows the same as a percentage.",
+      "instructionUz": "Bu imtihon allaqachon baholangan. Sizning balingiz maksimal balldan qancha olganingizni ko'rsatadi, chiziq esa shuni foizda ifodalaydi.",
+      "howto": "Read the teacher's comment below your score and use it to prepare better next time. If you do not understand a mark, ask your teacher about it.",
+      "howtoUz": "Balingiz ostidagi o'qituvchi izohini o'qing va keyingi safar yaxshiroq tayyorlanish uchun undan foydalaning. Agar biron baho tushunarsiz bo'lsa, o'qituvchingizdan so'rang.",
+      "sample": "A correct result looks like this: a score of 18 out of 20 shows as 18/20 and 90%. A comment such as \u201cGood job! Review the past tense\u201d tells you what to practise.",
+      "sampleUz": "To'g'ri natija misoli: 20 balldan 18 ball 18/20 va 90% ko'rinishida bo'ladi. \u201cBarakalla! O'tgan zamonni takrorlang\u201d kabi izoh esa nima ustida mashq qilishni bildiradi."
+    }
+  }
 }
