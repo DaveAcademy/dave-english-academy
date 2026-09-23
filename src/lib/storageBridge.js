@@ -1020,6 +1020,16 @@ export async function markHomeworkSubmitted(homeworkId, studentId) {
   return listHomeworkStatus();
 }
 
+// ---------- Homework completion (student dashboard count) ----------
+// Read-only server-side completion per assignment: all visible stages
+// completed (authoritative stage progress) or a Submitted/Graded status
+// row (manual/photo flow). One row per homework - duplicates impossible.
+export async function getMyHomeworkCompletion() {
+  const { data, error } = await supabase.rpc('get_my_homework_completion');
+  if (error) throw error;
+  return Array.isArray(data) ? data : [];
+}
+
 // ---------- Certificates ----------
 
 export async function listCertificates() {

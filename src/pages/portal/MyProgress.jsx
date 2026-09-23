@@ -18,6 +18,7 @@ import {
 import { useAcademy } from '../../lib/AcademyDataContext';
 import { levelToken } from '../../lib/levels';
 import { supabase } from '../../lib/supabaseClient';
+import { getMyHomeworkCompletion } from '../../lib/storageBridge';
 import {
   LESSON_STATUS, teacherPaceFor, lessonCapFor, progressByLessonNumber, lessonStatusFor,
   nextUnfinishedLesson, completionStreak,
@@ -132,6 +133,29 @@ export default function MyProgress() {
     };
   }, [me, lessons, curriculumProgress, lessonProgress]);
 
+  // ── homework completion (server-side, per assignment) ───────────────
+  // Set of homework IDs the server reports completed (all visible stages
+  // done, or a Submitted/Graded manual status). Empty until loaded, so the
+  // count starts at 0 and only rises on authoritative data - never on
+  // opened/started/duplicate/question-level activity.
+  const [completedHomeworkIds, setCompletedHomeworkIds] = useState(() => new Set());
+  useEffect(() => {
+    if (!me?.id) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const rows = await getMyHomeworkCompletion();
+        if (cancelled) return;
+        setCompletedHomeworkIds(new Set((rows || []).filter((r) => r.completed).map((r) => r.homework_id)));
+      } catch {
+        // count stays 0 on failure rather than showing a wrong number
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [me?.id]);
+
   // ── homework (preserved logic) ────────────────────────────────────────
   const homeworkRows = useMemo(() => {
     const myHomework = me ? homework.filter((h) => !h.level || h.level === me.level) : [];
@@ -143,10 +167,10 @@ export default function MyProgress() {
 
   const homeworkStats = useMemo(() => {
     const total = homeworkRows.length;
-    const completed = homeworkRows.filter((h) => h.statusRow?.status === 'Submitted' || h.statusRow?.status === 'Graded').length;
+    const completed = homeworkRows.filter((h) => completedHomeworkIds.has(h.id)).length;
     const graded = homeworkRows.filter((h) => h.statusRow?.status === 'Graded').length;
     return { total, completed, graded, rate: total > 0 ? Math.round((completed / total) * 100) : null };
-  }, [homeworkRows]);
+  }, [homeworkRows, completedHomeworkIds]);
 
   // ── supplemental: vocabulary journey (SRS stages) ─────────────────────
   const [vocabJourney, setVocabJourney] = useState(null);
@@ -252,22 +276,18 @@ export default function MyProgress() {
   }, [me?.id]);
 
   // ── derived hero values ───────────────────────────────────────────────
-  if (!me) {
-    return (
-      <div className="rounded-xl border border-ink/[0.06] bg-white p-10 text-center shadow-card">
-        <p className="font-display text-lg font-semibold text-ink">{t('dashboard:notLinkedYet')}</p>
-      </div>
-    );
-  }
+  // NOTE: no early return may sit above this point - every hook below must
+  // run on every render in the same order (Rules of Hooks). The !me guard
+  // lives just before the final return instead.
 
-  const totalPoints = Number(me.points ?? 0);
+  const totalPoints = Number(me?.points ?? 0);
   const tierInfo = gameTierForPoints(totalPoints);
-  const academyLevel = me.level || '—';
+  const academyLevel = me?.level || '—';
   const vocabMasteryPct = vocabJourney?.masteryPct ?? 0;
   const lessonPct = lessonBlock?.percent ?? 0;
   const lessonStreakVal = lessonBlock?.streak ?? 0;
   const nextLesson = lessonBlock?.next;
-  const initials = me.real_name?.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase() || '—';
+  const initials = me?.real_name?.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase() || '—';
 
   // game strengths / weak areas (only from real data)
   const gameStrengths = useMemo(() => {
@@ -287,6 +307,14 @@ export default function MyProgress() {
 
   // growth trends — only real deltas, never invented
   const hasGrowth = examTrend || streakAttendance > 0 || lessonStreakVal > 0 || (homeworkStats.rate != null);
+
+  if (!me) {
+    return (
+      <div className="rounded-xl border border-ink/[0.06] bg-white p-10 text-center shadow-card">
+        <p className="font-display text-lg font-semibold text-ink">{t('dashboard:notLinkedYet')}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-[880px]">
