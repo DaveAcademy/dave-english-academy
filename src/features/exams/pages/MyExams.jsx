@@ -38,7 +38,7 @@ function FeedbackText({ text, t }) {
   return (
     <div className="mt-3 rounded-xl border border-brand-100 bg-brand-50 px-3 py-2.5">
       <p className="text-sm leading-relaxed text-brand-800">
-        {expanded ? text : `${text.slice(0, COLLAPSE_AT)}ΓÇª`}
+        {expanded ? text : `${text.slice(0, COLLAPSE_AT)}…`}
       </p>
       <button
         type="button"
@@ -265,7 +265,7 @@ export default function MyExams() {
                               </span>
                               <span className="text-xs text-ink/50">{t('outOfScore', { max: e.max_score })}</span>
                               {e.deadline && !isOral && (
-                                <span className="text-xs text-ink/40">┬╖ {t('dueDate', { date: formatDateOnly(e.deadline.slice(0, 10), dateLocale) })}</span>
+                                <span className="text-xs text-ink/40">· {t('dueDate', { date: formatDateOnly(e.deadline.slice(0, 10), dateLocale) })}</span>
                               )}
                             </div>
                             <div className="mt-2 flex items-start gap-2 rounded-xl border border-ink/[0.06] bg-paper/60 px-3 py-2">
@@ -341,10 +341,10 @@ export default function MyExams() {
                             <StatusPill tone={STATUS_TONE[status]}>{status === 'expired' ? t('awaitingTeacher') : t(status)}</StatusPill>
                            </div>
                           <p className="mt-1 flex flex-wrap items-center gap-1 text-xs text-ink/50">
-                            <Clock size={11} className="text-ink/30" /> {formatDateOnly(e.exam_date, dateLocale)} ┬╖ {t('outOfScore', { max: e.max_score })}
+                            <Clock size={11} className="text-ink/30" /> {formatDateOnly(e.exam_date, dateLocale)} · {t('outOfScore', { max: e.max_score })}
                             {e.deadline && !isOral && (
-                              expired ? <span className="font-semibold text-inactive"> ┬╖ {t('dueDateOverdue', { date: formatDateOnly(e.deadline.slice(0, 10), dateLocale) })}</span>
-                                : <span> ┬╖ {t('dueDate', { date: formatDateOnly(e.deadline.slice(0, 10), dateLocale) })}</span>
+                              expired ? <span className="font-semibold text-inactive"> · {t('dueDateOverdue', { date: formatDateOnly(e.deadline.slice(0, 10), dateLocale) })}</span>
+                                : <span> · {t('dueDate', { date: formatDateOnly(e.deadline.slice(0, 10), dateLocale) })}</span>
                             )}
                           </p>
                           {e.description && <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-ink/65">{e.description}</p>}
@@ -354,7 +354,7 @@ export default function MyExams() {
                             <div className="mt-3 rounded-xl border border-brand-100 bg-brand-50/60 px-3 py-2.5">
                               <div className="flex items-center justify-between gap-2">
                                 <span className="inline-flex items-center gap-1 text-xs font-bold text-brand-700"><TrendingUp size={12} /> {t('portal:mpScoreLabel')}</span>
-                                <span className="text-sm font-bold text-brand-700 sm:hidden">{t('scoreOutOfMax', { score: result.score, max: e.max_score })} ┬╖ {pct}%</span>
+                                <span className="text-sm font-bold text-brand-700 sm:hidden">{t('scoreOutOfMax', { score: result.score, max: e.max_score })} · {pct}%</span>
                               </div>
                               <div className="mt-2 h-2 overflow-hidden rounded-full bg-white ring-1 ring-brand-100">
                                 <div className="h-full rounded-full bg-brand-500 transition-all" style={{ width: `${Math.min(100, pct)}%` }} />
