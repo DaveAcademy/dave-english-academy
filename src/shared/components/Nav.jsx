@@ -26,6 +26,7 @@ import {
   Sparkles,
   Gamepad2,
   BookMarked,
+  BarChart2,
   X,
 } from 'lucide-react';
 import { useAuth } from '../../lib/AuthContext';
@@ -59,6 +60,7 @@ const NAV_ITEMS = [
   { to: '/rankings', label: 'rankings', shortLabel: 'rankingsShort', Icon: Trophy, section: 'results' },
   { to: '/recognition', label: 'recognition', shortLabel: 'recognitionShort', Icon: Medal, adminOnly: true, section: 'results' },
   { to: '/game-results', label: 'gameResults', shortLabel: 'gameResultsShort', Icon: Gamepad2, section: 'results' },
+  { to: '/online-test-analytics', label: 'onlineTestAnalytics', shortLabel: 'onlineTestAnalyticsShort', Icon: BarChart2, adminOnly: true, section: 'results' },
   // Reports temporarily hidden from nav (2026-08-21) - feature kept intact,
   // just not exposed. Uncomment to re-enable admin navigation.
   // { to: '/reports', label: 'reports', shortLabel: 'reportsShort', Icon: BarChart3, adminOnly: true, section: 'results' },

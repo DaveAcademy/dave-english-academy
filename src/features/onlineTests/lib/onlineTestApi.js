@@ -55,3 +55,40 @@ export async function getOnlineExamRanking() {
   if (error) throw error;
   return data || [];
 }
+
+// ---- Admin Analytics (is_admin() required) ----
+
+// Test-level overview statistics for all published tests.
+export async function getAdminOnlineTestOverview() {
+  const { data, error } = await supabase.rpc('get_admin_online_test_overview');
+  if (error) throw error;
+  return data || [];
+}
+
+// Student-level performance detail for Admin.
+export async function getAdminOnlineTestStudentResults() {
+  const { data, error } = await supabase.rpc('get_admin_online_test_student_results');
+  if (error) throw error;
+  return data || [];
+}
+
+// Admin-only Online Test Performance Ranking (isolated system).
+export async function getAdminOnlineTestRanking() {
+  const { data, error } = await supabase.rpc('get_admin_online_test_ranking');
+  if (error) throw error;
+  return data || [];
+}
+
+// Test detail: stage performance breakdown for a specific test.
+export async function getAdminOnlineTestDetail(testId) {
+  const { data, error } = await supabase.rpc('get_admin_online_test_detail', { p_test_id: testId });
+  if (error) throw error;
+  return data ? data[0] : null;
+}
+
+// Student detail for a specific student's online test performance.
+export async function getAdminStudentOnlineTestDetail(studentId) {
+  const { data, error } = await supabase.rpc('get_admin_student_online_test_detail', { p_student_id: studentId });
+  if (error) throw error;
+  return data || [];
+}

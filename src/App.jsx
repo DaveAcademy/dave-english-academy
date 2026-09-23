@@ -49,6 +49,7 @@ const Dictionary = lazy(() => import('./features/dictionary/pages/Dictionary'));
 const MyRanking = lazy(() => import('./features/rankings/pages/MyRanking'));
 const OnlineTests = lazy(() => import('./features/onlineTests/pages/OnlineTests'));
 const OnlineTestRunner = lazy(() => import('./features/onlineTests/pages/OnlineTestRunner'));
+const AdminOnlineTestAnalytics = lazy(() => import('./features/onlineTests/pages/AdminOnlineTestAnalytics'));
 const MyCertificates = lazy(() => import('./features/certificates/pages/MyCertificates'));
 const PetCollection = lazy(() => import('./pages/portal/PetCollection'));
 // Avatar temporarily hidden (unfinished) - import kept for later restore.
@@ -207,6 +208,7 @@ function RoutedContent({ isStudent }) {
             <Route path="/dictionary-admin" element={<DictionaryAdmin />} />
             <Route path="/recognition" element={<Recognition />} />
             <Route path="/reports" element={<Reports />} />
+            <Route path="/online-test-analytics" element={<AdminOnlineTestAnalytics />} />
             {/* AI Assistant hidden from normal navigation - page, client, and
                 backend kept intact for later restore. Uncomment to re-expose. */}
             {/* <Route path="/ai-assistant" element={<AiAssistant />} /> */}
