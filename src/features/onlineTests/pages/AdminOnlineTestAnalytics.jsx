@@ -525,10 +525,10 @@ function TestDetailModal({ detail, onClose, t, dateLocale }) {
           <div className="mb-6">
             <h3 className="font-display text-base font-bold text-ink mb-3">{t('stagePerformance')}</h3>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-              <StageCard stage={t('stageVocabulary')} score={detail.stage_vocab_avg} total={8} t={t} />
-              <StageCard stage={t('stageGrammar')} score={detail.stage_grammar_avg} total={8} t={t} />
-              <StageCard stage={t('stageSentences')} score={detail.stage_sentences_avg} total={9} t={t} />
-              <StageCard stage={t('stageWriting')} score={detail.stage_writing_avg} total={9} t={t} />
+              <StageCard stage={t('stageVocabulary')} score={detail.stage_vocab_avg} total={10} t={t} />
+              <StageCard stage={t('stageGrammar')} score={detail.stage_grammar_avg} total={10} t={t} />
+              <StageCard stage={t('stageSentences')} score={detail.stage_sentences_avg} total={8} t={t} />
+              <StageCard stage={t('stageWriting')} score={detail.stage_writing_avg} total={6} t={t} />
             </div>
           </div>
 
