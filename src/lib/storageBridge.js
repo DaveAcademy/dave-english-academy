@@ -61,11 +61,15 @@ export async function updateStudent(id, data) {
 }
 
 export async function deleteStudent(id) {
-  // payments/attendance reference students(id) on delete cascade, so a
-  // single delete here removes their related records too.
-  const { data: rows, error } = await supabase.from('students').delete().eq('id', id).select('id');
+  // Delegate to Edge Function which uses service role to:
+  // 1. Find student's profile_id
+  // 2. Delete Auth user (requires service role)
+  // 3. Delete student record (cascades to all dependent tables via FK)
+  const { data, error } = await supabase.functions.invoke('admin-delete-student', {
+    body: { student_id: id },
+  });
   if (error) throw error;
-  assertRows(rows, 'delete this student');
+  if (data?.error) throw new Error(data.error);
   return true;
 }
 
