@@ -2254,6 +2254,19 @@ export async function autoGradeHomeworkAnswerById(answerId) {
   return data;
 }
 
+// ---------- Homework final attempt (automatic submission + 1-100 grade) ----------
+// Server-authoritative finalization: the client only requests it (typically
+// when all required work looks complete); the RPC itself verifies ownership,
+// completeness, keys, grades atomically, stores the single result row, and
+// locks answers via RLS. Never sends score/correctness - only the homework id.
+export async function submitHomeworkAttempt(homeworkId) {
+  const { data, error } = await supabase.rpc('submit_homework_attempt', {
+    p_homework_id: homeworkId,
+  });
+  if (error) throw error;
+  return data;
+}
+
 export async function awardHomeworkPoints(homeworkId, studentId, points, reason, awardedBy) {
   const { data, error } = await supabase.rpc('award_homework_points', {
     p_homework_id: homeworkId,

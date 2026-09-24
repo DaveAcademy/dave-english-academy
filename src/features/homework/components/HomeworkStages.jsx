@@ -1,12 +1,14 @@
 // HomeworkStages.jsx
 // Interactive four-stage homework (Vocabulary, Grammar, Practice, Review)
-// for ONE standard lesson-homework row. Read-only until the student submits;
-// answers persist in homework_answers, auto-graded where the question has an
-// explicit key, otherwise left for teacher review. Points stay manual.
+// for ONE standard lesson-homework row. Per-question submit still
+// autosaves/grades locally for immediate feedback; when every required
+// question is answered the client requests server finalization
+// (submit_homework_attempt), which is authoritative: it re-grades, stores
+// the single 1-100 result, and locks answers via RLS.
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CheckCircle2, BookOpen, PenTool, Target, Sparkles, Lock } from 'lucide-react';
+import { CheckCircle2, BookOpen, PenTool, Target, Sparkles, Lock, Award } from 'lucide-react';
 import {
   listHomeworkStages,
   listHomeworkQuestions,
@@ -16,6 +18,7 @@ import {
   ensureHomeworkStageProgress,
   checkHomeworkStageCompletion,
   autoGradeHomeworkAnswerById,
+  submitHomeworkAttempt,
 } from '../../../lib/db';
 import QuestionRenderer from './QuestionRenderer';
 import { initialActiveStageId } from '../../../lib/homeworkStageSelect';
@@ -27,7 +30,17 @@ const STAGE_META = {
   review: { icon: Sparkles, iconClass: 'text-violet-500', label: 'Review' },
 };
 
-export function HomeworkStages({ homeworkId, studentId, focusStageKey }) {
+// Types the server auto-grader can grade from an answer key. Keyless/
+// subjective types never receive an automatic 1-100 grade.
+const DETERMINISTIC_TYPES = new Set([
+  'multiple_choice',
+  'fill_blank',
+  'translation',
+  'matching',
+  'ordering',
+]);
+
+export function HomeworkStages({ homeworkId, studentId, focusStageKey, onFinalized }) {
   const { t } = useTranslation(['homework']);
   const [stages, setStages] = useState([]);
   const [stageProgress, setStageProgress] = useState({});
@@ -37,6 +50,9 @@ export function HomeworkStages({ homeworkId, studentId, focusStageKey }) {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [finalResult, setFinalResult] = useState(null);
+  const [finalizing, setFinalizing] = useState(false);
+  const [finalizeNote, setFinalizeNote] = useState(null);
 
   // Latest requested focus stage, mirrored for the async loader below.
   // Read (not a dep) so a stage-button click never triggers a full reload —
@@ -172,6 +188,73 @@ export function HomeworkStages({ homeworkId, studentId, focusStageKey }) {
     [studentId, homeworkId, questions, stages]
   );
 
+  // Derive whether every required question is answered (from loaded state).
+  // Used both as the auto-finalize trigger and as the reconcile-on-load path
+  // so a browser that closed between RPCs can still finalize on next open.
+  const requiredQuestions = stages
+    .filter((s) => s.is_required !== false)
+    .flatMap((s) => questions[s.id] || []);
+  const allRequiredAnswered =
+    requiredQuestions.length > 0 &&
+    requiredQuestions.every((q) => answers[q.id] != null);
+  const hasKeylessRequired = requiredQuestions.some(
+    (q) => !DETERMINISTIC_TYPES.has(q.question_type)
+  );
+
+  // Server-authoritative finalization. The client only *requests* it; the
+  // RPC verifies completeness/keys and stores the single grade. Runs after
+  // load (reconciliation) and after each answer once the set is complete.
+  const finalizeAttempt = useCallback(async () => {
+    if (!homeworkId || finalResult || finalizing) return;
+    if (hasKeylessRequired || !allRequiredAnswered) return;
+    setFinalizing(true);
+    setFinalizeNote(null);
+    try {
+      const result = await submitHomeworkAttempt(homeworkId);
+      setFinalResult(result);
+      try {
+        onFinalized?.(result);
+      } catch {
+        /* status refresh is best-effort */
+      }
+    } catch (e) {
+      const msg = String(e?.message || '');
+      // Keyless / incomplete / already-manual are honest terminal states —
+      // surface them instead of retrying forever.
+      if (
+        msg.includes('teacher review') ||
+        msg.includes('not complete') ||
+        msg.includes('already graded') ||
+        msg.includes('no gradable')
+      ) {
+        setFinalizeNote(msg);
+      }
+      // Other transient errors: leave finalResult null so a later answer or
+      // reload can retry (server stays authoritative either way).
+    } finally {
+      setFinalizing(false);
+    }
+  }, [homeworkId, finalResult, finalizing, hasKeylessRequired, allRequiredAnswered, onFinalized]);
+
+  // Auto-finalize when the required set becomes complete (covers both the
+  // last answer and the load/reconcile path — no background jobs).
+  useEffect(() => {
+    if (loading) return;
+    if (!allRequiredAnswered || finalResult || finalizing) return;
+    if (hasKeylessRequired) {
+      setFinalizeNote(t('needsTeacherReview', { defaultValue: 'This homework needs teacher review and cannot be auto-graded.' }));
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      if (!cancelled) await finalizeAttempt();
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, allRequiredAnswered, finalResult, finalizing, hasKeylessRequired, finalizeAttempt]);
+
   if (loading) return <p className="py-4 text-center text-sm text-ink/40">Loading practice questions…</p>;
   if (error && stages.length === 0) return <p className="py-4 text-center text-sm text-ink/40">{error}</p>;
   if (stages.length === 0) return <p className="py-4 text-center text-sm text-ink/40">No homework stages for this lesson yet.</p>;
@@ -256,6 +339,7 @@ export function HomeworkStages({ homeworkId, studentId, focusStageKey }) {
                         savedAnswer={answers[q.id] || null}
                         onSubmit={handleAnswer}
                         submitting={submitting}
+                        locked={Boolean(finalResult)}
                       />
                     </div>
                   ))
@@ -276,8 +360,46 @@ export function HomeworkStages({ homeworkId, studentId, focusStageKey }) {
             {t('completedDetail', { correct: correctCount, answered: answeredCount })}
             {answeredTotal > 0 ? ` · ${answeredCount}/${answeredTotal}` : ''}
           </p>
-          <p className="mt-1 text-xs text-ink/55">{t('completedNext')}</p>
-          <p className="text-xs text-ink/55">Great job — your teacher reviews written answers manually.</p>
+          {finalResult && (
+            <div className="mt-3 rounded-xl border border-brand-200 bg-brand-50 p-3">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-600 px-3 py-1 text-sm font-bold text-white">
+                <Award size={14} aria-hidden /> {finalResult.percentage}/100
+              </span>
+              <p className="mt-1.5 text-xs font-semibold text-brand-800">
+                {finalResult.resubmitted ? 'Already submitted — result unchanged.' : 'Homework submitted & graded automatically.'}
+              </p>
+              <p className="mt-0.5 text-[11px] text-brand-700/70">
+                {finalResult.correct_points != null && finalResult.max_points != null
+                  ? `${finalResult.correct_points}/${finalResult.max_points} points · grade is final`
+                  : 'grade is final'}
+              </p>
+            </div>
+          )}
+          {finalizing && (
+            <p className="mt-2 text-xs font-semibold text-ink/50">Submitting homework…</p>
+          )}
+          {!finalResult && !finalizing && finalizeNote && (
+            <p className="mt-2 text-xs font-semibold text-amber-700">{finalizeNote}</p>
+          )}
+          {!finalResult && !finalizing && !finalizeNote && (
+            <p className="mt-1 text-xs text-ink/55">{t('completedNext')}</p>
+          )}
+        </div>
+      )}
+      {!allCompleted && hasKeylessRequired && finalizeNote && (
+        <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-center text-xs font-semibold text-amber-800">
+          {finalizeNote}
+        </p>
+      )}
+      {!allCompleted && allRequiredAnswered && finalizing && (
+        <p className="text-center text-xs font-semibold text-ink/50">Submitting homework…</p>
+      )}
+      {!allCompleted && finalResult && (
+        <div className="rounded-xl border border-brand-200 bg-brand-50 p-3 text-center">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-600 px-3 py-1 text-sm font-bold text-white">
+            <Award size={14} aria-hidden /> Grade {finalResult.percentage}/100
+          </span>
+          <p className="mt-1 text-xs font-semibold text-brand-800">Homework submitted — result is final.</p>
         </div>
       )}
     </div>

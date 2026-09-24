@@ -700,7 +700,12 @@ export default function MyProgress() {
                       {h.statusRow?.feedback && <span className="mt-1 block text-xs text-ink/50">{t('portal:teacherFeedbackLabel', { defaultValue: 'Feedback' })}: {h.statusRow.feedback}</span>}
                       {h.due_date && <span className="mt-0.5 block text-xs text-ink/35">{t('portal:mpDueDate', { date: h.due_date })}</span>}
                     </span>
-                    <StatusPill tone={HOMEWORK_TONE[status]}>{t(`dashboard:${status === 'Assigned' ? 'assigned' : status === 'Submitted' ? 'awaitingGrading' : 'graded'}`, { defaultValue: status })}</StatusPill>
+                    <span className="flex flex-shrink-0 flex-col items-end gap-1">
+                      <StatusPill tone={HOMEWORK_TONE[status]}>{t(`dashboard:${status === 'Assigned' ? 'assigned' : status === 'Submitted' ? 'awaitingGrading' : 'graded'}`, { defaultValue: status })}</StatusPill>
+                      {status === 'Graded' && h.statusRow?.score != null && (
+                        <span className="rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-bold tabular-nums text-brand-700 ring-1 ring-brand-100">{h.statusRow.score}/100</span>
+                      )}
+                    </span>
                   </div>
                 );
               })}
