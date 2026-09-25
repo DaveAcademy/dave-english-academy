@@ -599,7 +599,7 @@ export default function PortalHomeV3() {
                       </p>
                     </div>
                     {e.starts_at ? (
-                      <ExamCountdown startsAt={e.starts_at} t={(k, o) => t(`exams:${k}`, o)} size="sm" />
+                      <ExamCountdown startsAt={e.starts_at} examType={e.exam_type} t={(k, o) => t(`exams:${k}`, o)} size="sm" />
                     ) : (
                       <p className="text-xs font-semibold text-ink/50">
                         {formatDateOnly(e.exam_date, dateLocale)}

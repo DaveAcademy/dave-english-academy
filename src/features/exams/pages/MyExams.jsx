@@ -267,7 +267,7 @@ export default function MyExams() {
                             </div>
                             {e.starts_at && (
                               <div className="mt-2.5">
-                                <ExamCountdown startsAt={e.starts_at} t={t} size="md" />
+                                <ExamCountdown startsAt={e.starts_at} examType={e.exam_type} t={t} size="md" />
                               </div>
                             )}
                             <div className="mt-2 flex items-start gap-2 rounded-xl border border-ink/[0.06] bg-paper/60 px-3 py-2">
