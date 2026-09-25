@@ -32,7 +32,9 @@ export {
 
 function UnitBox({ value, label, size }) {
   const text = size === 'sm' ? 'text-xl' : 'text-[26px] sm:text-3xl';
-  const box = size === 'sm' ? 'min-w-[3.6rem] px-2 py-2' : 'min-w-[4.4rem] px-3 py-2.5 sm:min-w-[5rem]';
+  // md min-w is 4rem (was 4.4rem) so four unit boxes still fit a 360px
+  // phone inside the card padding without clipping.
+  const box = size === 'sm' ? 'min-w-[3.6rem] px-2 py-2' : 'min-w-[4rem] px-3 py-2.5 sm:min-w-[5rem]';
   return (
     <div className={`flex-1 ${box} rounded-xl bg-white/15 text-center ring-1 ring-white/20 backdrop-blur-sm`}>
       {/* key remount replays a restrained fade on value change only */}
@@ -47,7 +49,10 @@ function UnitBox({ value, label, size }) {
 // The premium countdown block. Renders nothing when there is no usable
 // timestamp. `size` is "md" (Exams section centerpiece) or "sm" (dashboard rows).
 export default function ExamCountdown({ startsAt, t, size = 'md' }) {
-  const now = useLocalClock(30000);
+  // 1s tick so seconds are visibly live; parts are recomputed from the
+  // authoritative target each tick (no decrementing counter, no drift).
+  // Cleanup is owned by useLocalClock (clearInterval on unmount).
+  const now = useLocalClock(1000);
   const targetMs = startsAt ? new Date(startsAt).getTime() : NaN;
   const parts = getCountdownParts(targetMs, now.getTime());
   if (!parts) return null;
@@ -58,7 +63,7 @@ export default function ExamCountdown({ startsAt, t, size = 'md' }) {
   return (
     <div
       role="timer"
-      aria-label={parts.started ? t('cdStarting') : `${parts.days} ${t('cdUnitDays')}, ${parts.hours} ${t('cdUnitHours')}, ${parts.minutes} ${t('cdUnitMinutes')}`}
+      aria-label={parts.started ? t('cdStarting') : `${parts.days} ${t('cdUnitDays')}, ${parts.hours} ${t('cdUnitHours')}, ${parts.minutes} ${t('cdUnitMinutes')}, ${parts.seconds} ${t('cdUnitSeconds')}`}
       className={`overflow-hidden rounded-2xl bg-gradient-to-br from-brand-600 to-brand-500 shadow-card ${panel}`}
     >
       {parts.started ? (
@@ -70,6 +75,7 @@ export default function ExamCountdown({ startsAt, t, size = 'md' }) {
           <UnitBox value={String(parts.days)} label={t('cdUnitDays')} size={size} />
           <UnitBox value={pad(parts.hours)} label={t('cdUnitHours')} size={size} />
           <UnitBox value={pad(parts.minutes)} label={t('cdUnitMinutes')} size={size} />
+          <UnitBox value={pad(parts.seconds)} label={t('cdUnitSeconds')} size={size} />
         </div>
       )}
     </div>

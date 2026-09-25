@@ -17,16 +17,20 @@ export function examStartMs(exam) {
   return Number.isFinite(ms) ? ms : null;
 }
 
-// Splits the remaining time into day/hour/minute units. `started` is true
-// once the instant has passed - callers must never render negative values.
+// Splits the remaining time into day/hour/minute/second units. All parts
+// are derived from the authoritative timestamp difference (never a
+// decrement counter), so a throttled or lagging timer cannot cause drift.
+// `started` is true once the instant has passed - callers must never render
+// negative values.
 export function getCountdownParts(targetMs, nowMs) {
   if (!Number.isFinite(targetMs) || !Number.isFinite(nowMs)) return null;
   const diff = targetMs - nowMs;
-  if (diff <= 0) return { started: true, days: 0, hours: 0, minutes: 0 };
+  if (diff <= 0) return { started: true, days: 0, hours: 0, minutes: 0, seconds: 0 };
   const days = Math.floor(diff / 86400000);
   const hours = Math.floor((diff % 86400000) / 3600000);
   const minutes = Math.floor((diff % 3600000) / 60000);
-  return { started: false, days, hours, minutes };
+  const seconds = Math.floor((diff % 60000) / 1000);
+  return { started: false, days, hours, minutes, seconds };
 }
 
 // Tashkent wall-clock "10:00" (24-hour, matching formatClockTime).

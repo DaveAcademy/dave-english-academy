@@ -91,6 +91,7 @@
   "cdUnitDays": "Days",
   "cdUnitHours": "Hours",
   "cdUnitMinutes": "Minutes",
+  "cdUnitSeconds": "Seconds",
   "cdStarting": "Exam is starting",
   "cdNoUpcoming": "No upcoming exams",
   "cdWritingExam": "Writing Exam",

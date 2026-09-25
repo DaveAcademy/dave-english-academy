@@ -45,9 +45,22 @@ check(p.hours === 0 && p.minutes === 59, 'floors, never rounds up into the next 
 p = getCountdownParts(1000, 1000);
 check(p.started === true, 'zero remaining is started');
 p = getCountdownParts(500, 1000);
-check(p.started === true && p.days === 0 && p.hours === 0 && p.minutes === 0, 'negative remaining clamps to started, no negatives');
+check(p.started === true && p.days === 0 && p.hours === 0 && p.minutes === 0 && p.seconds === 0, 'negative remaining clamps to started, no negatives');
 check(getCountdownParts(NaN, 0) === null, 'invalid target is null');
 check(getCountdownParts(1000, NaN) === null, 'invalid now is null');
+
+// --- seconds: derived from real remaining duration, correct boundaries ---
+p = getCountdownParts(2 * DAY + 3 * HOUR + 42 * MIN + 17000, 0);
+check(p.days === 2 && p.hours === 3 && p.minutes === 42 && p.seconds === 17, '2d 3h 42m 17s splits correctly');
+p = getCountdownParts(59 * MIN + 59000, 0);
+check(p.hours === 0 && p.minutes === 59 && p.seconds === 59, 'floors to 59s, never rounds up');
+check(getCountdownParts(61000, 0).minutes === 1 && getCountdownParts(61000, 0).seconds === 1, 'minute boundary: 1m01s');
+check(getCountdownParts(60000, 0).minutes === 1 && getCountdownParts(60000, 0).seconds === 0, 'minute boundary: 1m00s');
+check(getCountdownParts(59999, 0).minutes === 0 && getCountdownParts(59999, 0).seconds === 59, 'minute boundary rolls to 0m59s');
+check(getCountdownParts(DAY - 1, 0).seconds === 59, 'day boundary seconds stay in range');
+check(getCountdownParts(2 * DAY + 3 * HOUR + 42 * MIN, 0).seconds === 0, 'exact remainder is 0s');
+// recomputing from shifted "now" (simulated lag/throttle) stays exact
+check(getCountdownParts(2 * MIN, 30000).minutes === 1 && getCountdownParts(2 * MIN, 30000).seconds === 30, 'recompute after 30s lag is exact, no drift');
 
 // --- Tashkent display helpers follow Asia/Tashkent wall time ---
 check(formatTashkentTime('2026-09-26T10:00:00+05:00') === '10:00', 'clock time renders Tashkent wall time');
@@ -80,9 +93,16 @@ check(adminPage.includes('examTimeLabel'), 'admin form has a time field label');
 check(adminPage.includes('starts_at'), 'admin form saves starts_at');
 const en = JSON.parse(src('src/locales/en/exams.json'));
 const uz = JSON.parse(src('src/locales/uz/exams.json'));
-for (const k of ['upcomingExamsTitle', 'cdUnitDays', 'cdUnitHours', 'cdUnitMinutes', 'cdStarting', 'cdNoUpcoming', 'cdWritingExam', 'cdSpeakingExam', 'examTimeLabel']) {
+for (const k of ['upcomingExamsTitle', 'cdUnitDays', 'cdUnitHours', 'cdUnitMinutes', 'cdUnitSeconds', 'cdStarting', 'cdNoUpcoming', 'cdWritingExam', 'cdSpeakingExam', 'examTimeLabel']) {
   check(typeof en[k] === 'string' && en[k].length > 0, `en has ${k}`);
   check(typeof uz[k] === 'string' && uz[k].length > 0 && uz[k] !== en[k], `uz has localized ${k}`);
 }
+
+// --- seconds rendering: 1s tick, seconds box, from real timestamp ---
+const cd = src('src/features/exams/components/ExamCountdown.jsx');
+check(cd.includes('useLocalClock(1000)'), 'countdown ticks once per second');
+check(cd.includes("pad(parts.seconds)"), 'countdown renders the seconds unit box');
+check(cd.includes("cdUnitSeconds"), 'seconds unit is localized');
+check(!/setInterval|setTimeout|requestAnimationFrame/.test(cd), 'no ad-hoc timers; cleanup stays with useLocalClock');
 
 console.log(`\n${passed} checks passed`);
