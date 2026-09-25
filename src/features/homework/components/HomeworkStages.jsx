@@ -40,7 +40,7 @@ const DETERMINISTIC_TYPES = new Set([
   'ordering',
 ]);
 
-export function HomeworkStages({ homeworkId, studentId, focusStageKey, onFinalized }) {
+export function HomeworkStages({ homeworkId, studentId, focusStageKey, onFinalized, contextTitle }) {
   const { t } = useTranslation(['homework']);
   const [stages, setStages] = useState([]);
   const [stageProgress, setStageProgress] = useState({});
@@ -54,6 +54,42 @@ export function HomeworkStages({ homeworkId, studentId, focusStageKey, onFinaliz
   const [finalizing, setFinalizing] = useState(false);
   const [finalizeNote, setFinalizeNote] = useState(null);
 
+  // Scroll/focus bookkeeping for stage transitions. The expanded questions
+  // render below the previously active stage, so without this the student is
+  // left staring at the old position and must hunt for the new questions.
+  // - Initial mount never scrolls (the panel was just tapped open).
+  // - Later changes scroll block:'nearest' (no-op when already visible).
+  // - Auto-advance after completion also moves screen-reader focus to the
+  //   new stage; manual tile taps keep the focus the user already has.
+  // - Respects prefers-reduced-motion (instant jump, no smooth animation).
+  const stageRefs = useRef({});
+  const mountedStageRef = useRef(null);
+  const advanceRef = useRef(false);
+  const reduceMotion =
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  useEffect(() => {
+    if (!activeStage) return;
+    if (mountedStageRef.current === null) {
+      mountedStageRef.current = activeStage;
+      return;
+    }
+    if (mountedStageRef.current === activeStage) return;
+    mountedStageRef.current = activeStage;
+    const el = stageRefs.current[activeStage];
+    if (!el) return;
+    try {
+      el.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'nearest' });
+      if (advanceRef.current) el.focus({ preventScroll: true });
+    } catch {
+      /* scroll/focus is enhancement-only */
+    } finally {
+      advanceRef.current = false;
+    }
+  }, [activeStage, reduceMotion]);
+  // Read (not a dep) so a stage-button click never triggers a full reload —
+  // the focus effect handles post-load activation without refetching.
   // Latest requested focus stage, mirrored for the async loader below.
   // Read (not a dep) so a stage-button click never triggers a full reload —
   // the focus effect handles post-load activation without refetching.
@@ -135,6 +171,7 @@ export function HomeworkStages({ homeworkId, studentId, focusStageKey, onFinaliz
   // apply even if an identical key was consumed for the previous homework.
   useEffect(() => {
     appliedFocusRef.current = null;
+    mountedStageRef.current = null;
   }, [homeworkId]);
   useEffect(() => {
     if (!focusStageKey || stages.length === 0 || appliedFocusRef.current === focusStageKey) return;
@@ -176,7 +213,12 @@ export function HomeworkStages({ homeworkId, studentId, focusStageKey, onFinaliz
           if (completed) {
             const current = stages.find((s) => s.id === question.stage_id);
             const next = stages.find((s) => s.stage_number === (current?.stage_number ?? 0) + 1);
-            if (next) setActiveStage(next.id);
+            if (next) {
+              // Mark as programmatic advance so the transition effect moves
+              // focus (manual tile taps keep the user's existing focus).
+              advanceRef.current = true;
+              setActiveStage(next.id);
+            }
           }
         }
       } catch (e) {
@@ -272,6 +314,58 @@ export function HomeworkStages({ homeworkId, studentId, focusStageKey, onFinaliz
   return (
     <div className="space-y-3">
       {error && <p className="text-xs font-semibold text-inactive">{error}</p>}
+      {/* Homework context: title + position + stepper. The tiles below stay
+          the primary controls; this bar keeps the student oriented about
+          which homework and stage they are in and what comes next. */}
+      {(contextTitle || visibleStages.length > 0) && (
+        <div className="rounded-xl border border-ink/[0.06] bg-paper/60 px-3 py-2.5">
+          {contextTitle && (
+            <p className="break-words font-display text-sm font-bold text-ink">{contextTitle}</p>
+          )}
+          {activeStage != null && visibleStages.some((s) => s.id === activeStage) && (
+            <p className="mt-0.5 text-[11px] font-semibold text-ink/45">
+              {t('stageOfTotal', {
+                current: visibleStages.findIndex((s) => s.id === activeStage) + 1,
+                total: visibleStages.length,
+              })}
+            </p>
+          )}
+          <div className="mt-2 flex flex-wrap items-center gap-1.5" role="list" aria-label={t('stageStepperLabel', { defaultValue: 'Homework stages' })}>
+            {visibleStages.map((s, idx) => {
+              const st = stageProgress[s.id]?.status || 'not_started';
+              const locked = st === 'locked';
+              const done = st === 'completed';
+              const current = s.id === activeStage;
+              const n = (questions[s.id] || []).length;
+              return (
+                <span key={s.id} role="listitem" className="inline-flex min-w-0 max-w-full">
+                <button
+                  type="button"
+                  disabled={locked}
+                  onClick={() => !locked && setActiveStage(current ? null : s.id)}
+                  aria-current={current ? 'step' : undefined}
+                  aria-label={`${idx + 1}. ${s.title || s.stage_key}${n > 0 ? `, ${n}` : ''} — ${done ? t('lhCompleted', { defaultValue: 'Completed' }) : locked ? t('lhLocked', { defaultValue: 'Locked' }) : t('lhNotStarted', { defaultValue: 'Not started' })}`}
+                  title={s.title || s.stage_key}
+                  className={`inline-flex min-h-[36px] max-w-full items-center gap-1 rounded-full px-2 py-1 text-[11px] font-bold ring-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 disabled:opacity-60 ${
+                    current
+                      ? 'bg-brand-600 text-white ring-brand-600'
+                      : done
+                        ? 'bg-active/10 text-active ring-active/20'
+                        : locked
+                          ? 'bg-ink/5 text-ink/40 ring-ink/10'
+                          : 'bg-white text-ink/60 ring-ink/10 hover:bg-brand-50'
+                  }`}
+                >
+                  <span aria-hidden="true" className="tabular-nums">{idx + 1}</span>
+                  <span className="max-w-[90px] truncate">{s.title || s.stage_key}</span>
+                  {done && <CheckCircle2 size={11} aria-hidden="true" />}
+                </button>
+                </span>
+              );
+            })}
+          </div>
+        </div>
+      )}
       {visibleStages.map((stage) => {
         const meta = STAGE_META[stage.stage_key] || { icon: BookOpen, iconClass: 'text-ink/40', label: stage.title };
         // Prefer the DB display title (Vocabulary → Sentences → Quizzes → Review); key map is fallback only.
@@ -288,7 +382,12 @@ export function HomeworkStages({ homeworkId, studentId, focusStageKey, onFinaliz
         return (
           <div
             key={stage.id}
-            className={`rounded-xl border bg-white p-3 shadow-card sm:p-4 ${
+            ref={(el) => {
+              if (el) stageRefs.current[stage.id] = el;
+              else delete stageRefs.current[stage.id];
+            }}
+            tabIndex={-1}
+            className={`rounded-xl border bg-white p-3 shadow-card focus:outline-none sm:p-4 ${
               isActive
                 ? isReview
                   ? 'border-violet-300 ring-2 ring-violet-100'

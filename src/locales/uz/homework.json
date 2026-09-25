@@ -84,6 +84,7 @@
   "completedDetail": "Javob berilgan {answered} tadan {correct} tasi to‘g‘ri",
   "completedNext": "O‘qituvchingiz yozma javoblarni tekshiradi — izoh uchun tez orada qayting.",
   "stagesProgressLabel": "{total} bosqichdan {done} tasi",
+  "stageOfTotal": "{{total}} ta bosqichdan {{current}}-bosqichi",
   "ctaStart": "Boshlash",
   "ctaContinue": "Davom etish",
   "ctaReview": "Ko'rish",

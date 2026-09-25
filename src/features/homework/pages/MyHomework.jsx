@@ -506,16 +506,17 @@ export default function MyHomework() {
                             )}
                           </div>
                         )}
-                             {!locked && standardHw && activeHomeworkStage?.lessonId === l.id && (
-                               <div className="mt-3 border-t border-ink/5 pt-3">
+                              {!locked && standardHw && activeHomeworkStage?.lessonId === l.id && (
+                                <div className="mt-3 border-t border-ink/5 pt-3">
                                  <HomeworkStages
                                    homeworkId={standardHw.id}
                                    studentId={me?.id}
                                    focusStageKey={activeHomeworkStage.stageKey}
                                    onFinalized={() => { refreshHomeworkStatus?.(); }}
+                                   contextTitle={lessonTitleOf(l)}
                                  />
-                               </div>
-                             )}
+                                </div>
+                              )}
                       </div>
                     </article>
                   );
@@ -735,6 +736,7 @@ export default function MyHomework() {
                           homeworkId={h.id}
                           studentId={me?.id}
                           onFinalized={() => { refreshHomeworkStatus?.(); }}
+                          contextTitle={h.title}
                         />
                       </div>
                     )}
