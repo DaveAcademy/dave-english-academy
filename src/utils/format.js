@@ -1,10 +1,1 @@
-// format.js
-
-export function formatUZS(n) {
-  return `${Number(n || 0).toLocaleString('en-US')} so'm`;
-}
-
-export const MONTH_NAMES = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-];
+export { formatUZS, MONTH_NAMES } from '../shared/utils/format';
