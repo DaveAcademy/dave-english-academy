@@ -1,12 +1,14 @@
 // HomeworkStages.jsx
 // Interactive four-stage homework (Vocabulary, Grammar, Practice, Review)
-// for ONE standard lesson-homework row. Read-only until the student submits;
-// answers persist in homework_answers, auto-graded where the question has an
-// explicit key, otherwise left for teacher review. Points stay manual.
+// for ONE standard lesson-homework row. Per-question submit still
+// autosaves/grades locally for immediate feedback; when every required
+// question is answered the client requests server finalization
+// (submit_homework_attempt), which is authoritative: it re-grades, stores
+// the single 1-100 result, and locks answers via RLS.
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CheckCircle2, BookOpen, PenTool, Target, Sparkles, Lock } from 'lucide-react';
+import { CheckCircle2, BookOpen, PenTool, Target, Sparkles, Lock, Award } from 'lucide-react';
 import {
   listHomeworkStages,
   listHomeworkQuestions,
@@ -16,6 +18,7 @@ import {
   ensureHomeworkStageProgress,
   checkHomeworkStageCompletion,
   autoGradeHomeworkAnswerById,
+  submitHomeworkAttempt,
 } from '../../../lib/db';
 import QuestionRenderer from './QuestionRenderer';
 import { initialActiveStageId } from '../../../lib/homeworkStageSelect';
@@ -27,7 +30,17 @@ const STAGE_META = {
   review: { icon: Sparkles, iconClass: 'text-violet-500', label: 'Review' },
 };
 
-export function HomeworkStages({ homeworkId, studentId, focusStageKey }) {
+// Types the server auto-grader can grade from an answer key. Keyless/
+// subjective types never receive an automatic 1-100 grade.
+const DETERMINISTIC_TYPES = new Set([
+  'multiple_choice',
+  'fill_blank',
+  'translation',
+  'matching',
+  'ordering',
+]);
+
+export function HomeworkStages({ homeworkId, studentId, focusStageKey, onFinalized, contextTitle }) {
   const { t } = useTranslation(['homework']);
   const [stages, setStages] = useState([]);
   const [stageProgress, setStageProgress] = useState({});
@@ -37,7 +50,46 @@ export function HomeworkStages({ homeworkId, studentId, focusStageKey }) {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [finalResult, setFinalResult] = useState(null);
+  const [finalizing, setFinalizing] = useState(false);
+  const [finalizeNote, setFinalizeNote] = useState(null);
 
+  // Scroll/focus bookkeeping for stage transitions. The expanded questions
+  // render below the previously active stage, so without this the student is
+  // left staring at the old position and must hunt for the new questions.
+  // - Initial mount never scrolls (the panel was just tapped open).
+  // - Later changes scroll block:'nearest' (no-op when already visible).
+  // - Auto-advance after completion also moves screen-reader focus to the
+  //   new stage; manual tile taps keep the focus the user already has.
+  // - Respects prefers-reduced-motion (instant jump, no smooth animation).
+  const stageRefs = useRef({});
+  const mountedStageRef = useRef(null);
+  const advanceRef = useRef(false);
+  const reduceMotion =
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  useEffect(() => {
+    if (!activeStage) return;
+    if (mountedStageRef.current === null) {
+      mountedStageRef.current = activeStage;
+      return;
+    }
+    if (mountedStageRef.current === activeStage) return;
+    mountedStageRef.current = activeStage;
+    const el = stageRefs.current[activeStage];
+    if (!el) return;
+    try {
+      el.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'nearest' });
+      if (advanceRef.current) el.focus({ preventScroll: true });
+    } catch {
+      /* scroll/focus is enhancement-only */
+    } finally {
+      advanceRef.current = false;
+    }
+  }, [activeStage, reduceMotion]);
+  // Read (not a dep) so a stage-button click never triggers a full reload —
+  // the focus effect handles post-load activation without refetching.
   // Latest requested focus stage, mirrored for the async loader below.
   // Read (not a dep) so a stage-button click never triggers a full reload —
   // the focus effect handles post-load activation without refetching.
@@ -119,6 +171,7 @@ export function HomeworkStages({ homeworkId, studentId, focusStageKey }) {
   // apply even if an identical key was consumed for the previous homework.
   useEffect(() => {
     appliedFocusRef.current = null;
+    mountedStageRef.current = null;
   }, [homeworkId]);
   useEffect(() => {
     if (!focusStageKey || stages.length === 0 || appliedFocusRef.current === focusStageKey) return;
@@ -160,7 +213,12 @@ export function HomeworkStages({ homeworkId, studentId, focusStageKey }) {
           if (completed) {
             const current = stages.find((s) => s.id === question.stage_id);
             const next = stages.find((s) => s.stage_number === (current?.stage_number ?? 0) + 1);
-            if (next) setActiveStage(next.id);
+            if (next) {
+              // Mark as programmatic advance so the transition effect moves
+              // focus (manual tile taps keep the user's existing focus).
+              advanceRef.current = true;
+              setActiveStage(next.id);
+            }
           }
         }
       } catch (e) {
@@ -171,6 +229,73 @@ export function HomeworkStages({ homeworkId, studentId, focusStageKey }) {
     },
     [studentId, homeworkId, questions, stages]
   );
+
+  // Derive whether every required question is answered (from loaded state).
+  // Used both as the auto-finalize trigger and as the reconcile-on-load path
+  // so a browser that closed between RPCs can still finalize on next open.
+  const requiredQuestions = stages
+    .filter((s) => s.is_required !== false)
+    .flatMap((s) => questions[s.id] || []);
+  const allRequiredAnswered =
+    requiredQuestions.length > 0 &&
+    requiredQuestions.every((q) => answers[q.id] != null);
+  const hasKeylessRequired = requiredQuestions.some(
+    (q) => !DETERMINISTIC_TYPES.has(q.question_type)
+  );
+
+  // Server-authoritative finalization. The client only *requests* it; the
+  // RPC verifies completeness/keys and stores the single grade. Runs after
+  // load (reconciliation) and after each answer once the set is complete.
+  const finalizeAttempt = useCallback(async () => {
+    if (!homeworkId || finalResult || finalizing) return;
+    if (hasKeylessRequired || !allRequiredAnswered) return;
+    setFinalizing(true);
+    setFinalizeNote(null);
+    try {
+      const result = await submitHomeworkAttempt(homeworkId);
+      setFinalResult(result);
+      try {
+        onFinalized?.(result);
+      } catch {
+        /* status refresh is best-effort */
+      }
+    } catch (e) {
+      const msg = String(e?.message || '');
+      // Keyless / incomplete / already-manual are honest terminal states —
+      // surface them instead of retrying forever.
+      if (
+        msg.includes('teacher review') ||
+        msg.includes('not complete') ||
+        msg.includes('already graded') ||
+        msg.includes('no gradable')
+      ) {
+        setFinalizeNote(msg);
+      }
+      // Other transient errors: leave finalResult null so a later answer or
+      // reload can retry (server stays authoritative either way).
+    } finally {
+      setFinalizing(false);
+    }
+  }, [homeworkId, finalResult, finalizing, hasKeylessRequired, allRequiredAnswered, onFinalized]);
+
+  // Auto-finalize when the required set becomes complete (covers both the
+  // last answer and the load/reconcile path — no background jobs).
+  useEffect(() => {
+    if (loading) return;
+    if (!allRequiredAnswered || finalResult || finalizing) return;
+    if (hasKeylessRequired) {
+      setFinalizeNote(t('needsTeacherReview', { defaultValue: 'This homework needs teacher review and cannot be auto-graded.' }));
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      if (!cancelled) await finalizeAttempt();
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, allRequiredAnswered, finalResult, finalizing, hasKeylessRequired, finalizeAttempt]);
 
   if (loading) return <p className="py-4 text-center text-sm text-ink/40">Loading practice questions…</p>;
   if (error && stages.length === 0) return <p className="py-4 text-center text-sm text-ink/40">{error}</p>;
@@ -189,6 +314,58 @@ export function HomeworkStages({ homeworkId, studentId, focusStageKey }) {
   return (
     <div className="space-y-3">
       {error && <p className="text-xs font-semibold text-inactive">{error}</p>}
+      {/* Homework context: title + position + stepper. The tiles below stay
+          the primary controls; this bar keeps the student oriented about
+          which homework and stage they are in and what comes next. */}
+      {(contextTitle || visibleStages.length > 0) && (
+        <div className="rounded-xl border border-ink/[0.06] bg-paper/60 px-3 py-2.5">
+          {contextTitle && (
+            <p className="break-words font-display text-sm font-bold text-ink">{contextTitle}</p>
+          )}
+          {activeStage != null && visibleStages.some((s) => s.id === activeStage) && (
+            <p className="mt-0.5 text-[11px] font-semibold text-ink/45">
+              {t('stageOfTotal', {
+                current: visibleStages.findIndex((s) => s.id === activeStage) + 1,
+                total: visibleStages.length,
+              })}
+            </p>
+          )}
+          <div className="mt-2 flex flex-wrap items-center gap-1.5" role="list" aria-label={t('stageStepperLabel', { defaultValue: 'Homework stages' })}>
+            {visibleStages.map((s, idx) => {
+              const st = stageProgress[s.id]?.status || 'not_started';
+              const locked = st === 'locked';
+              const done = st === 'completed';
+              const current = s.id === activeStage;
+              const n = (questions[s.id] || []).length;
+              return (
+                <span key={s.id} role="listitem" className="inline-flex min-w-0 max-w-full">
+                <button
+                  type="button"
+                  disabled={locked}
+                  onClick={() => !locked && setActiveStage(current ? null : s.id)}
+                  aria-current={current ? 'step' : undefined}
+                  aria-label={`${idx + 1}. ${s.title || s.stage_key}${n > 0 ? `, ${n}` : ''} — ${done ? t('lhCompleted', { defaultValue: 'Completed' }) : locked ? t('lhLocked', { defaultValue: 'Locked' }) : t('lhNotStarted', { defaultValue: 'Not started' })}`}
+                  title={s.title || s.stage_key}
+                  className={`inline-flex min-h-[36px] max-w-full items-center gap-1 rounded-full px-2 py-1 text-[11px] font-bold ring-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 disabled:opacity-60 ${
+                    current
+                      ? 'bg-brand-600 text-white ring-brand-600'
+                      : done
+                        ? 'bg-active/10 text-active ring-active/20'
+                        : locked
+                          ? 'bg-ink/5 text-ink/40 ring-ink/10'
+                          : 'bg-white text-ink/60 ring-ink/10 hover:bg-brand-50'
+                  }`}
+                >
+                  <span aria-hidden="true" className="tabular-nums">{idx + 1}</span>
+                  <span className="max-w-[90px] truncate">{s.title || s.stage_key}</span>
+                  {done && <CheckCircle2 size={11} aria-hidden="true" />}
+                </button>
+                </span>
+              );
+            })}
+          </div>
+        </div>
+      )}
       {visibleStages.map((stage) => {
         const meta = STAGE_META[stage.stage_key] || { icon: BookOpen, iconClass: 'text-ink/40', label: stage.title };
         // Prefer the DB display title (Vocabulary → Sentences → Quizzes → Review); key map is fallback only.
@@ -205,7 +382,12 @@ export function HomeworkStages({ homeworkId, studentId, focusStageKey }) {
         return (
           <div
             key={stage.id}
-            className={`rounded-xl border bg-white p-3 shadow-card sm:p-4 ${
+            ref={(el) => {
+              if (el) stageRefs.current[stage.id] = el;
+              else delete stageRefs.current[stage.id];
+            }}
+            tabIndex={-1}
+            className={`rounded-xl border bg-white p-3 shadow-card focus:outline-none sm:p-4 ${
               isActive
                 ? isReview
                   ? 'border-violet-300 ring-2 ring-violet-100'
@@ -256,6 +438,7 @@ export function HomeworkStages({ homeworkId, studentId, focusStageKey }) {
                         savedAnswer={answers[q.id] || null}
                         onSubmit={handleAnswer}
                         submitting={submitting}
+                        locked={Boolean(finalResult)}
                       />
                     </div>
                   ))
@@ -276,8 +459,46 @@ export function HomeworkStages({ homeworkId, studentId, focusStageKey }) {
             {t('completedDetail', { correct: correctCount, answered: answeredCount })}
             {answeredTotal > 0 ? ` · ${answeredCount}/${answeredTotal}` : ''}
           </p>
-          <p className="mt-1 text-xs text-ink/55">{t('completedNext')}</p>
-          <p className="text-xs text-ink/55">Great job — your teacher reviews written answers manually.</p>
+          {finalResult && (
+            <div className="mt-3 rounded-xl border border-brand-200 bg-brand-50 p-3">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-600 px-3 py-1 text-sm font-bold text-white">
+                <Award size={14} aria-hidden /> {finalResult.percentage}/100
+              </span>
+              <p className="mt-1.5 text-xs font-semibold text-brand-800">
+                {finalResult.resubmitted ? 'Already submitted — result unchanged.' : 'Homework submitted & graded automatically.'}
+              </p>
+              <p className="mt-0.5 text-[11px] text-brand-700/70">
+                {finalResult.correct_points != null && finalResult.max_points != null
+                  ? `${finalResult.correct_points}/${finalResult.max_points} points · grade is final`
+                  : 'grade is final'}
+              </p>
+            </div>
+          )}
+          {finalizing && (
+            <p className="mt-2 text-xs font-semibold text-ink/50">Submitting homework…</p>
+          )}
+          {!finalResult && !finalizing && finalizeNote && (
+            <p className="mt-2 text-xs font-semibold text-amber-700">{finalizeNote}</p>
+          )}
+          {!finalResult && !finalizing && !finalizeNote && (
+            <p className="mt-1 text-xs text-ink/55">{t('completedNext')}</p>
+          )}
+        </div>
+      )}
+      {!allCompleted && hasKeylessRequired && finalizeNote && (
+        <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-center text-xs font-semibold text-amber-800">
+          {finalizeNote}
+        </p>
+      )}
+      {!allCompleted && allRequiredAnswered && finalizing && (
+        <p className="text-center text-xs font-semibold text-ink/50">Submitting homework…</p>
+      )}
+      {!allCompleted && finalResult && (
+        <div className="rounded-xl border border-brand-200 bg-brand-50 p-3 text-center">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-600 px-3 py-1 text-sm font-bold text-white">
+            <Award size={14} aria-hidden /> Grade {finalResult.percentage}/100
+          </span>
+          <p className="mt-1 text-xs font-semibold text-brand-800">Homework submitted — result is final.</p>
         </div>
       )}
     </div>

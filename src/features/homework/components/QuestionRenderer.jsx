@@ -259,7 +259,7 @@ function isDraftEmpty(type, draft) {
   return false;
 }
 
-export default function QuestionRenderer({ question, savedAnswer, onSubmit, submitting }) {
+export default function QuestionRenderer({ question, savedAnswer, onSubmit, submitting, locked }) {
   const [draft, setDraftState] = useState(() => ({ ...(savedAnswer?.answer_data || {}) }));
   if (!question) return null;
   const setDraft = (patch) => setDraftState((prev) => ({ ...prev, ...patch }));
@@ -300,7 +300,7 @@ export default function QuestionRenderer({ question, savedAnswer, onSubmit, subm
       )}
       {type in DRAFT_FIELD && (
         <SubmitButton
-          disabled={empty || submitting}
+          disabled={empty || submitting || locked}
           submitting={submitting}
           onClick={() =>
             onSubmit(
@@ -312,6 +312,9 @@ export default function QuestionRenderer({ question, savedAnswer, onSubmit, subm
             )
           }
         />
+      )}
+      {locked && (
+        <p className="text-xs font-semibold text-ink/45">Submitted — answers are locked.</p>
       )}
       <ResultBanner savedAnswer={savedAnswer} explanation={question.explanation} />
     </div>

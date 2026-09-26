@@ -57,6 +57,7 @@ export default function MyHomework() {
     students, homework, homeworkStatus, homeworkSubmissionFiles, lessons,
     curriculumProgress, lessonProgress,
     removeMyHomeworkSubmissionFile, loading, error: loadError, setError, reloadAll,
+    refreshHomeworkStatus,
   } = useAcademy();
   const { me } = useAcademy(); // single source, no fallback
   const [actionError, setActionError] = useState(null);
@@ -505,11 +506,17 @@ export default function MyHomework() {
                             )}
                           </div>
                         )}
-                         {!locked && standardHw && activeHomeworkStage?.lessonId === l.id && (
-                           <div className="mt-3 border-t border-ink/5 pt-3">
-                             <HomeworkStages homeworkId={standardHw.id} studentId={me?.id} focusStageKey={activeHomeworkStage.stageKey} />
-                           </div>
-                         )}
+                              {!locked && standardHw && activeHomeworkStage?.lessonId === l.id && (
+                                <div className="mt-3 border-t border-ink/5 pt-3">
+                                 <HomeworkStages
+                                   homeworkId={standardHw.id}
+                                   studentId={me?.id}
+                                   focusStageKey={activeHomeworkStage.stageKey}
+                                   onFinalized={() => { refreshHomeworkStatus?.(); }}
+                                   contextTitle={lessonTitleOf(l)}
+                                 />
+                                </div>
+                              )}
                       </div>
                     </article>
                   );
@@ -725,7 +732,12 @@ export default function MyHomework() {
                         the Submit action: nothing is finalized here. */}
                     {flowOpen && (
                       <div className="mt-3 border-t border-ink/5 pt-3">
-                        <HomeworkStages homeworkId={h.id} studentId={me?.id} />
+                        <HomeworkStages
+                          homeworkId={h.id}
+                          studentId={me?.id}
+                          onFinalized={() => { refreshHomeworkStatus?.(); }}
+                          contextTitle={h.title}
+                        />
                       </div>
                     )}
 

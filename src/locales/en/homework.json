@@ -84,6 +84,7 @@
   "completedDetail": "{correct} correct out of {answered} answered",
   "completedNext": "Your teacher reviews written answers — check back soon for feedback.",
   "stagesProgressLabel": "{done} of {total} stages",
+  "stageOfTotal": "Stage {{current}} of {{total}}",
   "ctaStart": "Start",
   "ctaContinue": "Continue",
   "ctaReview": "Review",

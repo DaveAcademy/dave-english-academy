@@ -769,6 +769,18 @@ export function useAcademyData() {
     [homeworkSubmissionFiles]
   );
 
+  // After server-side homework finalization (submit_homework_attempt), pull
+  // the authoritative homework_status row so list/badges show the stored
+  // 1-100 grade without a full page reload. Best-effort.
+  const refreshHomeworkStatus = useCallback(async () => {
+    try {
+      const rows = await db.listHomeworkStatus();
+      setHomeworkStatusState(rows);
+    } catch {
+      /* next full load reconciles */
+    }
+  }, []);
+
   const removeMyHomeworkSubmissionFile = useCallback(async (id) => {
     try {
       await db.deleteHomeworkSubmissionFile(id);
@@ -1116,5 +1128,6 @@ export function useAcademyData() {
     editGroup,
     removeGroup,
     reloadAll,
+    refreshHomeworkStatus,
   };
 }

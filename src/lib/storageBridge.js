@@ -1024,6 +1024,16 @@ export async function markHomeworkSubmitted(homeworkId, studentId) {
   return listHomeworkStatus();
 }
 
+// ---------- Homework completion (student dashboard count) ----------
+// Read-only server-side completion per assignment: all visible stages
+// completed (authoritative stage progress) or a Submitted/Graded status
+// row (manual/photo flow). One row per homework - duplicates impossible.
+export async function getMyHomeworkCompletion() {
+  const { data, error } = await supabase.rpc('get_my_homework_completion');
+  if (error) throw error;
+  return Array.isArray(data) ? data : [];
+}
+
 // ---------- Certificates ----------
 
 export async function listCertificates() {
@@ -2243,6 +2253,19 @@ export async function checkHomeworkStageCompletion(homeworkId, studentId, stageI
 export async function autoGradeHomeworkAnswerById(answerId) {
   const { data, error } = await supabase.rpc('auto_grade_homework_answer', {
     p_answer_id: answerId,
+  });
+  if (error) throw error;
+  return data;
+}
+
+// ---------- Homework final attempt (automatic submission + 1-100 grade) ----------
+// Server-authoritative finalization: the client only requests it (typically
+// when all required work looks complete); the RPC itself verifies ownership,
+// completeness, keys, grades atomically, stores the single result row, and
+// locks answers via RLS. Never sends score/correctness - only the homework id.
+export async function submitHomeworkAttempt(homeworkId) {
+  const { data, error } = await supabase.rpc('submit_homework_attempt', {
+    p_homework_id: homeworkId,
   });
   if (error) throw error;
   return data;
