@@ -145,13 +145,14 @@ export default function GroupsManagement() {
 
       {error && <div className="mb-4 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{error}</div>}
 
-      {/* Level display names - renames what students/teachers see for
-          Level A/A1/B/C everywhere; keys and all memberships stay put. */}
+      {/* Academy Levels - structural levels (A/A1/B/C) used across the whole
+          system. Display-label renames only; keys and all memberships stay
+          put - levels can never be deleted or deactivated. */}
       <section className="mb-4 rounded-xl bg-white p-4 shadow-card">
-        <h2 className="font-display text-sm font-bold text-ink">Level display names</h2>
+        <h2 className="font-display text-sm font-bold text-ink">Academy Levels</h2>
         <p className="mt-1 text-xs text-ink/50">
-          Shown across the site instead of Level A/A1/B/C. Renaming changes only the display name - students,
-          payments, rankings, and lessons stay attached to the same level.
+          Academy Levels are structural levels used throughout the academy system. They can be renamed,
+          but they cannot be deleted or deactivated.
         </p>
         {levelError && <div className="mt-2 rounded-lg border border-inactive/30 bg-inactive/5 px-3 py-2 text-sm text-inactive">{levelError}</div>}
         <div className="mt-2 space-y-2">
@@ -198,6 +199,16 @@ export default function GroupsManagement() {
           ))}
         </div>
       </section>
+
+      {/* Custom Groups - independent groups with full CRUD (subject to the
+          existing no-students/no-lessons delete rule). */}
+      <div className="mb-3 mt-6">
+        <h2 className="font-display text-sm font-bold text-ink">Custom Groups</h2>
+        <p className="mt-1 text-xs text-ink/50">
+          Custom Groups are independent groups that can be created, edited, activated/deactivated, and
+          deleted when they contain no students or lessons.
+        </p>
+      </div>
 
       {groups.length === 0 ? (
         <div className="rounded-xl bg-white p-10 text-center shadow-card">

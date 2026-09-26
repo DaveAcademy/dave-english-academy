@@ -113,7 +113,7 @@ function AppShell() {
     <AcademyDataProvider key={session.user.id}>
       <div className="flex min-h-screen bg-paper">
         {isStudent ? <PortalSidebar /> : <Sidebar />}
-        <div className="flex-1">
+        <div className="min-w-0 flex-1">
           <MobileHeader isStudent={isStudent} onMenu={() => setMobileNavOpen(true)} />
           <main className="mx-auto max-w-6xl px-4 pb-24 pt-4 sm:px-6 sm:pt-6 md:pb-8">
             <RoutedContent isStudent={isStudent} />
