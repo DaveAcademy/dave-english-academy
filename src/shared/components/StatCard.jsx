@@ -37,8 +37,12 @@ export default function StatCard({ label, value, hint, tone = 'brand', icon: Ico
           </span>
         )}
       </div>
-      <div className="mt-1 flex items-baseline gap-2 sm:mt-2">
-        <p className="font-display text-2xl font-bold text-ink sm:text-3xl">{loading ? '—' : value}</p>
+      {/* flex-wrap + mobile text-xl: on narrow phones a large value (e.g. a
+          UZS amount) plus the trend badge exceed the card width and the card's
+          overflow-hidden clips the value - wrapping lets the badge drop below
+          and the smaller mobile size fits long figures. sm: and up unchanged. */}
+      <div className="mt-1 flex flex-wrap items-baseline gap-2 sm:mt-2">
+        <p className="font-display text-xl font-bold text-ink sm:text-3xl">{loading ? '—' : value}</p>
         {!loading && <TrendBadge trend={trend} />}
       </div>
       {hint && !loading && <p className="mt-1 text-xs text-ink/40">{hint}</p>}
