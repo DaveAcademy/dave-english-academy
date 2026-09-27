@@ -1,5 +1,5 @@
 // Payments.jsx
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, Fragment } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Search, ShieldAlert, X, History, MessageSquare, Download } from 'lucide-react';
@@ -912,7 +912,49 @@ export default function Payments() {
               const st = newStatuses[s.id];
               const { deadlineLine, statusLine, tone } = classifyPayment(st, s.monthly_fee, t, locale);
               return (
-                <div key={s.id} className="flex items-center gap-3 rounded-xl bg-white p-3 shadow-card">
+                <Fragment key={s.id}>
+                {/* Mobile compact composition - same student, status values,
+                    badges and action handlers as the desktop card below;
+                    layout only. The desktop card is hidden on mobile and this
+                    block is hidden on sm+ screens. */}
+                <div className="rounded-xl bg-white p-2 shadow-card sm:hidden">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(s.id)}
+                      onChange={() => toggleSelect(s.id)}
+                      className="h-4 w-4 rounded border-ink/20 flex-shrink-0"
+                      aria-label={`Select ${s.real_name}`}
+                    />
+                    <p className="min-w-0 flex-1 truncate font-semibold text-ink">{s.real_name}</p>
+                    <LevelBadge level={s.level} />
+                  </div>
+                  <div className="mt-1 flex items-center gap-1.5">
+                    <span className={`h-2 w-2 flex-shrink-0 rounded-full ${STATUS_DOT[tone]}`} />
+                    <span className={`text-xs ${STATUS_TEXT[tone]}`}>{statusLine}{deadlineLine && <span className="text-ink/40"> · {deadlineLine}</span>}</span>
+                  </div>
+                  <div className="mt-2 flex items-center gap-1">
+                    <button
+                      onClick={() => openModal(s, 'view')}
+                      title={t('payments:viewTimeline')}
+                      aria-label={t('payments:viewTimeline')}
+                      className="rounded-lg p-2 text-ink/40 hover:bg-ink/5 hover:text-ink min-h-[36px] min-w-[36px] flex items-center justify-center"
+                    >
+                      <History size={16} />
+                    </button>
+                    <Link to="/chat" title={t('payments:contactStudent')} aria-label={t('payments:contactStudent')} className="rounded-lg p-2 text-ink/40 hover:bg-ink/5 hover:text-ink min-h-[36px] min-w-[36px] flex items-center justify-center">
+                      <MessageSquare size={16} />
+                    </Link>
+                    <button
+                      onClick={() => openModal(s, 'record')}
+                      aria-label={t('payments:recordPaymentButton')}
+                      className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white min-h-[32px] flex-1"
+                    >
+                      {t('payments:recordPaymentButton')}
+                    </button>
+                  </div>
+                </div>
+                <div className="hidden items-center gap-2 rounded-xl bg-white p-2 shadow-card sm:flex sm:gap-3 sm:p-3">
                   <input
                     type="checkbox"
                     checked={selectedIds.has(s.id)}
@@ -929,11 +971,14 @@ export default function Payments() {
                       <p className="truncate font-semibold text-ink">{s.real_name}</p>
                       <LevelBadge level={s.level} />
                     </div>
-                    <div className="mt-1 flex items-center gap-1.5">
+                    {/* Mobile merges the deadline into the status line (hidden
+                        span below restores the separate desktop line) to save
+                        a full text row per student without dropping info. */}
+                    <div className="mt-0.5 flex items-center gap-1.5 sm:mt-1">
                       <span className={`h-2 w-2 flex-shrink-0 rounded-full ${STATUS_DOT[tone]}`} />
-                      <span className={`text-sm ${STATUS_TEXT[tone]}`}>{statusLine}</span>
+                      <span className={`text-xs sm:text-sm ${STATUS_TEXT[tone]}`}>{statusLine}{deadlineLine && <span className="text-ink/40 sm:hidden"> · {deadlineLine}</span>}</span>
                     </div>
-                    {deadlineLine && <p className="mt-0.5 text-xs text-ink/40">{deadlineLine}</p>}
+                    {deadlineLine && <p className="mt-0.5 hidden text-xs text-ink/40 sm:block">{deadlineLine}</p>}
                   </div>
                   <div className="flex flex-shrink-0 items-center gap-1">
                     <button
@@ -953,9 +998,10 @@ export default function Payments() {
                       className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white min-h-[32px]"
                     >
                       {t('payments:recordPaymentButton')}
-                    </button>
+                      </button>
+                    </div>
                   </div>
-                </div>
+                </Fragment>
               );
             })}
           </div>
