@@ -921,7 +921,11 @@ export default function Payments() {
                     aria-label={`Select ${s.real_name}`}
                   />
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
+                    {/* flex-wrap: on narrow phones the LevelBadge keeps its
+                        intrinsic width while the truncate name can shrink to
+                        0px - wrapping lets the badge drop below the name
+                        instead of crushing it to zero. No-op on wide screens. */}
+                    <div className="flex flex-wrap items-center gap-2">
                       <p className="truncate font-semibold text-ink">{s.real_name}</p>
                       <LevelBadge level={s.level} />
                     </div>
