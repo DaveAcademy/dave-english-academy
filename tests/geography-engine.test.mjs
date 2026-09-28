@@ -13,8 +13,10 @@ import {
   applyAnswer,
   accuracy,
   isRoundComplete,
+  answerValue,
+  findCountriesByAnswer,
 } from '../src/features/games/geography/utils/engine.js';
-import { MODES, isValidMode, normalizeMode, buildModeQuestion } from '../src/features/games/geography/utils/modes.js';
+import { MODES, QUESTION_TYPES, liveQuestionTypes, isValidMode, normalizeMode, buildModeQuestion } from '../src/features/games/geography/utils/modes.js';
 
 let passed = 0;
 function check(name, fn) {
@@ -33,11 +35,33 @@ function seededRand(seed = 42) {
 }
 
 // --- Dataset ---
-check('dataset has 30-40 records', () => {
-  assert.ok(COUNTRIES.length >= 30 && COUNTRIES.length <= 45, `size=${COUNTRIES.length}`);
+check('dataset has exactly 100 records', () => {
+  assert.equal(COUNTRIES.length, 100);
 });
-check('every record valid (iso2/country/nationality/region/difficulty)', () => {
+check('difficulty distribution is 30/35/25/10', () => {
+  const counts = { easy: 0, medium: 0, hard: 0, expert: 0 };
+  for (const r of COUNTRIES) counts[r.difficulty] += 1;
+  assert.deepEqual(counts, { easy: 30, medium: 35, hard: 25, expert: 10 });
+});
+check('every record valid (iso2/country/nationality/languages/capital/region/difficulty/funFact)', () => {
   for (const r of COUNTRIES) assert.equal(isValidRecord(r), true, JSON.stringify(r));
+});
+check('language arrays have no duplicates', () => {
+  for (const r of COUNTRIES) assert.equal(new Set(r.languages).size, r.languages.length, r.iso2);
+});
+check('multilingual countries represented correctly', () => {
+  const by = Object.fromEntries(COUNTRIES.map((r) => [r.country, r.languages]));
+  assert.deepEqual(by['Canada'], ['English', 'French']);
+  assert.ok(by['Switzerland'].length >= 3);
+  assert.ok(by['Belgium'].length === 3);
+  assert.ok(by['South Africa'].length >= 3);
+  assert.ok(by['India'].length >= 2);
+});
+check('continent coverage across all six regions', () => {
+  const regions = new Set(COUNTRIES.map((r) => r.region));
+  for (const c of ['Europe', 'Asia', 'Africa', 'North America', 'South America', 'Oceania']) {
+    assert.ok(regions.has(c), `missing ${c}`);
+  }
 });
 check('no duplicate iso2 or country names', () => {
   const iso = new Set(COUNTRIES.map((r) => r.iso2));
@@ -155,6 +179,52 @@ check('mode validation', () => {
   assert.equal(isValidMode('bogus'), false);
   assert.equal(normalizeMode('bogus'), 'country');
   assert.equal(buildQuestion(COUNTRIES[0], COUNTRIES, { answerKey: 'country', rand: seededRand(1) }).options.length, 4);
+});
+
+// --- Future dimensions (Phase 2/3 architecture, no UI yet) ---
+check('answerValue resolves all dimensions', () => {
+  const ch = COUNTRIES.find((r) => r.iso2 === 'CH');
+  assert.equal(answerValue(ch, 'country'), 'Switzerland');
+  assert.equal(answerValue(ch, 'nationality'), 'Swiss');
+  assert.equal(answerValue(ch, 'language'), 'German');
+  assert.equal(answerValue(ch, 'capital'), 'Bern');
+  assert.equal(answerValue(ch, 'region'), 'Europe');
+  assert.equal(answerValue(ch, 'bogus'), null);
+});
+check('all future question types generate pure 4-choice questions', () => {
+  const pools = {
+    language: new Set(COUNTRIES.map((r) => r.languages[0])),
+    capital: new Set(COUNTRIES.map((r) => r.capital)),
+    region: new Set(COUNTRIES.map((r) => r.region)),
+    country: new Set(COUNTRIES.map((r) => r.country)),
+    nationality: new Set(COUNTRIES.map((r) => r.nationality)),
+  };
+  for (const [type, spec] of Object.entries(QUESTION_TYPES)) {
+    const rand = seededRand(type.length);
+    for (const target of COUNTRIES.slice(0, 8)) {
+      const q = buildQuestion(target, COUNTRIES, { answerKey: spec.answerKey, rand });
+      assert.equal(q.options.length, 4, type);
+      assert.equal(new Set(q.options).size, 4, type);
+      assert.equal(q.options.filter((o) => o === q.correct).length, 1, type);
+      assert.equal(q.correct, answerValue(target, spec.answerKey), type);
+      for (const o of q.options) assert.ok(pools[spec.answerKey].has(o), `${type}: ${o}`);
+    }
+  }
+});
+check('only Phase 1 types are live', () => {
+  assert.deepEqual(Object.keys(liveQuestionTypes()).sort(), ['flag_country', 'flag_nationality']);
+});
+check('many-to-many lookups return all matching countries', () => {
+  const spanish = findCountriesByAnswer(COUNTRIES, 'language', 'Spanish');
+  assert.ok(spanish.length > 5, `spanish=${spanish.length}`);
+  assert.ok(spanish.every((r) => r.languages.includes('Spanish')));
+  const german = findCountriesByAnswer(COUNTRIES, 'language', 'German').map((r) => r.iso2).sort();
+  assert.ok(german.includes('DE') && german.includes('AT') && german.includes('CH'), german.join(','));
+  const dutch = findCountriesByAnswer(COUNTRIES, 'nationality', 'Dutch');
+  assert.equal(dutch.length, 1);
+  assert.equal(dutch[0].iso2, 'NL');
+  assert.equal(findCountriesByAnswer(COUNTRIES, 'capital', 'Tashkent')[0].iso2, 'UZ');
+  assert.ok(findCountriesByAnswer(COUNTRIES, 'region', 'Oceania').length >= 4);
 });
 
 console.log(`\n${passed} checks passed.`);

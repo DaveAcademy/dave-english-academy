@@ -37,11 +37,36 @@ export function filterPoolByDifficulty(records = COUNTRIES, difficulty = 'mixed'
   return filtered.length > 0 ? filtered : [...list];
 }
 
+// Answer dimensions the engine can quiz on. 'language' resolves to the
+// record's primary language (languages[0]); the other keys are scalar
+// fields. Returns null for unknown keys so callers can guard.
+export function answerValue(record, answerKey) {
+  if (!record) return null;
+  if (answerKey === 'language' || answerKey === 'languages') {
+    return Array.isArray(record.languages) && record.languages.length > 0 ? record.languages[0] : null;
+  }
+  const v = record[answerKey];
+  return typeof v === 'string' && v.length > 0 ? v : null;
+}
+
+// All records in `dataset` whose answer dimension equals `value`.
+// Relationships are many-to-many (Spanish -> many countries), so this
+// returns an array - the future language->country / nationality->country
+// modes must accept any listed record, never assume exactly one.
+export function findCountriesByAnswer(dataset = COUNTRIES, answerKey, value) {
+  const list = Array.isArray(dataset) ? dataset : [];
+  if (answerKey === 'language' || answerKey === 'languages') {
+    return list.filter((r) => Array.isArray(r.languages) && r.languages.includes(value));
+  }
+  return list.filter((r) => r[answerKey] === value);
+}
+
 // Pick up to `count` distractors for `target`, preferring same region,
 // then same difficulty, then the rest of the pool. `keyFn` selects the
-// answer dimension ('country' or 'nationality') so duplicates are judged
-// in the displayed dimension. Never returns the target itself.
-export function pickDistractors(target, pool, count = 3, keyFn = (r) => r.country, rand = Math.random) {
+// answer dimension ('country', 'nationality', 'language', 'capital',
+// 'region') so duplicates are judged in the displayed dimension.
+// Never returns the target itself.
+export function pickDistractors(target, pool, count = 3, keyFn = (r) => answerValue(r, 'country'), rand = Math.random) {
   const key = keyFn(target);
   const seen = new Set([key]);
   const out = [];
@@ -67,13 +92,15 @@ export function pickDistractors(target, pool, count = 3, keyFn = (r) => r.countr
 // Build one 4-choice question. Always returns exactly 4 unique options
 // with the correct answer present exactly once.
 export function buildQuestion(target, pool, { answerKey = 'country', rand = Math.random } = {}) {
-  const keyFn = (r) => r[answerKey];
+  const keyFn = (r) => answerValue(r, answerKey);
   const distractors = pickDistractors(target, pool, 3, keyFn, rand);
   const options = shuffle([keyFn(target), ...distractors.map(keyFn)], rand);
   return {
     iso2: target.iso2,
     country: target.country,
     nationality: target.nationality,
+    languages: Array.isArray(target.languages) ? [...target.languages] : [],
+    capital: target.capital,
     region: target.region,
     difficulty: target.difficulty,
     funFact: target.funFact,
