@@ -173,6 +173,15 @@ const GAME_CENTER_ITEMS = [
     gradient: 'bg-gradient-to-br from-red-50 to-orange-100',
     iconBg: 'bg-red-200',
   },
+  {
+    key: 'geography',
+    icon: '🌍',
+    nameKey: 'geographyTitle',
+    descriptionKey: 'geographySubtitle',
+    to: '/geography',
+    gradient: 'bg-gradient-to-br from-emerald-50 to-teal-100',
+    iconBg: 'bg-emerald-200',
+  },
 ];
 
 export default function GameCenter() {

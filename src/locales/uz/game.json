@@ -187,5 +187,21 @@
   "bestStreakLabel": "Eng yaxshi ketma-ketlik",
   "newPersonalBest": "Yangi shaxsiy rekord!",
   "backToGames": "O'yinlarga qaytish",
-  "levelLeader": "Daraja yetakchisi"
+  "levelLeader": "Daraja yetakchisi",
+  "geographyTitle": "Geografiya",
+  "geographySubtitle": "Bayroqlardan davlat va millatni toping.",
+  "geographyChooseMode": "Boshlash uchun rejim va qiyinlikni tanlang.",
+  "geographyCountryTitle": "Bayroq → Davlat",
+  "geographyCountryDesc": "Bayroqni ko'ring, davlatni tanlang.",
+  "geographyNationalityTitle": "Bayroq → Millat",
+  "geographyNationalityDesc": "Bayroqni ko'ring, millatni tanlang.",
+  "flagCountryPrompt": "Bu qaysi davlat?",
+  "flagNationalityPrompt": "Millati nima?",
+  "questionOf": "{{total}} tadan {{current}}-savol",
+  "difficultyLabel": "Qiyinlik",
+  "difficulty_mixed": "Aralash",
+  "flagAlt": "{{country}} bayrog'i",
+  "flagLoadError": "Bayroq rasmi mavjud emas — koddan foydalaning.",
+  "streakLabel": "Ketma-ket {{count}} ta",
+  "correctAnswerWas": "Javob {{answer}} edi."
 }

@@ -64,6 +64,8 @@ const WordBuilder = lazy(() => import('./features/games/pages/WordBuilder'));
 const PictureWord = lazy(() => import('./features/games/pages/PictureWord'));
 const GrammarBattle = lazy(() => import('./features/games/pages/GrammarBattle'));
 const PictureQuiz = lazy(() => import('./features/games/pages/PictureQuiz'));
+const Geography = lazy(() => import('./features/games/geography/pages/Geography'));
+const GeographyPlay = lazy(() => import('./features/games/geography/pages/GeographyPlay'));
 const SpeedChallenge = lazy(() => import('./features/games/pages/SpeedChallenge'));
 const Install = lazy(() => import('./pages/Install'));
 
@@ -172,6 +174,8 @@ function RoutedContent({ isStudent }) {
             <Route path="/grammar-battle" element={<GrammarBattle />} />
             <Route path="/picture-quiz" element={<PictureQuiz />} />
             <Route path="/picture-word" element={<PictureWord />} />
+            <Route path="/geography" element={<Geography />} />
+            <Route path="/geography/play" element={<GeographyPlay />} />
             {/* Avatar temporarily hidden (unfinished) - route redirects to
                 Portal Home; page, components, RPCs, tables and assets kept
                 intact for later restore. Uncomment the studio route to re-expose. */}

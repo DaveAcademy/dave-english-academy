@@ -187,5 +187,21 @@
   "bestStreakLabel": "Best streak",
   "newPersonalBest": "New personal best!",
   "backToGames": "Back to Games",
-  "levelLeader": "Level leader"
+  "levelLeader": "Level leader",
+  "geographyTitle": "Geography",
+  "geographySubtitle": "Guess countries and nationalities from flags.",
+  "geographyChooseMode": "Pick a mode and difficulty to start.",
+  "geographyCountryTitle": "Flag → Country",
+  "geographyCountryDesc": "See a flag, pick the country.",
+  "geographyNationalityTitle": "Flag → Nationality",
+  "geographyNationalityDesc": "See a flag, pick the nationality.",
+  "flagCountryPrompt": "Which country is this?",
+  "flagNationalityPrompt": "What is the nationality?",
+  "questionOf": "Question {{current}} of {{total}}",
+  "difficultyLabel": "Difficulty",
+  "difficulty_mixed": "Mixed",
+  "flagAlt": "Flag of {{country}}",
+  "flagLoadError": "Flag image unavailable — use the country code instead.",
+  "streakLabel": "{{count}} in a row",
+  "correctAnswerWas": "The answer was {{answer}}."
 }
