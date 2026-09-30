@@ -175,10 +175,33 @@ export default function Exams() {
   // "not submitted"/"not graded" case in the read-only results view. Active
   // exams keep showing the full current roster (activeStudents) so grading
   // behavior (ExamGradingRoster) is unaffected.
-  const closedExamStudentsBase = useMemo(
-    () => (selectedExam && isExamClosed(selectedExam) ? eligibleStudentsFor(selectedExam) : activeStudents),
-    [selectedExam, activeStudents, students, examScores]
-  );
+  //
+  // Active-roster visibility rule: the Exam section never shows inactive
+  // students anywhere - not in rosters, result views, counts or filters.
+  // Their exam_scores rows are untouched (never deleted), so reactivating
+  // a student makes them reappear automatically with history intact.
+  // Score-follows-student rule: exam records belong to the student
+  // (exam_scores is keyed by exam_id + student_id, no group involved), so
+  // an active student graded under one level stays visible - with that same
+  // score - on the exam even after moving to another level. No records are
+  // copied or recreated on group change; the current group only decides
+  // where the student is listed.
+  const closedExamStudentsBase = useMemo(() => {
+    if (!selectedExam) return activeStudents;
+    if (isExamClosed(selectedExam)) {
+      return eligibleStudentsFor(selectedExam).filter((s) => s.status === 'Active');
+    }
+    const scoredIds = new Set();
+    for (const sc of examScores) {
+      if (sc.exam_id === selectedExam.id) scoredIds.add(sc.student_id);
+    }
+    if (scoredIds.size === 0) return activeStudents;
+    const merged = new Map(activeStudents.map((s) => [s.id, s]));
+    for (const s of students) {
+      if (s.status === 'Active' && scoredIds.has(s.id) && !merged.has(s.id)) merged.set(s.id, s);
+    }
+    return [...merged.values()].sort((a, b) => a.real_name.localeCompare(b.real_name));
+  }, [selectedExam, activeStudents, students, examScores]);
 
   const filteredStudents = useMemo(
     () =>
@@ -192,7 +215,7 @@ export default function Exams() {
         if (statusFilter === 'notGraded') return !graded;
         return true;
       }),
-    [activeStudents, examScores, selectedExam, statusFilter]
+    [closedExamStudentsBase, examScores, selectedExam, statusFilter]
   );
 
   const resetForm = () => {

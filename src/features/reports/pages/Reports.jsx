@@ -126,7 +126,7 @@ export default function Reports() {
         const examsById = Object.fromEntries(exams.map((e) => [e.id, e]));
         const cols = ['Exam', 'Student', 'Score', 'Max score', 'Date'];
         const data = examScores
-          .filter((s) => filteredStudentIds.has(s.student_id))
+          .filter((s) => filteredStudentIds.has(s.student_id) && studentsById[s.student_id]?.status === 'Active')
           .map((s) => {
             const exam = examsById[s.exam_id];
             return [exam?.title || '—', studentsById[s.student_id]?.real_name || '—', s.score, exam?.max_score ?? '—', exam?.exam_date || '—'];
