@@ -24,5 +24,20 @@
   "discussionLesson": "Dars muhokamasi",
   "discussionHomework": "Uy vazifasi muhokamasi",
   "discussionExam": "Imtihon muhokamasi",
-  "discussionCertificate": "Sertifikat muhokamasi"
+  "discussionCertificate": "Sertifikat muhokamasi",
+  "searchConversations": "Suhbatlarni qidirish",
+  "noConversationSelected": "Xabar yozishni boshlash uchun suhbatni tanlang",
+  "levelGroupLabel": "{{level}} guruhi",
+  "noConversations": "Suhbatlar yo'q",
+  "readOnlyLevel": "Faqat o'qituvchilar va administrator bu yerga yoza oladi",
+  "readOnlyAnnouncement": "Faqat administrator e'lon joylashtira oladi",
+  "backToConversations": "Suhbatlar ro'yxatiga qaytish",
+  "uploadFailed": "Yuklab bo'lmadi. Qayta urinib ko'ring.",
+  "retry": "Qayta urinish",
+  "uploadingProgress": "Yuklanmoqda... {{percent}}%",
+  "uploadingMessage": "Yuklanmoqda...",
+  "removeAttachment": "Faylni olib tashlash",
+  "attachmentsCount": "{{count}}/{{max}} biriktirilgan",
+  "filesCount": "{{count}} fayl",
+  "newMessagesDivider": "Yangi xabarlar"
 }

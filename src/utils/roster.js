@@ -4,6 +4,8 @@
 // lines, "---" dividers) so people can paste messy lists safely:
 //   Name| English name| Level| Payment day
 //   Name| English name| Level| Payment day| Group
+import { LEVELS } from '../lib/levels';
+
 export function parseRosterText(text) {
   const lines = text.split('\n');
   const rows = [];
@@ -11,7 +13,7 @@ export function parseRosterText(text) {
     const parts = line.split('|').map((p) => p.trim());
     if (parts.length !== 4 && parts.length !== 5) continue;
     const [realName, englishName, level, deadlineStr, group] = parts;
-    if (!['A', 'B', 'C'].includes(level)) continue;
+    if (!LEVELS.includes(level)) continue;
     const deadline = parseInt(deadlineStr, 10);
     if (!realName || !Number.isInteger(deadline) || deadline < 1 || deadline > 31) continue;
     rows.push({

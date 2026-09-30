@@ -1,0 +1,13 @@
+-- Homework Phase H2: adds an optional description/instructions field to
+-- homework, mirroring exams.description (0037).
+--
+-- Nullable text column, no default - existing rows (there are none in
+-- production yet) get null. No RLS or grant changes needed:
+-- homework_read_all / homework_admin_all / homework_teacher_all (0005)
+-- are row-level policies, not column-scoped, and homework has no
+-- column-level REVOKE - confirmed via information_schema.column_privileges
+-- before writing this migration, every existing column carries the same
+-- full authenticated/anon grant, so a new column inherits it
+-- automatically. Does not touch storage.objects, homework_status, or any
+-- exam-related table/policy/function.
+alter table public.homework add column if not exists description text;

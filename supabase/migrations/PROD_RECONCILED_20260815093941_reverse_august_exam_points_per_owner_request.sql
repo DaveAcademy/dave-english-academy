@@ -1,0 +1,39 @@
+-- RECONCILIATION ARTIFACT — DOCUMENTATION ONLY. NOT APPLIED VIA `supabase db push`.
+-- Original prod migration: 20260815093941_0133_reverse_august_exam_points_per_owner_request
+-- (applied directly to project usqzcsoolkbuxyiiawmx, no local file existed).
+-- Confidence: RECONSTRUCTED FROM RESULTING DATA STATE, NOT RECOVERED ORIGINAL SOURCE.
+--   The original migration file's exact SQL (including whatever WHERE clause it used
+--   to select target rows) is not retrievable. The statement below is inferred
+--   purely from the resulting rows already present in point_transactions:
+--     71 rows, category_key = 'exam', is_reversal = true, points sum = -4665,
+--     reason (identical across all 71 rows) =
+--       'Reversal: exam points removed from August ranking per owner request
+--        (exam points not intended for this cycle yet)'
+--     created_at = 2026-08-15 (batch timestamp uniform across the set, consistent
+--     with a single migration-time INSERT ... SELECT)
+--   The shape below (reverse every non-reversed August 'exam' category award) is
+--   the most likely original logic given the reason text and row count, but the
+--   exact original filter predicates (e.g. explicit date range vs. category-only,
+--   exclusion list) cannot be confirmed. Do not treat this as authoritative source;
+--   it documents behavior/result only.
+
+-- Likely original shape (reconstructed):
+-- insert into public.point_transactions
+--   (student_id, level, group_name, category_id, category_key, points, reason,
+--    lesson_date, awarded_by, is_reversal, reversed_transaction_id, is_system_award)
+-- select
+--   pt.student_id, pt.level, pt.group_name, pt.category_id, pt.category_key,
+--   -pt.points,
+--   'Reversal: exam points removed from August ranking per owner request (exam points not intended for this cycle yet)',
+--   pt.lesson_date, <owner/admin profile id>, true, pt.id, pt.is_system_award
+-- from public.point_transactions pt
+-- where pt.category_key = 'exam'
+--   and pt.lesson_date >= '2026-08-01' and pt.lesson_date < '2026-09-01'
+--   and pt.is_reversal = false
+--   and not exists (
+--     select 1 from public.point_transactions r
+--     where r.reversed_transaction_id = pt.id
+--   );
+--
+-- Verified resulting aggregate (queried 2026-08-15 from live prod data):
+--   category_key='exam', is_reversal=true -> count=71, sum(points)=-4665

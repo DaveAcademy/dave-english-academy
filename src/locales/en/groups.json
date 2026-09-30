@@ -1,0 +1,49 @@
+{
+  "title": "Group Management",
+  "subtitle": "Create, rename, and organize student groups.",
+  "addGroup": "Add group",
+  "createGroup": "Create group",
+  "createFirstGroup": "Create first group",
+  "editGroup": "Edit group",
+  "createGroupTitle": "Create group",
+  "editGroupTitle": "Edit group",
+  "columns": {
+    "name": "Group Name",
+    "status": "Status",
+    "students": "Students",
+    "lessons": "Lessons",
+    "created": "Created",
+    "actions": "Actions"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "form": {
+    "name": "Group name",
+    "namePlaceholder": "e.g. Level D, Morning B, Evening C",
+    "active": "Active",
+    "activeHint": "Inactive groups won't appear in dropdowns for new assignments."
+  },
+  "adminOnly": {
+    "title": "Administrators only",
+    "description": "Group management is restricted to administrators."
+  },
+  "emptyState": {
+    "title": "No groups yet",
+    "description": "Create your first group to start organizing students."
+  },
+  "confirm": {
+    "deleteTitle": "Delete group?",
+    "deleteMessage": "This will permanently remove the group. This can't be undone."
+  },
+  "tooltip": {
+    "cannotDelete": "Cannot delete: group has assigned students or lessons"
+  },
+  "error": {
+    "nameRequired": "Group name is required.",
+    "duplicateName": "A group with this name already exists.",
+    "somethingWentWrong": "Something went wrong. Please try again.",
+    "deleteFailed": "Could not delete group."
+  }
+}

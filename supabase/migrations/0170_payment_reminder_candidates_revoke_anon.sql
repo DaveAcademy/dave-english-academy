@@ -1,0 +1,22 @@
+-- Payment Safety Audit (docs/PAYMENT-SAFETY-AUDIT-2026-08-19.md), finding
+-- P-3: get_payment_reminder_candidates() is directly executable by `anon`
+-- (confirmed live via has_function_privilege('anon', ..., 'execute') =
+-- true), contrary to 0056's stated policy that money-related endpoints
+-- should be closed at the grant level, not just behind the function's
+-- internal `if not is_admin() then raise exception` check.
+--
+-- Root cause: 0083_reminder_candidates_last_sent_at.sql did `drop
+-- function` + recreate (which re-triggers Supabase's default
+-- anon/authenticated EXECUTE grant on new public-schema functions) and
+-- only revoked from the `public` pseudo-role afterward, not from `anon`
+-- directly. Its sibling fix for get_student_payment_status in 0087 did
+-- this correctly (revokes from both `public` and `anon` explicitly) -
+-- this migration brings get_payment_reminder_candidates() in line with
+-- that same pattern.
+--
+-- Not an active data leak today (is_admin() still blocks anonymous
+-- callers - they get 'Unauthorized', not data), but closing the grant
+-- removes the gap rather than relying solely on the function body.
+-- authenticated keeps EXECUTE, unchanged.
+
+revoke execute on function public.get_payment_reminder_candidates() from anon;

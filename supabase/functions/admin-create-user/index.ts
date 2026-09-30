@@ -96,8 +96,8 @@ Deno.serve(async (req: Request) => {
   if (!["teacher", "student"].includes(role ?? "")) {
     return json({ error: "role must be 'teacher' or 'student'" }, 400, origin);
   }
-  if (studentId !== undefined && typeof studentId !== "number") {
-    return json({ error: "student_id must be a number" }, 400, origin);
+  if (studentId !== undefined && !Number.isSafeInteger(studentId)) {
+    return json({ error: "student_id must be an integer" }, 400, origin);
   }
 
   const password = randomPassword();
@@ -110,6 +110,11 @@ Deno.serve(async (req: Request) => {
       password,
       email_confirm: true,
       user_metadata: { full_name: full_name ?? "", role },
+      // Immutable recovery evidence (service-role-only app_metadata): the
+      // student row this login was provisioned for. Students cannot read or
+      // modify app_metadata; self-claim-student reads it server-side and only
+      // links when it identifies exactly one eligible unlinked student.
+      ...(role === "student" && studentId !== undefined ? { app_metadata: { student_id: studentId } } : {}),
     });
 
   if (createError) {
@@ -119,28 +124,86 @@ Deno.serve(async (req: Request) => {
     return json({ error: createError.message }, status, origin);
   }
 
-  if (studentId !== undefined && created.user) {
-    const { error: linkError, count } = await adminClient
-      .from("students")
-      .update({ profile_id: created.user.id }, { count: "exact" })
-      .eq("id", studentId)
-      .is("profile_id", null);
+  // Invariant: every student-role login must end up pointing at exactly one
+  // students row, created here if the caller didn't pick an existing one -
+  // never left to a later, optional, manual step. There is no other path
+  // in the app that can link an already-created orphaned account.
+  if (role === "student" && created.user) {
+    if (studentId !== undefined) {
+      const { error: linkError, count } = await adminClient
+        .from("students")
+        .update({ profile_id: created.user.id }, { count: "exact" })
+        .eq("id", studentId)
+        .is("profile_id", null);
 
-    if (linkError || count === 0) {
-      // The login account already exists at this point - don't fail the
-      // whole request, just report that linking didn't happen so the
-      // admin can retry linking separately rather than losing the account.
-      return json(
-        {
-          email: created.user.email ?? email,
-          password,
-          full_name: full_name ?? "",
-          role,
-          linkWarning: "Account created, but linking to that student failed (it may already be linked).",
-        },
-        200,
-        origin,
-      );
+      if (linkError || count === 0) {
+        // The login account already exists at this point - don't fail the
+        // whole request, just report that linking didn't happen so the
+        // admin can retry linking separately rather than losing the account.
+        return json(
+          {
+            email: created.user.email ?? email,
+            password,
+            full_name: full_name ?? "",
+            role,
+            linkWarning: "Account created, but linking to that student failed (it may already be linked).",
+          },
+          200,
+          origin,
+        );
+      }
+    } else {
+      // No existing roster row selected - create one instead of leaving
+      // the login unlinked. level/payment_deadline take safe placeholder
+      // defaults; monthly_fee/status/join_date fall back to their own
+      // table defaults. Same shape as StudentForm's "Add Student" - an
+      // admin can edit these afterward via the Students page.
+      const { data: newStudent, error: createStudentError } = await adminClient
+        .from("students")
+        .insert({
+          real_name: full_name,
+          level: "A",
+          payment_deadline: 1,
+          profile_id: created.user.id,
+        })
+        .select("id")
+        .single();
+
+      if (createStudentError) {
+        return json(
+          {
+            email: created.user.email ?? email,
+            password,
+            full_name: full_name ?? "",
+            role,
+            linkWarning: "Account created, but the student record could not be created automatically: " +
+              createStudentError.message,
+          },
+          200,
+          origin,
+        );
+      }
+
+      // Stamp the same immutable recovery evidence for auto-created roster
+      // rows. The account is already linked here; this only preserves the
+      // association so a later-unlinked row can still be recovered exactly.
+      const { error: evidenceError } = await adminClient.auth.admin.updateUserById(created.user.id, {
+        app_metadata: { student_id: newStudent.id },
+      });
+      if (evidenceError) {
+        return json(
+          {
+            email: created.user.email ?? email,
+            password,
+            full_name: full_name ?? "",
+            role,
+            claimWarning: "Account and student record are linked, but the recovery evidence could not be saved: " +
+              evidenceError.message,
+          },
+          200,
+          origin,
+        );
+      }
     }
   }
 

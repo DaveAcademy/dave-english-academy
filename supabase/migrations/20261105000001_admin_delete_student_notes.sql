@@ -1,0 +1,22 @@
+-- Admin Delete Student: SECURITY DEFINER function for deleting a student account.
+-- Uses the caller's admin privileges (verified via is_admin()) to delete:
+-- 1. The Auth user (via adminClient - but we need service role for this)
+-- 2. The student record (cascades to all dependent records)
+--
+-- Note: This function cannot directly call auth.admin.delete_user() because
+-- that requires the service role. Instead, we'll use a different approach:
+-- The admin deletion will be handled by the existing admin-create-user Edge Function
+-- pattern, but for deletion we'll create a new Edge Function.
+--
+-- This migration just documents the design decision. The actual implementation
+-- will use an Edge Function (admin-delete-student) deployed via Supabase Dashboard.
+
+-- No SQL changes needed here - the FK cascades are already in place (migration 20261105000000).
+-- The Edge Function will be deployed separately via Supabase Dashboard.
+
+-- For reference, the Edge Function will:
+-- 1. Verify caller is_admin() using their JWT
+-- 2. Find student's profile_id
+-- 3. Use service role to delete Auth user
+-- 4. Delete student record (cascades to all dependent tables)
+-- 5. Return success/error

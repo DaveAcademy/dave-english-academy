@@ -3,18 +3,31 @@ import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
 import './index.css';
 import './i18n';
+import { registerSW } from 'virtual:pwa-register';
 
-// The PWA service worker updates in the background (registerType:
-// 'autoUpdate'), but an already-open tab keeps running its old JS until
-// something reloads it - otherwise different tabs can silently end up
-// running different deployed versions at once. Reload once when a new
-// service worker takes over.
+const updateSW = registerSW({
+  onNeedRefresh() {
+    if (confirm('New version available. Reload to update?')) {
+      window.location.reload();
+    }
+  },
+  onOfflineReady() {
+    console.log('App ready to work offline');
+  },
+});
+
 if ('serviceWorker' in navigator) {
   let reloaded = false;
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     if (reloaded) return;
     reloaded = true;
     window.location.reload();
+  });
+  navigator.serviceWorker.addEventListener('updatefound', () => {
+    const registration = navigator.serviceWorker.controller;
+    if (registration) {
+      updateSW();
+    }
   });
 }
 

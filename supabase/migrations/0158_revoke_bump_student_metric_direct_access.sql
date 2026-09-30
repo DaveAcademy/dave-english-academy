@@ -1,0 +1,31 @@
+-- C1-class gap, same family as 0126b (secure_achievement_evaluator).
+-- Audit: public.bump_student_metric(p_student_id bigint, p_metric_key text,
+-- p_delta numeric) is SECURITY DEFINER with EXECUTE still granted to
+-- anon/authenticated. Unlike evaluate_achievements (fixed in 0126b), it has
+-- no caller-authorization check at all -- it unconditionally upserts
+-- student_metric_snapshots for whatever student_id/metric_key/delta is
+-- passed in. Grep across src/ confirms zero frontend callers; every real
+-- call site is another SECURITY DEFINER function/trigger
+-- (on_attendance_evaluate_achievements, on_lesson_progress_evaluate_achievements,
+-- on_lesson_work_submission_evaluate_achievements, submit_game_round), all
+-- owned by `postgres`, same as bump_student_metric itself. That means an
+-- unauthenticated (anon) or merely-logged-in (authenticated) caller can hit
+-- /rest/v1/rpc/bump_student_metric directly today and inflate or corrupt
+-- any student's metric snapshots (attendance_present, lessons_completed,
+-- practice_submitted, and any future metric key), independent of which
+-- student the caller actually is. student_metric_snapshots feeds
+-- evaluate_achievements()'s qualification checks (0126b), so this is a
+-- live integrity gap on the achievement engine even while the
+-- achievement->points bonus itself stays gated by v_points_authorized.
+--
+-- Fix: unlike evaluate_achievements (which has a legitimate direct-caller
+-- use case and was split into a checked wrapper + unchecked internal
+-- worker), bump_student_metric has no legitimate direct caller at all --
+-- revoke EXECUTE from public/anon/authenticated outright, matching the
+-- treatment already given to _evaluate_achievements_internal. All four
+-- existing call sites are SECURITY DEFINER functions owned by `postgres`
+-- (same owner as bump_student_metric), so the owner's implicit EXECUTE
+-- right keeps every internal call working unchanged; only direct
+-- browser/API access is closed off.
+
+revoke all on function public.bump_student_metric(bigint, text, numeric) from public, anon, authenticated;
