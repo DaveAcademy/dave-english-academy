@@ -262,7 +262,7 @@ export default function MyRanking() {
       </header>
 
       {/* ── HERO: YOUR RANK ─────────────────────────────────── */}
-      <section aria-labelledby="your-rank-heading" className="mb-6">
+      <section aria-labelledby="your-rank-heading" className="mb-4 sm:mb-6">
         <h2 id="your-rank-heading" className="sr-only">Your Rank</h2>
         <div className="overflow-hidden rounded-[20px] border border-ink/[0.06] bg-white shadow-[0_2px_8px_rgba(27,36,48,0.04),0_8px_24px_rgba(27,36,48,0.06)]">
           <div className="h-[3px] w-full bg-gradient-to-r from-brand-500 to-brand-400" aria-hidden="true" />
@@ -299,7 +299,7 @@ export default function MyRanking() {
                   </span>
                   <span className="hidden h-10 w-px bg-ink/10 sm:block" aria-hidden="true" />
                   <span className="text-left">
-                    <span className="block font-display text-xl font-bold leading-none text-ink sm:text-2xl">{formatPoints(heroPoints)} <span className="text-sm font-semibold text-ink/40">{t('portal:points')}</span></span>
+                    <span className="block font-display text-lg font-bold leading-none text-ink sm:text-xl">{formatPoints(heroPoints)} <span className="text-xs font-semibold text-ink/40">{t('portal:points')}</span></span>
                     <span className="mt-1 block text-xs font-semibold uppercase tracking-wide text-ink/45">{t(`portal:period_${period}`)}</span>
                   </span>
                 </div>
@@ -331,9 +331,9 @@ export default function MyRanking() {
 
               {/* Right: Lifetime total + rank position bar */}
               <div className="mt-4 flex justify-center sm:mt-0 sm:flex-col sm:items-end sm:justify-center">
-                <div className="rounded-2xl border border-ink/[0.06] bg-paper px-5 py-4 text-center shadow-sm sm:min-w-[170px]">
+                <div className="rounded-2xl border border-ink/[0.06] bg-paper px-4 py-3 text-center shadow-sm sm:min-w-[170px]">
                   <p className="text-[11px] font-bold uppercase tracking-wide text-ink/40">{t('portal:totalPointsLabel')}</p>
-                  <p className="mt-0.5 font-display text-xl font-bold text-ink">{formatPoints(summary?.lifetime_points ?? myRow?.points)}</p>
+                  <p className="mt-0.5 font-display text-lg font-bold text-ink">{formatPoints(summary?.lifetime_points ?? myRow?.points)}</p>
                   <p className="mt-1 text-[11px] font-medium text-ink/40">{t('portal:rankingHeroHint', { defaultValue: 'All-time total' })}</p>
                   {/* Progress bar showing rank position */}
                   {leaderboard && leaderboard.length > 0 && heroRank != null && (
@@ -371,7 +371,7 @@ export default function MyRanking() {
       )}
 
       {/* ── LEADERBOARD ─────────────────────────────────────── */}
-      <section aria-labelledby="leaderboard-heading" className="mb-6">
+      <section aria-labelledby="leaderboard-heading" className="mb-4 sm:mb-6">
         <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
           <h2 id="leaderboard-heading" className="font-display text-base font-bold tracking-tight text-ink">
             {t('portal:leaderboardTitle', { level: levelToken(me.level) })}
@@ -396,6 +396,9 @@ export default function MyRanking() {
             })}
           </div>
         </div>
+        <p className="mb-2 mt-2 px-1 text-[11px] font-semibold text-ink/45">
+          {levelToken(me.level)}{me.group_name ? ` · ${me.group_name}` : ''} · {t(`portal:period_${period}`)}
+        </p>
 
         <div className="overflow-hidden rounded-2xl border border-ink/[0.06] bg-white shadow-card">
           <div className="grid grid-cols-[40px_1fr_auto] items-center gap-2 border-b border-ink/[0.06] bg-paper/60 px-3 py-2.5 text-[10px] font-bold uppercase tracking-wide text-ink/40 sm:grid-cols-[48px_1fr_100px] sm:px-4" aria-hidden="true">
@@ -480,19 +483,12 @@ export default function MyRanking() {
                         {row.attendance_rate != null && (
                           <span className="text-[10px] font-medium text-ink/40">{row.attendance_rate}%</span>
                         )}
-                        {isMe && heroRankChange != null && heroRankChange !== 0 && (
-                          <span className={`inline-flex items-center gap-0.5 text-[10px] font-bold ${heroRankChange > 0 ? 'text-active' : 'text-inactive'}`}>
-                            {heroRankChange > 0 ? <ArrowUp size={10} /> : <ArrowDown size={10} />}
-                            {Math.abs(heroRankChange)}
-                          </span>
-                        )}
                       </div>
                     </span>
 
                     {/* Points */}
                     <span className="text-right">
                       <span className={`block text-sm font-bold tabular-nums leading-none ${isMe ? 'text-brand-700' : 'text-ink'}`}>{formatPoints(row.points)}</span>
-                      <span className="text-[10px] font-medium text-ink/35">pts</span>
                     </span>
                   </li>
                 );
@@ -500,13 +496,10 @@ export default function MyRanking() {
             </ol>
           )}
         </div>
-        {leaderboard && leaderboard.length > 0 && (
-          <p className="mt-2 px-1 text-xs text-ink/35">{t('portal:rankingLevelNote', { defaultValue: 'Ranking within Level {{level}} only.', level: levelToken(me.level) })}</p>
-        )}
       </section>
 
       {/* ── YOUR POINTS LOG ─────────────────────────────────── */}
-      <section aria-labelledby="lesson-points-heading" className="mb-6">
+      <section aria-labelledby="lesson-points-heading" className="mb-4 sm:mb-6">
         <h2 id="lesson-points-heading" className="mb-2 font-display text-sm font-bold tracking-tight text-ink">
           {t('portal:yourLessonPointsTitle', { defaultValue: 'Your Points Log' })}
         </h2>
@@ -568,7 +561,7 @@ export default function MyRanking() {
 
       {/* ── RECOGNITION (secondary, only when present) ──────── */}
       {awards && awards.length > 0 && (
-        <section aria-labelledby="recognition-heading" className="mb-6">
+        <section aria-labelledby="recognition-heading" className="mb-4 sm:mb-6">
           <h2 id="recognition-heading" className="mb-2 text-xs font-bold uppercase tracking-wide text-ink/40">{t('portal:recognitionTitle')}</h2>
           <div className="grid gap-2 sm:grid-cols-2">
             {awards.map((a) => {

@@ -46,10 +46,6 @@ import DashboardErrorBoundary from '../../../components/DashboardErrorBoundary';
 import ActivityFeed from '../../../components/ActivityFeed';
 import ProgressAnalytics from '../../../components/ProgressAnalytics';
 import WebsiteEngagementSummary from '../../../components/WebsiteEngagementSummary';
-import AcademicProgressSummary from '../../../components/AcademicProgressSummary';
-import DailyMissions from '../components/DailyMissions';
-import WeeklyMissions from '../components/WeeklyMissions';
-import StreakDisplay from '../components/StreakDisplay';
 import { TONE } from '../../../utils/tone';
 import { formatUZS } from '../../../utils/format';
 import { attendanceRate, filterByYearMonth } from '../../../utils/attendance';
@@ -71,6 +67,59 @@ function lastNMonths(n) {
 export default function Dashboard() {
   const { role } = useAuth();
   return role === 'administrator' ? <AdminDashboard /> : <TeacherDashboard />;
+}
+
+// Local premium primitives for the ADMIN dashboard only. Shared components
+// (StatCard/Panel/AttentionCard) are deliberately untouched so the teacher
+// view and other pages keep their exact appearance. Data and calculations
+// are unchanged - these only restyle already-computed values.
+const ACTION_TONE = {
+  danger: { bar: 'bg-inactive', soft: 'bg-inactive/10', text: 'text-inactive' },
+  warn: { bar: 'bg-levelB', soft: 'bg-levelB/10', text: 'text-levelB' },
+  info: { bar: 'bg-brand-500', soft: 'bg-brand-50', text: 'text-brand-600' },
+};
+
+// Tier 1 metric: caps label, large tabular number, one quiet context line.
+function MetricCard({ label, value, context, icon: Icon, tone = 'info', span = '' }) {
+  const t = ACTION_TONE[tone] || ACTION_TONE.info;
+  return (
+    <div className={`relative overflow-hidden rounded-2xl border border-ink/[0.06] bg-white p-4 shadow-card sm:p-5 ${span}`}>
+      <span className={`absolute left-0 top-0 h-full w-1 ${t.bar}`} aria-hidden="true" />
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-ink/45">{label}</p>
+        {Icon && (
+          <span className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl ${t.soft} ${t.text}`}>
+            <Icon size={15} aria-hidden="true" />
+          </span>
+        )}
+      </div>
+      <p className="mt-1.5 break-words font-display text-2xl font-extrabold leading-none tracking-tight tabular-nums text-ink sm:text-3xl">{value}</p>
+      {context != null && context !== '' && <p className="mt-1.5 truncate text-xs font-medium tracking-wide text-ink/60">{context}</p>}
+    </div>
+  );
+}
+
+// Tier 2 action window: icon + title, one prominent count, concise rows,
+// explicit footer action. One per category - never merged.
+function ActionCard({ title, icon: Icon, count, tone = 'info', viewTo, viewLabel, children }) {
+  const t = ACTION_TONE[tone] || ACTION_TONE.info;
+  return (
+    <div className="relative overflow-hidden rounded-2xl border border-ink/[0.06] bg-white shadow-card">
+      <span className={`absolute left-0 top-0 h-full w-[3px] ${t.bar}`} aria-hidden="true" />
+      <div className="flex items-center gap-3 p-4 pb-2.5 sm:p-5 sm:pb-3">
+        <span className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl ${t.soft} ${t.text}`}>
+          <Icon size={17} aria-hidden="true" />
+        </span>
+        <p className="min-w-0 flex-1 truncate text-sm font-bold text-ink">{title}</p>
+        <p className={`font-display text-2xl font-extrabold leading-none tabular-nums ${t.text}`}>{count}</p>
+      </div>
+      <div className="space-y-2 px-4 pb-1 sm:px-5 [&_a]:leading-snug [&_a>span:first-child]:font-medium [&_a>span:first-child]:tracking-wide [&_a>span:first-child]:text-ink/75 [&_a>span:first-child]:before:mr-2 [&_a>span:first-child]:before:inline-block [&_a>span:first-child]:before:h-1 [&_a>span:first-child]:before:w-1 [&_a>span:first-child]:before:rounded-full [&_a>span:first-child]:before:bg-brand-400 [&_a>span:first-child]:before:align-middle [&_a>span:first-child]:before:content-[''] [&_.font-semibold]:tabular-nums">{children}</div>
+      <Link to={viewTo} className="mt-2 flex items-center justify-between border-t border-ink/[0.06] px-4 py-2.5 text-xs font-bold text-brand-600 transition-colors hover:bg-brand-50/50 sm:px-5">
+        {viewLabel}
+        <ChevronRight size={14} aria-hidden="true" />
+      </Link>
+    </div>
+  );
 }
 
 function AdminDashboard() {
@@ -568,42 +617,32 @@ function AdminDashboard() {
       <DashboardErrorBoundary>
         <div className="mt-6">
           <SectionLabel>{t('overviewLabel')}</SectionLabel>
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-            <StatCard
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
+            <MetricCard
               label={t('activeStudents')}
-              value={stats.active}
-              hint={levelFilter ? undefined : (() => {
+              value={loading ? '—' : stats.active}
+              context={levelFilter ? undefined : (() => {
                 const entries = Object.entries(stats.levelCounts);
                 if (entries.length === 0) return t('levelBreakdownHint', { a: 0, b: 0, c: 0 });
                 return entries.map(([level, count]) => `${levelToken(level)}: ${count}`).join(' · ');
               })()}
-              tone="success"
+              tone="info"
               icon={Users}
-              loading={loading}
             />
-            <StatCard
-              label={t('neverLoggedInLabel')}
-              value={engagementSummary.neverLoggedIn}
-              hint={t('websiteOverviewHint', { noLessons: engagementSummary.loggedInNoLessons, learning: engagementSummary.learning, upToDate: engagementSummary.upToDate })}
-              tone="danger"
-              icon={LogIn}
-              loading={engagementDataLoading}
-            />
-            <StatCard
+            <MetricCard
               label={t('outstandingRevenue')}
-              value={formatUZS(stats.outstanding)}
-              hint={t('paymentsOverviewHint', { paid: stats.paymentStatusCounts.paid, active: stats.active, rate: stats.collectionRate })}
+              value={loading || monthTransactionsLoading ? '—' : formatUZS(stats.outstanding)}
+              context={t('paymentsOverviewHint', { paid: stats.paymentStatusCounts.paid, active: stats.active, rate: stats.collectionRate })}
               tone="danger"
               icon={AlertCircle}
-              loading={loading || monthTransactionsLoading}
             />
-            <StatCard
+            <MetricCard
               label={t('atRiskLabel')}
-              value={progressSummary.atRisk}
-              hint={t('academicOverviewHint', { onTrack: progressSummary.onTrack, behind: progressSummary.behind })}
-              tone="danger"
+              value={progressDataLoading ? '—' : progressSummary.atRisk}
+              context={t('academicOverviewHint', { onTrack: progressSummary.onTrack, behind: progressSummary.behind })}
+              tone="warn"
               icon={AlertTriangle}
-              loading={progressDataLoading}
+              span="col-span-2 lg:col-span-1"
             />
           </div>
 
@@ -630,20 +669,11 @@ function AdminDashboard() {
         </div>
       </DashboardErrorBoundary>
 
-      {/* Stage 14: Daily Missions */}
-      <DailyMissions dailyProgress={dailyMissionProgress} />
-
-      {/* Stage 14: Weekly Missions */}
-      <WeeklyMissions weeklyProgress={weeklyMissionProgress} />
-
-      {/* Stage 14: Streak Display */}
-      <StreakDisplay currentStreak={currentStreak} bestStreak={bestStreak} lastActiveDate={lastActiveDate} />
-
       <DashboardErrorBoundary>
         <div className="mt-6">
           <SectionLabel>{t('needsAttentionLabel')}</SectionLabel>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            <Panel title={t('paymentAlertsTitle')} icon={Wallet}>
+            <ActionCard title={t('paymentAlertsTitle')} icon={Wallet} count={stats.unpaidStudents.length} tone="danger" viewTo="/payments" viewLabel={t('viewAllLabel', { defaultValue: 'View all' })}>
               <div className="space-y-2">
                 <Link to="/payments" className="flex items-center justify-between text-sm hover:text-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded-lg">
                   <span className="text-ink/60">{t('overdueLabel')}</span>
@@ -667,9 +697,9 @@ function AdminDashboard() {
                 {t('sendRemindersCta')}
               </Link>
               */}
-            </Panel>
+            </ActionCard>
 
-            <Panel title={t('attendanceAlertsTitle')} icon={CalendarCheck}>
+            <ActionCard title={t('attendanceAlertsTitle')} icon={CalendarCheck} count={stats.todayAttendanceCounts.Absent} tone="danger" viewTo="/attendance" viewLabel={t('viewAllLabel', { defaultValue: 'View all' })}>
               <div className="space-y-2">
                 <Link to="/attendance" className="flex items-center justify-between text-sm hover:text-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded-lg">
                   <span className="text-ink/60">{t('absentTodayLabel')}</span>
@@ -684,9 +714,9 @@ function AdminDashboard() {
                   <span className="font-semibold text-inactive">{stats.threePlusConsecutiveAbsent.length}</span>
                 </Link>
               </div>
-            </Panel>
+            </ActionCard>
 
-            <Panel title={t('homeworkReviewTitle')} icon={BookOpen}>
+            <ActionCard title={t('homeworkReviewTitle')} icon={BookOpen} count={stats.homeworkSubmitted + stats.examsAwaitingGrading} tone="warn" viewTo="/homework" viewLabel={t('viewAllLabel', { defaultValue: 'View all' })}>
               <div className="space-y-2">
                 <Link to="/homework" className="flex items-center justify-between text-sm hover:text-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded-lg">
                   <span className="text-ink/60">{t('waitingForReviewLabel')}</span>
@@ -697,9 +727,9 @@ function AdminDashboard() {
                   <span className="font-semibold text-levelB">{stats.examsAwaitingGrading}</span>
                 </Link>
               </div>
-            </Panel>
+            </ActionCard>
 
-            <Panel title={t('academicAlertsTitle')} icon={AlertTriangle}>
+            <ActionCard title={t('academicAlertsTitle')} icon={AlertTriangle} count={progressSummary.atRisk} tone="warn" viewTo="/students" viewLabel={t('viewAllLabel', { defaultValue: 'View all' })}>
               <div className="space-y-2">
                 <Link to="/students" className="flex items-center justify-between text-sm hover:text-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded-lg">
                   <span className="text-ink/60">{t('atRiskLabel')}</span>
@@ -710,9 +740,9 @@ function AdminDashboard() {
                   <span className="font-semibold text-levelB">{progressSummary.behind}</span>
                 </Link>
               </div>
-            </Panel>
+            </ActionCard>
 
-            <Panel title={t('websiteAlertsTitle')} icon={Globe}>
+            <ActionCard title={t('websiteAlertsTitle')} icon={Globe} count={engagementSummary.neverLoggedIn} tone="info" viewTo="/students" viewLabel={t('viewAllLabel', { defaultValue: 'View all' })}>
               <div className="space-y-2">
                 <Link to="/students" className="flex items-center justify-between text-sm hover:text-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded-lg">
                   <span className="text-ink/60">{t('neverLoggedInLabel')}</span>
@@ -723,7 +753,7 @@ function AdminDashboard() {
                   <span className="font-semibold text-levelB">{engagementSummary.loggedInNoLessons}</span>
                 </Link>
               </div>
-            </Panel>
+            </ActionCard>
           </div>
 
           <div className="mt-4">
@@ -752,63 +782,8 @@ function AdminDashboard() {
       </DashboardErrorBoundary>
 
       <DashboardErrorBoundary>
-        <div className="mt-6 rounded-2xl border-2 border-dashed border-brand-200 bg-brand-50/40 p-4 sm:p-5">
-          <SectionLabel>{t('websiteEngagementLabel')}</SectionLabel>
-          <WebsiteEngagementSummary rows={engagementRows} levelFilter={levelFilter} loading={engagementDataLoading} />
-        </div>
-      </DashboardErrorBoundary>
-
-      <DashboardErrorBoundary>
-        <div className="mt-6">
-          <SectionLabel>{t('financeOverviewLabel')}</SectionLabel>
-          <div className="grid gap-4 lg:grid-cols-2">
-            <div className="overflow-x-auto rounded-xl border border-ink/[0.06] bg-white p-4 shadow-card sm:p-5">
-              <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-ink/50">{t('groupBreakdownTitle')}</h2>
-              <table className="w-full min-w-0 text-left text-sm">
-                <thead>
-                  <tr className="text-xs uppercase tracking-wide text-ink/40">
-                    <th className="py-2 font-semibold">{t('group')}</th>
-                    <th className="py-2 font-semibold">{t('paidCol')}</th>
-                    <th className="py-2 font-semibold">{t('totalCol')}</th>
-                    <th className="py-2 font-semibold">{t('collected')}</th>
-                    <th className="py-2 font-semibold">{t('expectedCol')}</th>
-                    <th className="py-2 font-semibold">{t('collectionPercentCol')}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-ink/[0.06]">
-                  {loading || monthTransactionsLoading ? (
-                    <tr>
-                      <td colSpan={6} className="py-3 text-ink/40">
-                        —
-                      </td>
-                    </tr>
-                  ) : (
-                    <>
-                      {stats.financeByGroup.map((g) => (
-                        <tr key={g.level}>
-                          <td className="py-2 font-medium text-ink">{t('levelLabel', { level: levelToken(g.level) })}</td>
-                          <td className="py-2 text-ink/70">{g.paid}</td>
-                          <td className="py-2 text-ink/70">{g.total}</td>
-                          <td className="py-2 text-ink/70">{formatUZS(g.collected)}</td>
-                          <td className="py-2 text-ink/70">{formatUZS(g.expected)}</td>
-                          <td className="py-2 text-ink/70">{g.rate}%</td>
-                        </tr>
-                      ))}
-                      <tr className="font-semibold text-ink">
-                        <td className="py-2">{t('totalRow')}</td>
-                        <td className="py-2">{stats.financeTotal.paid}</td>
-                        <td className="py-2">{stats.financeTotal.total}</td>
-                        <td className="py-2">{formatUZS(stats.financeTotal.collected)}</td>
-                        <td className="py-2">{formatUZS(stats.financeTotal.expected)}</td>
-                        <td className="py-2">{stats.financeTotal.rate}%</td>
-                      </tr>
-                    </>
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            <Panel title={t('revenueTrendTitle')} icon={BarChart3}>
+        <div className="mt-4 sm:mt-6">
+          <Panel title={t('revenueTrendTitle')} icon={BarChart3}>
               <p className="mb-3 text-xs text-ink/50">
                 <Trans
                   i18nKey="dashboard:collectedOfExpected"
@@ -818,12 +793,11 @@ function AdminDashboard() {
               </p>
               <MiniBarChart data={stats.income} formatValue={formatUZS} color="bg-active" loading={loading || collectionByMonthLoading} />
             </Panel>
-          </div>
         </div>
       </DashboardErrorBoundary>
 
       <DashboardErrorBoundary>
-        <div className="mt-6">
+        <div className="mt-4 sm:mt-6">
           <SectionLabel>{t('attendanceExamsLabel')}</SectionLabel>
           <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
             <StatCard

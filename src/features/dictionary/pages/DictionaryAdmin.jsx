@@ -109,7 +109,7 @@ export default function DictionaryAdmin() {
   return (
     <div className="space-y-4">
       <header>
-        <h1 className="font-display text-2xl font-bold text-ink">Dictionary Performance</h1>
+        <h1 className="font-display text-xl font-bold text-ink sm:text-2xl">Dictionary Performance</h1>
         <p className="mt-1 text-sm text-ink/50">
           Who is doing well, who is improving, and who needs help.
         </p>

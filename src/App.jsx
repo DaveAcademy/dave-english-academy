@@ -248,7 +248,7 @@ function PageLoading() {
 
 function MobileHeader({ isStudent, onMenu }) {
   return (
-    <header className="sticky top-0 z-30 flex items-center gap-2 bg-brand-700 px-3 py-3 text-white shadow-md md:hidden">
+    <header className="sticky top-0 z-30 flex items-center gap-2 bg-brand-700 px-3 py-2 text-white shadow-md md:hidden">
       {!isStudent && (
         <button
           type="button"

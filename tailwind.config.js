@@ -30,8 +30,11 @@ export default {
         levelC: '#7856A6',
       },
       fontFamily: {
-        display: ['Sora', 'sans-serif'],
-        body: ['Inter', 'sans-serif'],
+        // Single primary family (Plus Jakarta Sans) for display + body.
+        // Hierarchy is carried by weight/size (font-display classes keep
+        // their meaning); verified to include Uzbek Oʻ/Gʻ (U+02BB).
+        display: ['"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+        body: ['"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
       },
       boxShadow: {
         card: '0 1px 2px rgba(27, 36, 48, 0.06), 0 1px 3px rgba(27, 36, 48, 0.08)',

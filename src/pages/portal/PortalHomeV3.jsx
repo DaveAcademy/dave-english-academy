@@ -337,13 +337,13 @@ export default function PortalHomeV3() {
 
       {/* ── Premium hero ─────────────────────────────────────────────── */}
       <div
-        className="mb-6 overflow-hidden rounded-[20px] border border-ink/[0.06] bg-white shadow-[0_2px_8px_rgba(27,36,48,0.04),0_8px_24px_rgba(27,36,48,0.06)]"
+        className="mb-4 sm:mb-6 overflow-hidden rounded-[20px] border border-ink/[0.06] bg-white shadow-[0_2px_8px_rgba(27,36,48,0.04),0_8px_24px_rgba(27,36,48,0.06)]"
         style={{ animation: 'fadeIn 0.55s ease-out both' }}
       >
         {/* hairline brand accent */}
         <div className="h-[3px] w-full bg-brand-500" aria-hidden="true" />
         {/* greeting + identity row */}
-        <div className="px-5 pb-4 pt-5 sm:px-6 sm:pt-6">
+        <div className="px-4 pb-4 pt-4 sm:px-6 sm:pt-6">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
               <p className="font-display text-[22px] font-bold leading-none tracking-tight text-ink sm:text-[26px]">
@@ -388,7 +388,7 @@ export default function PortalHomeV3() {
 
           {/* Level-up celebration — restrained, session-level, no duplicate on refresh */}
           {xpLevelUp != null && (
-            <div className="mx-5 mb-4 flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white p-4 shadow-sm sm:mx-6 motion-safe:animate-[fadeIn_0.3s_ease-out]">
+            <div className="mx-4 mb-4 flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white p-3 shadow-sm sm:mx-6 motion-safe:animate-[fadeIn_0.3s_ease-out]">
               <div>
                 <p className="text-xs font-bold uppercase tracking-wide text-amber-700">{t('portal:mpLevelUpTitle')}</p>
                 <p className="mt-0.5 font-display text-sm font-bold text-ink">{t('portal:mpLevelUpBody', { level: xpLevelUp, xp: xpProgress?.total_xp ?? '' })}</p>
@@ -398,7 +398,7 @@ export default function PortalHomeV3() {
           )}
           {/* XP Progression — authoritative_level, progress toward next, remaining */}
           {xpProgress && (
-            <div className="mx-5 mb-4 rounded-xl border border-violet-100 bg-gradient-to-br from-violet-50 to-white p-4 shadow-sm sm:mx-6">
+            <div className="mx-4 mb-4 rounded-xl border border-violet-100 bg-gradient-to-br from-violet-50 to-white p-3 shadow-sm sm:mx-6">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5">
                   <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-600 text-xs font-bold text-white">Lv{xpProgress.level}</span>
@@ -429,7 +429,7 @@ export default function PortalHomeV3() {
         {/* Today's Learning + Next Goal */}
         <div className="grid gap-0 border-t border-ink/[0.06] sm:grid-cols-[1.15fr_1fr]">
           {/* Today's Learning — visually obvious */}
-          <div className="border-b border-ink/[0.06] p-5 sm:border-b-0 sm:border-r sm:p-6" style={{ animation: 'slideUp 0.5s ease-out 0.12s both' }}>
+          <div className="border-b border-ink/[0.06] p-4 sm:border-b-0 sm:border-r sm:p-6" style={{ animation: 'slideUp 0.5s ease-out 0.12s both' }}>
             <div className="mb-3 flex items-center gap-2">
               <span className="h-6 w-0.5 rounded-full bg-brand-500" aria-hidden="true" />
               <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-ink/40">{t('v3TodaysLearning')}</p>
@@ -490,7 +490,7 @@ export default function PortalHomeV3() {
           </div>
 
           {/* Next Goal — prominent */}
-          <div className="bg-paper/60 p-5 sm:p-6" style={{ animation: 'slideUp 0.5s ease-out 0.2s both' }}>
+          <div className="bg-paper/60 p-4 sm:p-6" style={{ animation: 'slideUp 0.5s ease-out 0.2s both' }}>
             <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-ink/40">{t('v3NextGoalLabel')}</p>
             {nextLesson ? (
               <>
@@ -542,7 +542,7 @@ export default function PortalHomeV3() {
         return (
           <Link
             to={action.to}
-            className="mb-6 flex items-center gap-3 rounded-2xl border border-brand-200 bg-gradient-to-r from-brand-600 to-brand-500 px-4 py-4 shadow-card transition-all hover:shadow-md hover:-translate-y-px active:translate-y-0 active:scale-[0.98] sm:px-5"
+            className="mb-4 sm:mb-6 flex items-center gap-3 rounded-2xl border border-brand-200 bg-gradient-to-r from-brand-600 to-brand-500 px-4 py-4 shadow-card transition-all hover:shadow-md hover:-translate-y-px active:translate-y-0 active:scale-[0.98] sm:px-5"
           >
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15 text-xl backdrop-blur-sm" aria-hidden>{icons[action.key] || '⭐'}</span>
             <div className="min-w-0 flex-1">
@@ -564,7 +564,7 @@ export default function PortalHomeV3() {
           .filter((e) => isExamUpcoming(e))
           .sort((a, b) => startOf(a) - startOf(b));
         return (
-          <div className="mb-6 overflow-hidden rounded-2xl border border-ink/[0.06] bg-white shadow-card">
+          <div className="mb-4 sm:mb-6 overflow-hidden rounded-2xl border border-ink/[0.06] bg-white shadow-card">
             <div className="flex items-center justify-between gap-2 px-4 pt-4 sm:px-5">
               <p className="flex items-center gap-2 text-sm font-bold text-ink">
                 <CalendarClock size={16} className="text-brand-600" aria-hidden="true" />
@@ -629,7 +629,7 @@ export default function PortalHomeV3() {
 
       {/* ── Daily missions + Streak + Pet + Achievements strip (supplementary, fail-silent) ── */}
       {(dailyMissions !== null || learningStreak !== null || petProgress || (achievements && achievements.length > 0)) && (
-        <div className="mb-6 grid gap-3 sm:grid-cols-2">
+        <div className="mb-4 sm:mb-6 grid gap-3 sm:grid-cols-2">
           {dailyMissions !== null && (
             <div className="rounded-2xl border border-ink/[0.06] bg-white p-4 shadow-card">
               <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-ink/40"><Target size={12} /> {t('portal:mpTodaysMissions')}</p>
@@ -682,7 +682,7 @@ export default function PortalHomeV3() {
         </div>
       )}
 
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+      <div className="mb-4 sm:mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <div style={{ animation: 'slideUp 0.45s ease-out 0.28s both' }}>
           <StatCard label={t('nav:attendance')} value={stats.attendanceRate == null ? '—' : `${stats.attendanceRate}%`} trend={stats.attendanceTrend} tone="success" icon={CalendarClock} />
           {attendanceStatusValue && (
@@ -714,7 +714,7 @@ export default function PortalHomeV3() {
 
       <Link
         to={nextStep.to}
-        className="mb-6 flex items-center gap-3 rounded-xl border border-brand-100 bg-brand-50 px-4 py-3.5 shadow-card transition-colors hover:bg-brand-100/60"
+        className="mb-4 sm:mb-6 flex items-center gap-3 rounded-xl border border-brand-100 bg-brand-50 px-4 py-3.5 shadow-card transition-colors hover:bg-brand-100/60"
       >
         <span className="text-2xl" aria-hidden="true">{nextStep.icon}</span>
         <div className="min-w-0 flex-1">
@@ -725,7 +725,7 @@ export default function PortalHomeV3() {
       </Link>
 
       {paymentStatus && (
-        <div className="mb-6">
+        <div className="mb-4 sm:mb-6">
           <Panel title={t('v3PaymentTitle')} icon={CreditCard}>
             {(() => {
               const nextDueText = formatDateOnly(paymentStatus.next_due_date, dateLocale);
@@ -809,12 +809,12 @@ export default function PortalHomeV3() {
         </div>
       )}
 
-      <div className="mb-6">
+      <div className="mb-4 sm:mb-6">
         <SectionLabel>{t('quickActionsLabel')}</SectionLabel>
         <QuickActions actions={quickActions} />
       </div>
 
-      <div className="mb-6">
+      <div className="mb-4 sm:mb-6">
         <Panel title={t('v3SmartInsightsTitle')}>
           <div className="space-y-2">
             {insights.map((ins, i) => (

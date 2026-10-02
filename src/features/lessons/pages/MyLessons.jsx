@@ -186,7 +186,7 @@ export default function MyLessons() {
       {next ? (
         <Link
           to={`/my-lessons/${next.id}`}
-          className="group mb-5 flex items-center gap-4 rounded-2xl bg-gradient-to-r from-brand-600 to-brand-500 p-4 shadow-card transition-transform hover:scale-[1.01] sm:p-5"
+          className="group mb-4 flex items-center gap-4 rounded-2xl bg-gradient-to-r from-brand-600 to-brand-500 p-3 shadow-card transition-transform hover:scale-[1.01] sm:mb-5 sm:p-5"
         >
           <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-white/15 text-2xl" aria-hidden="true">
             =���
@@ -205,7 +205,7 @@ export default function MyLessons() {
           <ArrowRight size={22} className="flex-shrink-0 text-white/80 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
         </Link>
       ) : myLessons.length > 0 ? (
-        <div className="mb-5 flex items-center gap-3 rounded-2xl border border-active/20 bg-active/5 p-4 shadow-card sm:p-5">
+        <div className="mb-4 flex items-center gap-3 rounded-2xl border border-active/20 bg-active/5 p-3 shadow-card sm:mb-5 sm:p-5">
           <span className="text-2xl" aria-hidden="true">=���</span>
           <div>
             <p className="font-display text-base font-bold text-ink">{t('allCaughtUp')}</p>
@@ -294,7 +294,7 @@ export default function MyLessons() {
               )}
             </div>
           ) : (
-            <div className="mt-4 space-y-4">
+            <div className="mt-4 space-y-3 sm:space-y-4">
               {groups.map((group) => (
                 <MonthGroup key={group.month} label={group.label} count={group.items.length} forceOpen={filtersActive}>
                   {group.items.map((l) => (

@@ -697,8 +697,8 @@ export default function Payments() {
 
   return (
     <div>
-      <header className="mb-4">
-        <h1 className="font-display text-2xl font-bold text-ink">{t('payments:title')}</h1>
+      <header className="mb-3 sm:mb-4">
+        <h1 className="font-display text-xl font-bold text-ink sm:text-2xl">{t('payments:title')}</h1>
         <p className="mt-1 text-sm text-ink/50">{t('payments:subtitle')}</p>
       </header>
 
@@ -709,7 +709,7 @@ export default function Payments() {
       {exportError && <div className="mb-4 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{exportError}</div>}
 
       {/* Payment Overview — premium, compact, analytics-only, same authoritative source (newStatuses + feeForStudent) */}
-      <section aria-label={t('payments:overviewTitle')} className="mb-4">
+      <section aria-label={t('payments:overviewTitle')} className="mb-3 sm:mb-4">
         <div className="mb-2 flex items-center justify-between gap-2">
           <h2 className="text-[11px] font-bold uppercase tracking-widest text-ink/40">{t('payments:overviewTitle')}</h2>
           <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-ink/50 shadow-sm border border-ink/5">
@@ -717,27 +717,27 @@ export default function Payments() {
           </span>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-4">
           {/* Total Collected */}
-          <div className="rounded-xl border border-ink/[0.06] bg-white p-4 shadow-card">
+          <div className="rounded-xl border border-ink/[0.06] bg-white p-3 shadow-card sm:p-4">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-ink/40">{t('payments:overviewTotalCollected')}</p>
-            <p className="mt-1.5 font-display text-[17px] font-bold leading-none tracking-tight text-ink">{formatUZS(overview.collected)}</p>
+            <p className="mt-1 font-display text-[15px] font-bold leading-none tracking-tight text-ink sm:mt-1.5 sm:text-[17px]">{formatUZS(overview.collected)}</p>
             <p className="mt-1 text-xs font-medium text-ink/50">{t('payments:overviewCollectedHint')}</p>
-            <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-ink/[0.06]">
+            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-ink/[0.06] sm:mt-3">
               <div className="h-full rounded-full bg-active transition-all" style={{ width: `${overview.total ? overview.paidPct : 0}%` }} />
             </div>
-            <p className="mt-1.5 text-[11px] text-ink/40">{overview.paid} / {overview.total} · {overview.paidPct}%</p>
+            <p className="mt-1 text-[11px] sm:mt-1.5 text-ink/40">{overview.paid} / {overview.total} · {overview.paidPct}%</p>
           </div>
 
           {/* Remaining Amount */}
-          <div className="rounded-xl border border-ink/[0.06] bg-white p-4 shadow-card">
+          <div className="rounded-xl border border-ink/[0.06] bg-white p-3 shadow-card sm:p-4">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-ink/40">{t('payments:overviewRemainingAmount')}</p>
-            <p className="mt-1.5 font-display text-[17px] font-bold leading-none tracking-tight text-ink">{formatUZS(overview.remainingAmount)}</p>
+            <p className="mt-1 font-display text-[15px] font-bold leading-none tracking-tight text-ink sm:mt-1.5 sm:text-[17px]">{formatUZS(overview.remainingAmount)}</p>
             <p className="mt-1 text-xs font-medium text-ink/50">{t('payments:overviewRemainingHint')}</p>
-            <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-ink/[0.06]">
+            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-ink/[0.06] sm:mt-3">
               <div className="h-full rounded-full bg-inactive/70 transition-all" style={{ width: `${overview.total ? overview.remainingPct : 0}%` }} />
             </div>
-            <p className="mt-1.5 text-[11px] text-ink/40">{overview.remaining} · {overview.remainingPct}%</p>
+            <p className="mt-1 text-[11px] sm:mt-1.5 text-ink/40">{overview.remaining} · {overview.remainingPct}%</p>
           </div>
 
           {/* Students Paid */}
@@ -745,17 +745,17 @@ export default function Payments() {
             type="button"
             onClick={() => setStatusFilter((prev) => (prev === 'paid' ? 'all' : 'paid'))}
             aria-label={t('payments:overviewPaidFilterHint')}
-            className={`rounded-xl border bg-white p-4 text-left shadow-card transition-colors hover:bg-ink/[0.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 ${statusFilter === 'paid' ? 'border-brand-200 ring-1 ring-brand-500/20 bg-brand-50/30' : 'border-ink/[0.06]'}`}
+            className={`rounded-xl border bg-white p-3 text-left shadow-card transition-colors hover:bg-ink/[0.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 sm:p-4 ${statusFilter === 'paid' ? 'border-brand-200 ring-1 ring-brand-500/20 bg-brand-50/30' : 'border-ink/[0.06]'}`}
           >
             <p className="text-[11px] font-semibold uppercase tracking-wide text-ink/40">{t('payments:overviewStudentsPaid')}</p>
-            <p className="mt-1.5 font-display text-[17px] font-bold leading-none tracking-tight text-ink">
+            <p className="mt-1 font-display text-[15px] font-bold leading-none tracking-tight text-ink sm:mt-1.5 sm:text-[17px]">
               {overview.total > 0 ? t('payments:overviewPaidFraction', { paid: overview.paid, total: overview.total }) : t('payments:overviewNoStudents')}
             </p>
             <p className="mt-1 text-xs font-medium text-active">{t('payments:overviewPaidPercent', { percent: overview.paidPct })}</p>
-            <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-ink/[0.06]">
+            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-ink/[0.06] sm:mt-3">
               <div className="h-full rounded-full bg-active transition-all" style={{ width: `${overview.paidPct}%` }} />
             </div>
-            <p className="mt-1.5 text-[11px] font-medium text-ink/40">{t('payments:overviewClickToFilter', { label: t('payments:filterPaid') })}</p>
+            <p className="mt-1 hidden text-[11px] font-medium text-ink/40 sm:mt-1.5 sm:block">{t('payments:overviewClickToFilter', { label: t('payments:filterPaid') })}</p>
           </button>
 
           {/* Students Remaining */}
@@ -763,27 +763,27 @@ export default function Payments() {
             type="button"
             onClick={() => setStatusFilter((prev) => (prev === 'unpaid' ? 'all' : 'unpaid'))}
             aria-label={t('payments:overviewRemainingFilterHint')}
-            className={`rounded-xl border bg-white p-4 text-left shadow-card transition-colors hover:bg-ink/[0.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 ${statusFilter === 'unpaid' ? 'border-brand-200 ring-1 ring-brand-500/20 bg-brand-50/30' : 'border-ink/[0.06]'}`}
+            className={`rounded-xl border bg-white p-3 text-left shadow-card transition-colors hover:bg-ink/[0.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 sm:p-4 ${statusFilter === 'unpaid' ? 'border-brand-200 ring-1 ring-brand-500/20 bg-brand-50/30' : 'border-ink/[0.06]'}`}
           >
             <p className="text-[11px] font-semibold uppercase tracking-wide text-ink/40">{t('payments:overviewStudentsRemaining')}</p>
-            <p className="mt-1.5 font-display text-[17px] font-bold leading-none tracking-tight text-ink">
+            <p className="mt-1 font-display text-[15px] font-bold leading-none tracking-tight text-ink sm:mt-1.5 sm:text-[17px]">
               {overview.total > 0 ? t('payments:overviewRemainingCount', { count: overview.remaining }) : t('payments:overviewNoStudents')}
             </p>
             <p className="mt-1 text-xs font-medium text-inactive">{t('payments:overviewRemainingPercent', { percent: overview.remainingPct })}</p>
-            <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-ink/[0.06]">
+            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-ink/[0.06] sm:mt-3">
               <div className="h-full rounded-full bg-inactive transition-all" style={{ width: `${overview.remainingPct}%` }} />
             </div>
-            <p className="mt-1.5 text-[11px] font-medium text-ink/40">{t('payments:overviewClickToFilter', { label: t('payments:filterOverdue') })}</p>
+            <p className="mt-1 hidden text-[11px] font-medium text-ink/40 sm:mt-1.5 sm:block">{t('payments:overviewClickToFilter', { label: t('payments:filterOverdue') })}</p>
           </button>
         </div>
 
         {/* Group Summary */}
         <div className="mt-3">
-          <div className="mb-2 flex items-center gap-2">
+          <div className="mb-1.5 flex items-center gap-2 sm:mb-2">
             <h3 className="text-[11px] font-bold uppercase tracking-widest text-ink/40">{t('payments:overviewGroupTitle')}</h3>
             <span className="h-px flex-1 bg-ink/[0.06]" aria-hidden="true" />
           </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-1.5 sm:gap-3 lg:grid-cols-4">
             {overview.groups.map((g) => {
               const isActive = level === g.level;
               const pct = g.pct;
@@ -793,7 +793,7 @@ export default function Payments() {
                   type="button"
                   onClick={() => setLevel((prev) => (prev === g.level ? '' : g.level))}
                   aria-label={t('payments:overviewClickToFilter', { label: `Level ${levelToken(g.level)}` })}
-                  className={`rounded-xl border p-3 text-left shadow-card transition-colors hover:bg-ink/[0.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 ${isActive ? 'border-brand-200 bg-brand-50/40 ring-1 ring-brand-500/15' : 'border-ink/[0.06] bg-white'}`}
+                  className={`rounded-xl border p-2 text-left shadow-card transition-colors hover:bg-ink/[0.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 sm:p-3 ${isActive ? 'border-brand-200 bg-brand-50/40 ring-1 ring-brand-500/15' : 'border-ink/[0.06] bg-white'}`}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-bold leading-none ${g.level === 'A' ? 'bg-levelA/10 text-levelA border-levelA/20' : g.level === 'A1' ? 'bg-levelA1/10 text-levelA1 border-levelA1/20' : g.level === 'B' ? 'bg-levelB/10 text-levelB border-levelB/20' : 'bg-levelC/10 text-levelC border-levelC/20'}`}>
@@ -801,12 +801,12 @@ export default function Payments() {
                     </span>
                     <span className={`text-[11px] font-semibold ${pct === 100 ? 'text-active' : pct >= 50 ? 'text-ink/60' : 'text-inactive'}`}>{pct}%</span>
                   </div>
-                  <p className="mt-2.5 text-sm font-bold leading-none text-ink">{t('payments:overviewGroupPaid', { paid: g.paid, total: g.total })}</p>
+                  <p className="mt-1.5 sm:mt-2.5 text-sm font-bold leading-none text-ink">{t('payments:overviewGroupPaid', { paid: g.paid, total: g.total })}</p>
                   <p className="mt-1 text-xs text-ink/50">{t('payments:overviewGroupRemaining', { count: g.remaining })}</p>
-                  <p className="mt-2 truncate text-[11px] font-medium leading-tight text-ink/60">
+                  <p className="mt-1.5 truncate text-[11px] font-medium leading-tight text-ink/60 sm:mt-2">
                     {formatUZS(g.collected)} <span className="text-ink/30">/</span> {formatUZS(g.expected)}
                   </p>
-                  <div className="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-ink/[0.06]">
+                  <div className="mt-1.5 sm:mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-ink/[0.06]">
                     <div
                       className={`h-full rounded-full transition-all ${g.level === 'A' ? 'bg-levelA' : g.level === 'A1' ? 'bg-levelA1' : g.level === 'B' ? 'bg-levelB' : 'bg-levelC'}`}
                       style={{ width: `${pct}%` }}
@@ -819,7 +819,7 @@ export default function Payments() {
         </div>
       </section>
 
-      <div className="mb-3 flex flex-wrap gap-2 rounded-xl bg-white p-3 shadow-card">
+      <div className="mb-3 flex flex-wrap gap-2 rounded-xl bg-white p-2.5 shadow-card sm:p-3">
         <span className="rounded-full bg-active/10 px-3 py-1 text-xs font-semibold text-active">{t('payments:summaryPaid', { count: summaryCounts.paid })}</span>
         <span className="rounded-full bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-700">{t('payments:summaryDueSoon', { count: summaryCounts.due_soon })}</span>
         <span className="rounded-full bg-inactive/10 px-3 py-1 text-xs font-semibold text-inactive">{t('payments:summaryOverdue', { count: summaryCounts.overdue })}</span>
@@ -876,7 +876,7 @@ export default function Payments() {
         ))}
       </div>
 
-      <div className="mb-3 flex flex-wrap items-center gap-2 rounded-xl bg-white p-3 shadow-card">
+      <div className="mb-3 flex flex-wrap items-center gap-2 rounded-xl bg-white p-2.5 shadow-card sm:p-3">
         <label className="flex items-center gap-2 text-xs font-semibold text-ink cursor-pointer">
           <input
             type="checkbox"

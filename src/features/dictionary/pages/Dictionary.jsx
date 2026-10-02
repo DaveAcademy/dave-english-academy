@@ -171,7 +171,7 @@ function LearnTab({ me, t }) {
 
 function LearnWordCard({ word, t, showUzbek }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-ink/[0.06] bg-white p-4 shadow-card">
+    <div className="overflow-hidden rounded-xl border border-ink/[0.06] bg-white p-3 shadow-card sm:p-4">
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
         <h3 className="break-words font-display text-lg font-bold text-ink">{word.english}</h3>
         {word.part_of_speech && <Pill text={word.part_of_speech} />}
