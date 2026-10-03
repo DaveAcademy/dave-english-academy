@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search, Plus, Upload, Pencil, Trash2, ChevronUp, ChevronDown, ArrowUpDown, MessageCircle, MessageCircleOff, Trophy } from 'lucide-react';
+import { Search, Plus, Upload, Pencil, Trash2, ChevronUp, ChevronDown, ArrowUpDown, MessageCircle, MessageCircleOff, Trophy, KeyRound } from 'lucide-react';
 import { useAcademy } from '../../../lib/AcademyDataContext';
 import { useAuth } from '../../../lib/AuthContext';
 import { LEVELS } from '../../../lib/levels';
@@ -12,7 +12,7 @@ import ConfirmDialog from '../../../components/ConfirmDialog';
 import ImportModal from '../../../components/ImportModal';
 import StudentAchievementsModal from '../../../components/StudentAchievementsModal';
 import { formatUZS } from '../../../utils/format';
-import { listAllStudentLessonProgress, listStudentLoginInfo } from '../../../lib/storageBridge';
+import { listAllStudentLessonProgress, listStudentLoginInfo, adminResetStudentPassword } from '../../../lib/storageBridge';
 import { buildStudentProgressRows } from '../../../lib/progressAnalytics';
 import { buildWebsiteEngagementRows, WEBSITE_STATUS_META } from '../../../lib/websiteEngagement';
 
@@ -53,6 +53,9 @@ export default function Students() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
   const [deletingStudent, setDeletingStudent] = useState(null);
+  const [resettingStudent, setResettingStudent] = useState(null);
+  const [resetBusy, setResetBusy] = useState(false);
+  const [resetResult, setResetResult] = useState(null); // { name, tempPassword } | { name, error }
   const [achievementsStudent, setAchievementsStudent] = useState(null);
   const [importOpen, setImportOpen] = useState(false);
 
@@ -104,6 +107,19 @@ export default function Students() {
   const handleDelete = async () => {
     await removeStudent(deletingStudent.id);
     setDeletingStudent(null);
+  };
+
+  const handleResetConfirm = async () => {
+    setResetBusy(true);
+    try {
+      const tempPassword = await adminResetStudentPassword(resettingStudent.id);
+      setResetResult({ name: resettingStudent.real_name, tempPassword });
+    } catch (e) {
+      setResetResult({ name: resettingStudent.real_name, error: e.message || t('resetPasswordFailed', { defaultValue: 'Could not reset the password. Please try again.' }) });
+    } finally {
+      setResetBusy(false);
+      setResettingStudent(null);
+    }
   };
 
   const columns = [
@@ -277,6 +293,13 @@ export default function Students() {
                             >
                               {t('common:edit')}
                             </button>
+                            <button
+                              onClick={() => setResettingStudent(s)}
+                              title={t('resetPasswordTitle', { defaultValue: 'Reset password' })}
+                              className="rounded-md px-2 py-1 text-xs font-semibold text-ink/50 hover:bg-ink/5"
+                            >
+                              {t('resetPasswordAction', { defaultValue: 'Reset password' })}
+                            </button>
                             <button onClick={() => setDeletingStudent(s)} className="rounded-md px-2 py-1 text-xs font-semibold text-inactive hover:bg-inactive/10">
                               {t('common:delete')}
                             </button>
@@ -319,6 +342,9 @@ export default function Students() {
                       </button>
                       <button onClick={() => setDeletingStudent(s)} className="rounded-md p-1.5 text-inactive active:bg-inactive/10">
                         <Trash2 size={15} />
+                      </button>
+                      <button onClick={() => setResettingStudent(s)} className="rounded-md p-1.5 text-ink/50 active:bg-ink/5" aria-label="Reset password">
+                        <KeyRound size={15} />
                       </button>
                     </div>
                   )}
@@ -375,6 +401,52 @@ export default function Students() {
           onConfirm={handleDelete}
           onCancel={() => setDeletingStudent(null)}
         />
+      )}
+
+      {resettingStudent && (
+        <ConfirmDialog
+          title={t('resetPasswordTitle', { defaultValue: 'Reset password' })}
+          message={t('resetPasswordMessage', { name: resettingStudent.real_name, defaultValue: 'Set a new temporary password for {{name}}? They will need to change it after signing in.' })}
+          confirmLabel={t('resetPasswordConfirm', { defaultValue: 'Reset' })}
+          busy={resetBusy}
+          onConfirm={handleResetConfirm}
+          onCancel={() => { if (!resetBusy) setResettingStudent(null); }}
+        />
+      )}
+
+      {resetResult && (
+        <div className="fixed inset-0 z-30 flex items-center justify-center bg-ink/40 p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+            <h2 className="font-display text-lg font-bold text-ink">
+              {resetResult.error
+                ? t('resetPasswordFailedTitle', { defaultValue: 'Reset failed' })
+                : t('resetPasswordDoneTitle', { defaultValue: 'Temporary password' })}
+            </h2>
+            {resetResult.error ? (
+              <p className="mt-2 text-sm text-ink/60">{resetResult.error}</p>
+            ) : (
+              <>
+                <p className="mt-2 text-sm text-ink/60">
+                  {t('resetPasswordDoneFor', { name: resetResult.name, defaultValue: 'New temporary password for {{name}}:' })}
+                </p>
+                <p className="mt-2 rounded-lg bg-ink/5 px-3 py-2 text-center font-mono text-base font-bold tracking-wide text-ink">
+                  {resetResult.tempPassword}
+                </p>
+                <p className="mt-2 text-xs font-medium text-inactive">
+                  {t('resetPasswordWarning', { defaultValue: 'Give it to the student securely. It is shown only once and will not be saved anywhere.' })}
+                </p>
+              </>
+            )}
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => setResetResult(null)}
+                className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
+              >
+                {t('common:done', { defaultValue: 'Done' })}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {achievementsStudent && (
