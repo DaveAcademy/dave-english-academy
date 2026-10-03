@@ -73,6 +73,19 @@ export async function deleteStudent(id) {
   return true;
 }
 
+// Admin-assisted password reset for a locked-out student. Delegates to an
+// Edge Function which verifies the caller is an admin server-side, sets a
+// random temporary password via service role, and returns it exactly once.
+// The caller must relay it to the student and drop it - it is never stored.
+export async function adminResetStudentPassword(id) {
+  const { data, error } = await supabase.functions.invoke('admin-reset-password', {
+    body: { student_id: id },
+  });
+  if (error) throw error;
+  if (data?.error) throw new Error(data.error);
+  return data.temp_password;
+}
+
 // ---------- Points ledger ----------
 // students.points is now a database-maintained cache (see migrations
 // 0019/0020): every award inserts a point_transactions row, and a
