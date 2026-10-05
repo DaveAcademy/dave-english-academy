@@ -1,11 +1,12 @@
-// ThemeSettings.jsx (admin only, inside Appearance)
-// Global Light / Dark / System website theme. Persists to
-// app_settings.website_theme and applies instantly via lib/siteTheme.js.
-
+// ThemeSettings.jsx (inside Appearance)
+// mode="global" (admin): site-wide default in app_settings.website_theme.
+// mode="personal" (teacher/student): per-account override in profiles.theme
+// (NULL = inherit the site default), applied instantly via lib/siteTheme.js.
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Sun, Moon, MonitorSmartphone } from 'lucide-react';
-import { THEMES, DEFAULT_THEME, getSiteTheme, setSiteTheme } from '../../../lib/siteTheme';
+import { THEMES, DEFAULT_THEME, getSiteTheme, setSiteTheme, getPersonalTheme, setPersonalTheme } from '../../../lib/siteTheme';
+import { useAuth } from '../../../lib/AuthContext';
 
 const OPTIONS = [
   { value: 'light', Icon: Sun },
@@ -13,16 +14,26 @@ const OPTIONS = [
   { value: 'system', Icon: MonitorSmartphone },
 ];
 
-export default function ThemeSettings() {
+export default function ThemeSettings({ mode = 'global' }) {
   const { t } = useTranslation(['common', 'settings']);
+  const { session } = useAuth();
+  const personal = mode === 'personal';
   const [theme, setTheme] = useState(DEFAULT_THEME);
+  const [inherited, setInherited] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
   useEffect(() => {
-    getSiteTheme().then(setTheme);
-  }, []);
+    if (personal) {
+      Promise.all([getPersonalTheme(session?.user?.id), getSiteTheme()]).then(([mine, site]) => {
+        setInherited(mine == null);
+        setTheme(mine ?? site);
+      });
+    } else {
+      getSiteTheme().then(setTheme);
+    }
+  }, [personal, session?.user?.id]);
 
   const handleSelect = async (value) => {
     if (value === theme || saving) return;
@@ -30,9 +41,16 @@ export default function ThemeSettings() {
     setMessage('');
     setError('');
     try {
-      const applied = await setSiteTheme(value);
+      const applied = personal
+        ? await setPersonalTheme(session?.user?.id, value)
+        : await setSiteTheme(value);
       setTheme(applied);
-      setMessage(t('settings:themeSaved', { defaultValue: 'Theme applied to the entire site.' }));
+      setInherited(false);
+      setMessage(
+        personal
+          ? t('settings:themeSavedPersonal', { defaultValue: 'Your theme preference was saved.' })
+          : t('settings:themeSaved', { defaultValue: 'Theme applied to the entire site.' }),
+      );
     } catch {
       setError(t('settings:themeSaveFailed', { defaultValue: 'Could not save the theme. Please try again.' }));
     } finally {
@@ -44,7 +62,12 @@ export default function ThemeSettings() {
     <div className="mt-4 border-t border-ink/[0.06] pt-4">
       <p className="text-sm font-bold text-ink">{t('settings:theme', { defaultValue: 'Theme' })}</p>
       <p className="mt-0.5 text-xs text-ink/50">
-        {t('settings:themeDesc', { defaultValue: 'Light, dark, or follow this device. Applies to admin, teachers and students.' })}
+        {personal
+          ? t('settings:themeDescPersonal', { defaultValue: 'Light, dark, or follow this device. Applies to your account.' })
+          : t('settings:themeDesc', { defaultValue: 'Light, dark, or follow this device. Applies to admin, teachers and students.' })}
+        {personal && inherited && (
+          <> {t('settings:themeInherited', { defaultValue: 'Currently using the site default.' })}</>
+        )}
       </p>
       <div className="mt-2 grid grid-cols-3 gap-2" role="radiogroup" aria-label={t('settings:theme', { defaultValue: 'Theme' })}>
         {OPTIONS.map(({ value, Icon }) => {

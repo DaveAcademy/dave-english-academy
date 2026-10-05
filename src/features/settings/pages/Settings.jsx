@@ -62,19 +62,17 @@ export default function Settings() {
       {message && <div className="mb-4 rounded-lg border border-brand-500/20 bg-brand-50 px-4 py-3 text-sm text-brand-700">{message}</div>}
 
       <div className="space-y-3">
-        {isAdmin && (
-          <SettingsSection
-            id="appearance"
-            icon={Palette}
-            title={t('settings:appearance', { defaultValue: 'Appearance' })}
-            subtitle={t('settings:appearanceDesc', { defaultValue: 'Website font and branding' })}
-            open={openSection === 'appearance'}
-            onToggle={toggleSection}
-          >
-            <TypographySettings />
-            <ThemeSettings />
-          </SettingsSection>
-        )}
+        <SettingsSection
+          id="appearance"
+          icon={Palette}
+          title={t('settings:appearance', { defaultValue: 'Appearance' })}
+          subtitle={t('settings:appearanceDesc', { defaultValue: 'Website font and branding' })}
+          open={openSection === 'appearance'}
+          onToggle={toggleSection}
+        >
+          {isAdmin && <TypographySettings />}
+          <ThemeSettings mode={isAdmin ? 'global' : 'personal'} />
+        </SettingsSection>
 
         <SettingsSection
           id="account"

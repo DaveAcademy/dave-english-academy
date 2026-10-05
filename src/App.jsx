@@ -8,6 +8,7 @@ import { Sidebar, AdminMobileDrawer } from './shared/components/Nav';
 import { PortalSidebar, PortalBottomNav } from './shared/components/PortalNav';
 import { AcademyDataProvider, useAcademy } from './lib/AcademyDataContext';
 import { AuthProvider, useAuth } from './lib/AuthContext';
+import { applyForUser } from './lib/siteTheme';
 import AuthGate from './features/auth/components/AuthGate';
 import RouteErrorBoundary from './shared/components/RouteErrorBoundary';
 import { syncLanguageForRole } from './i18n';
@@ -102,9 +103,17 @@ export default function App() {
 }
 
 function AppShell() {
-  const { session, role } = useAuth();
+  const { session, role, profile } = useAuth();
   const isStudent = role === 'student';
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  // Re-resolve the effective theme (personal override ?? site default) for
+  // whoever just signed in; falls back to the site default on sign-out when
+  // this shell unmounts, so one user's choice never leaks into the next.
+  useEffect(() => {
+    applyForUser(profile?.theme ?? null);
+    return () => applyForUser(null);
+  }, [profile?.id, profile?.theme]);
 
   // AuthGate only renders AppShell once the profile (and therefore role)
   // has resolved, so this is the first point role is definitively known -
