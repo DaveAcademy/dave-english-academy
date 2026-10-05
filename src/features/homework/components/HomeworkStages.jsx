@@ -30,14 +30,19 @@ const STAGE_META = {
   review: { icon: Sparkles, iconClass: 'text-violet-500', label: 'Review' },
 };
 
-// Types the server auto-grader can grade from an answer key. Keyless/
-// subjective types never receive an automatic 1-100 grade.
+// Types the server auto-resolves. Deterministic types grade on keys;
+// score-neutral production (short_answer without targets,
+// sentence_creation, reading_comprehension) finalizes with 0 points and
+// never blocks submission. No manual review.
 const DETERMINISTIC_TYPES = new Set([
   'multiple_choice',
   'fill_blank',
   'translation',
   'matching',
   'ordering',
+  'short_answer',
+  'sentence_creation',
+  'reading_comprehension',
 ]);
 
 export function HomeworkStages({ homeworkId, studentId, focusStageKey, onFinalized, contextTitle }) {

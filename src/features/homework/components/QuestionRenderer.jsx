@@ -4,8 +4,10 @@
 //   multiple_choice: { selected_index } vs question_data.correct_index
 //   matching:        { pairs: [[leftIdx, rightIdx], ...] } (canonical order) vs correct_pairs
 //   fill_blank:      { answer } vs question_data.answer (case-insensitive)
-//   translation:     { answer } vs question_data.target_text (case-insensitive)
-//   sentence_creation / short_answer / reading_comprehension: stored, teacher-reviewed
+//   translation:     { answer } vs question_data.target_text OR any accepted_targets (normalized)
+//   short_answer:    { answer } vs accepted_targets when present (else score-neutral 0 pts)
+//   sentence_creation: { sentence } score-neutral 0 pts (required_words when defined)
+//   reading_comprehension: { answers: [{question_index, answer}] } score-neutral 0 pts
 // Grading display reads the SAVED answer row (top-level is_correct /
 // auto_graded columns) — never answer_data.is_correct, which does not exist.
 
