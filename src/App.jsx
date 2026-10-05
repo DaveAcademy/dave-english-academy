@@ -50,6 +50,9 @@ const MyRanking = lazy(() => import('./features/rankings/pages/MyRanking'));
 const OnlineTests = lazy(() => import('./features/onlineTests/pages/OnlineTests'));
 const OnlineTestRunner = lazy(() => import('./features/onlineTests/pages/OnlineTestRunner'));
 const AdminOnlineTestAnalytics = lazy(() => import('./features/onlineTests/pages/AdminOnlineTestAnalytics'));
+const IqBrainHub = lazy(() => import('./features/iqbrain/pages/IqBrainHub'));
+const IqChallengeRunner = lazy(() => import('./features/iqbrain/pages/IqChallengeRunner'));
+const IqHistory = lazy(() => import('./features/iqbrain/pages/IqHistory'));
 const MyCertificates = lazy(() => import('./features/certificates/pages/MyCertificates'));
 const PetCollection = lazy(() => import('./pages/portal/PetCollection'));
 // Avatar temporarily hidden (unfinished) - import kept for later restore.
@@ -158,6 +161,9 @@ function RoutedContent({ isStudent }) {
             <Route path="/my-exams" element={<MyExams />} />
             <Route path="/online-tests" element={<OnlineTests />} />
             <Route path="/online-tests/:testId" element={<OnlineTestRunner />} />
+            <Route path="/iq-brain" element={<IqBrainHub />} />
+            <Route path="/iq-brain/history" element={<IqHistory />} />
+            <Route path="/iq-brain/:attemptId" element={<IqChallengeRunner />} />
             <Route path="/my-homework" element={<MyHomework />} />
             <Route path="/my-lessons" element={<MyLessons />} />
             <Route path="/my-lessons/:id" element={<LessonHub />} />
