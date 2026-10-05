@@ -42,6 +42,8 @@
   "chooseAnswer": "Javobni tanlang",
   "typeAnswer": "Javobni kiriting",
   "rememberYourChoice": "Tayyor",
+  "promptEnLabel": "Inglizcha",
+  "promptUzLabel": "O'zbekcha",
   "challengeScore": "Vazifa balli",
   "percentLabel": "{{pct}}%",
   "correctCount": "{{total}} tadan {{correct}} ta to'g'ri",

@@ -16,6 +16,7 @@ export default function QuestionCard({ item, index, total, value, disabled, onCh
   const stimulus = (item.stimulus && typeof item.stimulus === 'object') ? item.stimulus : {};
   const prompt = (item.prompt && typeof item.prompt === 'object') ? item.prompt : {};
   const stem = prompt.stem || prompt.text || String(item.prompt || '');
+  const stemUz = typeof prompt.stem_uz === 'string' && prompt.stem_uz.trim() ? prompt.stem_uz : '';
   const sequence = Array.isArray(stimulus.sequence) ? stimulus.sequence : null;
   const revealMs = Number(stimulus.reveal_ms) > 0 ? Number(stimulus.reveal_ms) : 0;
   const memoryReveal = Boolean(sequence) && revealMs > 0;
@@ -65,7 +66,15 @@ export default function QuestionCard({ item, index, total, value, disabled, onCh
         </div>
       ) : null}
 
+      <p className="mb-1 text-[11px] font-bold uppercase tracking-wide text-ink/40">{t('promptEnLabel')}</p>
       <h2 className="mb-4 font-display text-lg font-semibold leading-snug text-ink sm:text-xl">{stem}</h2>
+
+      {stemUz ? (
+        <div className="mb-4 rounded-xl bg-ink/[0.03] px-3.5 py-2.5">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-ink/40">{t('promptUzLabel')}</p>
+          <p className="mt-0.5 text-sm font-medium leading-snug text-ink/70">{stemUz}</p>
+        </div>
+      ) : null}
 
       {isNumericEntry ? (
         <input

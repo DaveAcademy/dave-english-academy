@@ -42,6 +42,8 @@
   "chooseAnswer": "Choose an answer",
   "typeAnswer": "Type your answer",
   "rememberYourChoice": "Ready?",
+  "promptEnLabel": "English",
+  "promptUzLabel": "O'zbekcha",
   "challengeScore": "Challenge score",
   "percentLabel": "{{pct}}%",
   "correctCount": "{{correct}} of {{total}} correct",
