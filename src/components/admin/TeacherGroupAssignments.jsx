@@ -11,8 +11,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Users2 } from 'lucide-react';
 import { listTeachers, listTeacherGroupAssignments, addTeacherGroupAssignment, removeTeacherGroupAssignment } from '../../lib/db';
+import { LEVELS, levelToken } from '../../lib/levels';
 
-const LEVELS = ['A', 'B', 'C'];
 
 export default function TeacherGroupAssignments() {
   const [teachers, setTeachers] = useState(null);
@@ -80,7 +80,7 @@ export default function TeacherGroupAssignments() {
                 <th className="px-3 py-2">Teacher</th>
                 {LEVELS.map((lvl) => (
                   <th key={lvl} className="px-3 py-2 text-center">
-                    Level {lvl}
+                    Level {levelToken(lvl)}
                   </th>
                 ))}
               </tr>
@@ -103,7 +103,7 @@ export default function TeacherGroupAssignments() {
                           disabled={pending === key}
                           onChange={() => toggle(t.id, lvl)}
                           className="h-4 w-4 accent-brand-500 disabled:opacity-40"
-                          aria-label={`${t.full_name || t.email} - Level ${lvl}`}
+                          aria-label={`${t.full_name || t.email} - Level ${levelToken(lvl)}`}
                         />
                       </td>
                     );

@@ -1,0 +1,643 @@
+{
+  "generatedAt": "2026-08-07T14:03:55.511Z",
+  "scope": "lessons 30-100, Dave English Academy",
+  "curriculumLessonsInRange": [
+    {
+      "id": 21,
+      "lesson_number": 34,
+      "title": "Prepositions"
+    },
+    {
+      "id": 22,
+      "lesson_number": 44,
+      "title": "How Many / How Much"
+    },
+    {
+      "id": 23,
+      "lesson_number": 56,
+      "title": "My Weekend"
+    },
+    {
+      "id": 24,
+      "lesson_number": 61,
+      "title": "Holidays and Celebrations"
+    },
+    {
+      "id": 25,
+      "lesson_number": 71,
+      "title": "Body Parts"
+    },
+    {
+      "id": 26,
+      "lesson_number": 72,
+      "title": "Health Problems"
+    },
+    {
+      "id": 27,
+      "lesson_number": 73,
+      "title": "At the Doctor's"
+    },
+    {
+      "id": 37,
+      "lesson_number": 30,
+      "title": "Furniture"
+    }
+  ],
+  "lessonsRowsInRange": [
+    {
+      "id": 54,
+      "curriculum_lesson_id": 23,
+      "topic": "My Weekend",
+      "pdf_name": "Lesson_056_My_Weekend.pdf"
+    },
+    {
+      "id": 53,
+      "curriculum_lesson_id": 21,
+      "topic": "Prepositions",
+      "pdf_name": "Lesson_034_Prepositions.pdf"
+    },
+    {
+      "id": 55,
+      "curriculum_lesson_id": 27,
+      "topic": "At the Doctor's",
+      "pdf_name": "Lesson_073_At_the_Doctors.pdf"
+    },
+    {
+      "id": 83,
+      "curriculum_lesson_id": 37,
+      "topic": "Furniture",
+      "pdf_name": null
+    }
+  ],
+  "conflictVocab": {
+    "30": {
+      "lessonId": 83,
+      "rows": [
+        {
+          "id": "eaa0a7e8-9cbb-4296-96e4-89a252cc2809",
+          "lesson_id": 83,
+          "english": "Bed",
+          "uzbek": "Karavot",
+          "example": "There is a bed in my room.",
+          "pronunciation": "/bed/",
+          "display_order": 0,
+          "is_active": true
+        },
+        {
+          "id": "e8c72692-ee91-4ed3-9ea5-50ae724c2e41",
+          "lesson_id": 83,
+          "english": "Table",
+          "uzbek": "Stol",
+          "example": "This table is new.",
+          "pronunciation": "/TEY-bal/",
+          "display_order": 1,
+          "is_active": true
+        },
+        {
+          "id": "dc5b8a83-b90b-429a-828a-19be85dd4965",
+          "lesson_id": 83,
+          "english": "Chair",
+          "uzbek": "Stul",
+          "example": "That chair is old.",
+          "pronunciation": "/cher/",
+          "display_order": 2,
+          "is_active": true
+        },
+        {
+          "id": "76ac2988-3a4d-47c6-93c4-395ac2d22cf6",
+          "lesson_id": 83,
+          "english": "Sofa",
+          "uzbek": "Divan",
+          "example": "There is a sofa in the living room.",
+          "pronunciation": "/SOH-fa/",
+          "display_order": 3,
+          "is_active": true
+        },
+        {
+          "id": "c93f29bb-4b2f-4543-b89b-5e25ec7951d9",
+          "lesson_id": 83,
+          "english": "Lamp",
+          "uzbek": "Chiroq / lampa",
+          "example": "This lamp is bright.",
+          "pronunciation": "/lamp/",
+          "display_order": 4,
+          "is_active": true
+        },
+        {
+          "id": "acc50755-e104-42e5-8f22-cd6f40721ba5",
+          "lesson_id": 83,
+          "english": "Wardrobe",
+          "uzbek": "Kiyim shkafi",
+          "example": "My clothes are in the wardrobe.",
+          "pronunciation": "/WOR-drohb/",
+          "display_order": 5,
+          "is_active": true
+        },
+        {
+          "id": "ab2287cd-37c3-4c44-9910-386762d0c513",
+          "lesson_id": 83,
+          "english": "Mirror",
+          "uzbek": "Oyna",
+          "example": "There is a mirror on the wall.",
+          "pronunciation": "/MI-rar/",
+          "display_order": 6,
+          "is_active": true
+        },
+        {
+          "id": "cb2c0080-b1fd-4d34-ab63-e48deff5ff28",
+          "lesson_id": 83,
+          "english": "Shelf",
+          "uzbek": "Tokcha",
+          "example": "My books are on the shelf.",
+          "pronunciation": "/shelf/",
+          "display_order": 7,
+          "is_active": true
+        },
+        {
+          "id": "33a16a98-4772-4d79-aa8b-2b55c68c1088",
+          "lesson_id": 83,
+          "english": "Carpet",
+          "uzbek": "Gilam",
+          "example": "This carpet is soft.",
+          "pronunciation": "/KAR-pit/",
+          "display_order": 8,
+          "is_active": true
+        },
+        {
+          "id": "257207ce-3bca-40e9-bcd2-5f2c77265d85",
+          "lesson_id": 83,
+          "english": "Curtains",
+          "uzbek": "Parda",
+          "example": "Those curtains are blue.",
+          "pronunciation": "/KYOR-tanz/",
+          "display_order": 9,
+          "is_active": true
+        },
+        {
+          "id": "75cdd29c-95e3-42e8-95e0-3e9c2ac105d6",
+          "lesson_id": 83,
+          "english": "Furniture",
+          "uzbek": "Mebel",
+          "example": "There is a lot of furniture in my house.",
+          "pronunciation": "/FYOR-ni-char/",
+          "display_order": 10,
+          "is_active": true
+        },
+        {
+          "id": "fe83021d-2da2-42b4-b483-46b52e6fffe0",
+          "lesson_id": 83,
+          "english": "My favorite furniture is...",
+          "uzbek": "Sevimli mebelim ...",
+          "example": "My favorite furniture is my bed!",
+          "pronunciation": null,
+          "display_order": 11,
+          "is_active": true
+        }
+      ]
+    },
+    "34": {
+      "lessonId": 53,
+      "rows": [
+        {
+          "id": "cf918b69-29fe-46f4-9998-f8b6755b82c7",
+          "lesson_id": 53,
+          "english": "in",
+          "uzbek": "ichida",
+          "example": "The pen is in the bag.",
+          "pronunciation": null,
+          "display_order": 1,
+          "is_active": true
+        },
+        {
+          "id": "28fe6a2f-b2c4-4a39-8e72-0918edea519f",
+          "lesson_id": 53,
+          "english": "on",
+          "uzbek": "ustida",
+          "example": "The book is on the table.",
+          "pronunciation": null,
+          "display_order": 2,
+          "is_active": true
+        },
+        {
+          "id": "d46a8651-09aa-4633-a2d8-eb349234471f",
+          "lesson_id": 53,
+          "english": "under",
+          "uzbek": "ostida",
+          "example": "The cat is under the chair.",
+          "pronunciation": null,
+          "display_order": 3,
+          "is_active": true
+        },
+        {
+          "id": "51cf5dc5-5d82-4321-9332-3aac139cd9d3",
+          "lesson_id": 53,
+          "english": "next to",
+          "uzbek": "yonida",
+          "example": "My house is next to the school.",
+          "pronunciation": null,
+          "display_order": 4,
+          "is_active": true
+        },
+        {
+          "id": "82734416-22ac-4c77-9bfe-317dd3643288",
+          "lesson_id": 53,
+          "english": "between",
+          "uzbek": "orasida",
+          "example": "The lamp is between two books.",
+          "pronunciation": null,
+          "display_order": 5,
+          "is_active": true
+        },
+        {
+          "id": "2ee55fe9-e656-409d-953b-86fa340b1d1d",
+          "lesson_id": 53,
+          "english": "behind",
+          "uzbek": "orqasida",
+          "example": "My bag is behind the door.",
+          "pronunciation": null,
+          "display_order": 6,
+          "is_active": true
+        },
+        {
+          "id": "a5f716a3-b5e8-453b-9d1e-b3caf7033444",
+          "lesson_id": 53,
+          "english": "in front of",
+          "uzbek": "oldida",
+          "example": "My desk is in front of the window.",
+          "pronunciation": null,
+          "display_order": 7,
+          "is_active": true
+        },
+        {
+          "id": "aac18679-790a-4b4b-9015-1186e84821cb",
+          "lesson_id": 53,
+          "english": "above",
+          "uzbek": "yuqorisida",
+          "example": "The clock is above the door.",
+          "pronunciation": null,
+          "display_order": 8,
+          "is_active": true
+        },
+        {
+          "id": "70ea3522-fac5-4d46-9dbf-ca721b9722c3",
+          "lesson_id": 53,
+          "english": "near",
+          "uzbek": "yaqinida",
+          "example": "The park is near my house.",
+          "pronunciation": null,
+          "display_order": 9,
+          "is_active": true
+        },
+        {
+          "id": "0cc7ee40-f3ab-4578-a1bc-c00ab9cb2ccd",
+          "lesson_id": 53,
+          "english": "shelf",
+          "uzbek": "javon",
+          "example": "The book is on the shelf.",
+          "pronunciation": null,
+          "display_order": 10,
+          "is_active": true
+        },
+        {
+          "id": "fb6facc5-ceea-46db-95ff-9aa5077109e8",
+          "lesson_id": 53,
+          "english": "box",
+          "uzbek": "quti",
+          "example": "My toys are in the box.",
+          "pronunciation": null,
+          "display_order": 11,
+          "is_active": true
+        },
+        {
+          "id": "86358ac5-ec1c-4826-be05-570c0b7bdf39",
+          "lesson_id": 53,
+          "english": "Where is it?",
+          "uzbek": "U qayerda?",
+          "example": "\"Where is it?\" \"It's on the table.\"",
+          "pronunciation": null,
+          "display_order": 12,
+          "is_active": true
+        }
+      ]
+    },
+    "56": {
+      "lessonId": 54,
+      "rows": [
+        {
+          "id": "0d0f2a1b-8520-41d1-8d73-760c12d1514f",
+          "lesson_id": 54,
+          "english": "played",
+          "uzbek": "o'ynadi",
+          "example": "I played football with my friends.",
+          "pronunciation": null,
+          "display_order": 1,
+          "is_active": true
+        },
+        {
+          "id": "39a18675-e1b0-4f66-87a7-5d4e92c01e1d",
+          "lesson_id": 54,
+          "english": "visited",
+          "uzbek": "bordi (mehmonga)",
+          "example": "We visited my grandmother.",
+          "pronunciation": null,
+          "display_order": 2,
+          "is_active": true
+        },
+        {
+          "id": "83811223-4406-445e-89ae-2d8ffc3ce952",
+          "lesson_id": 54,
+          "english": "watched",
+          "uzbek": "tomosha qildi",
+          "example": "She watched a movie.",
+          "pronunciation": null,
+          "display_order": 3,
+          "is_active": true
+        },
+        {
+          "id": "5a8c5bce-3088-4a17-9718-3b2208a5d738",
+          "lesson_id": 54,
+          "english": "went (go)",
+          "uzbek": "bordi",
+          "example": "I went to the park.",
+          "pronunciation": null,
+          "display_order": 4,
+          "is_active": true
+        },
+        {
+          "id": "26639057-8b72-441f-b348-f87ab4e444fc",
+          "lesson_id": 54,
+          "english": "read (past)",
+          "uzbek": "o'qidi",
+          "example": "He read a book.",
+          "pronunciation": null,
+          "display_order": 5,
+          "is_active": true
+        },
+        {
+          "id": "cc58e917-f204-4b0e-8ca7-5b83dfb13ba7",
+          "lesson_id": 54,
+          "english": "cooked",
+          "uzbek": "pishirdi",
+          "example": "My mom cooked dinner.",
+          "pronunciation": null,
+          "display_order": 6,
+          "is_active": true
+        },
+        {
+          "id": "15f23607-1316-41db-b018-89b8fa6914b5",
+          "lesson_id": 54,
+          "english": "then",
+          "uzbek": "keyin",
+          "example": "First I woke up. Then I had breakfast.",
+          "pronunciation": null,
+          "display_order": 7,
+          "is_active": true
+        },
+        {
+          "id": "7144a1dd-e22d-473a-b0de-6872f9909a50",
+          "lesson_id": 54,
+          "english": "after that",
+          "uzbek": "shundan keyin",
+          "example": "After that, I played football.",
+          "pronunciation": null,
+          "display_order": 8,
+          "is_active": true
+        },
+        {
+          "id": "f57146a7-5cfb-4821-a7c7-7dfb524948f5",
+          "lesson_id": 54,
+          "english": "finally",
+          "uzbek": "nihoyat",
+          "example": "Finally, I watched a film.",
+          "pronunciation": null,
+          "display_order": 9,
+          "is_active": true
+        },
+        {
+          "id": "aacdd4ad-c629-4a26-bf40-85e6e3e3675a",
+          "lesson_id": 54,
+          "english": "last weekend",
+          "uzbek": "o'tgan dam olish kuni",
+          "example": "Last weekend was great!",
+          "pronunciation": null,
+          "display_order": 10,
+          "is_active": true
+        },
+        {
+          "id": "6a880f5b-5405-487b-8b03-b1c3842ed922",
+          "lesson_id": 54,
+          "english": "tired",
+          "uzbek": "charchagan",
+          "example": "I was tired after the trip.",
+          "pronunciation": null,
+          "display_order": 11,
+          "is_active": true
+        },
+        {
+          "id": "7370fc8d-2e60-4228-8ba3-6ff6f962191e",
+          "lesson_id": 54,
+          "english": "What did you do?",
+          "uzbek": "Nima qildingiz?",
+          "example": "\"What did you do?\" \"I played football.\"",
+          "pronunciation": null,
+          "display_order": 12,
+          "is_active": true
+        }
+      ]
+    },
+    "73": {
+      "lessonId": 55,
+      "rows": [
+        {
+          "id": "712a9f3c-f1de-43c4-84e6-dcd02ac466db",
+          "lesson_id": 55,
+          "english": "doctor",
+          "uzbek": "shifokor",
+          "example": "The doctor checked my temperature.",
+          "pronunciation": null,
+          "display_order": 1,
+          "is_active": true
+        },
+        {
+          "id": "21667850-e9cb-4311-9724-67dd2ff89a1d",
+          "lesson_id": 55,
+          "english": "patient",
+          "uzbek": "bemor",
+          "example": "The doctor examines a patient.",
+          "pronunciation": null,
+          "display_order": 2,
+          "is_active": true
+        },
+        {
+          "id": "c03539c6-6457-4cf4-b23d-e82357ebe7a3",
+          "lesson_id": 55,
+          "english": "medicine",
+          "uzbek": "dori",
+          "example": "Take this medicine twice a day.",
+          "pronunciation": null,
+          "display_order": 3,
+          "is_active": true
+        },
+        {
+          "id": "b75c9635-19ba-4eed-af1c-9d71e84f1e3c",
+          "lesson_id": 55,
+          "english": "temperature",
+          "uzbek": "harorat",
+          "example": "She has a high temperature.",
+          "pronunciation": null,
+          "display_order": 4,
+          "is_active": true
+        },
+        {
+          "id": "2b63a140-73bd-4090-a1d6-0d941c657922",
+          "lesson_id": 55,
+          "english": "appointment",
+          "uzbek": "uchrashuv (qabul)",
+          "example": "I have a doctor's appointment.",
+          "pronunciation": null,
+          "display_order": 5,
+          "is_active": true
+        },
+        {
+          "id": "dcd92be1-d615-43f0-a8e0-857f9a83fc99",
+          "lesson_id": 55,
+          "english": "check-up",
+          "uzbek": "tekshiruv",
+          "example": "I need a check-up.",
+          "pronunciation": null,
+          "display_order": 6,
+          "is_active": true
+        },
+        {
+          "id": "1d1945b1-af7c-4a1f-99f7-f48494e86343",
+          "lesson_id": 55,
+          "english": "What's wrong?",
+          "uzbek": "Nima bo'ldi?",
+          "example": "\"What's wrong?\" \"I have a headache.\"",
+          "pronunciation": null,
+          "display_order": 7,
+          "is_active": true
+        },
+        {
+          "id": "0a721960-0484-4a65-8ae2-0f308f247e5a",
+          "lesson_id": 55,
+          "english": "rest",
+          "uzbek": "dam olish",
+          "example": "Get some rest and drink water.",
+          "pronunciation": null,
+          "display_order": 8,
+          "is_active": true
+        },
+        {
+          "id": "860a80ce-a4e2-4e15-8c55-4efccb2a6f61",
+          "lesson_id": 55,
+          "english": "bandage",
+          "uzbek": "bint",
+          "example": "The nurse put a bandage on my arm.",
+          "pronunciation": null,
+          "display_order": 9,
+          "is_active": true
+        },
+        {
+          "id": "65ad3f3a-1fca-4514-adb5-a52d51064509",
+          "lesson_id": 55,
+          "english": "nurse",
+          "uzbek": "hamshira",
+          "example": "The nurse is very kind.",
+          "pronunciation": null,
+          "display_order": 10,
+          "is_active": true
+        },
+        {
+          "id": "c7d45ea5-3762-4b2e-8381-d3f9ad79b470",
+          "lesson_id": 55,
+          "english": "pill",
+          "uzbek": "tabletka",
+          "example": "Take one pill after lunch.",
+          "pronunciation": null,
+          "display_order": 11,
+          "is_active": true
+        },
+        {
+          "id": "f936e72e-9f42-401d-b9f6-ad8266a281a8",
+          "lesson_id": 55,
+          "english": "get well soon",
+          "uzbek": "tezroq tuzaling",
+          "example": "Get well soon! Take care.",
+          "pronunciation": null,
+          "display_order": 12,
+          "is_active": true
+        }
+      ]
+    }
+  },
+  "conflictStorageObjects": {
+    "30": {
+      "lessonId": 83,
+      "objects": []
+    },
+    "34": {
+      "lessonId": 53,
+      "objects": [
+        {
+          "name": "1785941657913-r1jb2jzf2h.pdf",
+          "id": "6d464c4b-9020-4e74-932d-5905bd4b7731",
+          "updated_at": "2026-08-05T14:54:19.631Z",
+          "created_at": "2026-08-05T14:54:19.631Z",
+          "last_accessed_at": "2026-08-05T14:54:19.631Z",
+          "metadata": {
+            "eTag": "\"28c4f47b99650f97b8ba48b2a3b975db\"",
+            "size": 1624726,
+            "mimetype": "application/pdf",
+            "cacheControl": "max-age=3600",
+            "lastModified": "2026-08-05T14:54:20.000Z",
+            "contentLength": 1624726,
+            "httpStatusCode": 200
+          }
+        }
+      ]
+    },
+    "56": {
+      "lessonId": 54,
+      "objects": [
+        {
+          "name": "1785941633263-f4ic8t3dxpv.pdf",
+          "id": "96a150f9-8c23-4ea5-8675-089183c95adc",
+          "updated_at": "2026-08-05T14:53:55.617Z",
+          "created_at": "2026-08-05T14:53:55.617Z",
+          "last_accessed_at": "2026-08-05T14:53:55.617Z",
+          "metadata": {
+            "eTag": "\"7f51e93f36363725d97d29d3208676cc\"",
+            "size": 1705830,
+            "mimetype": "application/pdf",
+            "cacheControl": "max-age=3600",
+            "lastModified": "2026-08-05T14:53:56.000Z",
+            "contentLength": 1705830,
+            "httpStatusCode": 200
+          }
+        }
+      ]
+    },
+    "73": {
+      "lessonId": 55,
+      "objects": [
+        {
+          "name": "1785941619319-qhw8kc081p.pdf",
+          "id": "2c431f84-82f4-467f-9cb8-a05aece5e85c",
+          "updated_at": "2026-08-05T14:53:41.265Z",
+          "created_at": "2026-08-05T14:53:41.265Z",
+          "last_accessed_at": "2026-08-05T14:53:41.265Z",
+          "metadata": {
+            "eTag": "\"bbca88b27150baa2ff008939aaf31587\"",
+            "size": 1691402,
+            "mimetype": "application/pdf",
+            "cacheControl": "max-age=3600",
+            "lastModified": "2026-08-05T14:53:42.000Z",
+            "contentLength": 1691402,
+            "httpStatusCode": 200
+          }
+        }
+      ]
+    }
+  }
+}

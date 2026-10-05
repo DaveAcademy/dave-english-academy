@@ -29,6 +29,20 @@ import enSettings from '../locales/en/settings.json';
 import uzSettings from '../locales/uz/settings.json';
 import enChat from '../locales/en/chat.json';
 import uzChat from '../locales/uz/chat.json';
+import enLessons from '../locales/en/lessons.json';
+import uzLessons from '../locales/uz/lessons.json';
+import enGame from '../locales/en/game.json';
+import uzGame from '../locales/uz/game.json';
+import enDictionary from '../locales/en/dictionary.json';
+import uzDictionary from '../locales/uz/dictionary.json';
+import enGroups from '../locales/en/groups.json';
+import uzGroups from '../locales/uz/groups.json';
+import enPayments from '../locales/en/payments.json';
+import uzPayments from '../locales/uz/payments.json';
+import enOnlineTest from '../locales/en/onlineTest.json';
+import uzOnlineTest from '../locales/uz/onlineTest.json';
+import enIqbrain from '../locales/en/iqbrain.json';
+import uzIqbrain from '../locales/uz/iqbrain.json';
 
 const LANGUAGE_KEY = 'dave-academy-language';
 const storedLanguage = localStorage.getItem(LANGUAGE_KEY);
@@ -58,6 +72,13 @@ i18n.use(initReactI18next).init({
       portal: enPortal,
       settings: enSettings,
       chat: enChat,
+      lessons: enLessons,
+      game: enGame,
+      dictionary: enDictionary,
+      groups: enGroups,
+      payments: enPayments,
+      onlineTest: enOnlineTest,
+      iqbrain: enIqbrain,
     },
     uz: {
       common: uzCommon,
@@ -71,6 +92,13 @@ i18n.use(initReactI18next).init({
       portal: uzPortal,
       settings: uzSettings,
       chat: uzChat,
+      lessons: uzLessons,
+      game: uzGame,
+      dictionary: uzDictionary,
+      groups: uzGroups,
+      payments: uzPayments,
+      onlineTest: uzOnlineTest,
+      iqbrain: uzIqbrain,
     },
   },
   lng: storedLanguage || 'en',
@@ -81,10 +109,19 @@ i18n.use(initReactI18next).init({
 
 // The one place that changes the active language. Guarded here (not just
 // by hiding the Settings selector) so Uzbek can never be activated for a
-// non-student role, regardless of what calls this.
+// resolved non-student role, regardless of what calls this. A null role
+// (logged out / pre-auth login screen) may use Uzbek: syncLanguageForRole
+// re-pins correctly the moment the real role is known.
 export function setLanguage(lang) {
-  if (lang === 'uz' && currentRole !== 'student') return;
+  if (lang === 'uz' && currentRole !== 'student' && currentRole !== null) return;
   applyLanguage(lang);
+}
+
+// Pre-auth login screen default: first-time visitors (nothing ever saved)
+// see Uzbek immediately. Never overrides an explicit past choice, and
+// post-login role pinning is unchanged.
+export function applyLoginDefaultLanguage() {
+  if (localStorage.getItem(LANGUAGE_KEY) == null) applyLanguage('uz');
 }
 
 // Call whenever the authenticated role becomes known or changes (App.jsx,

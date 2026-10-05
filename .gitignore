@@ -8,3 +8,13 @@ dist/
 .vercel
 .env*
 .claude/scheduled_tasks.lock
+.claude/settings.local.json
+.claude/worktrees/
+graphify-out/
+supabase/.temp/
+supabase/.branches/
+
+.supabase_anon_key
+
+# Deploy worktree
+C:/Dave-Academy-Deploy/
