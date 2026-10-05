@@ -9,5 +9,15 @@
   "noActiveStudentsInLevel": "{{level}} darajasida faol o'quvchilar yo'q",
   "noActiveStudents": "Faol o'quvchilar yo'q",
   "tryDifferentLevel": "Boshqa darajani tanlang yoki Hammasi bo'limiga qayting.",
-  "addActiveStudentsHint": "Davomatni boshlash uchun faol o'quvchilar qo'shing."
+  "addActiveStudentsHint": "Davomatni boshlash uchun faol o'quvchilar qo'shing.",
+  "loading": "Davomat yuklanmoqda…",
+  "statusSaved": "{{status}} — {{name}}: saqlandi",
+  "searchPlaceholder": "O'quvchilarni qidirish…",
+  "clearSearch": "Qidiruvni tozalash",
+  "noMatch": "“{{q}}” bo'yicha o'quvchi topilmadi",
+  "markAllPresent": "Barchasini Keldi qilish",
+  "confirmOverwrite": "{{count}} ta belgini Keldi bilan almashtirish?",
+  "bulkMarking": "Belgilanmoqda… {{done}}/{{total}}",
+  "bulkResult": "Ommaviy belgilash: {{ok}} ta saqlandi, {{fail}} ta xato",
+  "progressMarked": "{{marked}} / {{total}} belgilandi"
 }

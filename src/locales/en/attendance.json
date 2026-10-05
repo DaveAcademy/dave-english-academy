@@ -9,5 +9,15 @@
   "noActiveStudentsInLevel": "No active students in Level {{level}}",
   "noActiveStudents": "No active students",
   "tryDifferentLevel": "Try a different level, or switch back to All.",
-  "addActiveStudentsHint": "Add active students to start taking attendance."
+  "addActiveStudentsHint": "Add active students to start taking attendance.",
+  "loading": "Loading attendance…",
+  "statusSaved": "{{status}} saved for {{name}}",
+  "searchPlaceholder": "Search students…",
+  "clearSearch": "Clear search",
+  "noMatch": "No students match “{{q}}”",
+  "markAllPresent": "Mark all Present",
+  "confirmOverwrite": "Overwrite {{count}} as Present?",
+  "bulkMarking": "Marking… {{done}}/{{total}}",
+  "bulkResult": "Bulk done: {{ok}} marked, {{fail}} failed",
+  "progressMarked": "{{marked}} / {{total}} marked"
 }
