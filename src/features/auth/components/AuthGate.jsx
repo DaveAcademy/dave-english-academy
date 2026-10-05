@@ -4,12 +4,14 @@ import { useAuth } from '../../../lib/AuthContext';
 import { isSetupComplete, claimFirstAdmin, signOut } from '../../../lib/auth';
 import FirstTimeSetup from './FirstTimeSetup';
 import Login from './Login';
+import SetNewPassword from './SetNewPassword';
 
 export default function AuthGate({ children }) {
   const { t } = useTranslation(['auth', 'common']);
-  const { session, profile, profileError, role, loading: authLoading, refreshProfile } = useAuth();
+  const { session, profile, profileError, role, loading: authLoading, refreshProfile, isRecovery } = useAuth();
   const [setupComplete, setSetupComplete] = useState(null);
   const [checkingSetup, setCheckingSetup] = useState(true);
+  const [resetNotice, setResetNotice] = useState(false);
   const bootstrapAttempted = useRef(false);
 
   useEffect(() => {
@@ -48,6 +50,13 @@ export default function AuthGate({ children }) {
     }
   }, [session, setupComplete, role, refreshProfile]);
 
+  // A real (non-recovery) session consumes the reset notice so it never
+  // reappears on a later plain logout. Must stay above every early return
+  // so hook order never changes between renders.
+  useEffect(() => {
+    if (session && !isRecovery) setResetNotice(false);
+  }, [session, isRecovery]);
+
   if (authLoading || checkingSetup) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-paper">
@@ -57,7 +66,22 @@ export default function AuthGate({ children }) {
   }
 
   if (!session) {
-    return setupComplete ? <Login /> : <FirstTimeSetup onSetupComplete={() => setSetupComplete(true)} />;
+    return setupComplete ? <Login notice={resetNotice} /> : <FirstTimeSetup onSetupComplete={() => setSetupComplete(true)} />;
+  }
+
+  // Password-recovery session (user arrived via the emailed reset link):
+  // dedicated set-new-password screen, never the app behind it. On success
+  // the session is signed out (AuthContext clears recovery mode) and the
+  // user lands back on Login with a confirmation notice.
+  if (isRecovery) {
+    return (
+      <SetNewPassword
+        onComplete={async () => {
+          await signOut();
+          setResetNotice(true);
+        }}
+      />
+    );
   }
 
   if (profileError) {

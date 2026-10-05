@@ -16,6 +16,15 @@ export async function signInWithPassword({ email, password }) {
   return data;
 }
 
+// Sends a Supabase password-reset email. Generic by design: Supabase does
+// not reveal whether the address exists, and callers must keep it that way.
+export async function requestPasswordReset(email) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: typeof window !== 'undefined' ? window.location.origin : undefined,
+  });
+  if (error) throw error;
+}
+
 export async function signOut() {
   const { error } = await supabase.auth.signOut();
   if (error) throw error;
@@ -28,8 +37,16 @@ export async function getSession() {
 }
 
 export function onAuthStateChange(callback) {
-  const { data } = supabase.auth.onAuthStateChange((_event, session) => callback(session));
+  const { data } = supabase.auth.onAuthStateChange((event, session) => callback(session, event));
   return data.subscription;
+}
+
+// Completes a password-recovery flow: only valid on the recovery session
+// Supabase establishes from the emailed reset link (PASSWORD_RECOVERY
+// event). No current password needed - possession of the link is the proof.
+export async function updateRecoveryPassword(newPassword) {
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  if (error) throw error;
 }
 
 export async function getProfile(userId) {

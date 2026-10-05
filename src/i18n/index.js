@@ -109,10 +109,19 @@ i18n.use(initReactI18next).init({
 
 // The one place that changes the active language. Guarded here (not just
 // by hiding the Settings selector) so Uzbek can never be activated for a
-// non-student role, regardless of what calls this.
+// resolved non-student role, regardless of what calls this. A null role
+// (logged out / pre-auth login screen) may use Uzbek: syncLanguageForRole
+// re-pins correctly the moment the real role is known.
 export function setLanguage(lang) {
-  if (lang === 'uz' && currentRole !== 'student') return;
+  if (lang === 'uz' && currentRole !== 'student' && currentRole !== null) return;
   applyLanguage(lang);
+}
+
+// Pre-auth login screen default: first-time visitors (nothing ever saved)
+// see Uzbek immediately. Never overrides an explicit past choice, and
+// post-login role pinning is unchanged.
+export function applyLoginDefaultLanguage() {
+  if (localStorage.getItem(LANGUAGE_KEY) == null) applyLanguage('uz');
 }
 
 // Call whenever the authenticated role becomes known or changes (App.jsx,
