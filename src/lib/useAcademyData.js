@@ -397,32 +397,41 @@ export function useAcademyData() {
   );
 
   const [pendingAttendance, setPendingAttendance] = useState(new Set());
+  // Synchronous per-key in-flight guard. A React state update cannot dedupe
+  // same-tick clicks (it hasn't rendered when the second click's closure
+  // runs), so the check+set here must happen on a ref before any await.
+  // pendingAttendance state remains only for the UI disabled flag.
+  const attendanceInFlightRef = useRef(new Set());
 
   const setAttendanceStatus = useCallback(
     async (studentId, date, status) => {
-      // Deduplicate: prevent concurrent saves for the same student+date.
-      // Use functional check via pendingAttendanceRef to avoid stale closure.
       const key = `${studentId}:${date}`;
-      if (pendingAttendance.has(key)) return;
+      // Synchronous dedupe: ignore a repeat click for the same
+      // student+date while its save is in flight. Other keys proceed.
+      if (attendanceInFlightRef.current.has(key)) return;
+      attendanceInFlightRef.current.add(key);
       setPendingAttendance((prev) => {
         if (prev.has(key)) return prev;
         return new Set([...prev, key]);
       });
 
-      // Capture the original record before the optimistic update, so we can
-      // restore it exactly on failure. Use attendance from closure (not prev).
-      const originalRecord = attendance.find((a) => a.student_id === studentId && a.date === date);
+      // Pre-click snapshot from the latest committed state (not a closure)
+      // for error rollback. Same-key concurrency is impossible past the
+      // guard above, so this is the true pre-click value.
+      const originalRecord = stateRef.current.attendance.find(
+        (a) => a.student_id === studentId && a.date === date
+      );
 
-      // Optimistic update: immediately reflect the change in local state.
+      // Optimistic update: always show the requested status. The toggle-off
+      // decision has ONE source of truth — the server result below — so the
+      // local and server layers can never disagree (insert vs delete) and
+      // one click always has one deterministic outcome.
       setAttendance((prev) => {
         const existing = prev.find((a) => a.student_id === studentId && a.date === date);
         if (existing) {
-          if (existing.status === status) {
-            // Toggle off: remove the record.
-            return prev.filter((a) => a.id !== existing.id);
-          }
-          // Update existing record — keep the real id, replace status optimistically.
-          return prev.map((a) => (a.id === existing.id ? { ...a, status } : a));
+          return prev.map((a) =>
+            a.student_id === studentId && a.date === date ? { ...a, status } : a
+          );
         }
         // Insert new record (optimistic — id may be placeholder).
         return [...prev, { id: `opt-${key}`, student_id: studentId, date, status }];
@@ -430,7 +439,9 @@ export function useAcademyData() {
 
       try {
         const result = await db.setAttendanceStatus(studentId, date, status);
-        // Replace optimistic state with real data from the server.
+        // Reconcile by attendance identity (student_id + date), never by
+        // database id: the optimistic row's id can differ from the real
+        // row's id, and matching by id would keep the stale optimistic row.
         setAttendance((prev) => {
           // Remove the optimistic entry.
           const withoutOptimistic = prev.filter(
@@ -444,33 +455,29 @@ export function useAcademyData() {
           }
           // Server upserted — merge the real row.
           const real = result.row;
-          const exists = withoutOptimistic.find((a) => a.student_id === real.student_id && a.date === real.date);
-          if (exists) {
-            return withoutOptimistic.map((a) => (a.id === real.id ? real : a));
+          const idx = withoutOptimistic.findIndex(
+            (a) => a.student_id === real.student_id && a.date === real.date
+          );
+          if (idx >= 0) {
+            const next = [...withoutOptimistic];
+            next[idx] = real;
+            return next;
           }
           return [...withoutOptimistic, real];
         });
         touchBackup();
       } catch (e) {
-        // Rollback: restore the original record if one existed, otherwise remove
-        // the optimistic entry. This preserves the pre-update state exactly.
+        // Rollback to the pre-click snapshot: restore the original record
+        // or drop the optimistic insert. Keyed by student+date so no stale
+        // row survives under a mismatched id.
         setAttendance((prev) => {
-          if (originalRecord) {
-            // An existing record was updated — restore its original status.
-            return prev.map((a) =>
-              a.student_id === studentId && a.date === date
-                ? { ...originalRecord, status: originalRecord.status }
-                : a
-            );
-          }
-          // No existing record was present — remove the optimistic entry.
-          return prev.filter(
-            (a) => !(a.id === `opt-${key}` && a.student_id === studentId && a.date === date)
-          );
+          const rest = prev.filter((a) => !(a.student_id === studentId && a.date === date));
+          return originalRecord ? [...rest, originalRecord] : rest;
         });
         setError('Could not update attendance. Please try again.');
         throw e;
       } finally {
+        attendanceInFlightRef.current.delete(key);
         setPendingAttendance((prev) => {
           const next = new Set(prev);
           next.delete(key);
@@ -478,7 +485,7 @@ export function useAcademyData() {
         });
       }
     },
-    [touchBackup, pendingAttendance, attendance]
+    [touchBackup]
   );
 
   const addLesson = useCallback(async (data) => {
