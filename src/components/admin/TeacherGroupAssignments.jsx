@@ -1,12 +1,15 @@
 // TeacherGroupAssignments.jsx
-// Which levels (A/B/C) each teacher may award ranking points for (see
-// migration 0017). This is the only place that can change it - the
-// database enforces the actual restriction independently on every
-// point_transactions insert (RLS + a trigger), so a mistake here only
-// affects what a teacher can attempt, never a real security bypass.
+// Which class levels (A/B/C) each teacher may manage. The same rows gate
+// attendance, exam scores, homework, lesson work and progress, and ranking
+// points for students in those levels (migrations 0017, 0131-0135) - a
+// teacher with no rows here can see students but cannot save anything for
+// them. This UI and the optional levels step in account creation are the
+// only writers; the database enforces the actual restriction independently
+// on every write (RLS), so a mistake here only affects what a teacher can
+// attempt, never a real security bypass.
 // Every existing teacher was seeded with all three levels at cutover, so
-// this UI narrows access, it never has to be used just to keep things
-// working as they already were.
+// narrowing here never has to be used just to keep things working as they
+// already were - but any teacher created without levels starts with none.
 
 import { useState, useEffect, useCallback } from 'react';
 import { Users2 } from 'lucide-react';
@@ -62,7 +65,7 @@ export default function TeacherGroupAssignments() {
         <Users2 size={18} className="text-brand-500" />
         <h2 className="font-display text-base font-bold text-ink">Teacher level assignments</h2>
       </div>
-      <p className="mb-4 text-sm text-ink/60">Which levels each teacher can award ranking points for.</p>
+      <p className="mb-4 text-sm text-ink/60">Which class levels each teacher can manage: attendance, exam scores, homework, and ranking points for students in those levels. A teacher with no levels assigned cannot save attendance.</p>
 
       {loadError && (
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{loadError}</div>

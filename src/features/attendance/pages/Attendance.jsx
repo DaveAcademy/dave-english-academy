@@ -7,6 +7,7 @@ import { useAcademy } from '../../../lib/AcademyDataContext';
 import { useAuth } from '../../../lib/AuthContext';
 import { listMyTeacherLevels } from '../../../lib/db';
 import { initialsOf, avatarToneIndex, searchStudents, bulkPlan } from '../../../lib/attendanceWorkflow';
+import { needsAssignmentGuidance, filterStudentsByTeacherLevels } from '../teacherRoster';
 import { todayTashkentISO } from '../../../shared/utils/date';
 import { LEVELS, levelToken } from '../../../lib/levels';
 
@@ -62,13 +63,19 @@ export default function Attendance() {
   // that would be pulled away (or contain unmarkable students).
   const showLoading = loading || (isTeacher && teacherLevels === null);
 
+  // A teacher with zero assigned levels cannot save anything (RLS 0135
+  // rejects every write) - show explicit guidance instead of a roster.
+  const showGuidance = needsAssignmentGuidance({ isTeacher, teacherLevels });
+
   const activeStudents = useMemo(
     () =>
-      [...students]
-        .filter((s) => s.status === 'Active')
-        .filter((s) => !level || s.level === level)
-        .filter((s) => !isTeacher || (teacherLevels || []).includes(s.level))
-        .sort((a, b) => a.real_name.localeCompare(b.real_name)),
+      filterStudentsByTeacherLevels(
+        [...students]
+          .filter((s) => s.status === 'Active')
+          .filter((s) => !level || s.level === level)
+          .sort((a, b) => a.real_name.localeCompare(b.real_name)),
+        { isTeacher, teacherLevels }
+      ),
     [students, level, isTeacher, teacherLevels]
   );
 
@@ -151,8 +158,8 @@ export default function Attendance() {
 
   return (
     <div>
-      <header className="mb-4">
-        <h1 className="font-display text-2xl font-bold text-ink">{t('title')}</h1>
+      <header className="mb-3 sm:mb-4">
+        <h1 className="font-display text-xl font-bold text-ink sm:text-2xl">{t('title')}</h1>
         <p className="mt-1 text-sm text-ink/50">{t('subtitle')}</p>
       </header>
 
@@ -283,6 +290,11 @@ export default function Attendance() {
               </div>
             ))}
           </div>
+        </div>
+      ) : showGuidance ? (
+        <div className="rounded-xl bg-white p-10 text-center shadow-card">
+          <p className="font-display text-lg font-semibold text-ink">{t('noLevelAssignment')}</p>
+          <p className="mt-1 text-sm text-ink/50">{t('noLevelAssignmentHint')}</p>
         </div>
       ) : activeStudents.length === 0 ? (
         <div className="rounded-xl bg-white p-10 text-center shadow-card">

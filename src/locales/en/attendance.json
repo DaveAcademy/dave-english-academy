@@ -19,5 +19,7 @@
   "confirmOverwrite": "Overwrite {{count}} as Present?",
   "bulkMarking": "Marking… {{done}}/{{total}}",
   "bulkResult": "Bulk done: {{ok}} marked, {{fail}} failed",
-  "progressMarked": "{{marked}} / {{total}} marked"
+  "progressMarked": "{{marked}} / {{total}} marked",
+  "noLevelAssignment": "No class levels assigned yet",
+  "noLevelAssignmentHint": "Your account cannot save attendance until an administrator assigns you to a class level."
 }

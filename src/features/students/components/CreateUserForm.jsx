@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { UserPlus, Copy, Check } from 'lucide-react';
 import { supabase } from '../../../lib/supabaseClient';
 
-const EMPTY = { fullName: '', email: '', role: 'teacher', studentId: '' };
+const EMPTY = { fullName: '', email: '', role: 'teacher', studentId: '', levels: [] };
+const ALL_LEVELS = ['A', 'B', 'C'];
 
 export default function CreateUserForm() {
   const [form, setForm] = useState(EMPTY);
@@ -24,6 +25,12 @@ export default function CreateUserForm() {
 
   const handleChange = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
 
+  const toggleLevel = (lvl) =>
+    setForm((f) => ({
+      ...f,
+      levels: f.levels.includes(lvl) ? f.levels.filter((l) => l !== lvl) : [...f.levels, lvl],
+    }));
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -36,6 +43,7 @@ export default function CreateUserForm() {
           full_name: form.fullName,
           role: form.role,
           ...(form.role === 'student' && form.studentId ? { student_id: Number(form.studentId) } : {}),
+          ...(form.role === 'teacher' ? { levels: form.levels } : {}),
         },
       });
       if (fnError) throw fnError;
@@ -78,6 +86,15 @@ export default function CreateUserForm() {
           {created.linkWarning && (
             <p className="mt-2 text-xs font-semibold text-amber-700">{created.linkWarning}</p>
           )}
+          {created.levelsWarning && (
+            <p className="mt-2 text-xs font-semibold text-amber-700">{created.levelsWarning}</p>
+          )}
+          {created.role === 'teacher' && Array.isArray(created.levels) && (
+            <p className="mt-2 text-xs text-brand-700/90">
+              Assigned levels: {created.levels.length > 0 ? created.levels.join(', ') : 'none'}
+              {created.levels.length === 0 && ' — assign levels in Settings → Teacher level assignments so this teacher can take attendance.'}
+            </p>
+          )}
           <button
             onClick={handleCopy}
             className="mt-2 flex items-center gap-1.5 rounded-lg border border-brand-500 px-3 py-1.5 text-xs font-semibold text-brand-600 hover:bg-brand-100"
@@ -118,6 +135,29 @@ export default function CreateUserForm() {
             <option value="student">Student</option>
           </select>
         </div>
+
+        {form.role === 'teacher' && (
+          <div>
+            <span className="mb-1 block text-xs font-medium text-ink/60">Class levels (optional)</span>
+            <div className="flex gap-2">
+              {ALL_LEVELS.map((lvl) => (
+                <label key={lvl} className="flex items-center gap-1.5 rounded-lg border border-ink/10 px-3 py-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={form.levels.includes(lvl)}
+                    onChange={() => toggleLevel(lvl)}
+                    className="h-4 w-4 rounded border-ink/30 text-brand-600"
+                  />
+                  {lvl}
+                </label>
+              ))}
+            </div>
+            <p className="mt-1 text-xs text-ink/40">
+              A teacher without assigned levels cannot mark attendance for students. Leave empty only if you will
+              assign levels afterward in Settings → Teacher level assignments.
+            </p>
+          </div>
+        )}
 
         {form.role === 'student' && (
           <div>

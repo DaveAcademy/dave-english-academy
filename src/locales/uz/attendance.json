@@ -19,5 +19,7 @@
   "confirmOverwrite": "{{count}} ta belgini Keldi bilan almashtirish?",
   "bulkMarking": "Belgilanmoqda… {{done}}/{{total}}",
   "bulkResult": "Ommaviy belgilash: {{ok}} ta saqlandi, {{fail}} ta xato",
-  "progressMarked": "{{marked}} / {{total}} belgilandi"
+  "progressMarked": "{{marked}} / {{total}} belgilandi",
+  "noLevelAssignment": "Hali hech qanday daraja biriktirilmagan",
+  "noLevelAssignmentHint": "Administrator sizni daraja bilan biriktirmaguncha davomatni saqlay olmaysiz."
 }
