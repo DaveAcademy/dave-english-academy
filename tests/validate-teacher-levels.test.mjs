@@ -17,6 +17,7 @@ const read = (p) => fs.readFileSync(path.join(repo, p), 'utf8');
 
 // Explicit assignments pass through; duplicates collapse (no duplicate rows).
 check(JSON.stringify(validateTeacherLevels(['A', 'C'])) === JSON.stringify({ ok: true, levels: ['A', 'C'] }), 'explicit levels accepted');
+check(JSON.stringify(validateTeacherLevels(['A1'])) === JSON.stringify({ ok: true, levels: ['A1'] }), 'A1 level accepted (migration 0096)');
 check(JSON.stringify(validateTeacherLevels(['B', 'B', 'A'])) === JSON.stringify({ ok: true, levels: ['B', 'A'] }), 'duplicates deduped, order kept');
 
 // Empty default: omitted or empty means NO levels, never all levels.
@@ -38,7 +39,7 @@ check(fn.includes('levelsWarning'), 'assignment failure surfaces explicit warnin
 
 // Form contracts (static).
 const form = read('src/features/students/components/CreateUserForm.jsx');
-check(form.includes('levels: []') && form.includes("ALL_LEVELS = ['A', 'B', 'C']"), 'form defaults to no levels');
+check(form.includes('levels: []') && form.includes("ALL_LEVELS = ['A', 'A1', 'B', 'C']"), 'form defaults to no levels');
 check(form.includes("form.role === 'teacher' ? { levels: form.levels }"), 'form sends levels for teachers only');
 check(form.includes('cannot mark attendance'), 'form explains empty-assignment consequence');
 check(form.includes('created.levelsWarning'), 'form displays assignment-failure warning');

@@ -3,7 +3,7 @@ import { UserPlus, Copy, Check } from 'lucide-react';
 import { supabase } from '../../../lib/supabaseClient';
 
 const EMPTY = { fullName: '', email: '', role: 'teacher', studentId: '', levels: [] };
-const ALL_LEVELS = ['A', 'B', 'C'];
+const ALL_LEVELS = ['A', 'A1', 'B', 'C'];
 
 export default function CreateUserForm() {
   const [form, setForm] = useState(EMPTY);

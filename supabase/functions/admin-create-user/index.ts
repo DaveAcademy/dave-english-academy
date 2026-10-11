@@ -4,6 +4,7 @@
 // Setup bootstrap flow (claim_first_admin RPC).
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { validateTeacherLevels } from "./validateLevels.ts";
 
 const ALLOWED_ORIGINS = [
   "https://dave-english-academy.vercel.app",
@@ -79,7 +80,7 @@ Deno.serve(async (req: Request) => {
     return json({ error: "Forbidden" }, 403, origin);
   }
 
-  let body: { email?: string; full_name?: string; role?: string; student_id?: number };
+  let body: { email?: string; full_name?: string; role?: string; student_id?: number; levels?: unknown };
   try {
     body = await req.json();
   } catch {
@@ -89,6 +90,20 @@ Deno.serve(async (req: Request) => {
   const { email, full_name } = body;
   const role = body.role;
   const studentId = role === "student" ? body.student_id : undefined;
+
+  // Optional class levels for newly created teachers only. Omitted means
+  // no assignments - never an automatic grant. Levels on a student (or
+  // any other role) payload are rejected so a misbuilt client cannot
+  // silently mis-provision an account.
+  if (role !== "teacher" && body.levels !== undefined) {
+    return json({ error: "levels is only accepted for role 'teacher'." }, 400, origin);
+  }
+  const levelsCheck = role === "teacher"
+    ? validateTeacherLevels(body.levels)
+    : { ok: true as const, levels: [] as never[] };
+  if (!levelsCheck.ok) {
+    return json({ error: levelsCheck.error }, 400, origin);
+  }
 
   if (!email || typeof email !== "string") {
     return json({ error: "email is required" }, 400, origin);
@@ -207,12 +222,47 @@ Deno.serve(async (req: Request) => {
     }
   }
 
+  // Teacher level assignments (migration 0017/0135): without a row here the
+  // new teacher can neither save nor view attendance. Insert exactly the
+  // explicitly requested levels - empty means none. Upsert on the unique
+  // pair makes retries safe (no duplicate rows, ever).
+  const assignedLevels: string[] = [];
+  if (role === "teacher" && created.user && levelsCheck.levels.length > 0) {
+    const { error: levelsError } = await adminClient
+      .from("teacher_group_assignments")
+      .upsert(
+        levelsCheck.levels.map((level) => ({ teacher_id: created.user!.id, level })),
+        { onConflict: "teacher_id,level", ignoreDuplicates: true },
+      );
+    if (levelsError) {
+      // Same convention as student linkWarning below: the login already
+      // exists, so report success-with-warning rather than failing blindly
+      // or pretending the teacher is fully provisioned.
+      return json(
+        {
+          email: created.user.email ?? email,
+          password,
+          full_name: full_name ?? "",
+          role,
+          levels: assignedLevels,
+          levelsWarning: "Account created, but level assignments failed (" +
+            levelsError.message +
+            "). Assign levels in Settings → Teacher level assignments, or the teacher cannot take attendance.",
+        },
+        200,
+        origin,
+      );
+    }
+    assignedLevels.push(...levelsCheck.levels);
+  }
+
   return json(
     {
       email: created.user?.email ?? email,
       password,
       full_name: full_name ?? "",
       role,
+      ...(role === "teacher" ? { levels: assignedLevels } : {}),
     },
     200,
     origin,

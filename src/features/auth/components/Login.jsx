@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Eye, EyeOff, Loader2, Lock } from 'lucide-react';
-import { signInWithPassword } from '../../../lib/auth';
+import { signInWithPassword, requestPasswordReset } from '../../../lib/auth';
 import { setLanguage, applyLoginDefaultLanguage } from '../../../i18n';
 
 export default function Login({ notice = false }) {
@@ -12,6 +12,8 @@ export default function Login({ notice = false }) {
   const [capsLockOn, setCapsLockOn] = useState(false);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [mode, setMode] = useState('signin');
+  const [resetSent, setResetSent] = useState(false);
 
   // First-time visitors see Uzbek; an explicit saved choice is never overridden.
   useEffect(() => {
@@ -23,13 +25,24 @@ export default function Login({ notice = false }) {
     setError('');
     setSubmitting(true);
     try {
-      await signInWithPassword({ email, password });
-      // onAuthStateChange (in AuthContext) picks up the new session automatically.
+      if (mode === 'forgot') {
+        await requestPasswordReset(email);
+        setResetSent(true);
+      } else {
+        await signInWithPassword({ email, password });
+        // onAuthStateChange (in AuthContext) picks up the new session automatically.
+      }
     } catch (err) {
-      setError(err.message || t('auth:couldNotSignIn'));
+      setError(err.message || (mode === 'forgot' ? t('auth:resetSendFailed') : t('auth:couldNotSignIn')));
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const switchMode = (next) => {
+    setMode(next);
+    setError('');
+    setResetSent(false);
   };
 
   const trackCapsLock = (e) => {
@@ -75,10 +88,10 @@ export default function Login({ notice = false }) {
             <img src="/icons/icon-192.png" alt="Dave English Academy" className="mx-auto mb-3 h-12 w-12 rounded-2xl md:hidden" />
             <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-brand-600 md:hidden">{t('auth:brandTitle')}</p>
             <h1 className="mt-1 font-display text-xl font-bold text-ink">
-              {t('auth:signInTitle')}
+              {mode === 'forgot' ? t('auth:forgotTitle') : t('auth:signInTitle')}
             </h1>
             <p className="mt-1 text-sm text-ink/55">
-              {t('auth:signInToContinue')}
+              {mode === 'forgot' ? t('auth:forgotSubtitle') : t('auth:signInToContinue')}
             </p>
           </div>
 
@@ -91,6 +104,12 @@ export default function Login({ notice = false }) {
           {notice && !error && (
             <div role="status" className="mb-4 rounded-lg border border-active/25 bg-active/5 px-3 py-2 text-sm font-medium text-active">
               {t('auth:resetCompleteNotice')}
+            </div>
+          )}
+
+          {mode === 'forgot' && resetSent && !error && (
+            <div role="status" className="mb-4 rounded-lg border border-active/25 bg-active/5 px-3 py-2 text-sm font-medium text-active">
+              {t('auth:resetSent')} {t('auth:checkYourEmail')}
             </div>
           )}
 
@@ -110,6 +129,7 @@ export default function Login({ notice = false }) {
                   className="w-full rounded-lg border border-ink/10 bg-white px-3 py-2.5 text-sm text-ink focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
                 />
               </div>
+              {mode === 'signin' && (
               <div>
                 <label htmlFor="login-password" className="mb-1 block text-xs font-semibold text-ink/60">
                   {t('common:password')}
@@ -138,12 +158,13 @@ export default function Login({ notice = false }) {
                     {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
                   </button>
                 </div>
-                {capsLockOn && (
+                {capsLockOn && mode === 'signin' && (
                   <p role="status" className="mt-1 text-xs font-medium text-levelB">
                     {t('auth:capsLockOn')}
                   </p>
                 )}
               </div>
+              )}
 
               <button
                 type="submit"
@@ -152,8 +173,19 @@ export default function Login({ notice = false }) {
                 className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 disabled:opacity-50"
               >
                 {submitting ? <Loader2 size={15} className="animate-spin" aria-hidden="true" /> : <Lock size={15} aria-hidden="true" />}
-                {submitting ? t('auth:signingIn') : t('common:signIn')}
+                {submitting ? (mode === 'forgot' ? t('auth:sending') : t('auth:signingIn')) : (mode === 'forgot' ? t('auth:sendResetLink') : t('common:signIn'))}
               </button>
+              <div className="text-center">
+                {mode === 'signin' ? (
+                  <button type="button" onClick={() => switchMode('forgot')} className="text-xs font-semibold text-brand-600 hover:text-brand-700">
+                    {t('auth:forgotPassword')}
+                  </button>
+                ) : (
+                  <button type="button" onClick={() => switchMode('signin')} className="text-xs font-semibold text-brand-600 hover:text-brand-700">
+                    {t('auth:backToSignIn')}
+                  </button>
+                )}
+              </div>
               <p className="text-center text-[11px] leading-relaxed text-ink/40">
                 {t('auth:trustNote')}
               </p>

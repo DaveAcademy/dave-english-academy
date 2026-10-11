@@ -45,21 +45,21 @@ assert(sb.includes("storage.from(ATTACHMENTS_BUCKET).remove([path])"), 'storageB
 assert(sb.includes('deleteHomeworkSubmissionFile') && sb.includes('file_url'), 'delete fetches path before DB delete');
 
 // 5. Storage path safety
-assert(sb.includes("homework-answers/${me.id}") || read('src/features/homework/pages/MyHomework.jsx').includes('homework-answers/${me.id}'), 'upload path uses homework-answers/{student_id}');
+// NOTE (2026): the student photo-capture UI was deliberately removed from
+// the website (commit 2dbb90d), so no upload-path/camera assertions apply.
+// Per-student storage isolation is still enforced server-side (0039 +
+// orphan inventory + delete-before-DB-delete, asserted in §4 above).
 assert(sb.includes('can_write_homework_answer') || read('supabase/migrations/0039_secure_homework_storage.sql').includes('can_write_homework_answer'), 'can_write_homework_answer still referenced');
-assert(!sb.includes("uploadAttachment(file, 'homework-answers') && !sb.includes('${me.id}'") || true, 'no flat homework-answers upload without student_id (checked above)');
 
 // 6. Manual points only — no auto trigger
 const migrations = fs.readdirSync(path.join(repo,'supabase/migrations')).join('\n');
 assert(!migrations.includes('award_homework_submission_points') || read('supabase/migrations/20260919000000_homework_level_scoped_and_consistency.sql').length>0, 'no active auto homework trigger (0121 dropped)');
 const allMigrationsText = fs.readdirSync(path.join(repo,'supabase/migrations')).map(f=> read(`supabase/migrations/${f}`)).join('\n');
-assert(!allMigrationsText.includes('create or replace function public.award_homework') || allMigrationsText.includes('drop trigger if exists award_homework'), 'no live award_homework function');
+assert(!allMigrationsText.includes('create or replace function public.award_homework(') || allMigrationsText.includes('drop trigger if exists award_homework'), 'no live award_homework function (exact name: award_homework_points is the legitimate manual-points function and must not match)');
 assert(read('src/features/homework/pages/MyHomework.jsx').includes('MANUAL only') || read('src/features/homework/pages/Homework.jsx').includes('Manual'), 'UI notes manual points');
 
-// 7. 5-image limit + camera
-assert(read('src/features/homework/pages/MyHomework.jsx').includes('MAX_IMAGES = 5'), 'MAX_IMAGES 5 enforced');
-assert(read('src/features/homework/pages/MyHomework.jsx').includes('capture="environment"'), 'camera capture attribute present');
-assert(read('src/features/homework/pages/MyHomework.jsx').includes('Take clear') || read('src/features/homework/pages/MyHomework.jsx').includes('well-lit'), 'photo guidance present');
+// 7. Student capture UI — retired with the feature (see §5 note above).
+// Teacher-side gallery assertions below remain in force.
 
 // 8. Teacher lightbox
 assert(read('src/features/homework/pages/Homework.jsx').includes('lightbox'), 'teacher lightbox exists');
