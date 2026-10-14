@@ -60,6 +60,25 @@ export async function updateStudent(id, data) {
   return assertRows(rows, 'edit this student')[0];
 }
 
+// Assigns multiple students to one group in a single batched update.
+// Only group_id is written - level, payments, attendance, exams, points,
+// and every other column are left exactly as they are.
+export async function assignStudentsToGroup(studentIds, groupId) {
+  const ids = [...new Set((studentIds || []).map((v) => Number(v)).filter(Number.isFinite))];
+  if (ids.length === 0) throw new Error('No students selected.');
+  const { data: rows, error } = await supabase
+    .from('students')
+    .update({ group_id: groupId })
+    .in('id', ids)
+    .select('id');
+  if (error) throw error;
+  assertRows(rows, 'assign these students');
+  if (rows.length !== ids.length) {
+    throw new Error(`Only ${rows.length} of ${ids.length} students were assigned.`);
+  }
+  return rows;
+}
+
 export async function deleteStudent(id) {
   // Delegate to Edge Function which uses service role to:
   // 1. Find student's profile_id
@@ -1403,6 +1422,27 @@ export async function getWordBuilderRound() {
   const { data, error } = await supabase.rpc('get_word_builder_round');
   if (error) throw error;
   return splitRoundId(data);
+}
+
+// Anagram Builder round: a single letter pool plus the required word
+// count, minted single-use server-side (get_anagram_builder_round).
+// Returns { roundId, level, letters, target } - never the candidate
+// answers, so the client can only validate submissions, not reveal them.
+export async function getAnagramBuilderRound() {
+  const { data, error } = await supabase.rpc('get_anagram_builder_round');
+  if (error) throw error;
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row || !row.round_id || !row.letters) throw new Error('No anagram round available');
+  return { roundId: row.round_id, level: row.level, letters: row.letters, target: row.target_words };
+}
+
+// Student's own available vocabulary - the same approved source the
+// server validates anagram answers against - used for instant
+// client-side feedback only. Authoritative grading stays server-side.
+export async function listAvailableVocabulary() {
+  const { data, error } = await supabase.rpc('student_available_vocabulary');
+  if (error) throw error;
+  return data || [];
 }
 
 export async function getListeningChallengeRound() {

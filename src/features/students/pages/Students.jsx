@@ -75,7 +75,12 @@ export default function Students() {
     }
     if (filters.level) list = list.filter((s) => s.level === filters.level);
     if (filters.status) list = list.filter((s) => s.status === filters.status);
-    if (filters.group) list = list.filter((s) => String(s.group_id) === filters.group);
+    if (filters.group) {
+      list =
+        filters.group === 'none'
+          ? list.filter((s) => s.group_id == null)
+          : list.filter((s) => String(s.group_id) === filters.group);
+    }
     if (filters.websiteStatus) list = list.filter((s) => engagementById[s.id]?.websiteStatus === filters.websiteStatus);
 
     const ENGAGEMENT_KEYS = { websiteStatus: 'websiteStatus', lastLogin: 'lastSignInAt', lastWebsiteActivity: 'lastWebsiteActivity', lessonsCompleted: 'lessonsCompleted', lessonsAvailable: 'lessonsAvailable', currentLesson: 'currentLessonNumber' };
@@ -142,9 +147,9 @@ export default function Students() {
 
   return (
     <div>
-      <header className="mb-4 flex flex-wrap items-center justify-between gap-2">
+      <header className="mb-3 flex flex-wrap items-center justify-between gap-2 sm:mb-4">
         <div>
-          <h1 className="font-display text-2xl font-bold text-ink">{t('title')}</h1>
+          <h1 className="font-display text-xl font-bold text-ink sm:text-2xl">{t('title')}</h1>
           <p className="mt-1 text-sm text-ink/50">{t('subtitle')}</p>
         </div>
         {isAdmin && (
@@ -194,6 +199,7 @@ export default function Students() {
         {activeGroups.length > 0 && (
           <select value={filters.group} onChange={(e) => setFilters({ ...filters, group: e.target.value })} className="input sm:w-40">
             <option value="">{t('allGroups')}</option>
+            <option value="none">{t('noGroup', { defaultValue: 'No group' })}</option>
             {activeGroups.map((g) => (
               <option key={g.id} value={g.id}>
                 {g.name}
@@ -320,15 +326,20 @@ export default function Students() {
               const eng = engagementById[s.id];
               const group = groups.find((g) => g.id === s.group_id);
               return (
-              <div key={s.id} className="rounded-xl bg-white p-3 shadow-card">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="font-semibold text-ink">{s.real_name}</p>
-                    {s.english_name && <p className="text-xs text-ink/40">{s.english_name}</p>}
-                  </div>
+              <div key={s.id} className="rounded-xl bg-white p-2.5 shadow-card">
+                {/* Mobile compact composition - name + level + status share
+                    line 1, all secondary meta merges into one wrapping line 2.
+                    Desktop table above. Same data, badges and handlers. */}
+                <div className="flex items-center gap-2">
+                  <p className="min-w-0 flex-1 truncate font-semibold text-ink">
+                    {s.real_name}
+                    {s.english_name && <span className="font-normal text-ink/40"> ({s.english_name})</span>}
+                  </p>
+                  <LevelBadge level={s.level} />
+                  <StatusBadge status={s.status} />
                   {isAdmin && (
-                    <div className="flex gap-1">
-                      <button onClick={() => setAchievementsStudent(s)} className="rounded-md p-1.5 text-ink/50 active:bg-ink/5">
+                    <div className="flex flex-shrink-0 gap-0.5">
+                      <button onClick={() => setAchievementsStudent(s)} className="rounded-md p-1.5 text-ink/50 active:bg-ink/5" aria-label="Achievements">
                         <Trophy size={15} />
                       </button>
                       <button
@@ -337,10 +348,11 @@ export default function Students() {
                           setFormOpen(true);
                         }}
                         className="rounded-md p-1.5 text-brand-600 active:bg-brand-50"
+                        aria-label="Edit student"
                       >
                         <Pencil size={15} />
                       </button>
-                      <button onClick={() => setDeletingStudent(s)} className="rounded-md p-1.5 text-inactive active:bg-inactive/10">
+                      <button onClick={() => setDeletingStudent(s)} className="rounded-md p-1.5 text-inactive active:bg-inactive/10" aria-label="Delete student">
                         <Trash2 size={15} />
                       </button>
                       <button onClick={() => setResettingStudent(s)} className="rounded-md p-1.5 text-ink/50 active:bg-ink/5" aria-label="Reset password">
@@ -349,31 +361,10 @@ export default function Students() {
                     </div>
                   )}
                 </div>
-                <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                  <LevelBadge level={s.level} />
-                  <StatusBadge status={s.status} />
-                  {group?.name && <span className="text-xs text-ink/40">{group.name}</span>}
-                  <span className="text-xs text-ink/40">{t('paysDay', { day: s.payment_deadline })}</span>
-                  {s.telegram_chat_id ? (
-                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-active">
-                      <MessageCircle size={12} /> {t('telegramConnected')}
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-ink/40">
-                      <MessageCircleOff size={12} /> {t('telegramMissing')}
-                    </span>
-                  )}
-                  <WebsiteStatusBadge status={eng?.websiteStatus} />
-                </div>
-                {eng && (
-                  <div className="mt-1.5 text-xs text-ink/50">
-                    {t('colLessonsCompleted', { defaultValue: 'Lessons Completed' })}: {eng.lessonsCompleted}/{eng.lessonsAvailable} · {t('colCurrentLesson', { defaultValue: 'Current Lesson' })}: {eng.currentLessonLabel || '—'}
-                  </div>
-                )}
-                <div className="mt-1.5 flex items-center justify-between">
-                  {s.phone && <p className="text-xs text-ink/50">{s.phone}</p>}
-                  <p className="text-xs font-semibold text-brand-600">{formatUZS(s.monthly_fee)}{t('perMonth')}</p>
-                </div>
+                <p className="mt-1 text-xs text-ink/50">
+                  {[group?.name, t('paysDay', { day: s.payment_deadline }), s.telegram_chat_id ? t('telegramConnected') : t('telegramMissing'), eng ? `${t('colLessonsCompleted', { defaultValue: 'Lessons Completed' })} ${eng.lessonsCompleted}/${eng.lessonsAvailable}` : null, eng?.currentLessonLabel ? `${t('colCurrentLesson', { defaultValue: 'Current Lesson' })}: ${eng.currentLessonLabel}` : null, s.phone, `${formatUZS(s.monthly_fee)}${t('perMonth')}`].filter(Boolean).join(' · ')}
+                  {eng?.websiteStatus ? <><span> · </span><WebsiteStatusBadge status={eng.websiteStatus} /></> : null}
+                </p>
               </div>
               );
             })}

@@ -18,3 +18,5 @@ supabase/.branches/
 
 # Deploy worktree
 C:/Dave-Academy-Deploy/
+
+*.local.json

@@ -1,4 +1,4 @@
-export { LEVELS } from '../features/games/utils/levels';
+export { LEVELS } from '../features/games/utils/levels.js';
 
 // On-screen name for a level key. Prefers the admin-renamable stored
 // label (level_labels table, exposed as levelLabels from useAcademy())

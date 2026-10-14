@@ -1,16 +1,17 @@
 // GroupsManagement.jsx
 
 import { useState, useMemo } from 'react';
-import { Plus, Pencil, Trash2, CheckCircle2, XCircle, Users, X } from 'lucide-react';
+import { Plus, Pencil, Trash2, CheckCircle2, XCircle, Users, X, ArrowLeft, Search, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAcademy } from '../../../lib/AcademyDataContext';
 import { useAuth } from '../../../lib/AuthContext';
 import { LEVELS, levelDisplayName } from '../../../lib/levels';
+import { studentDisplayName, rosterFor, searchRoster, studentsWithoutGroup, planTransfer, planBulkAssignment, friendlyGroupError } from '../../../lib/groupUtils';
 import ConfirmDialog from '../../../shared/components/ConfirmDialog';
 
 export default function GroupsManagement() {
   const { t } = useTranslation(['groups', 'common']);
-  const { groups, students, lessons, addGroup, editGroup, removeGroup, levelLabels, renameLevelLabel, error, setError } = useAcademy();
+  const { groups, groupsError, retryGroups, students, lessons, addGroup, editGroup, removeGroup, assignStudentsToGroup, levelLabels, renameLevelLabel, error, setError } = useAcademy();
   const { role } = useAuth();
   const isAdmin = role === 'administrator';
 
@@ -26,6 +27,30 @@ export default function GroupsManagement() {
   const [levelDraft, setLevelDraft] = useState('');
   const [levelError, setLevelError] = useState('');
   const [levelSaving, setLevelSaving] = useState(false);
+  // Group detail (roster), transfers, and bulk assignment.
+  const [detailId, setDetailId] = useState(null);
+  const [rosterQuery, setRosterQuery] = useState('');
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerQuery, setPickerQuery] = useState('');
+  const [pickerSelected, setPickerSelected] = useState([]);
+  const [confirmAction, setConfirmAction] = useState(null);
+  const [detailBusy, setDetailBusy] = useState(false);
+  const [detailMessage, setDetailMessage] = useState(null);
+
+  const detailGroup = useMemo(() => groups.find((g) => g.id === detailId) || null, [groups, detailId]);
+  const roster = useMemo(() => (detailId ? rosterFor(students, detailId) : []), [students, detailId]);
+  const visibleRoster = useMemo(() => searchRoster(roster, rosterQuery), [roster, rosterQuery]);
+  // Candidates for bulk assignment: everyone NOT already in this group.
+  const candidates = useMemo(() => {
+    if (!detailId) return [];
+    const pool = students.filter((s) => String(s.group_id ?? '') !== String(detailId));
+    const q = pickerQuery.trim().toLowerCase();
+    const filtered = q
+      ? pool.filter((s) => studentDisplayName(s).toLowerCase().includes(q))
+      : pool;
+    return filtered.sort((a, b) => studentDisplayName(a).localeCompare(studentDisplayName(b)));
+  }, [students, detailId, pickerQuery]);
+  const groupNameById = useMemo(() => Object.fromEntries(groups.map((g) => [String(g.id), g.name])), [groups]);
 
   const groupStats = useMemo(() => {
     const stats = {};
@@ -80,7 +105,13 @@ export default function GroupsManagement() {
       setFormOpen(false);
       setEditingGroup(null);
     } catch (err) {
-      setFormError(err.message || t('error.somethingWentWrong'));
+      // A rename colliding with an existing name (case-insensitive) hits
+      // the DB's unique index - show the friendly message, not raw SQL.
+      setFormError(
+        friendlyGroupError(err) === 'duplicate'
+          ? t('error.duplicateName')
+          : err.message || t('error.somethingWentWrong')
+      );
     } finally {
       setSaving(false);
     }
@@ -121,6 +152,83 @@ export default function GroupsManagement() {
     }
   };
 
+  // ----- Group detail / roster / transfers -----
+
+  const openDetail = (group) => {
+    setDetailId(group.id);
+    setRosterQuery('');
+    setPickerOpen(false);
+    setPickerQuery('');
+    setPickerSelected([]);
+    setDetailMessage(null);
+  };
+
+  const closeDetail = () => {
+    setDetailId(null);
+    setPickerOpen(false);
+    setPickerSelected([]);
+    setDetailMessage(null);
+  };
+
+  // Single transfer (or removal - targetGroupId null). Plan first so a
+  // no-op never reaches the database; only group_id is ever written.
+  const startTransfer = (student, targetGroupId) => {
+    const plan = planTransfer(students, student.id, targetGroupId);
+    if (!plan.ok) return;
+    const fromName = plan.currentGroupId ? groupNameById[plan.currentGroupId] || plan.currentGroupId : 'No group';
+    const toName = plan.targetGroupId ? groupNameById[plan.targetGroupId] || plan.targetGroupId : 'No group';
+    setConfirmAction({
+      title: 'Move student',
+      message: `Move ${studentDisplayName(student)} from "${fromName}" to "${toName}"? Only the group changes - level, payments, attendance, and results are untouched.`,
+      confirmLabel: 'Move',
+      run: async () => {
+        await assignStudentsToGroup([student.id], plan.targetGroupId);
+        setDetailMessage({ ok: true, text: `${studentDisplayName(student)} moved to ${toName}.` });
+      },
+    });
+  };
+
+  const togglePickerStudent = (id) => {
+    setPickerSelected((prev) => (prev.includes(id) ? prev.filter((v) => v !== id) : [...prev, id]));
+  };
+
+  const startBulkAssignment = () => {
+    const plan = planBulkAssignment(students, pickerSelected, detailId);
+    if (plan.assignable.length === 0) {
+      setDetailMessage({ ok: false, text: 'No students selected, or all selected students are already in this group.' });
+      return;
+    }
+    setConfirmAction({
+      title: 'Add students',
+      message: `Assign ${plan.assignable.length} student(s) to "${detailGroup?.name}"? Only the group changes - levels and all other records are untouched.`,
+      confirmLabel: `Assign ${plan.assignable.length}`,
+      run: async () => {
+        await assignStudentsToGroup(plan.assignable.map((s) => s.id), plan.targetGroupId);
+        const skipped = plan.alreadyInGroup.length;
+        setDetailMessage({
+          ok: true,
+          text: `Assigned ${plan.assignable.length} student(s).${skipped ? ` ${skipped} already in this group were skipped.` : ''}`,
+        });
+        setPickerOpen(false);
+        setPickerSelected([]);
+      },
+    });
+  };
+
+  const runConfirmed = async () => {
+    if (!confirmAction) return;
+    setDetailBusy(true);
+    try {
+      await confirmAction.run();
+      setConfirmAction(null);
+    } catch (err) {
+      setDetailMessage({ ok: false, text: err.message || 'The change could not be saved. Please try again.' });
+      setConfirmAction(null);
+    } finally {
+      setDetailBusy(false);
+    }
+  };
+
   if (!isAdmin) {
     return (
       <div className="rounded-xl bg-white p-10 text-center shadow-card">
@@ -133,9 +241,9 @@ export default function GroupsManagement() {
 
   return (
     <div>
-      <header className="mb-6 flex flex-wrap items-center justify-between gap-2">
+      <header className="mb-4 flex flex-wrap items-center justify-between gap-2 sm:mb-6">
         <div>
-          <h1 className="font-display text-2xl font-bold text-ink">{t('title')}</h1>
+          <h1 className="font-display text-xl font-bold text-ink sm:text-2xl">{t('title')}</h1>
           <p className="mt-1 text-sm text-ink/50">{t('subtitle')}</p>
         </div>
         <button onClick={handleOpenCreate} className="flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600">
@@ -144,6 +252,16 @@ export default function GroupsManagement() {
       </header>
 
       {error && <div className="mb-4 rounded-lg border border-inactive/30 bg-inactive/5 px-4 py-3 text-sm text-inactive">{error}</div>}
+
+      {/* A failed groups fetch must never look like an empty group list. */}
+      {groupsError && (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <span className="flex items-center gap-2"><AlertCircle size={16} /> Could not load groups. Please try again.</span>
+          <button onClick={retryGroups} className="rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-600">
+            Retry
+          </button>
+        </div>
+      )}
 
       {/* Academy Levels - structural levels (A/A1/B/C) used across the whole
           system. Display-label renames only; keys and all memberships stay
@@ -206,7 +324,7 @@ export default function GroupsManagement() {
         <h2 className="font-display text-sm font-bold text-ink">Custom Groups</h2>
         <p className="mt-1 text-xs text-ink/50">
           Custom Groups are independent groups that can be created, edited, activated/deactivated, and
-          deleted when they contain no students or lessons.
+          deleted when they contain no students or lessons. Click a group name to view its roster.
         </p>
       </div>
 
@@ -214,7 +332,11 @@ export default function GroupsManagement() {
         <div className="rounded-xl bg-white p-10 text-center shadow-card">
           <Users className="mx-auto mb-3 h-12 w-12 text-ink/20" />
           <p className="font-display text-lg font-semibold text-ink">{t('emptyState.title')}</p>
-          <p className="mt-1 text-sm text-ink/50">{t('emptyState.description')}</p>
+          <p className="mt-1 text-sm text-ink/50">
+            {groupsError
+              ? 'Groups could not be loaded. Use the Retry button above, or create a group below.'
+              : t('emptyState.description')}
+          </p>
           <button onClick={handleOpenCreate} className="mt-4 flex mx-auto items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600">
             <Plus size={16} /> {t('createFirstGroup')}
           </button>
@@ -238,7 +360,11 @@ export default function GroupsManagement() {
                 const hasDependencies = stats.students > 0 || stats.lessons > 0;
                 return (
                   <tr key={g.id} className="border-b border-ink/5 last:border-0 hover:bg-ink/[0.015]">
-                    <td className="px-4 py-3 font-medium text-ink">{g.name}</td>
+                    <td className="px-4 py-3 font-medium text-ink">
+                      <button onClick={() => openDetail(g)} className="font-medium text-brand-500 hover:underline">
+                        {g.name}
+                      </button>
+                    </td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${g.active ? 'bg-active/10 text-active' : 'bg-inactive/10 text-inactive'}`}>
                         {g.active ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
@@ -250,6 +376,12 @@ export default function GroupsManagement() {
                     <td className="px-4 py-3 text-ink/50">{new Date(g.created_at).toLocaleDateString()}</td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex justify-end gap-2">
+                        <button
+                          onClick={() => openDetail(g)}
+                          className="rounded-md px-2 py-1 text-xs font-semibold text-ink/60 hover:bg-ink/5"
+                        >
+                          {t('view', { defaultValue: 'View' })}
+                        </button>
                         <button
                           onClick={() => handleOpenEdit(g)}
                           className="rounded-md px-2 py-1 text-xs font-semibold text-brand-500 hover:bg-brand-50"
@@ -330,6 +462,155 @@ export default function GroupsManagement() {
         </div>
       )}
 
+      {detailGroup && (
+        <div className="fixed inset-0 z-30 flex items-end justify-center bg-ink/40 sm:items-center sm:p-4">
+          <div className="flex max-h-[92vh] w-full flex-col rounded-t-2xl bg-white shadow-xl sm:max-w-lg sm:rounded-2xl">
+            <div className="flex flex-shrink-0 items-center justify-between gap-2 border-b border-ink/10 px-5 py-4">
+              <div className="min-w-0">
+                <h2 className="truncate font-display text-lg font-bold text-ink">{detailGroup.name}</h2>
+                <p className="mt-0.5 text-xs text-ink/50">
+                  Group ID: {detailGroup.id} · {roster.length} student(s) · {detailGroup.active ? t('status.active') : t('status.inactive')}
+                </p>
+              </div>
+              <button onClick={closeDetail} className="rounded-md p-1 text-ink/40 hover:bg-ink/5 hover:text-ink">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+              {detailMessage && (
+                <div className={`mb-3 rounded-lg border px-3 py-2 text-sm ${detailMessage.ok ? 'border-active/30 bg-active/5 text-active' : 'border-inactive/30 bg-inactive/5 text-inactive'}`}>
+                  {detailMessage.text}
+                </div>
+              )}
+
+              {!pickerOpen ? (
+                <>
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                    <div className="relative min-w-0 flex-1">
+                      <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink/30" />
+                      <input
+                        value={rosterQuery}
+                        onChange={(e) => setRosterQuery(e.target.value)}
+                        placeholder="Search students…"
+                        className="input pl-8"
+                      />
+                    </div>
+                    <button
+                      onClick={() => { setPickerOpen(true); setPickerQuery(''); setPickerSelected([]); }}
+                      className="flex flex-shrink-0 items-center gap-1.5 rounded-lg bg-brand-500 px-3 py-2 text-xs font-semibold text-white hover:bg-brand-600"
+                    >
+                      <Plus size={14} /> Add students
+                    </button>
+                  </div>
+
+                  {visibleRoster.length === 0 ? (
+                    <div className="rounded-xl border border-ink/10 p-8 text-center">
+                      <Users className="mx-auto mb-2 h-8 w-8 text-ink/20" />
+                      <p className="text-sm font-semibold text-ink">
+                        {roster.length === 0 ? 'This group has no students yet.' : 'No students match your search.'}
+                      </p>
+                      <p className="mt-1 text-xs text-ink/50">
+                        {roster.length === 0 ? 'Use "Add students" to assign students to this group.' : 'Try a different name.'}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {visibleRoster.map((s) => (
+                        <div key={s.id} className="flex flex-wrap items-center gap-2 rounded-lg border border-ink/10 p-3">
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-semibold text-ink">{studentDisplayName(s)}</p>
+                            <p className="text-xs text-ink/50">{levelDisplayName(s.level, levelLabels, t)}</p>
+                          </div>
+                          <select
+                            value=""
+                            onChange={(e) => {
+                              const target = e.target.value === 'none' ? null : e.target.value;
+                              if (target || e.target.value === 'none') startTransfer(s, target);
+                              e.target.value = '';
+                            }}
+                            disabled={detailBusy}
+                            className="input w-40 flex-shrink-0 text-xs"
+                          >
+                            <option value="">Move to…</option>
+                            <option value="none">No group</option>
+                            {groups.filter((g) => g.id !== detailId && g.active).map((g) => (
+                              <option key={g.id} value={g.id}>{g.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => { setPickerOpen(false); setPickerSelected([]); }}
+                    className="mb-3 flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold text-ink/60 hover:bg-ink/5"
+                  >
+                    <ArrowLeft size={12} /> Back to roster
+                  </button>
+                  <div className="relative mb-3">
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink/30" />
+                    <input
+                      value={pickerQuery}
+                      onChange={(e) => setPickerQuery(e.target.value)}
+                      placeholder="Search students…"
+                      className="input pl-8"
+                    />
+                  </div>
+                  {candidates.length === 0 ? (
+                    <div className="rounded-xl border border-ink/10 p-8 text-center">
+                      <p className="text-sm font-semibold text-ink">Every student is already in this group.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {candidates.map((s) => (
+                        <label key={s.id} className="flex cursor-pointer items-center gap-3 rounded-lg border border-ink/10 p-3 hover:bg-ink/[0.015]">
+                          <input
+                            type="checkbox"
+                            checked={pickerSelected.includes(s.id)}
+                            onChange={() => togglePickerStudent(s.id)}
+                            className="h-4 w-4 rounded border-ink/30 text-brand-500 focus:ring-brand-500"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-semibold text-ink">{studentDisplayName(s)}</p>
+                            <p className="text-xs text-ink/50">
+                              {s.group_id ? `Currently in: ${groupNameById[String(s.group_id)] || s.group_id}` : 'No group'}
+                              {' · '}
+                              {levelDisplayName(s.level, levelLabels, t)}
+                            </p>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            {pickerOpen && (
+              <div className="flex flex-shrink-0 items-center justify-between gap-2 border-t border-ink/10 px-5 py-4">
+                <p className="text-xs text-ink/60">{pickerSelected.length} selected</p>
+                <div className="flex gap-2">
+                  <button onClick={() => setPickerSelected([])} className="rounded-lg px-3 py-2 text-xs font-semibold text-ink/60 hover:bg-ink/5">
+                    Clear
+                  </button>
+                  <button
+                    onClick={startBulkAssignment}
+                    disabled={detailBusy || pickerSelected.length === 0}
+                    className="rounded-lg bg-brand-500 px-4 py-2 text-xs font-semibold text-white hover:bg-brand-600 disabled:opacity-60"
+                  >
+                    {detailBusy ? t('common:saving') : `Assign to ${detailGroup.name}`}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {deletingGroup && (
         <ConfirmDialog
           title={t('confirm.deleteTitle', { name: deletingGroup.name })}
@@ -337,6 +618,17 @@ export default function GroupsManagement() {
           confirmLabel={t('common:delete')}
           onConfirm={handleDelete}
           onCancel={() => setDeletingGroup(null)}
+        />
+      )}
+
+      {confirmAction && (
+        <ConfirmDialog
+          title={confirmAction.title}
+          message={confirmAction.message}
+          confirmLabel={confirmAction.confirmLabel}
+          busy={detailBusy}
+          onConfirm={runConfirmed}
+          onCancel={() => setConfirmAction(null)}
         />
       )}
     </div>

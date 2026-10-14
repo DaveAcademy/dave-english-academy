@@ -100,6 +100,7 @@ export function useAcademyData() {
   const [messageAttachments, setMessageAttachments] = useState([]);
   const [files, setFiles] = useState([]);
   const [groups, setGroups] = useState([]);
+  const [groupsError, setGroupsError] = useState(null);
   const [levelLabels, setLevelLabels] = useState({}); // { A: 'Level A', ... } - admin-renamable display names
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -194,6 +195,18 @@ export function useAcademyData() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.role, me, loading, error, loadCore]);
 
+  // Groups fetch, isolated from every other load: a failure is captured in
+  // groupsError (never silently shown as an empty list) and retryGroups
+  // lets the Groups page retry without reloading the whole app.
+  const loadGroups = useCallback(async () => {
+    setGroupsError(null);
+    try {
+      setGroups(await db.listGroups());
+    } catch (e) {
+      setGroupsError(e);
+    }
+  }, []);
+
   // Loaded separately from the block above on purpose: these tables come
   // from later migrations (0009, 0010). If a migration hasn't been
   // applied to a given environment yet, this fetch fails - but it must
@@ -202,7 +215,7 @@ export function useAcademyData() {
   useEffect(() => {
     (async () => {
       try {
-        const [tmpl, msg, reads, atts, fls, hsf, cl, cp, gr] = await Promise.all([
+        const [tmpl, msg, reads, atts, fls, hsf, cl, cp] = await Promise.all([
           db.listCertificateTemplates(),
           db.listMessages(),
           db.listMessageReads(),
@@ -211,7 +224,6 @@ export function useAcademyData() {
           db.listHomeworkSubmissionFiles(),
           db.listCurriculumLessons(),
           db.listCurriculumProgress(),
-          db.listGroups(),
         ]);
         setCertificateTemplates(tmpl);
         setMessages(msg);
@@ -221,7 +233,6 @@ export function useAcademyData() {
         setHomeworkSubmissionFilesState(hsf);
         setCurriculumLessons(cl);
         setCurriculumProgress(cp);
-        setGroups(gr);
       } catch (e) {
         // Messaging/certificate-template/file-library are additive
         // features - leave them at their empty defaults rather than
@@ -229,6 +240,10 @@ export function useAcademyData() {
         // what's likely just a migration not being applied yet in this
         // environment.
       }
+      // Groups load in their own isolated fetch with a visible error +
+      // retry - a failed groups fetch must never masquerade as an empty
+      // group list.
+      loadGroups();
       // Level display labels live in their own isolated fetch: the
       // level_labels table may not exist yet where the migration hasn't
       // been applied, and that must not disturb anything above.
@@ -397,41 +412,39 @@ export function useAcademyData() {
   );
 
   const [pendingAttendance, setPendingAttendance] = useState(new Set());
-  // Synchronous per-key in-flight guard. A React state update cannot dedupe
-  // same-tick clicks (it hasn't rendered when the second click's closure
-  // runs), so the check+set here must happen on a ref before any await.
-  // pendingAttendance state remains only for the UI disabled flag.
+
+  // Synchronous in-flight guard: state updates flush async, so two clicks
+  // in the same tick would both pass the `pendingAttendance` closure check
+  // below. The ref check+set runs synchronously before any await, making
+  // the second same-key click a no-op. State remains only for UI disabling.
   const attendanceInFlightRef = useRef(new Set());
 
   const setAttendanceStatus = useCallback(
     async (studentId, date, status) => {
+      // Deduplicate: prevent concurrent saves for the same student+date.
       const key = `${studentId}:${date}`;
-      // Synchronous dedupe: ignore a repeat click for the same
-      // student+date while its save is in flight. Other keys proceed.
       if (attendanceInFlightRef.current.has(key)) return;
       attendanceInFlightRef.current.add(key);
+      if (pendingAttendance.has(key)) { attendanceInFlightRef.current.delete(key); return; }
       setPendingAttendance((prev) => {
         if (prev.has(key)) return prev;
         return new Set([...prev, key]);
       });
 
-      // Pre-click snapshot from the latest committed state (not a closure)
-      // for error rollback. Same-key concurrency is impossible past the
-      // guard above, so this is the true pre-click value.
-      const originalRecord = stateRef.current.attendance.find(
-        (a) => a.student_id === studentId && a.date === date
-      );
+      // Capture the original record before the optimistic update, so we can
+      // restore it exactly on failure. Use attendance from closure (not prev).
+      const originalRecord = attendance.find((a) => a.student_id === studentId && a.date === date);
 
-      // Optimistic update: always show the requested status. The toggle-off
-      // decision has ONE source of truth — the server result below — so the
-      // local and server layers can never disagree (insert vs delete) and
-      // one click always has one deterministic outcome.
+      // Optimistic update: immediately reflect the change in local state.
       setAttendance((prev) => {
         const existing = prev.find((a) => a.student_id === studentId && a.date === date);
         if (existing) {
-          return prev.map((a) =>
-            a.student_id === studentId && a.date === date ? { ...a, status } : a
-          );
+          if (existing.status === status) {
+            // Toggle off: remove the record.
+            return prev.filter((a) => a.id !== existing.id);
+          }
+          // Update existing record — keep the real id, replace status optimistically.
+          return prev.map((a) => (a.id === existing.id ? { ...a, status } : a));
         }
         // Insert new record (optimistic — id may be placeholder).
         return [...prev, { id: `opt-${key}`, student_id: studentId, date, status }];
@@ -439,9 +452,7 @@ export function useAcademyData() {
 
       try {
         const result = await db.setAttendanceStatus(studentId, date, status);
-        // Reconcile by attendance identity (student_id + date), never by
-        // database id: the optimistic row's id can differ from the real
-        // row's id, and matching by id would keep the stale optimistic row.
+        // Replace optimistic state with real data from the server.
         setAttendance((prev) => {
           // Remove the optimistic entry.
           const withoutOptimistic = prev.filter(
@@ -455,24 +466,29 @@ export function useAcademyData() {
           }
           // Server upserted — merge the real row.
           const real = result.row;
-          const idx = withoutOptimistic.findIndex(
-            (a) => a.student_id === real.student_id && a.date === real.date
-          );
-          if (idx >= 0) {
-            const next = [...withoutOptimistic];
-            next[idx] = real;
-            return next;
+          const exists = withoutOptimistic.find((a) => a.student_id === real.student_id && a.date === real.date);
+          if (exists) {
+            return withoutOptimistic.map((a) => (a.id === real.id ? real : a));
           }
           return [...withoutOptimistic, real];
         });
         touchBackup();
       } catch (e) {
-        // Rollback to the pre-click snapshot: restore the original record
-        // or drop the optimistic insert. Keyed by student+date so no stale
-        // row survives under a mismatched id.
+        // Rollback: restore the original record if one existed, otherwise remove
+        // the optimistic entry. This preserves the pre-update state exactly.
         setAttendance((prev) => {
-          const rest = prev.filter((a) => !(a.student_id === studentId && a.date === date));
-          return originalRecord ? [...rest, originalRecord] : rest;
+          if (originalRecord) {
+            // An existing record was updated — restore its original status.
+            return prev.map((a) =>
+              a.student_id === studentId && a.date === date
+                ? { ...originalRecord, status: originalRecord.status }
+                : a
+            );
+          }
+          // No existing record was present — remove the optimistic entry.
+          return prev.filter(
+            (a) => !(a.id === `opt-${key}` && a.student_id === studentId && a.date === date)
+          );
         });
         setError('Could not update attendance. Please try again.');
         throw e;
@@ -485,7 +501,7 @@ export function useAcademyData() {
         });
       }
     },
-    [touchBackup]
+    [touchBackup, pendingAttendance, attendance]
   );
 
   const addLesson = useCallback(async (data) => {
@@ -912,6 +928,7 @@ export function useAcademyData() {
     try {
       const record = await db.createGroup(data);
       setGroups((prev) => [...prev, record].sort((a, b) => a.name.localeCompare(b.name)));
+      setGroupsError(null);
       return record;
     } catch (e) {
       setError('Could not create group. Please try again.');
@@ -923,6 +940,7 @@ export function useAcademyData() {
     try {
       const record = await db.updateGroup(id, data);
       setGroups((prev) => prev.map((g) => (g.id === id ? record : g)).sort((a, b) => a.name.localeCompare(b.name)));
+      setGroupsError(null);
       return record;
     } catch (e) {
       setError('Could not update group. Please try again.');
@@ -934,10 +952,24 @@ export function useAcademyData() {
     try {
       await db.deleteGroup(id);
       setGroups((prev) => prev.filter((g) => g.id !== id));
+      setGroupsError(null);
     } catch (e) {
       setError('Could not delete group. Please try again.');
       throw e;
     }
+  }, []);
+
+  // Batched group assignment (also used for single transfers and for
+  // removing a student from a group by assigning group_id = null). Only
+  // group_id is written; the full student list is then re-read so every
+  // roster and count stays consistent. Errors are rethrown for the caller
+  // (Groups page detail view) to surface next to the action - no shared
+  // banner, so the failure never appears twice.
+  const assignStudentsToGroup = useCallback(async (studentIds, groupId) => {
+    await db.assignStudentsToGroup(studentIds, groupId);
+    const refreshed = await db.listStudents();
+    setStudents(refreshed);
+    touchBackup();
   }, []);
 
   // Admin-only rename of a level's on-screen label. The level key itself
@@ -1085,8 +1117,11 @@ export function useAcademyData() {
     messageAttachments,
     files,
     groups,
+    groupsError,
+    retryGroups: loadGroups,
     levelLabels,
     renameLevelLabel,
+    assignStudentsToGroup,
     loading,
     error,
     setError,
