@@ -21,5 +21,7 @@
   "bulkResult": "Ommaviy belgilash: {{ok}} ta saqlandi, {{fail}} ta xato",
   "progressMarked": "{{marked}} / {{total}} belgilandi",
   "noLevelAssignment": "Hali hech qanday daraja biriktirilmagan",
-  "noLevelAssignmentHint": "Administrator sizni daraja bilan biriktirmaguncha davomatni saqlay olmaysiz."
+  "noLevelAssignmentHint": "Administrator sizni daraja bilan biriktirmaguncha davomatni saqlay olmaysiz.",
+  "month": "Oy",
+  "sessionCount": "{{count}} ta yozuv"
 }

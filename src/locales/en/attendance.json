@@ -21,5 +21,7 @@
   "bulkResult": "Bulk done: {{ok}} marked, {{fail}} failed",
   "progressMarked": "{{marked}} / {{total}} marked",
   "noLevelAssignment": "No class levels assigned yet",
-  "noLevelAssignmentHint": "Your account cannot save attendance until an administrator assigns you to a class level."
+  "noLevelAssignmentHint": "Your account cannot save attendance until an administrator assigns you to a class level.",
+  "month": "Month",
+  "sessionCount": "{{count}} sessions"
 }

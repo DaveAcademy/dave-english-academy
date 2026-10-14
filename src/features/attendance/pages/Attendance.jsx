@@ -8,6 +8,7 @@ import { useAuth } from '../../../lib/AuthContext';
 import { listMyTeacherLevels } from '../../../lib/db';
 import { initialsOf, avatarToneIndex, searchStudents, bulkPlan } from '../../../lib/attendanceWorkflow';
 import { needsAssignmentGuidance, filterStudentsByTeacherLevels } from '../teacherRoster';
+import { monthlyStatsByStudent } from '../attendanceStats';
 import { todayTashkentISO } from '../../../shared/utils/date';
 import { LEVELS, levelToken } from '../../../lib/levels';
 
@@ -37,6 +38,9 @@ export default function Attendance() {
   const isTeacher = role === 'teacher';
   const [date, setDate] = useState(todayTashkentISO());
   const [level, setLevel] = useState('');
+  // Monthly percentage window. Independent from the daily marking date so
+  // reviewing a past month never disturbs today's workflow.
+  const [month, setMonth] = useState(() => todayTashkentISO().slice(0, 7));
   // Display-only roster search (never touches attendance data).
   const [query, setQuery] = useState('');
   // Bulk-mark state: two-step confirm before overwriting Late/Absent.
@@ -91,6 +95,12 @@ export default function Attendance() {
   };
 
   const statusOf = (studentId) => dayRecords.find((a) => a.student_id === studentId)?.status || null;
+
+  // Monthly percentages, computed client-side from already-fetched rows.
+  // Keyed by student_id (never display names). Unrecorded days are simply
+  // absent from the data, so they can never deflate a percentage.
+  const monthlyByStudent = useMemo(() => monthlyStatsByStudent(attendance, month), [attendance, month]);
+  const monthlyOf = (studentId) => monthlyByStudent.get(studentId) || { sessions: 0, pct: null };
 
   // Search is a display filter only; progress below always uses the full
   // eligible roster (activeStudents), never the filtered list.
@@ -185,6 +195,10 @@ export default function Attendance() {
         <div className="rounded-xl bg-white p-3 shadow-card sm:w-64">
           <label className="mb-1 block text-xs font-semibold text-ink/50">{t('date')}</label>
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-full rounded-lg border border-ink/10 px-3 py-2 text-sm" />
+        </div>
+        <div className="rounded-xl bg-white p-3 shadow-card sm:w-48">
+          <label className="mb-1 block text-xs font-semibold text-ink/50">{t('month')}</label>
+          <input type="month" value={month} onChange={(e) => e.target.value && setMonth(e.target.value)} className="w-full rounded-lg border border-ink/10 px-3 py-2 text-sm" />
         </div>
         <div className="grid flex-1 grid-cols-3 gap-3">
           <div className="rounded-xl bg-white p-3 text-center shadow-card">
@@ -321,6 +335,7 @@ export default function Attendance() {
           {displayedStudents.map((s) => {
             const current = statusOf(s.id);
             const pending = pendingAttendance?.has(`${s.id}:${date}`);
+            const mon = monthlyOf(s.id);
             return (
               <div key={s.id} className="rounded-xl bg-white p-3 shadow-card">
                 <div className="mb-2 flex min-h-[2rem] items-center gap-2">
@@ -333,6 +348,9 @@ export default function Attendance() {
                   <p title={s.real_name} className="min-w-0 flex-1 truncate font-semibold leading-tight text-ink">{s.real_name}</p>
                   <span className="shrink-0 rounded bg-ink/5 px-1.5 py-0.5 text-[10px] font-bold text-ink/50">{levelToken(s.level)}</span>
                 </div>
+                <p className="mb-2 text-xs tabular-nums text-ink/50" title={t('sessionCount', { count: mon.sessions })}>
+                  {mon.pct === null ? '—' : `${mon.pct}% · ${mon.sessions}`}
+                </p>
                 <div className="grid grid-cols-3 gap-2">
                   <button
                     onClick={() => handleStatus(s, 'Present')}
