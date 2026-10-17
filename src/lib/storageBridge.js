@@ -3,6 +3,7 @@
 // version, so useAcademyData.js and every page need zero changes.
 
 import { supabase } from './supabaseClient';
+import { fetchAllPages } from './pagination';
 
 function assertRows(rows, action) {
   if (!rows || rows.length === 0) {
@@ -647,10 +648,19 @@ export async function getPaymentDataAudit() {
 
 // ---------- Attendance ----------
 
+// Paginated: Supabase caps responses at 1000 rows and silently truncates,
+// which hid every attendance record past the first 1000 (the newest ones)
+// once the table grew past that. Pages through .range() until exhausted.
 export async function listAttendance() {
-  const { data, error } = await supabase.from('attendance').select('*').order('id');
-  if (error) throw error;
-  return data;
+  return fetchAllPages(async (from) => {
+    const { data, error } = await supabase
+      .from('attendance')
+      .select('*')
+      .order('id')
+      .range(from, from + 999);
+    if (error) throw error;
+    return data;
+  });
 }
 
 export async function setAttendanceStatus(studentId, date, status) {
