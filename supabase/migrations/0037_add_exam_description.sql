@@ -1,0 +1,15 @@
+-- Phase 2A: adds an optional description/instructions field to exams.
+--
+-- Nullable text column, no default - existing rows get null (rendered as
+-- "no description" by the frontend, exactly like a null file_url today).
+-- No RLS or grant changes needed: exams_read_all / exams_admin_all /
+-- exams_teacher_all (0005) are row-level policies, not column-scoped, and
+-- exams has no column-level REVOKE (unlike students.profile_id, see 0028)
+-- - confirmed via information_schema.column_privileges before writing this
+-- migration, every existing column carries the same full authenticated/
+-- anon grant, so a new column inherits it automatically. This migration
+-- does not touch storage.objects, any exam-answers/exams storage policy,
+-- or the exam_scores table - Phase 1's attachments_read/insert/update
+-- policies and can_read_exam_file/can_write_exam_answer functions
+-- (20260726121753) are untouched.
+alter table public.exams add column if not exists description text;

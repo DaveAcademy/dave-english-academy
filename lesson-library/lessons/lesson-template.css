@@ -1,0 +1,71 @@
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; color: #2c3e50; }
+  .page { width: 210mm; min-height: 297mm; padding: 12mm 15mm; page-break-after: always; position: relative; background-color: #fdf8ec; }
+  .page:last-child { page-break-after: auto; }
+
+  .footer { position: absolute; bottom: 7mm; left: 15mm; right: 15mm; display: flex; justify-content: space-between; font-size: 8.5pt; color: #b0bec5; }
+  .stripe { height: 8px; background: repeating-linear-gradient(90deg,#ff7043 0 20px,#ffca28 20px 40px,#66bb6a 40px 60px,#42a5f5 60px 80px,#ab47bc 80px 100px); border-radius: 6px; margin-bottom: 14px; }
+  h1 { margin: 0; font-size: 30pt; }
+  h2 { margin: 0 0 4px; font-size: 20pt; color: #1565c0; }
+  .uz { color: #78909c; font-style: italic; font-size: 10.5pt; }
+  .pill { display: inline-block; font-weight: 800; padding: 5px 16px; border-radius: 30px; font-size: 10.5pt; }
+  .pill-orange { background:#ff7043; color:white; }
+  .pill-purple { background:#ab47bc; color:white; }
+  .pill-green { background:#43a047; color:white; }
+
+  /* COVER */
+  .cover { background: radial-gradient(circle at 20% 15%, #7e57c2, #42a5f5 60%); color: white; text-align:center; padding-top: 20mm; }
+  .cover .big-emoji { font-size: 70pt; line-height:1; margin-bottom: 6px; }
+  .cover h1 { font-size: 40pt; margin: 4px 0; }
+  .cover .sub { font-size: 18pt; font-weight: 600; }
+  .cover .uz-sub { font-size: 12pt; opacity:.9; margin-top:2px; }
+  .goal-cloud { background: white; color:#2c3e50; border-radius: 24px; padding: 16px 22px; margin: 14mm 6mm 0; text-align:left; box-shadow: 0 6px 0 rgba(0,0,0,.08); }
+  .goal-cloud .title { color:#7e57c2; font-weight:800; font-size:13pt; }
+  .goal-cloud ul { margin: 8px 0 0; padding-left: 20px; }
+  .goal-cloud li { margin-bottom: 6px; font-size: 10.5pt; }
+
+  /* GENERIC SECTION HEADER */
+  .head { display:flex; align-items:center; gap:12px; margin-bottom: 12px; }
+  .head .bubble { font-size: 26pt; background:white; border-radius: 50%; width:52px; height:52px; display:flex; align-items:center; justify-content:center; box-shadow: 0 3px 0 rgba(0,0,0,.08); }
+
+  /* VOCAB SPOTLIGHT CARDS */
+  .vspot { display:flex; align-items:center; gap:16px; background:white; border-radius: 20px; padding: 12px 18px; margin-bottom: 10px; box-shadow: 0 3px 0 rgba(0,0,0,.06); }
+  .vspot .icon { font-size: 34pt; width: 60px; text-align:center; }
+  .vspot .content { flex:1; }
+  .vspot .word-row { display:flex; align-items:baseline; gap: 10px; }
+  .vspot .word { font-weight: 800; font-size: 15pt; color:#1565c0; }
+  .vspot .pron { color:#90a4ae; font-size: 9.5pt; }
+  .vspot .uzw { color:#ab47bc; font-weight:700; font-size:11pt; }
+  .vspot .ex { font-size: 9.5pt; margin-top: 3px; color:#455a64; }
+  .vspot .ex .uz { display:block; color:#90a4ae; }
+  .c1 .icon{background:#fff3e0;border-radius:14px;} .c2 .icon{background:#e3f2fd;border-radius:14px;} .c3 .icon{background:#e8f5e9;border-radius:14px;} .c4 .icon{background:#f3e5f5;border-radius:14px;} .c5 .icon{background:#fce4ec;border-radius:14px;} .c6 .icon{background:#fffde7;border-radius:14px;}
+
+  /* GRAMMAR */
+  .grammar-hero { background: white; border-radius: 22px; padding: 18px 22px; text-align:center; box-shadow: 0 3px 0 rgba(0,0,0,.06); margin-bottom: 14px; }
+  .grammar-hero .rule { font-size: 15pt; font-weight: 800; color:#1565c0; }
+  .grammar-hero .uz { font-size: 11pt; }
+  .example-strip { display:flex; gap:10px; margin-top: 10px; flex-wrap:wrap; justify-content:center; }
+  .example-chip { background:#e3f2fd; border-radius:14px; padding:8px 14px; font-size:10.5pt; }
+  .example-chip b { color:#1565c0; }
+  .example-chip .uz { display:block; font-size:9pt; }
+  .highlight { background:#ffe082; padding: 0 4px; border-radius:4px; font-weight:800; }
+  .mistake-card { background: #ffebee; border-radius: 18px; padding: 12px 18px; display:flex; align-items:center; gap:12px; }
+  .mistake-card .x { font-size: 24pt; }
+
+  /* GENERIC ACTIVITY CARD */
+  .act-card { background: white; border-radius: 18px; padding: 12px 18px; margin-bottom: 10px; box-shadow: 0 3px 0 rgba(0,0,0,.06); }
+  .act-title { font-weight: 800; color:#ab47bc; font-size: 12pt; display:flex; align-items:center; gap:8px; }
+  ol.tasks li, ul.tasks li { margin-bottom: 6px; font-size: 10.5pt; }
+  .blank { display:inline-block; border-bottom: 2px solid #ffb300; width: 90px; }
+  table.grid-table { width: 100%; border-collapse: collapse; margin: 6px 0; }
+  table.grid-table th { background: #42a5f5; color: white; padding: 6px 8px; font-size: 9.5pt; text-align: left; border-radius: 6px; }
+  table.grid-table td { border: 1px solid #eceff1; padding: 6px 8px; font-size: 10pt; text-align:center; }
+
+  .checklist li { list-style: none; margin-bottom: 8px; font-size: 11pt; }
+  .checklist li::before { content: "\2B50  "; }
+
+  .teacher-col { background: white; border-radius: 16px; padding: 12px 14px; box-shadow: 0 3px 0 rgba(0,0,0,.06); }
+  .teacher-col h3 { margin: 0 0 6px; font-size: 12pt; }
+  .lvlA{border-top:6px solid #66bb6a;} .lvlB{border-top:6px solid #ffa726;} .lvlC{border-top:6px solid #ef5350;}
+  .three-col { display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }

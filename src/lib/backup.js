@@ -8,8 +8,23 @@
 //     actually survives losing the phone or clearing browser data.
 
 import { exportAllData, importAllData } from './db';
+import { supabase } from './supabaseClient';
 
 const AUTO_BACKUP_KEY = 'dea_autobackup';
+
+// Backup/restore is administrator-only (see Settings.jsx). Hiding the
+// buttons isn't a real guard on its own - these functions are the actual
+// action, callable directly (e.g. from devtools) regardless of what the
+// UI shows, so they check the caller's own role themselves rather than
+// trusting the component that happened to invoke them.
+async function assertIsAdmin() {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not signed in.');
+  const { data, error } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+  if (error || data?.role !== 'administrator') throw new Error('Only administrators can use backup/restore.');
+}
 
 // Takes the caller's already-in-memory state rather than re-fetching from
 // Supabase - this runs after every single mutation (add a student, toggle
@@ -37,6 +52,7 @@ export function getAutoBackupTimestamp() {
 }
 
 export async function downloadBackup() {
+  await assertIsAdmin();
   const data = await exportAllData();
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -66,6 +82,7 @@ export function readBackupFile(file) {
 }
 
 export async function restoreFromFile(file) {
+  await assertIsAdmin();
   const data = await readBackupFile(file);
   await importAllData(data);
 }

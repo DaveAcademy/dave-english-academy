@@ -8,6 +8,10 @@ export function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null);
   const [profileError, setProfileError] = useState(null);
   const [loading, setLoading] = useState(true);
+  // True while the session comes from a password-recovery link
+  // (PASSWORD_RECOVERY event). Cleared on real sign-in/out so the
+  // recovery screen can never linger over an authenticated session.
+  const [isRecovery, setIsRecovery] = useState(false);
 
   const loadProfile = useCallback(async (currentSession) => {
     if (!currentSession) {
@@ -35,8 +39,10 @@ export function AuthProvider({ children }) {
       if (mounted) setLoading(false);
     });
 
-    const subscription = onAuthStateChange(async (s) => {
+    const subscription = onAuthStateChange(async (s, event) => {
       if (!mounted) return;
+      if (event === 'PASSWORD_RECOVERY') setIsRecovery(true);
+      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') setIsRecovery(false);
       setSession(s);
       await loadProfile(s);
       setLoading(false);
@@ -52,7 +58,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ session, profile, profileError, role: profile?.role ?? null, loading, refreshProfile }}
+      value={{ session, profile, profileError, role: profile?.role ?? null, loading, refreshProfile, isRecovery }}
     >
       {children}
     </AuthContext.Provider>
