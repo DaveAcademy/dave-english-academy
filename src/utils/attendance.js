@@ -13,11 +13,18 @@ export function filterByYearMonth(records, dateField, year, month) {
   });
 }
 export function attendanceRate(records) {
-  if (records.length === 0) return null;
+  // Only the three supported statuses are eligible. Anything else (a status
+  // typo, a future status, a bad import) is ignored entirely - excluded from
+  // both numerator and denominator - matching attendanceStats.js. With no
+  // eligible sessions the rate is null (rendered as "No data", never 0%).
+  const eligible = (records || []).filter((r) =>
+    r.status === 'Present' || r.status === 'Late' || r.status === 'Absent'
+  );
+  if (eligible.length === 0) return null;
   // Late counts as present — a student who is late is still present.
-  const score = records.reduce((sum, a) =>
+  const score = eligible.reduce((sum, a) =>
     sum + (a.status === 'Absent' ? 0 : 1), 0);
-  return Math.round((score / records.length) * 100);
+  return Math.round((score / eligible.length) * 100);
 }
 
 // Consecutive 'Present' records counting back from the most recent one.
