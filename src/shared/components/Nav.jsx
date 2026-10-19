@@ -22,6 +22,7 @@ import {
   MessageSquare,
   Medal,
   Languages,
+  Target,
   BellRing,
   Sparkles,
   Gamepad2,
@@ -61,6 +62,7 @@ const NAV_ITEMS = [
   { to: '/recognition', label: 'recognition', shortLabel: 'recognitionShort', Icon: Medal, adminOnly: true, section: 'results' },
   { to: '/game-results', label: 'gameResults', shortLabel: 'gameResultsShort', Icon: Gamepad2, section: 'results' },
   { to: '/online-test-analytics', label: 'onlineTestAnalytics', shortLabel: 'onlineTestAnalyticsShort', Icon: BarChart2, adminOnly: true, section: 'results' },
+  { to: '/placement-review', label: 'placementReview', shortLabel: 'placementReviewShort', Icon: Target, section: 'teaching' },
   // Reports temporarily hidden from nav (2026-08-21) - feature kept intact,
   // just not exposed. Uncomment to re-enable admin navigation.
   // { to: '/reports', label: 'reports', shortLabel: 'reportsShort', Icon: BarChart3, adminOnly: true, section: 'results' },

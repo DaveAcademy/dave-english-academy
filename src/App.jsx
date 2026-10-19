@@ -54,6 +54,9 @@ const AdminOnlineTestAnalytics = lazy(() => import('./features/onlineTests/pages
 const IqBrainHub = lazy(() => import('./features/iqbrain/pages/IqBrainHub'));
 const IqChallengeRunner = lazy(() => import('./features/iqbrain/pages/IqChallengeRunner'));
 const IqHistory = lazy(() => import('./features/iqbrain/pages/IqHistory'));
+const PlacementTest = lazy(() => import('./features/placementTest/pages/PlacementTest'));
+const PlacementRunner = lazy(() => import('./features/placementTest/pages/PlacementRunner'));
+const PlacementReview = lazy(() => import('./features/placementTest/pages/PlacementReview'));
 const MyCertificates = lazy(() => import('./features/certificates/pages/MyCertificates'));
 const PetCollection = lazy(() => import('./pages/portal/PetCollection'));
 // Avatar temporarily hidden (unfinished) - import kept for later restore.
@@ -170,6 +173,8 @@ function RoutedContent({ isStudent }) {
             <Route path="/my-exams" element={<MyExams />} />
             <Route path="/online-tests" element={<OnlineTests />} />
             <Route path="/online-tests/:testId" element={<OnlineTestRunner />} />
+            <Route path="/placement" element={<PlacementTest />} />
+            <Route path="/placement/attempt/:attemptId" element={<PlacementRunner />} />
             <Route path="/iq-brain" element={<IqBrainHub />} />
             <Route path="/iq-brain/history" element={<IqHistory />} />
             <Route path="/iq-brain/:attemptId" element={<IqChallengeRunner />} />
@@ -226,6 +231,7 @@ function RoutedContent({ isStudent }) {
             <Route path="/recognition" element={<Recognition />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/online-test-analytics" element={<AdminOnlineTestAnalytics />} />
+            <Route path="/placement-review" element={<PlacementReview />} />
             {/* AI Assistant hidden from normal navigation - page, client, and
                 backend kept intact for later restore. Uncomment to re-expose. */}
             {/* <Route path="/ai-assistant" element={<AiAssistant />} /> */}
