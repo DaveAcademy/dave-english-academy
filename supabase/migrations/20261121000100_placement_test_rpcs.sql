@@ -10,7 +10,8 @@
 -- psychometric model):
 --   * Per objective skill (grammar -> vocabulary -> reading -> listening,
 --     fixed rotation): level estimate on the ladder 1=A1 .. 6=C2.
---   * Entry level: A2 (2) - accessible start.
+--   * Entry level: A1 (1) - questions start from the easiest and the ladder
+--     adapts upward as the student answers correctly.
 --   * After each answer:  estimate = clamp(ENTRY + round(net / 2), 1, 6)
 --     where net = correct - incorrect (skipped counts as incorrect).
 --     Dividing by 2 damps a single lucky/unlucky answer.
@@ -37,7 +38,7 @@
 -- ---------------------------------------------------------------------------
 create or replace function public.placement_entry_level()
 returns smallint language sql immutable as $$
-  select 2::smallint;  -- A2
+  select 1::smallint;  -- A1: start from the easiest level and adapt upward
 $$;
 
 create or replace function public.placement_min_per_skill()

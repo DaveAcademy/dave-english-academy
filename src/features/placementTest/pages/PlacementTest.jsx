@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { ArrowRight, ClipboardList, Info, Play } from 'lucide-react';
 import ErrorBanner from '../../../components/ErrorBanner';
 import { SkeletonList } from '../../../components/Skeleton';
+import { useUzbekInstructions } from '../lib/useUzbekInstructions';
 import {
   listMyPlacementAttempts,
   startPlacementAttempt,
@@ -21,6 +22,7 @@ import {
 } from '../lib/placementModel';
 
 export default function PlacementTest() {
+  useUzbekInstructions();
   const { t } = useTranslation(['placement', 'common']);
   const navigate = useNavigate();
   const [attempts, setAttempts] = useState(null);

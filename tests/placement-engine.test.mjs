@@ -32,7 +32,7 @@ const MIN_PER_SKILL = fnReturnsInt('placement_min_per_skill');
 const MAX_PER_SKILL = fnReturnsInt('placement_max_per_skill');
 const MIN_TOTAL = fnReturnsInt('placement_min_total_answered');
 const MAX_ATTEMPTS = fnReturnsInt('placement_max_attempts');
-check(ENTRY === 2, `entry level is A2 (2), got ${ENTRY}`);
+check(ENTRY === 1, `entry level is A1 (1) - easiest first, got ${ENTRY}`);
 check(MIN_PER_SKILL === 4, `min per skill is 4, got ${MIN_PER_SKILL}`);
 check(MAX_PER_SKILL === 7, `max per skill is 7, got ${MAX_PER_SKILL}`);
 check(MIN_TOTAL === 12, `min total answered is 12, got ${MIN_TOTAL}`);
@@ -142,7 +142,7 @@ function scoreOverall(perSkill) {
   const w = walkSkill([1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
   check(w.asked.length === MAX_PER_SKILL, `all-correct stops at max (${w.asked.length})`);
   check(w.asked.every((l) => l >= ENTRY), 'all-correct never asks below entry');
-  check(w.asked[w.asked.length - 1] >= 5, 'all-correct climbs to C1/C2 items (scoring maps 100% to C2)');
+  check(w.asked[w.asked.length - 1] >= 4, 'all-correct climbs upward from A1 (scoring maps 100% to C2)');
 }
 {
   // all wrong: quickly bottoms out at A1 and stops once clearly stable
@@ -161,7 +161,7 @@ function scoreOverall(perSkill) {
 {
   // boundary B1/A2: enter, correct, correct -> estimate A2+2=B1 region
   const w = walkSkill([1, 1, 1, 1]);
-  check(w.asked[0] === ENTRY, 'first item is asked at the entry level');
+  check(w.asked[0] === ENTRY, 'first item is asked at the entry level (A1)');
   check(w.asked[1] === ENTRY + 1 || w.asked[1] === ENTRY + 2, 'second item moves up after a correct answer');
 }
 {

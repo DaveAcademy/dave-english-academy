@@ -5,7 +5,7 @@
   "rules": {
     "duration": "Taxminan 20-30 daqiqa oladi. Testni boshlagandan keyin 1 soat ichida tugatish kerak.",
     "sections": "Bo'limlar: grammatika, lug'at, o'qish va bitta yozma topshiriq. Ogzaki qism o'qituvchi bilan qisqa suhbat.",
-    "adaptive": "Savollar javoblaringizga qarab o'zgaradi - test darajangizni tez topish uchun osonlashadi yoki qiyinlashadi.",
+    "adaptive": "Savollar eng oson darajadan boshlanadi va togri javoblaringizga qarab qiyinlashadi - shu tarzda test darajangizni aniqlaydi.",
     "rules": "Halol va yordamsiz javob bering. Test davomida togri javoblarni korib bolmaydi, test yopilmaguncha qayta topshirib bolmaydi.",
     "writing": "Yozma ish o'qituvchi tomonidan maxsus mezonlar asosida tekshiriladi.",
     "speaking": "Ogzaki qism o'qituvchi bilan qisqa suhbat - mavzular oldindan korinadi."

@@ -48,7 +48,7 @@ psychometric model:
 
 - Skills run in a fixed rotation: grammar -> vocabulary -> reading ->
   listening. Within a skill the ladder position is 1 (A1) .. 6 (C2).
-- Entry level: A2 (2).
+- Entry level: A1 (1) - the easiest questions first; the ladder adapts upward.
 - After each answer: `estimate = clamp(ENTRY + round(net / 2), 1, 6)` where
   `net = correct - incorrect` and skipped counts as incorrect. Dividing by 2
   damps a single lucky/unlucky answer.

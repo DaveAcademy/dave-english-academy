@@ -23,8 +23,10 @@ import {
   reviewStatusKey,
 } from '../lib/placementModel';
 import { createSerializedQueue } from '../lib/promiseQueue';
+import { useUzbekInstructions } from '../lib/useUzbekInstructions';
 
 export default function PlacementRunner() {
+  useUzbekInstructions();
   const { attemptId } = useParams();
   const { t } = useTranslation(['placement', 'common']);
   const id = Number(attemptId);

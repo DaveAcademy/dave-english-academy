@@ -5,7 +5,7 @@
   "rules": {
     "duration": "Takes about 20-30 minutes. The attempt must be finished within 1 hour of starting.",
     "sections": "Sections: grammar, vocabulary, reading, and one writing task. Speaking is a short live assessment with a teacher.",
-    "adaptive": "Questions adapt to your answers - the test gets easier or harder to find your level quickly.",
+    "adaptive": "Questions start from the easiest level and become harder as you answer correctly, so the test can find your exact level.",
     "rules": "Answer honestly and without help. You cannot see correct answers during the test, and you cannot retake while an attempt is running.",
     "writing": "The writing task is reviewed by a teacher using a rubric.",
     "speaking": "The speaking part is a short live assessment with a teacher - the test shows you the topics in advance."
