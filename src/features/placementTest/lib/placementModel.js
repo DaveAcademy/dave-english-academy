@@ -21,8 +21,9 @@ export function recommendedAcademyLevel(level) {
   return ACADEMY_LEVEL_MAP[level] || null;
 }
 
-// Objective sections in the server's fixed rotation order.
-export const OBJECTIVE_SKILLS = ['grammar', 'vocabulary', 'reading', 'listening'];
+// Objective sections in the server's fixed rotation order (listening is
+// excluded: device-dependent TTS made it unfair - see docs/PLACEMENT_TEST.md).
+export const OBJECTIVE_SKILLS = ['grammar', 'vocabulary', 'reading'];
 
 // Review rubric dimensions per teacher-assessed skill (each scored 0-3).
 export const WRITING_RUBRIC = ['task_completion', 'grammar_control', 'vocabulary_range', 'coherence'];

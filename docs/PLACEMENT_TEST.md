@@ -24,7 +24,7 @@ is recorded; group changes remain an explicit action in Group Management.
   explanations never reach a client during an active attempt; staff receive
   them only for submitted/reviewed attempts via `get_placement_attempt`.
 - `placement_attempts` - one active attempt per student (partial unique
-  index), server-set 24h deadline, frozen `asked_question_ids` order.
+  index), server-set 1-hour deadline, frozen `asked_question_ids` order.
 - `placement_answers` - one row per asked question, graded server-side.
 - `placement_reviews` - one review per attempt (upsert on re-review):
   reviewer, rubric scores, final level, mandatory reason.

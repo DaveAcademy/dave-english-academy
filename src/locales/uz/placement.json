@@ -3,8 +3,8 @@
   "subtitle": "Hozirgi ingliz tili darajangizni toping (A1-C2).",
   "about": "Bu test ingliz tilidagi darajangizni aniqlaydi va sizga togri guruhni tanlashda yordam beradi. Bu tavsiya - rasmiy sertifikat emas.",
   "rules": {
-    "duration": "Taxminan 20-30 daqiqa oladi. 24 soat ichida toxtatib davom ettirish mumkin.",
-    "sections": "Bo'limlar: grammatika, lug'at, o'qish, tinglash, bitta yozma topshiriq va o'qituvchi bilan ogzaki suhbat.",
+    "duration": "Taxminan 20-30 daqiqa oladi. Testni boshlagandan keyin 1 soat ichida tugatish kerak.",
+    "sections": "Bo'limlar: grammatika, lug'at, o'qish va bitta yozma topshiriq. Ogzaki qism o'qituvchi bilan qisqa suhbat.",
     "adaptive": "Savollar javoblaringizga qarab o'zgaradi - test darajangizni tez topish uchun osonlashadi yoki qiyinlashadi.",
     "rules": "Halol va yordamsiz javob bering. Test davomida togri javoblarni korib bolmaydi, test yopilmaguncha qayta topshirib bolmaydi.",
     "writing": "Yozma ish o'qituvchi tomonidan maxsus mezonlar asosida tekshiriladi.",

@@ -35,12 +35,11 @@ for (const phase of ["'question'", "'writing'", "'speaking'", "'complete'", "'ex
 }
 
 // Fixed section rotation order
-check(next.includes("array['grammar','vocabulary','reading','listening']") ||
-      next.includes('placement_objective_skills()'),
+check(next.includes('placement_objective_skills()'),
   'objective skills rotate in a fixed order');
 const skillsFn = body(rpcs, 'placement_objective_skills');
-check(skillsFn.includes("array['grammar','vocabulary','reading','listening']"),
-  'rotation order is grammar -> vocabulary -> reading -> listening');
+check(skillsFn.includes("array['grammar','vocabulary','reading']"),
+  'rotation order is grammar -> vocabulary -> reading (listening excluded from scoring)');
 
 // Adaptive constants used in selection
 check(next.includes('placement_adaptive_estimate'), 'per-skill estimates drive selection');
@@ -102,6 +101,10 @@ check(submit.includes("now() > deadline"), 'submit marks stale attempts expired 
 check(next.includes('perform public.submit_placement_attempt(p_attempt_id)'),
   'expiry path finalizes the attempt via submit instead of discarding');
 check(rpcs.includes('submit_placement_review') && body(rpcs, 'submit_placement_review').includes("('submitted','reviewed','expired')"), 'expired attempts are reviewable');
+
+// Attempt window: 1 hour (students found a 24h countdown confusing)
+check(rpcs.includes("select interval '1 hour';"), 'attempt TTL is 1 hour');
+check(!rpcs.includes("interval '24 hours'"), 'no 24-hour TTL remains');
 
 // Automatic grading normalization (case / whitespace / surrounding punctuation)
 check(rpcs.includes('create or replace function public.placement_normalize_answer(p text)'),

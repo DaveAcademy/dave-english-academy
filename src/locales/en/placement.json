@@ -3,8 +3,8 @@
   "subtitle": "Find your current English level (A1-C2).",
   "about": "This test estimates your English level and helps us recommend the right group for you. It is a placement recommendation, not an official certificate.",
   "rules": {
-    "duration": "Takes about 20-30 minutes. You can pause and continue within 24 hours.",
-    "sections": "Sections: grammar, vocabulary, reading, listening, one writing task, and a speaking assessment with a teacher.",
+    "duration": "Takes about 20-30 minutes. The attempt must be finished within 1 hour of starting.",
+    "sections": "Sections: grammar, vocabulary, reading, and one writing task. Speaking is a short live assessment with a teacher.",
     "adaptive": "Questions adapt to your answers - the test gets easier or harder to find your level quickly.",
     "rules": "Answer honestly and without help. You cannot see correct answers during the test, and you cannot retake while an attempt is running.",
     "writing": "The writing task is reviewed by a teacher using a rubric.",

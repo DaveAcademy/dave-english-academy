@@ -168,7 +168,6 @@ let s2Attempt2Id = null; // set in the expiry block
 const served = []; // {id, skill, cefr}
 const asked = new Set();
 const bySkill = {};
-let listenedSkipped = 0;
 
 async function serveAndAnswerOne() {
   const r = await rpc(S1, 'get_next_placement_question', { p_attempt_id: attemptId });
@@ -198,15 +197,6 @@ for (let i = 0; i < 60; i++) {
     `select answer_key, accepted_answers, question_type from public.placement_questions where id = ${q.id}`
   );
 
-  if (q.skill === 'listening' && listenedSkipped === 0) {
-    const sv = await rpc(S1, 'save_placement_answer', {
-      p_attempt_id: attemptId, p_question_id: q.id, p_answer: null, p_skipped: true,
-    });
-    check(sv.ok, `listening item skipped (${ERR(sv)})`);
-    listenedSkipped = 1;
-    bySkill[q.skill].wrong++;
-    continue;
-  }
   if (q.question_type === 'mcq') {
     const idx = keys[0].answer_key.option_index;
     const sv = await rpc(S1, 'save_placement_answer', {
@@ -225,13 +215,12 @@ for (let i = 0; i < 60; i++) {
 }
 check(leakChecks >= 16, `keyless payloads verified across ${leakChecks} questions`);
 
-const order = ['grammar', 'vocabulary', 'reading', 'listening'].filter((s) => bySkill[s]);
-check(JSON.stringify(order) === JSON.stringify(['grammar', 'vocabulary', 'reading', 'listening']),
-  `sections rotate in fixed order (${order.join('->')})`);
+const order = ['grammar', 'vocabulary', 'reading'].filter((s) => bySkill[s]);
+check(JSON.stringify(order) === JSON.stringify(['grammar', 'vocabulary', 'reading']),
+  `sections rotate in fixed order (${order.join('->')}); listening excluded from scoring`);
 for (const s of order) {
   check(bySkill[s].asked >= 4 && bySkill[s].asked <= 7, `${s}: ${bySkill[s].asked} questions (4..7)`);
 }
-check(listenedSkipped === 1, 'exactly one listening item was skipped');
 const grammarLevels = served.filter((x) => x.skill === 'grammar').map((x) => x.cefr);
 check(Math.max(...grammarLevels) >= 3, `grammar climbs above entry (max ${Math.max(...grammarLevels)})`);
 
@@ -275,14 +264,13 @@ check(['A', 'A1', 'B', 'C'].includes(result.recommended_academy_level),
 
 {
   const skillResult = {};
-  for (const s of ['grammar', 'vocabulary', 'reading', 'listening']) {
+  for (const s of ['grammar', 'vocabulary', 'reading']) {
     const items = served.filter((x) => x.skill === s);
     if (items.length === 0) continue;
-    let denom = 0, earned = 0, skippedSoFar = 0;
+    let denom = 0, earned = 0;
     for (const it of items) {
-      const isSkipped = s === 'listening' && skippedSoFar++ === 0; // the one skip
       denom += it.cefr;
-      if (!isSkipped) earned += it.cefr;
+      if (true) earned += it.cefr;
     }
     const pct = Math.round((earned / denom) * 1000) / 10;
     const level = pct < 35 ? 1 : pct < 50 ? 2 : pct < 65 ? 3 : pct < 80 ? 4 : pct < 92 ? 5 : 6;

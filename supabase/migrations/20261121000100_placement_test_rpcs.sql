@@ -52,7 +52,7 @@ $$;
 
 create or replace function public.placement_attempt_ttl()
 returns interval language sql immutable as $$
-  select interval '24 hours';
+  select interval '1 hour';
 $$;
 
 create or replace function public.placement_max_attempts()
@@ -104,7 +104,10 @@ $$;
 -- Fixed section rotation (drives section order in the runner).
 create or replace function public.placement_objective_skills()
 returns text[] language sql immutable as $$
-  select array['grammar','vocabulary','reading','listening'];
+  -- Listening removed from the automatic assessment: client-side speech
+  -- synthesis is device-dependent (unreliable on many phones), which produced
+  -- unfair 0% scores. Items remain in the bank for a future hosted-audio version.
+  select array['grammar','vocabulary','reading'];
 $$;
 
 -- ---------------------------------------------------------------------------
