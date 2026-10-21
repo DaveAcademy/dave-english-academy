@@ -1,11 +1,11 @@
 {
   "title": "Darajani aniqlash testi",
   "subtitle": "Hozirgi ingliz tili darajangizni toping (A1-C2).",
-  "about": "Bu test ingliz tilidagi darajangizni aniqlaydi va sizga togri guruhni tanlashda yordam beradi. Bu tavsiya - rasmiy sertifikat emas.",
+  "about": "Bu test ingliz tili darajangizni 60 savol bilan aniqlaydi (har bir daraja uchun 10 tadan, A1 dan C2 gacha, maksimum 600 ball). Bu avtomatik joylashuv tavsiyasi - rasmiy sertifikat emas.",
   "rules": {
     "duration": "Taxminan 20-30 daqiqa oladi. Testni boshlagandan keyin 1 soat ichida tugatish kerak.",
     "sections": "Bo'limlar: grammatika, lug'at, o'qish va bitta yozma topshiriq. Ogzaki qism o'qituvchi bilan qisqa suhbat.",
-    "adaptive": "Savollar eng oson darajadan boshlanadi va togri javoblaringizga qarab qiyinlashadi - shu tarzda test darajangizni aniqlaydi.",
+    "adaptive": "Test 60 savoldan iborat: A1 (eng oson) dan C2 (eng qiyin) gacha har bir darajada 10 tadan, ketma-ket beriladi.",
     "rules": "Halol va yordamsiz javob bering. Test davomida togri javoblarni korib bolmaydi, test yopilmaguncha qayta topshirib bolmaydi.",
     "writing": "Yozma ish o'qituvchi tomonidan maxsus mezonlar asosida tekshiriladi.",
     "speaking": "Ogzaki qism o'qituvchi bilan qisqa suhbat - mavzular oldindan korinadi."
@@ -41,7 +41,7 @@
   "resultUnavailableNote": "Natija test yuborilgandan keyin shu yerda korinadi.",
   "resultTitle": "Joylashuv natijasi",
   "preliminary": "Avtomatik",
-  "estimatedLevel": "Taxminiy daraja",
+  "estimatedLevel": "Taxminiy CEFR daraja",
   "recommendedGroup": "Tavsiya etilgan guruh",
   "confidenceLabel": "Ishonch",
   "confidence": {
@@ -114,5 +114,15 @@
   "noAutoMove": "Joylashuv natijalari avtomatik hisoblanadi. Bu forma ixtiyoriy qo'lda tuzatishni qayd etadi; guruh o'zgartirishlari alohida amalga oshiriladi.",
   "confirmLevel": "Joylashuvni tasdiqlash",
   "reviewSaved": "Tekshiruv saqlandi.",
-  "reviewFailed": "Tekshiruvni saqlab bolmadi. Formani tekshirib, yana urinib koring."
+  "reviewFailed": "Tekshiruvni saqlab bolmadi. Formani tekshirib, yana urinib koring.",
+  "questionHeader": "{{level}} · {{skill}} · {{n}} / {{total}} savol",
+  "levelProgress": "{{level}} · {{done}} / {{perLevel}}",
+  "overallProgress": "{{done}} / {{total}} javob berildi",
+  "totalScore": "{{score}} / {{max}}",
+  "correctCount": "{{correct}} / {{total}} togri",
+  "levelBreakdown": "Darajalar bo'yicha ball",
+  "levelScore": "{{score}} / {{max}} · {{correct}} togri",
+  "skillScore": "{{score}} / {{max}} · {{correct}}/{{asked}} togri",
+  "writingGradingNote": "Yozma topshiriqlar bajarilgani uchun ball oladi (server tomonidan hajm va originallik tekshiriladi). Yozuv sifati avtomatik baholanmaydi.",
+  "legacyResultNote": "Bu urinish testning avvalgi versiyasida topshirilgan; ballari o'sha formatga tegishli."
 }

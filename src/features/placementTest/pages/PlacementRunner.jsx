@@ -16,7 +16,11 @@ import {
   submitPlacementAttempt,
 } from '../lib/placementApi';
 import {
-  OBJECTIVE_SKILLS,
+  CEFR_LEVELS,
+  QUESTIONS_PER_LEVEL,
+  TOTAL_QUESTIONS,
+  MAX_SCORE,
+  isFixed60Result,
   attemptStatusTone,
   cefrLabel,
   confidenceKey,
@@ -229,7 +233,7 @@ export default function PlacementRunner() {
   return (
     <div className="space-y-4">
       {/* Progress */}
-      <SectionStepper phase={phase} question={question} progress={progress} />
+      <LevelProgress phase={phase} question={question} progress={progress} />
       {remaining != null && (
         <p className="text-right text-xs tabular-nums text-ink/40" aria-live="off">
           {t('placement:timeLeft', { time: `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}` })}
@@ -238,11 +242,16 @@ export default function PlacementRunner() {
 
       {error && <ErrorBanner>{error}</ErrorBanner>}
 
-      {/* Objective question */}
+      {/* Scored question */}
       {phase === 'question' && question && (
         <section className="rounded-2xl border border-ink/[0.06] bg-white p-4 shadow-card sm:p-5">
           <p className="text-xs font-bold uppercase tracking-wide text-brand-600">
-            {t(`placement:skillNames.${question.skill}`)}
+            {t('placement:questionHeader', {
+              level: cefrLabel(question.cefr_level),
+              skill: t(`placement:skillNames.${question.skill}`),
+              n: progress?.question_number ?? '',
+              total: progress?.total_questions ?? TOTAL_QUESTIONS,
+            })}
           </p>
 
           {question.question_type === 'mcq' && (
@@ -449,87 +458,106 @@ function McqBody({ question, selectedIndex, onSelect, t }) {
 }
 
 // ---------------------------------------------------------------------------
-function SectionStepper({ phase, question, progress }) {
+function LevelProgress({ phase, question, progress }) {
   const { t } = useTranslation('placement');
-  const steps = [...OBJECTIVE_SKILLS, 'writing', 'speaking'];
-  // The current objective skill is the first one still being asked.
-  const activeSkill =
-    phase === 'writing'
-      ? 'writing'
-      : phase === 'speaking'
-        ? 'speaking'
-        : question?.skill ?? null;
-  const skills = progress?.skills ?? {};
-
-  const done = (skill) => {
-    if (!OBJECTIVE_SKILLS.includes(skill)) return false;
-    const s = skills[skill];
-    return s && s.asked > 0 && activeSkill && steps.indexOf(activeSkill) > steps.indexOf(skill);
-  };
+  const levels = progress?.levels ?? {};
+  const total = progress?.total_questions ?? TOTAL_QUESTIONS;
+  const asked = progress?.total_asked ?? 0;
+  const currentLevel = question?.cefr_level ?? progress?.current_level ?? 1;
+  const levelStats = levels[String(currentLevel)] ?? { asked: 0, answered: 0 };
+  const inLevel = Math.max(levelStats.answered, question ? levelStats.asked - 1 : levelStats.asked);
 
   return (
-    <ol className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-2xl border border-ink/[0.06] bg-white px-4 py-3 shadow-card" aria-label={t('progressLabel')}>
-      {steps.map((skill) => {
-        const isActive = skill === activeSkill;
-        const asked = skills[skill]?.asked ?? 0;
-        return (
-          <li key={skill} className="flex items-center gap-1.5">
-            <span
-              className={`h-2 w-2 rounded-full ${
-                isActive ? 'bg-brand-600' : done(skill) || (skill !== 'writing' && skill !== 'speaking' && asked > 0 && !isActive)
-                  ? 'bg-emerald-500'
-                  : 'bg-ink/15'
-              }`}
-              aria-hidden="true"
-            />
-            <span
-              className={`text-xs font-semibold ${isActive ? 'text-brand-700' : 'text-ink/40'}`}
-              aria-current={isActive ? 'step' : undefined}
-            >
-              {t(`skillNames.${skill}`)}
-            </span>
-          </li>
-        );
-      })}
-    </ol>
+    <div className="rounded-2xl border border-ink/[0.06] bg-white px-4 py-3 shadow-card">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm font-semibold text-ink" aria-live="polite">
+          {t('questionHeader', {
+            level: cefrLabel(currentLevel),
+            n: Math.min(asked + (phase === 'question' || phase === 'writing' ? 1 : 0), total),
+            total,
+          })}
+        </p>
+        <p className="text-xs font-semibold tabular-nums text-brand-600">
+          {t('levelProgress', { level: cefrLabel(currentLevel), done: inLevel, perLevel: QUESTIONS_PER_LEVEL })}
+        </p>
+      </div>
+      <ol className="mt-2 flex items-center gap-1.5" aria-label={t('progressLabel')}>
+        {CEFR_LEVELS.map((label, i) => {
+          const lvl = i + 1;
+          const done = lvl < currentLevel || (lvl === 6 && asked >= total);
+          const active = lvl === currentLevel && phase !== 'complete';
+          return (
+            <li key={label} className="flex-1" aria-current={active ? 'step' : undefined}>
+              <div
+                className={`h-1.5 rounded-full ${done ? 'bg-emerald-500' : active ? 'bg-brand-500' : 'bg-ink/10'}`}
+                title={label}
+              />
+              <p className={`mt-1 text-center text-[10px] font-bold ${active ? 'text-brand-700' : done ? 'text-emerald-600' : 'text-ink/40'}`}>
+                {label}
+              </p>
+            </li>
+          );
+        })}
+      </ol>
+      <p className="mt-1.5 text-xs tabular-nums text-ink/40">
+        {t('overallProgress', { done: Math.min(asked, total), total })}
+      </p>
+    </div>
   );
 }
 
 // ---------------------------------------------------------------------------
 function ResultSummary({ result, reviewStatus, finalLevel }) {
   const { t } = useTranslation(['placement', 'common']);
-  const skills = result?.skills ?? {};
 
   if (!result) {
     return (
       <div className="rounded-2xl border border-ink/[0.06] bg-white p-10 text-center shadow-card">
-        <p className="font-display text-lg font-semibold text-ink">{t('placement:resultUnavailable')}</p>
-        <p className="mt-1 text-sm text-ink/50">{t('placement:resultUnavailableNote')}</p>
+        <p className="font-display text-lg font-semibold text-ink">{t('resultUnavailable')}</p>
+        <p className="mt-1 text-sm text-ink/50">{t('resultUnavailableNote')}</p>
       </div>
     );
   }
 
-  const skillEntries = Object.entries(skills).filter(([, v]) => v && v.pct != null);
-  const strongest = result.strongest_skill;
-  const weakest = result.weakest_skill;
+  return isFixed60Result(result) ? (
+    <Fixed60Result result={result} reviewStatus={reviewStatus} finalLevel={finalLevel} />
+  ) : (
+    <LegacyResult result={result} reviewStatus={reviewStatus} finalLevel={finalLevel} />
+  );
+}
+
+// Fixed-60 (current) results: 600-point scale with per-level breakdown.
+function Fixed60Result({ result, reviewStatus, finalLevel }) {
+  const { t } = useTranslation('placement');
+  const perLevel = result.per_level ?? {};
+  const perSkill = result.per_skill ?? {};
 
   return (
     <div className="space-y-4">
       <section className="rounded-2xl border border-ink/[0.06] bg-white p-4 shadow-card sm:p-5">
         <p className="text-sm text-ink/50">{t('resultTitle')}</p>
         <div className="mt-2 flex flex-wrap items-center gap-3">
-          <p className="font-display text-4xl font-bold text-brand-700">{cefrLabel(result.overall_level)}</p>
-          <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${attemptStatusTone('submitted')}`}>
-            {t('preliminary')}
-          </span>
-          {result.insufficient_evidence && (
+          <p className="font-display text-4xl font-bold text-brand-700" aria-live="polite">
+            {t('totalScore', { score: result.total_score, max: result.max_score })}
+          </p>
+          {result.insufficient_evidence ? (
             <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-700">
               {t('insufficientEvidenceBadge')}
+            </span>
+          ) : (
+            <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${attemptStatusTone('submitted')}`}>
+              {t('preliminary')}
             </span>
           )}
         </div>
         <p className="mt-2 text-sm text-ink/70">
+          {t('correctCount', { correct: result.correct_count, total: result.total_questions })}
+          {' · '}
           {t('confidenceLabel')}: <span className="font-semibold">{t(confidenceKey(result.confidence))}</span>
+        </p>
+        <p className="mt-1 text-sm text-ink/70">
+          {t('estimatedLevel')}:{' '}
+          <span className="font-semibold">CEFR {cefrLabel(result.estimated_level)}</span>
         </p>
         {result.recommended_academy_level && (
           <p className="mt-1 text-sm text-ink/70">
@@ -554,40 +582,112 @@ function ResultSummary({ result, reviewStatus, finalLevel }) {
         <p className="mt-2 text-xs text-ink/40">{t('disclaimer')}</p>
       </section>
 
-      {/* Per-skill evidence */}
+      {/* Per-level scores */}
       <section className="rounded-2xl border border-ink/[0.06] bg-white p-4 shadow-card sm:p-5">
-        <h2 className="font-display text-base font-semibold text-ink">{t('skillBreakdown')}</h2>
+        <h2 className="font-display text-base font-semibold text-ink">{t('levelBreakdown')}</h2>
         <ul className="mt-3 space-y-2.5">
-          {skillEntries.map(([skill, v]) => (
-            <li key={skill}>
+          {Object.entries(perLevel).map(([lvl, v]) => (
+            <li key={lvl}>
               <div className="flex items-center justify-between text-sm">
-                <span className="font-medium text-ink">
-                  {t(`skillNames.${skill}`)}
-                  {skill === strongest && (
-                    <span className="ml-2 text-xs text-emerald-600">{t('strongest')}</span>
-                  )}
-                  {skill === weakest && (
-                    <span className="ml-2 text-xs text-ink/40">{t('weakest')}</span>
-                  )}
-                </span>
+                <span className="font-medium text-ink">{cefrLabel(Number(lvl))}</span>
                 <span className="tabular-nums text-ink/60">
-                  {v.pct}% · CEFR {cefrLabel(v.level)}
+                  {t('levelScore', { score: v.score, max: v.max, correct: v.correct })}
                 </span>
               </div>
               <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-ink/[0.06]">
                 <div
                   className="h-full rounded-full bg-brand-500"
-                  style={{ width: `${Math.max(0, Math.min(100, v.pct))}%` }}
+                  style={{ width: `${v.max ? Math.max(0, Math.min(100, (v.score / v.max) * 100)) : 0}%` }}
                 />
               </div>
             </li>
           ))}
         </ul>
         {(reviewStatus ?? result.review_status) === 'reviewed' && (
-          <p className="mt-3 text-xs text-ink/50">
-            {t(reviewStatusKey('reviewed'))}
+          <p className="mt-3 text-xs text-ink/50">{t(reviewStatusKey('reviewed'))}</p>
+        )}
+      </section>
+
+      {/* Per-skill scores */}
+      <section className="rounded-2xl border border-ink/[0.06] bg-white p-4 shadow-card sm:p-5">
+        <h2 className="font-display text-base font-semibold text-ink">{t('skillBreakdown')}</h2>
+        <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+          {Object.entries(perSkill).map(([skill, v]) => (
+            <li key={skill} className="rounded-xl border border-ink/[0.06] px-3 py-2 text-sm">
+              <span className="font-medium text-ink">{t(`skillNames.${skill}`)}</span>
+              <span className="float-right tabular-nums text-ink/60">
+                {t('skillScore', { score: v.score, max: v.max, correct: v.correct, asked: v.asked })}
+              </span>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-3 text-xs text-ink/40">{t('writingGradingNote')}</p>
+      </section>
+    </div>
+  );
+}
+
+// Legacy (adaptive-era) results: keep their original weighted display so
+// historical attempts are never misrepresented as being out of 600.
+function LegacyResult({ result, reviewStatus, finalLevel }) {
+  const { t } = useTranslation('placement');
+  const skills = result?.skills ?? {};
+
+  return (
+    <div className="space-y-4">
+      <section className="rounded-2xl border border-ink/[0.06] bg-white p-4 shadow-card sm:p-5">
+        <p className="text-sm text-ink/50">{t('resultTitle')}</p>
+        <div className="mt-2 flex flex-wrap items-center gap-3">
+          <p className="font-display text-4xl font-bold text-brand-700">{cefrLabel(result.overall_level)}</p>
+          {result.insufficient_evidence ? (
+            <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-700">
+              {t('insufficientEvidenceBadge')}
+            </span>
+          ) : (
+            <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${attemptStatusTone('submitted')}`}>
+              {t('preliminary')}
+            </span>
+          )}
+        </div>
+        <p className="mt-2 text-sm text-ink/70">
+          {t('confidenceLabel')}: <span className="font-semibold">{t(confidenceKey(result.confidence))}</span>
+        </p>
+        {result.recommended_academy_level && (
+          <p className="mt-1 text-sm text-ink/70">
+            {t('recommendedGroup')}:{' '}
+            <span className="font-semibold">{result.recommended_academy_level}</span>
           </p>
         )}
+        {result.insufficient_evidence ? (
+          <p className="mt-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-800">{t('insufficientNotice')}</p>
+        ) : (
+          <p className="mt-3 rounded-xl bg-brand-50/60 p-3 text-sm text-ink/70">{t('pendingReviewNotice')}</p>
+        )}
+        <p className="mt-2 text-xs text-ink/40">{t('legacyResultNote')}</p>
+      </section>
+
+      <section className="rounded-2xl border border-ink/[0.06] bg-white p-4 shadow-card sm:p-5">
+        <h2 className="font-display text-base font-semibold text-ink">{t('skillBreakdown')}</h2>
+        <ul className="mt-3 space-y-2.5">
+          {Object.entries(skills)
+            .filter(([, v]) => v && v.pct != null)
+            .map(([skill, v]) => (
+              <li key={skill}>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium text-ink">{t(`skillNames.${skill}`)}</span>
+                  <span className="tabular-nums text-ink/60">
+                    {v.pct}% · CEFR {cefrLabel(v.level)}
+                  </span>
+                </div>
+                <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-ink/[0.06]">
+                  <div
+                    className="h-full rounded-full bg-brand-500"
+                    style={{ width: `${Math.max(0, Math.min(100, v.pct))}%` }}
+                  />
+                </div>
+              </li>
+            ))}
+        </ul>
       </section>
     </div>
   );

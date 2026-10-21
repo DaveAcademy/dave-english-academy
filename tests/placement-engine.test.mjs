@@ -1,10 +1,9 @@
-// Placement Test adaptive engine + scoring model contract.
-// The authoritative implementation is SQL (migration 20261121000100).
-// This test mirrors the algorithm in JS, pins the mirror to the SQL
-// constants (extracted from the migration), and exercises the behaviours
-// the placement feature depends on: entry level, adaptation up/down,
-// boundary cases, min/max lengths, stability stop, insufficient evidence,
-// skipped questions, determinism, and termination.
+// Placement Test fixed-60 contract (mirrors migration 20261121000100).
+// Verifies: exactly 60 distinct questions (10 per level A1->C2) drawn from the
+// real seed bank per the required skill distribution; 10-point scoring;
+// 600/0 bounds; per-level breakdown; consecutive-mastery CEFR staircase with
+// top-level caution and insufficient-evidence handling; and that the v1
+// adaptive functions are gone.
 // Run: node tests/placement-engine.test.mjs
 import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
@@ -19,239 +18,203 @@ function check(cond, msg) {
 
 const rpc = readFileSync(`${root}/supabase/migrations/20261121000100_placement_test_rpcs.sql`, 'utf8')
   .replace(/--.*$/gm, '');
+const seed = readFileSync(`${root}/supabase/migrations/20261121000200_placement_test_seed.sql`, 'utf8');
 
 // ---------------------------------------------------------------------------
-// Extract the SQL constants the mirror must agree with.
+// Constants extracted from SQL
 // ---------------------------------------------------------------------------
 function fnReturnsInt(name) {
-  const m = rpc.match(new RegExp(`create or replace function public\\.${name}\\(\\)\\s*returns\\s*\\w+\\s+language sql immutable as \\$\\$\\s*select (\\d+)`));
+  const m = rpc.match(new RegExp(`create or replace function public\\.${name}\\(\\)\\s*returns\\s*int\\s+language sql immutable as \\$\\$\\s*select (\\d+)`));
   return m ? Number(m[1]) : null;
 }
-const ENTRY = fnReturnsInt('placement_entry_level');
-const MIN_PER_SKILL = fnReturnsInt('placement_min_per_skill');
-const MAX_PER_SKILL = fnReturnsInt('placement_max_per_skill');
-const MIN_TOTAL = fnReturnsInt('placement_min_total_answered');
+const PER_LEVEL = fnReturnsInt('placement_questions_per_level');
+const POINTS = fnReturnsInt('placement_points_per_question');
+const TOTAL = fnReturnsInt('placement_total_questions');
+const MAX_SCORE = fnReturnsInt('placement_max_score');
+const MASTERY = fnReturnsInt('placement_mastery_threshold');
+const MIN_ANSWERED = fnReturnsInt('placement_min_total_answered');
 const MAX_ATTEMPTS = fnReturnsInt('placement_max_attempts');
-check(ENTRY === 1, `entry level is A1 (1) - easiest first, got ${ENTRY}`);
-check(MIN_PER_SKILL === 4, `min per skill is 4, got ${MIN_PER_SKILL}`);
-check(MAX_PER_SKILL === 7, `max per skill is 7, got ${MAX_PER_SKILL}`);
-check(MIN_TOTAL === 12, `min total answered is 12, got ${MIN_TOTAL}`);
-check(MAX_ATTEMPTS === 5, `max attempts is 5, got ${MAX_ATTEMPTS}`);
+check(PER_LEVEL === 10, `10 questions per level, got ${PER_LEVEL}`);
+check(POINTS === 10, `10 points per question, got ${POINTS}`);
+check(TOTAL === 60, `60 total questions, got ${TOTAL}`);
+check(MAX_SCORE === 600, `600 max score, got ${MAX_SCORE}`);
+check(MASTERY === 60, `mastery threshold 60%, got ${MASTERY}`);
+check(MIN_ANSWERED === 30, `min answered for sufficient evidence 30, got ${MIN_ANSWERED}`);
+check(MAX_ATTEMPTS === 5, `max attempts 5, got ${MAX_ATTEMPTS}`);
 
-const pctCase = [...rpc.matchAll(/when p_pct < (\d+) then (\d)/g)].map((m) => [Number(m[1]), Number(m[2])]);
-check(JSON.stringify(pctCase) === JSON.stringify([[35, 1], [50, 2], [65, 3], [80, 4], [92, 5]]),
-  `threshold chain is 35/50/65/80/92 -> 1..5, got ${JSON.stringify(pctCase)}`);
+// skill distribution from SQL
+const distMatch = rpc.match(/select '\{[\s\S]*?\}'::jsonb;\s*\n\$\$;/);
+check(!!distMatch, 'skill distribution constant exists');
+const dist = JSON.parse(distMatch[0].match(/select '(\{[\s\S]*?\})'::jsonb/)[1]);
+const requiredDist = {
+  1: { grammar: 4, vocabulary: 3, reading: 2, writing: 1 },
+  2: { grammar: 4, vocabulary: 2, reading: 2, writing: 2 },
+  3: { grammar: 3, vocabulary: 3, reading: 2, writing: 2 },
+  4: { grammar: 3, vocabulary: 2, reading: 3, writing: 2 },
+  5: { grammar: 3, vocabulary: 3, reading: 3, writing: 1 },
+  6: { grammar: 3, vocabulary: 2, reading: 3, writing: 2 },
+};
+for (const lvl of [1, 2, 3, 4, 5, 6]) {
+  check(
+    JSON.stringify(dist[String(lvl)]) === JSON.stringify(requiredDist[lvl]),
+    `level ${lvl} distribution matches the required structure`
+  );
+  const sum = Object.values(dist[String(lvl)]).reduce((s, x) => s + x, 0);
+  check(sum === PER_LEVEL, `level ${lvl} distribution sums to ${PER_LEVEL} (got ${sum})`);
+}
+check(!rpc.includes('create or replace function public.placement_objective_skills'), 'v1 skill rotation removed');
+check(!rpc.includes('create or replace function public.placement_level_from_pct'), 'v1 weighted-pct thresholds removed');
+check(!rpc.includes('create or replace function public.placement_adaptive_estimate'), 'v1 adaptive estimate removed');
+check(!rpc.includes('create or replace function public.placement_provisional_level'), 'v1 provisional level removed');
+check(/drop function if exists public\.placement_level_from_pct/.test(rpc), 'obsolete v1 functions dropped');
 
 // ---------------------------------------------------------------------------
-// JS mirror of the SQL algorithm (kept deliberately line-by-line faithful).
+// Real-bank plan mirror: build each level's candidate list exactly as the SQL
+// does (grammar by id, vocabulary by id, reading by id, writing by id, taking
+// the distribution's count per skill) from the seed file.
 // ---------------------------------------------------------------------------
-const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
-// Mirrors PG round(numeric): half away from zero (JS Math.round is not).
-const roundAway = (x) => (x >= 0 ? Math.floor(x + 0.5) : Math.ceil(x - 0.5));
-function estimate(net, entry = ENTRY, round = roundAway) {
-  return clamp(entry + round(net / 2), 1, 6);
+const bank = { 1: {}, 2: {}, 3: {}, 4: {}, 5: {}, 6: {} };
+for (const m of seed.matchAll(/\('(\w+)', (\d), '(mcq|gap_fill|prompt)',\s*\$j\$/g)) {
+  const [, skill, lvl] = m;
+  bank[Number(lvl)][skill] = (bank[Number(lvl)][skill] || 0) + 1;
 }
-function levelFromPct(pct) {
-  if (pct == null) return null;
-  if (pct < 35) return 1;
-  if (pct < 50) return 2;
-  if (pct < 65) return 3;
-  if (pct < 80) return 4;
-  if (pct < 92) return 5;
-  return 6;
-}
-function recommendedAcademy(level) {
-  if (level <= 1) return 'A';
-  if (level === 2) return 'A1';
-  if (level <= 4) return 'B';
-  return 'C';
-}
+const SKILL_ORDER = ['grammar', 'vocabulary', 'reading', 'writing'];
 
-// Simulates one skill's adaptive walk over an answer pattern.
-// pattern: array of 1/0/null (correct/incorrect/skip). Bank: items per level.
-function walkSkill(pattern, { bankPerLevel = 2 } = {}) {
-  const asked = []; // levels of asked questions
-  const results = []; // 1/0 (skip counted as wrong at scoring time)
-  const unused = {}; // level -> count
-  for (let l = 1; l <= 6; l++) unused[l] = bankPerLevel;
-
-  // SQL round(numeric) is half-away-from-zero; JS Math.round is not.
-  const roundAway = (x) => (x >= 0 ? Math.floor(x + 0.5) : Math.ceil(x - 0.5));
-
-  const pick = (est) => {
-    // nearest-level fallback mirrors the SQL ladder offsets:
-    // est, est-1, est+1, est-2, est+2, then any nearest
-    const order = [est, est - 1, est + 1, est - 2, est + 2];
-    for (const l of order) {
-      if (l >= 1 && l <= 6 && unused[l] > 0) { unused[l]--; return l; }
-    }
-    let best = null;
-    for (let l = 1; l <= 6; l++) {
-      if (unused[l] > 0 && (best === null || Math.abs(l - est) < Math.abs(best - est))) best = l;
-    }
-    if (best !== null) { unused[best]--; return best; }
-    return null;
-  };
-
-  const estOf = (rs) => estimate(rs.reduce((s, r) => s + r, 0), ENTRY, roundAway);
-
-  for (let i = 0; i < pattern.length; i++) {
-    const est = estOf(results);
-    // stability: estimate unchanged across the last TWO consecutive answers
-    const estPrev = results.length > 1 ? estOf(results.slice(0, -1)) : null;
-    const estPrev2 = results.length > 2 ? estOf(results.slice(0, -2)) : null;
-
-    const belowMin = asked.length < MIN_PER_SKILL;
-    const belowMax = asked.length < MAX_PER_SKILL;
-    const stable = estPrev !== null && estPrev2 !== null && est === estPrev && estPrev === estPrev2;
-    if (!(asked.length === 0 || belowMin || (belowMax && !stable))) break; // stop rule fired
-    const lvl = pick(est);
-    if (lvl === null) break; // bank exhausted
-    asked.push(lvl);
-    results.push(pattern[i] === null ? 0 : pattern[i]);
+function levelPlan(level) {
+  const plan = [];
+  for (const s of SKILL_ORDER) {
+    const need = dist[String(level)][s];
+    if (need > 0) plan.push({ skill: s, count: need, available: bank[level][s] || 0 });
   }
-  return { asked, results };
+  return plan;
 }
 
-function scoreSkill(results, askedLevels) {
-  if (askedLevels.length === 0) return { pct: null, level: null };
-  const denom = askedLevels.reduce((s, w) => s + w, 0);
-  const earned = askedLevels.reduce((s, w, i) => s + (results[i] === 1 ? w : 0), 0);
-  const pct = Math.round((earned / denom) * 1000) / 10;
-  return { pct, level: levelFromPct(pct) };
-}
-
-function scoreOverall(perSkill) {
-  const levels = perSkill.map((s) => s.level).filter((l) => l !== null).sort((a, b) => a - b);
-  if (levels.length === 0) return { overall: ENTRY, confidence: 'low', insufficient: true };
-  const n = levels.length;
-  const mid = Math.floor((levels[(n - 1) >> 1] + levels[n >> 1]) / 2); // floored median
-  const spread = levels[n - 1] - levels[0];
-  return { overall: clamp(mid, 1, 6), confidence: spread <= 1 ? 'high' : spread === 2 ? 'medium' : 'low', insufficient: false };
-}
-
-// ---------------------------------------------------------------------------
-// Adaptive behaviour
-// ---------------------------------------------------------------------------
-{
-  const w = walkSkill([]);
-  check(w.asked.length === 0, 'empty pattern asks nothing');
-}
-{
-  // all correct: walks up but never above the ladder top, stops at MAX
-  const w = walkSkill([1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
-  check(w.asked.length === MAX_PER_SKILL, `all-correct stops at max (${w.asked.length})`);
-  check(w.asked.every((l) => l >= ENTRY), 'all-correct never asks below entry');
-  check(w.asked[w.asked.length - 1] >= 4, 'all-correct climbs upward from A1 (scoring maps 100% to C2)');
-}
-{
-  // all wrong: quickly bottoms out at A1 and stops once clearly stable
-  const w = walkSkill([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
-  check(w.asked.length === MIN_PER_SKILL, `all-wrong stops at the minimum (${w.asked.length})`);
-  check(w.asked.every((l) => l === 1 || l === 2), 'all-wrong asks only entry-or-below items');
-  check(Math.min(...w.asked) === 1, 'all-wrong reaches A1 items');
-}
-{
-  // alternating right/wrong is consistent evidence around B1: the estimate
-  // stabilises at entry+1 and the skill stops at the minimum
-  const w = walkSkill([1, 0, 1, 0, 1, 0, 1, 0, 1, 0]);
-  check(w.asked.length === MIN_PER_SKILL, `oscillating pattern stabilises at min (${w.asked.length})`);
-  check(Math.max(...w.asked) <= 3 && Math.min(...w.asked) >= 1, 'oscillating pattern stays near entry');
-}
-{
-  // boundary B1/A2: enter, correct, correct -> estimate A2+2=B1 region
-  const w = walkSkill([1, 1, 1, 1]);
-  check(w.asked[0] === ENTRY, 'first item is asked at the entry level (A1)');
-  check(w.asked[1] === ENTRY + 1 || w.asked[1] === ENTRY + 2, 'second item moves up after a correct answer');
-}
-{
-  // one lucky guess must not dominate: correct then wrong returns to entry
-  const w = walkSkill([1, 0, 0, 0, 0]);
-  const net = w.results.reduce((s, r) => s + r, 0);
-  check(estimate(net) <= ENTRY + 1, 'a single lucky answer damps back (net/2)');
-}
-{
-  // stability stop: 2 correct then 2 wrong then stable-at-minimum
-  // net after [1,1,1,0,0] = 1 -> est=3; without last = 2 -> est=3 (stable)
-  const w = walkSkill([1, 1, 1, 0, 0]);
-  check(w.asked.length === 5, `stable estimate after min stops the skill (${w.asked.length})`);
-}
-{
-  // deterministic: same pattern, same walk
-  const a = walkSkill([1, 1, 0, 1, 0, 0, 1]);
-  const b = walkSkill([1, 1, 0, 1, 0, 0, 1]);
-  check(JSON.stringify(a) === JSON.stringify(b), 'identical answer patterns produce identical walks');
-}
-{
-  // termination: no pattern can exceed max questions
-  for (const p of [[1], [0], [1, 0], [null, null], [1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 1]]) {
-    const w = walkSkill(p);
-    check(w.asked.length <= MAX_PER_SKILL, `pattern ${JSON.stringify(p)} terminates within max (${w.asked.length})`);
+for (const lvl of [1, 2, 3, 4, 5, 6]) {
+  const plan = levelPlan(lvl);
+  const total = plan.reduce((s, p) => s + p.count, 0);
+  check(total === PER_LEVEL, `level ${lvl} plan has ${PER_LEVEL} questions (got ${total})`);
+  for (const p of plan) {
+    check(p.available >= p.count,
+      `level ${lvl} ${p.skill}: ${p.available} available >= ${p.count} required (no shortage)`);
   }
 }
+
+// ---------------------------------------------------------------------------
+// Scoring mirror: 10 points per correct answer, per-level breakdown
+// ---------------------------------------------------------------------------
+function scoreAttempt(answers /* array of {level, correct} */) {
+  let total = 0, correct = 0;
+  const perLevel = {};
+  for (let lvl = 1; lvl <= 6; lvl++) {
+    const items = answers.filter((a) => a.level === lvl);
+    const c = items.filter((a) => a.correct).length;
+    perLevel[lvl] = { asked: items.length, correct: c, score: c * POINTS, max: items.length * POINTS };
+    total += c * POINTS;
+    correct += c;
+  }
+  return { total, correct, perLevel };
+}
 {
-  // skipped questions count as incorrect and cannot inflate the estimate
-  const withSkip = walkSkill([1, null, 0, 0]);
-  const plain = walkSkill([1, 0, 0, 0]);
-  check(JSON.stringify(withSkip.asked) === JSON.stringify(plain.asked), 'skip behaves exactly like an incorrect answer');
+  const allCorrect = [];
+  for (let lvl = 1; lvl <= 6; lvl++) for (let i = 0; i < 10; i++) allCorrect.push({ level: lvl, correct: true });
+  const r = scoreAttempt(allCorrect);
+  check(r.total === 600 && r.correct === 60, `all correct -> 600/600 (got ${r.total})`);
+  check(r.perLevel[1].score === 100 && r.perLevel[6].score === 100, 'every level scores 100/100');
+}
+{
+  const allWrong = [];
+  for (let lvl = 1; lvl <= 6; lvl++) for (let i = 0; i < 10; i++) allWrong.push({ level: lvl, correct: false });
+  const r = scoreAttempt(allWrong);
+  check(r.total === 0 && r.correct === 0, `all wrong -> 0/600 (got ${r.total})`);
+}
+{
+  const mixed = [];
+  for (let lvl = 1; lvl <= 6; lvl++) for (let i = 0; i < 10; i++) mixed.push({ level: lvl, correct: i < 7 });
+  const r = scoreAttempt(mixed);
+  check(r.total === 420 && r.correct === 42, `7/10 correct per level -> 420/600 and 42/60 (got ${r.total})`);
+  check(r.perLevel[1].score === 70, 'per-level score 70/100');
+}
+{
+  // unanswered/skipped questions are asked but not correct -> 0 points
+  const withBlanks = [];
+  for (let lvl = 1; lvl <= 6; lvl++) for (let i = 0; i < 10; i++) {
+    withBlanks.push({ level: lvl, correct: lvl < 6 }); // level 6 entirely unanswered
+  }
+  const r = scoreAttempt(withBlanks.map((a) => ({ ...a, correct: a.correct })));
+  check(r.perLevel[6].score === 0 && r.perLevel[6].max === 100,
+    'unanswered level-6 items earn 0 of their 100 points');
+  check(r.total === 500, 'total reflects only answered questions (got ' + r.total + ')');
 }
 
 // ---------------------------------------------------------------------------
-// Scoring model
+// CEFR staircase mirror: highest level L with every level 1..L >= 60%
 // ---------------------------------------------------------------------------
-{
-  const s = scoreSkill([1, 1, 1, 1], [2, 2, 2, 2]);
-  check(s.pct === 100 && s.level === 6, 'perfect score maps to C2');
-  const z = scoreSkill([0, 0, 0, 0], [3, 3, 3, 3]);
-  check(z.pct === 0 && z.level === 1, 'zero score maps to A1');
+function estimate(perLevelPct) {
+  let est = 0, seenFail = false;
+  for (let lvl = 1; lvl <= 6; lvl++) {
+    if (perLevelPct[lvl] == null) break;
+    if (perLevelPct[lvl] >= MASTERY && !seenFail) est = lvl;
+    else seenFail = true;
+  }
+  return Math.max(1, est);
+}
+function confidence(pcts, answered, est) {
+  let boundaryClean = true;
+  for (let lvl = est + 1; lvl <= 6; lvl++) {
+    if (pcts[lvl] != null && pcts[lvl] >= 40) boundaryClean = false;
+  }
+  if (answered < MIN_ANSWERED) return 'low';
+  if (est === 1 && pcts[1] < 40) return 'low';
+  if (est === 6 && pcts[6] < 80) return 'medium';
+  if (est === 5 && pcts[5] < 80) return 'medium';
+  if (boundaryClean) return 'high';
+  return 'medium';
 }
 {
-  // weighting: correct hard items outweigh correct easy items at equal counts
-  const easy = scoreSkill([1, 1, 1, 0, 0, 0], [1, 1, 1, 1, 1, 1]); // 50% weight-equal
-  const hard = scoreSkill([1, 1, 1, 0, 0, 0], [6, 6, 6, 6, 6, 6]); // same counts, hard items
-  check(hard.pct === easy.pct && hard.level >= easy.level, 'equal pct stays level-equal regardless of weights');
-  const mixed = scoreSkill([1, 0, 0, 0], [6, 1, 1, 1]);
-  const uniform = scoreSkill([1, 0, 0, 0], [2, 2, 2, 2]);
-  check(mixed.pct > uniform.pct, 'a correct hard item earns a higher weighted pct than a correct easy one');
+  const r = estimate({ 1: 90, 2: 80, 3: 70, 4: 60, 5: 55, 6: 30 });
+  check(r === 4, `strong A1-B2, weak C1 -> B2 (got ${r})`);
+  check(confidence({ 1: 90, 2: 80, 3: 70, 4: 60, 5: 55, 6: 30 }, 60, r) === 'medium', 'partial mastery above the ceiling -> medium confidence');
+check(confidence({ 1: 90, 2: 80, 3: 70, 4: 60, 5: 30, 6: 20 }, 60, r) === 'high', 'clean ceiling -> high confidence');
 }
 {
-  // overall = conservative median; outlier skill does not dominate
-  const o = scoreOverall([
-    { pct: 90, level: 5 },
-    { pct: 60, level: 3 },
-    { pct: 55, level: 3 },
-    { pct: 50, level: 2 },
-  ]);
-  check(o.overall === 3, `median of [2,3,3,5] floors to 3 (B1), got ${o.overall}`);
-  check(o.confidence === 'low', `spread of 3 -> low confidence, got ${o.confidence}`);
+  // a lucky C2 score cannot outrank a failed lower level
+  const r = estimate({ 1: 90, 2: 85, 3: 70, 4: 20, 5: 90, 6: 90 });
+  check(r === 3, `failed B2 caps the estimate at B1 even with 90% C1/C2 (got ${r})`);
+  check(confidence({ 1: 90, 2: 85, 3: 70, 4: 20, 5: 90, 6: 90 }, 60, r) === 'medium', 'non-clean boundary -> medium confidence');
 }
 {
-  const o = scoreOverall([{ pct: 70, level: 4 }, { pct: 66, level: 4 }, { pct: 60, level: 3 }, { pct: 62, level: 3 }]);
-  check(o.overall === 3 && o.confidence === 'high', 'tight skill spread -> high confidence');
-  const o2 = scoreOverall([{ pct: 95, level: 6 }, { pct: 10, level: 1 }, { pct: 40, level: 2 }, { pct: 85, level: 5 }]);
-  check(o2.confidence === 'low', 'wild skill spread -> low confidence');
+  const r = estimate({ 1: 100, 2: 100, 3: 100, 4: 100, 5: 100, 6: 100 });
+  check(r === 6, 'perfect ladder -> C2');
+  check(confidence({ 1: 100, 2: 100, 3: 100, 4: 100, 5: 100, 6: 100 }, 60, 6) === 'high', '100% at C2 -> high confidence');
 }
 {
-  // insufficient evidence: too few answered questions
-  const answered = 5;
-  check(answered < MIN_TOTAL, 'below min total answered -> insufficient evidence rule applies');
-  const none = scoreOverall([]);
-  check(none.insufficient === true && none.confidence === 'low', 'no skill evidence -> insufficient + low');
+  const r = estimate({ 1: 80, 2: 70, 3: 65, 4: 62, 5: 81, 6: 75 });
+  check(r === 6, 'all levels mastered -> C2');
+  check(confidence({ 1: 80, 2: 70, 3: 65, 4: 62, 5: 81, 6: 75 }, 60, 6) === 'medium',
+    'C2 with < 80% -> medium confidence (limited evidence at the top)');
 }
 {
-  // academy mapping mirrors placement_recommended_academy_level
-  const map = [1, 2, 3, 4, 5, 6].map(recommendedAcademy);
-  check(JSON.stringify(map) === JSON.stringify(['A', 'A1', 'B', 'B', 'C', 'C']),
-    `CEFR -> academy map is A/A1/B/B/C/C, got ${JSON.stringify(map)}`);
+  const r = estimate({ 1: 50, 2: 20, 3: 0, 4: 0, 5: 0, 6: 0 });
+  check(r === 1, 'nothing mastered -> A1 floor');
+  check(confidence({ 1: 50, 2: 20, 3: 0, 4: 0, 5: 0, 6: 0 }, 20, 1) === 'low', 'few answered -> low confidence');
 }
 
 // ---------------------------------------------------------------------------
-// Mirror vs frontend display constants
+// Frontend model mirror
 // ---------------------------------------------------------------------------
 const model = readFileSync(`${root}/src/features/placementTest/lib/placementModel.js`, 'utf8');
 check(model.includes("CEFR_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']"), 'frontend CEFR labels match the ladder');
-check(model.includes("1: 'A', 2: 'A1', 3: 'B', 4: 'B', 5: 'C', 6: 'C'"), 'frontend academy map matches the SQL mapping');
-check(model.includes('NOT the scoring authority') || model.includes('display-only'), 'frontend model is explicitly display-only');
+check(model.includes('QUESTIONS_PER_LEVEL = 10') && model.includes('MAX_SCORE = 600'), 'frontend mirrors the fixed-60 constants');
+check(model.includes('isFixed60Result'), 'frontend distinguishes fixed-60 results from legacy attempts');
+check(model.includes("2: 'A1', 3: 'B', 4: 'B', 5: 'C', 6: 'C'"), 'frontend academy map matches the SQL mapping');
+
+// result payload contract (submit builds these fields)
+for (const f of ["'format', 'fixed-60'", "'per_level'", "'per_skill'", "'total_score'", "'max_score'", "'correct_count'", "'estimated_level'", "'insufficient_evidence'", "'recommended_academy_level'"]) {
+  check(rpc.includes(f), `submit result includes ${f.replace(/'/g, '')}`);
+}
+check(rpc.includes("'writing_grading', 'completion-based credit"),
+  'writing grading is explicitly labeled completion-based (not quality assessment)');
+check(rpc.includes('superseded_result'), 're-finalized attempts preserve the superseded result');
 
 console.log(failures === 0 ? 'ASCII-START placement-engine ALL CHECKS PASS' : `${failures} FAILURES`);
 process.exit(failures === 0 ? 0 : 1);

@@ -125,7 +125,6 @@ await mgmtQuery(`
       '{"role":"teacher","full_name":"Placement Test Teacher"}', 'authenticated', 'authenticated');
 `);
 const students = await mgmtQuery(`
-  delete from public.students where profile_id in ('${S1}','${S2}');
   insert into public.students (profile_id, real_name, level, payment_deadline, monthly_fee)
   values
     ('${S1}', 'Placement Test Student One', 'A', 5, 0),
@@ -163,10 +162,12 @@ let s2AttemptId = null; // set in the expiry block
 let s2Attempt2Id = null; // set in the expiry block
 
 // ============================================================================
-// 3-4. Adaptive engine serves keyless questions; rotation + bounds.
+// 3-4. Fixed-60 delivery: keyless payloads, A1->C2 order, 10 per level,
+//      required skill distribution, no repeats, no early termination.
 // ============================================================================
-const served = []; // {id, skill, cefr}
+const served = []; // {id, skill, cefr, type, correct}
 const asked = new Set();
+const byLevel = {};
 const bySkill = {};
 
 async function serveAndAnswerOne() {
@@ -175,11 +176,38 @@ async function serveAndAnswerOne() {
   return r.json;
 }
 
-let writingServed = null;
+// deterministic rubric-satisfying text for scored writing tasks
+const WRITING_POOL = ['yesterday', 'morning', 'coffee', 'window', 'garden', 'blanket', 'engine', 'ladder', 'candle', 'harbor', 'meadow', 'pencil', 'market', 'silver', 'bridge', 'autumn', 'planet', 'ribbon', 'shelter', 'thunder'];
+function writingTextFor(prompt) {
+  const min = (prompt && prompt.min_words) || 20;
+  const words = [];
+  for (let i = 0; i < min + 5; i++) words.push(WRITING_POOL[i % WRITING_POOL.length]);
+  return words.join(' ') + '.';
+}
+
+let writingCount = 0;
 let leakChecks = 0;
-for (let i = 0; i < 60; i++) {
+for (let i = 0; i < 75; i++) {
   const p = await serveAndAnswerOne();
-  if (p.phase === 'writing') { writingServed = p.question; break; }
+  if (p.phase === 'speaking') { break; }
+  if (p.phase === 'writing') {
+    // scored writing item inside the sequence: satisfy the completion rubric
+    const wq = p.question;
+    const rawW = JSON.stringify(p);
+    check(!rawW.includes('answer_key') && !rawW.includes('explanation'), `writing ${wq.id} keyless`);
+    check(!asked.has(wq.id), `writing task ${wq.id} served only once`);
+    asked.add(wq.id);
+    served.push({ id: wq.id, skill: 'writing', cefr: wq.cefr_level, type: 'prompt', correct: true });
+    bySkill.writing = bySkill.writing || { asked: 0, correct: 0 };
+    bySkill.writing.asked++; bySkill.writing.correct++;
+    const text = writingTextFor(wq.prompt);
+    const sv = await rpc(S1, 'save_placement_answer', {
+      p_attempt_id: attemptId, p_question_id: wq.id, p_answer: { text }, p_skipped: false,
+    });
+    check(sv.ok, `writing item ${wq.id} saved with rubric-satisfying text (${ERR(sv)})`);
+    writingCount++;
+    continue;
+  }
   if (p.phase !== 'question') throw new Error(`unexpected phase ${p.phase}`);
   const rawQ = JSON.stringify(p);
   check(!rawQ.includes('answer_key') && !rawQ.includes('explanation') && !rawQ.includes('"is_correct"'),
@@ -188,8 +216,9 @@ for (let i = 0; i < 60; i++) {
   const q = p.question;
   check(!asked.has(q.id), `question ${q.id} served only once`);
   asked.add(q.id);
-  served.push({ id: q.id, skill: q.skill, cefr: q.cefr_level, type: q.question_type });
-  bySkill[q.skill] = bySkill[q.skill] || { asked: 0, correct: 0, wrong: 0 };
+  served.push({ id: q.id, skill: q.skill, cefr: q.cefr_level, type: q.question_type, correct: true });
+  byLevel[q.cefr_level] = (byLevel[q.cefr_level] || 0) + 1;
+  bySkill[q.skill] = bySkill[q.skill] || { asked: 0, correct: 0 };
   bySkill[q.skill].asked++;
 
   // privileged fetch of the answer key (harness only - students can't)
@@ -213,16 +242,25 @@ for (let i = 0; i < 60; i++) {
     bySkill[q.skill].correct++;
   }
 }
-check(leakChecks >= 16, `keyless payloads verified across ${leakChecks} questions`);
+check(leakChecks === 50, `keyless payloads verified across all ${leakChecks} objective questions`);
 
-const order = ['grammar', 'vocabulary', 'reading'].filter((s) => bySkill[s]);
-check(JSON.stringify(order) === JSON.stringify(['grammar', 'vocabulary', 'reading']),
-  `sections rotate in fixed order (${order.join('->')}); listening excluded from scoring`);
-for (const s of order) {
-  check(bySkill[s].asked >= 4 && bySkill[s].asked <= 7, `${s}: ${bySkill[s].asked} questions (4..7)`);
+// exactly 60 scored: 10 per level, sequential A1 -> C2, required distribution
+const levelsServed = served.map((x) => x.cefr);
+check(levelsServed.length === 60, `exactly 60 scored questions served (${levelsServed.length})`);
+for (let lvl = 1; lvl <= 6; lvl++) {
+  const n = levelsServed.filter((l) => l === lvl).length;
+  check(n === 10, `level ${lvl}: exactly 10 questions served (${n})`);
 }
-const grammarLevels = served.filter((x) => x.skill === 'grammar').map((x) => x.cefr);
-check(Math.max(...grammarLevels) >= 3, `grammar climbs above entry (max ${Math.max(...grammarLevels)})`);
+const sorted = [...levelsServed].sort((a, b) => a - b);
+check(JSON.stringify(levelsServed) === JSON.stringify(sorted),
+  'questions arrive sequentially A1 -> C2 (never a lower level after a higher one)');
+const distCount = {};
+for (const x of served) distCount[x.skill] = (distCount[x.skill] || 0) + 1;
+check((distCount.listening || 0) === 0, 'no listening questions served');
+check(distCount.writing === 10, `10 writing tasks served (${distCount.writing})`);
+check(distCount.grammar === 20, `20 grammar questions served (${distCount.grammar})`);
+check(distCount.vocabulary === 15, `15 vocabulary questions served (${distCount.vocabulary})`);
+check(distCount.reading === 15, `15 reading questions served (${distCount.reading})`);
 
 // ============================================================================
 // 9. Answer-key protection at the table level (student RLS).
@@ -233,63 +271,59 @@ check(Math.max(...grammarLevels) >= 3, `grammar climbs above entry (max ${Math.m
 }
 
 // ============================================================================
-// 5. Writing phase, then one-shot speaking prompts.
+// 5. After the 60 scored questions: unscored speaking diagnostic.
 // ============================================================================
-check(writingServed && writingServed.skill === 'writing', 'writing prompt served after objective phase');
 {
-  const sv = await rpc(S1, 'save_placement_answer', {
-    p_attempt_id: attemptId, p_question_id: writingServed.id,
-    p_answer: { text: 'I have studied English for two years. My favourite part is reading short stories because they teach me new words and interesting ideas.' },
-    p_skipped: false,
-  });
-  check(sv.ok, `writing saved (${ERR(sv)})`);
   const p = await serveAndAnswerOne();
   check(p.phase === 'speaking' && Array.isArray(p.prompts) && p.prompts.length >= 1,
     `speaking prompts served once (${p.phase}, ${p.prompts?.length})`);
   const p2 = await serveAndAnswerOne();
   check(p2.phase === 'speaking' || p2.phase === 'complete', 'engine idempotent after speaking served');
+  check(writingCount === 10, `all 10 writing tasks answered inside the sequence (${writingCount})`);
 }
 
 // ============================================================================
-// 7. Submit -> valid terminal state; results match the documented model.
+// 7. Submit -> 600/600, per-level/per-skill scores, estimated C2, idempotent.
 // ============================================================================
 const submit1 = await rpc(S1, 'submit_placement_attempt', { p_attempt_id: attemptId });
-check(submit1.ok && submit1.json.overall_level, `submit produced a result (${ERR(submit1)})`);
+check(submit1.ok && submit1.json.estimated_level, `submit produced a result (${ERR(submit1)})`);
 const result = submit1.json;
-check(result.total_asked >= 12, `enough questions asked (${result.total_asked})`);
+check(result.format === 'fixed-60', 'result carries the fixed-60 format marker');
+check(result.total_score === 600, `all-correct attempt scores 600/600 (${result.total_score})`);
+check(result.max_score === 600, 'max_score persisted as 600');
+check(result.correct_count === 60, `correct_count 60/60 (${result.correct_count})`);
+check(result.estimated_level === 6, `all-correct attempt estimates C2 (${result.estimated_level})`);
 check(result.insufficient_evidence === false, 'full attempt is not flagged insufficient');
 check(['high', 'medium', 'low'].includes(result.confidence), `confidence present (${result.confidence})`);
 check(['A', 'A1', 'B', 'C'].includes(result.recommended_academy_level),
   `academy recommendation valid (${result.recommended_academy_level})`);
 
 {
-  const skillResult = {};
-  for (const s of ['grammar', 'vocabulary', 'reading']) {
-    const items = served.filter((x) => x.skill === s);
-    if (items.length === 0) continue;
-    let denom = 0, earned = 0;
-    for (const it of items) {
-      denom += it.cefr;
-      if (true) earned += it.cefr;
-    }
-    const pct = Math.round((earned / denom) * 1000) / 10;
-    const level = pct < 35 ? 1 : pct < 50 ? 2 : pct < 65 ? 3 : pct < 80 ? 4 : pct < 92 ? 5 : 6;
-    skillResult[s] = { pct, level };
+  const levelResult = {};
+  for (let lvl = 1; lvl <= 6; lvl++) {
+    const items = served.filter((x) => x.cefr === lvl);
+    const correct = items.filter((x) => x.correct).length;
+    levelResult[lvl] = { correct, score: correct * 10, max: items.length * 10 };
   }
-  for (const s of Object.keys(skillResult)) {
-    const actual = result.skills[s];
-    check(actual && Math.abs(actual.pct - skillResult[s].pct) < 0.15,
-      `${s} pct matches model (${actual.pct} vs ${skillResult[s].pct})`);
-    check(actual && actual.level === skillResult[s].level,
-      `${s} level matches model (${actual.level} vs ${skillResult[s].level})`);
+  for (let lvl = 1; lvl <= 6; lvl++) {
+    const actual = result.per_level[String(lvl)];
+    check(actual && actual.score === levelResult[lvl].score,
+      `level ${lvl} score matches model (${actual?.score} vs ${levelResult[lvl].score})`);
+    check(actual && actual.correct === levelResult[lvl].correct,
+      `level ${lvl} correct count matches (${actual?.correct} vs ${levelResult[lvl].correct})`);
   }
-  const levels = Object.values(skillResult).map((x) => x.level).sort((a, b) => a - b);
-  const n = levels.length;
-  const median = Math.floor((levels[(n - 1) >> 1] + levels[n >> 1]) / 2);
-  check(result.overall_level === median, `overall = conservative median (${result.overall_level} vs ${median})`);
-  const spread = levels[n - 1] - levels[0];
-  const conf = spread <= 1 ? 'high' : spread === 2 ? 'medium' : 'low';
-  check(result.confidence === conf, `confidence matches spread (${result.confidence} vs ${conf})`);
+  const skillTotals = {};
+  for (const x of served) {
+    skillTotals[x.skill] = skillTotals[x.skill] || { correct: 0, asked: 0, score: 0 };
+    skillTotals[x.skill].asked += 1;
+    skillTotals[x.skill].correct += x.correct ? 1 : 0;
+    skillTotals[x.skill].score += x.correct ? 10 : 0;
+  }
+  for (const [s, v] of Object.entries(skillTotals)) {
+    const actual = result.per_skill[s];
+    check(actual && actual.score === v.score && actual.asked === v.asked,
+      `skill ${s} breakdown matches (${actual?.score}/${v.score}, asked ${actual?.asked}/${v.asked})`);
+  }
 }
 
 const submit1b = await rpc(S1, 'submit_placement_attempt', { p_attempt_id: attemptId });
@@ -320,7 +354,8 @@ check(submit1b.ok && JSON.stringify(submit1b.json) === JSON.stringify(result),
 }
 
 // ============================================================================
-// 6. Expired attempts: deadline is server-enforced.
+// 6. Expired attempts: deadline is server-enforced; stale attempts finalize
+//    automatically with computed evidence (never a bare discard).
 // ============================================================================
 {
   const s2start = await rpc(S2, 'start_placement_attempt');
@@ -346,10 +381,9 @@ check(submit1b.ok && JSON.stringify(submit1b.json) === JSON.stringify(result),
     p_attempt_id: s2AttemptId, p_question_id: q1.json.question.id, p_answer: { option_index: 0 }, p_skipped: false,
   });
   check(!saveExpired.ok, `save after expiry rejected (${ERR(saveExpired)})`);
-  const rows = await mgmtQuery(`select status from public.placement_attempts where id = ${s2AttemptId}`);
+  const rows = await mgmtQuery(`select status, result is not null as has_result, estimated_level from public.placement_attempts where id = ${s2AttemptId}`);
   check(rows[0].status === 'expired', 'attempt marked expired in the database');
-  const finalizedRow = await mgmtQuery(`select result is not null as has_result, estimated_level from public.placement_attempts where id = ${s2AttemptId}`);
-  check(finalizedRow[0].has_result === true && finalizedRow[0].estimated_level != null,
+  check(rows[0].has_result === true && rows[0].estimated_level != null,
     'expired attempt kept a computed preliminary result (evidence preserved)');
   // retake after expiry, then empty submit -> insufficient evidence
   const s2b = await rpc(S2, 'start_placement_attempt');
@@ -364,21 +398,14 @@ check(submit1b.ok && JSON.stringify(submit1b.json) === JSON.stringify(result),
 }
 
 // ============================================================================
-// 12b. Normalization probe: wrong case + extra spaces + surrounding punctuation
-// on a gap_fill must still grade correct (deterministic keys, automatic grading).
+// 12b. Normalization probe: with the fixed sequence the FIRST question is the
+// A1 gap_fill ("She ___ a teacher"), graded through placement_normalize_answer.
+// ============================================================================
 {
   const s2p = await rpc(S2, 'start_placement_attempt');
   check(s2p.ok, `probe attempt started (${ERR(s2p)})`);
   const pid = s2p.json.attempt_id;
-  let step = (await rpc(S2, 'get_next_placement_question', { p_attempt_id: pid })).json;
-  // one wrong answer drives the estimate to A1, where the first gap_fill lives
-  const q1 = step.question;
-  const k1 = await mgmtQuery(`select answer_key, question_type from public.placement_questions where id = ${q1.id}`);
-  const wrong = k1[0].question_type === 'mcq'
-    ? { option_index: (k1[0].answer_key.option_index + 1) % (q1.prompt.options?.length || 4) }
-    : { text: 'zzzz' };
-  await rpc(S2, 'save_placement_answer', { p_attempt_id: pid, p_question_id: q1.id, p_answer: wrong, p_skipped: false });
-  step = (await rpc(S2, 'get_next_placement_question', { p_attempt_id: pid })).json;
+  const step = (await rpc(S2, 'get_next_placement_question', { p_attempt_id: pid })).json;
   const gq = step.question;
   const k2 = await mgmtQuery(`select question_type, accepted_answers from public.placement_questions where id = ${gq.id}`);
   check(k2[0].question_type === 'gap_fill', `probe served a gap_fill item (got ${k2[0].question_type})`);
@@ -392,6 +419,7 @@ check(submit1b.ok && JSON.stringify(submit1b.json) === JSON.stringify(result),
   await rpc(S2, 'submit_placement_attempt', { p_attempt_id: pid });
 }
 
+// ============================================================================
 // 13. Retakes after submit are allowed and history persists.
 // ============================================================================
 {
@@ -400,7 +428,7 @@ check(submit1b.ok && JSON.stringify(submit1b.json) === JSON.stringify(result),
     'S1 retake creates a fresh attempt after submit');
   const hist = await rpc(S1, 'list_my_placement_attempts');
   check(hist.ok && hist.json.length >= 2, `history lists attempts (${hist.json?.length})`);
-  check(hist.json.some((a) => a.id === attemptId && a.estimated_level === result.overall_level),
+  check(hist.json.some((a) => a.id === attemptId && a.estimated_level === result.estimated_level),
     'submitted result persists in history');
   await rpc(S1, 'submit_placement_attempt', { p_attempt_id: s1c.json.attempt_id });
 }
@@ -431,12 +459,12 @@ check(submit1b.ok && JSON.stringify(submit1b.json) === JSON.stringify(result),
   });
   check(!badLevel.ok && /between 1 and 6/i.test(badLevel.error), `final level 7 rejected (${ERR(badLevel)})`);
   const badRubric = await rpc(T1, 'submit_placement_review', {
-    p_attempt_id: attemptId, p_final_level: 3, p_reason: 'solid B1 evidence',
+    p_attempt_id: attemptId, p_final_level: 3, p_reason: 'solid evidence',
     p_writing_scores: { task_completion: 2, grammar_control: 4, vocabulary_range: 2, coherence: 2 },
   });
   check(!badRubric.ok && /between 0 and 3/i.test(badRubric.error), `rubric 4 rejected (${ERR(badRubric)})`);
   const missingDim = await rpc(T1, 'submit_placement_review', {
-    p_attempt_id: attemptId, p_final_level: 3, p_reason: 'solid B1 evidence',
+    p_attempt_id: attemptId, p_final_level: 3, p_reason: 'solid evidence',
     p_writing_scores: { task_completion: 2, grammar_control: 2, vocabulary_range: 2 },
   });
   check(!missingDim.ok && /missing rubric dimension/i.test(missingDim.error),
@@ -448,7 +476,7 @@ check(submit1b.ok && JSON.stringify(submit1b.json) === JSON.stringify(result),
   check(!sReview.ok && /access denied/i.test(sReview.error), `student cannot review (${ERR(sReview)})`);
 
   const review = await rpc(T1, 'submit_placement_review', {
-    p_attempt_id: attemptId, p_final_level: 3, p_reason: 'Confirmed B1: writing coherent, speaking task clear',
+    p_attempt_id: attemptId, p_final_level: 3, p_reason: 'Confirmed B2 range: strong grammar and reading',
     p_writing_scores: { task_completion: 2, grammar_control: 2, vocabulary_range: 2, coherence: 3 },
     p_speaking_scores: { intelligibility: 3, grammar_control: 2, vocabulary_range: 2, fluency_coherence: 2 },
     p_speaking_conducted: true,

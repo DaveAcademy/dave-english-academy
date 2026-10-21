@@ -333,23 +333,59 @@ function ReviewDetail({ attemptId, onBack }) {
         )}
       </section>
 
-      {/* Skill evidence */}
+            {/* Skill evidence */}
       <section className="rounded-2xl border border-ink/[0.06] bg-white p-4 shadow-card sm:p-5">
-        <h2 className="font-display text-base font-semibold text-ink">{t('placement:skillBreakdown')}</h2>
-        <ul className="mt-3 grid gap-2 sm:grid-cols-2">
-          {Object.entries(result.skills || {}).map(([skill, v]) => (
-            <li key={skill} className="rounded-xl border border-ink/[0.06] px-3 py-2 text-sm">
-              <span className="font-medium text-ink">{t(`skillNames.${skill}`, { ns: 'placement' })}</span>
-              <span className="float-right tabular-nums text-ink/60">
-                {v.pct != null ? `${v.pct}% · CEFR ${cefrLabel(v.level)} · ${v.asked}` : 'â€”'}
-              </span>
-            </li>
-          ))}
-        </ul>
-        <p className="mt-3 text-xs text-ink/40">{t('placement:evidenceNote', { asked: result.total_asked ?? 'â€”', answered: result.total_answered ?? 'â€”', skipped: result.total_skipped ?? 'â€”' })}</p>
+        <h2 className="font-display text-base font-semibold text-ink">{t('skillBreakdown', { ns: 'placement' })}</h2>
+
+        {result.per_level ? (
+          <>
+            <p className="mt-1 text-sm text-ink/70">
+              {t('totalScore', { ns: 'placement', score: result.total_score, max: result.max_score })}
+              {' · '}
+              {t('correctCount', { ns: 'placement', correct: result.correct_count, total: result.total_questions })}
+              {' · '}
+              {t('estimatedLevel', { ns: 'placement' })}: <span className="font-semibold">CEFR {cefrLabel(result.estimated_level)}</span>
+            </p>
+            <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+              {Object.entries(result.per_level).map(([lvl, v]) => (
+                <li key={lvl} className="rounded-xl border border-ink/[0.06] px-3 py-2 text-sm">
+                  <span className="font-medium text-ink">CEFR {cefrLabel(Number(lvl))}</span>
+                  <span className="float-right tabular-nums text-ink/60">
+                    {t('levelScore', { ns: 'placement', score: v.score, max: v.max, correct: v.correct })}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+              {Object.entries(result.per_skill || {}).map(([skill, v]) => (
+                <li key={skill} className="rounded-xl border border-ink/[0.06] px-3 py-2 text-sm">
+                  <span className="font-medium text-ink">{t(`skillNames.${skill}`, { ns: 'placement' })}</span>
+                  <span className="float-right tabular-nums text-ink/60">
+                    {t('skillScore', { ns: 'placement', score: v.score, max: v.max, correct: v.correct, asked: v.asked })}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : (
+          <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+            {Object.entries(result.skills || {}).map(([skill, v]) => (
+              <li key={skill} className="rounded-xl border border-ink/[0.06] px-3 py-2 text-sm">
+                <span className="font-medium text-ink">{t(`skillNames.${skill}`, { ns: 'placement' })}</span>
+                <span className="float-right tabular-nums text-ink/60">
+                  {v.pct != null ? `${v.pct}% · CEFR ${cefrLabel(v.level)} · ${v.asked}` : '—'}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+        <p className="mt-3 text-xs text-ink/40">{t('evidenceNote', { asked: result.total_asked ?? '—', answered: result.total_answered ?? '—', skipped: result.total_skipped ?? '—' })}</p>
+        {result.total_score != null && (
+          <p className="mt-1 text-xs text-ink/40">{t('writingGradingNote', { ns: 'placement' })}</p>
+        )}
       </section>
 
-      {/* Answers with keys/explanations (staff, post-submit) */}
+{/* Answers with keys/explanations (staff, post-submit) */}
       <section className="rounded-2xl border border-ink/[0.06] bg-white p-4 shadow-card sm:p-5">
         <h2 className="font-display text-base font-semibold text-ink">{t('placement:answers')}</h2>
         <ol className="mt-3 space-y-2">

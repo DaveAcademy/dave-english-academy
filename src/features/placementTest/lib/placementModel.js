@@ -1,8 +1,9 @@
 // placementModel.js - display-only helpers shared by the placement pages.
-// IMPORTANT: this is NOT the scoring authority. All adaptive selection,
-// grading, and placement computation happen server-side (migration
-// 20261121000100). These constants mirror the server contract for display
-// and are asserted to match it in tests/placement-engine.test.mjs.
+// IMPORTANT: this is NOT the scoring authority. The fixed-60 structure,
+// grading, per-level/per-skill scores, and the estimated CEFR level are all
+// computed server-side (migration 20261121000100). These constants mirror the
+// server contract for display and are asserted to match it in
+// tests/placement-engine.test.mjs.
 
 // CEFR ladder: index 0 = level 1 (A1) ... index 5 = level 6 (C2).
 export const CEFR_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
@@ -12,6 +13,15 @@ export function cefrLabel(level) {
   return CEFR_LEVELS[level - 1];
 }
 
+// Fixed-60 structure (mirrors placement_questions_per_level /
+// placement_points_per_question / placement_total_questions /
+// placement_max_score / placement_mastery_threshold).
+export const QUESTIONS_PER_LEVEL = 10;
+export const POINTS_PER_QUESTION = 10;
+export const TOTAL_QUESTIONS = 60;
+export const MAX_SCORE = 600;
+export const MASTERY_THRESHOLD = 60;
+
 // CEFR -> academy group level (A / A1 / B / C), mirroring
 // placement_recommended_academy_level(). A recommendation only - group
 // changes remain an explicit admin/teacher action.
@@ -20,10 +30,6 @@ export const ACADEMY_LEVEL_MAP = { 1: 'A', 2: 'A1', 3: 'B', 4: 'B', 5: 'C', 6: '
 export function recommendedAcademyLevel(level) {
   return ACADEMY_LEVEL_MAP[level] || null;
 }
-
-// Objective sections in the server's fixed rotation order (listening is
-// excluded: device-dependent TTS made it unfair - see docs/PLACEMENT_TEST.md).
-export const OBJECTIVE_SKILLS = ['grammar', 'vocabulary', 'reading'];
 
 // Review rubric dimensions per teacher-assessed skill (each scored 0-3).
 export const WRITING_RUBRIC = ['task_completion', 'grammar_control', 'vocabulary_range', 'coherence'];
@@ -81,4 +87,10 @@ export function attemptStatusTone(status) {
     default:
       return 'text-amber-700 bg-amber-50';
   }
+}
+
+// A result is "new format" when it carries the fixed-60 total. Legacy
+// (adaptive-era) results render with their own weighted-skill breakdown.
+export function isFixed60Result(result) {
+  return !!result && typeof result.total_score === 'number';
 }

@@ -1,11 +1,11 @@
 {
   "title": "Placement Test",
   "subtitle": "Find your current English level (A1-C2).",
-  "about": "This test estimates your English level and helps us recommend the right group for you. It is a placement recommendation, not an official certificate.",
+  "about": "This test estimates your English level with 60 questions (10 per level, A1 to C2, 600 points maximum). It is an automated placement recommendation, not an official certificate.",
   "rules": {
     "duration": "Takes about 20-30 minutes. The attempt must be finished within 1 hour of starting.",
     "sections": "Sections: grammar, vocabulary, reading, and one writing task. Speaking is a short live assessment with a teacher.",
-    "adaptive": "Questions start from the easiest level and become harder as you answer correctly, so the test can find your exact level.",
+    "adaptive": "The test has 60 questions: 10 at each level from A1 (easiest) to C2 (hardest), presented in order.",
     "rules": "Answer honestly and without help. You cannot see correct answers during the test, and you cannot retake while an attempt is running.",
     "writing": "The writing task is reviewed by a teacher using a rubric.",
     "speaking": "The speaking part is a short live assessment with a teacher - the test shows you the topics in advance."
@@ -41,7 +41,7 @@
   "resultUnavailableNote": "The result will appear here once the attempt is submitted.",
   "resultTitle": "Placement result",
   "preliminary": "Automatic",
-  "estimatedLevel": "Estimated level",
+  "estimatedLevel": "Estimated CEFR level",
   "recommendedGroup": "Recommended group",
   "confidenceLabel": "Confidence",
   "confidence": {
@@ -114,5 +114,15 @@
   "noAutoMove": "Placement results are calculated automatically. This form records an optional manual adjustment; group changes are made separately through Group Management.",
   "confirmLevel": "Confirm placement",
   "reviewSaved": "Review saved.",
-  "reviewFailed": "Could not save the review. Please check the form and try again."
+  "reviewFailed": "Could not save the review. Please check the form and try again.",
+  "questionHeader": "{{level}} · {{skill}} · Question {{n}} of {{total}}",
+  "levelProgress": "{{level}} · {{done}} / {{perLevel}}",
+  "overallProgress": "{{done}} / {{total}} answered",
+  "totalScore": "{{score}} / {{max}}",
+  "correctCount": "{{correct}} of {{total}} correct",
+  "levelBreakdown": "Score by level",
+  "levelScore": "{{score}} / {{max}} · {{correct}} correct",
+  "skillScore": "{{score}} / {{max}} · {{correct}}/{{asked}} correct",
+  "writingGradingNote": "Writing items earn completion-based credit (validated server-side for minimum length and originality). Writing quality is not automatically assessed.",
+  "legacyResultNote": "This attempt was taken with an earlier version of the assessment; its scores reflect that format."
 }
