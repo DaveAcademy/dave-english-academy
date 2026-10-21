@@ -581,9 +581,9 @@ function ResultSummary({ result, reviewStatus, finalLevel }) {
             </li>
           ))}
         </ul>
-        {(reviewStatus || result.review_status) && (
+        {(reviewStatus ?? result.review_status) === 'reviewed' && (
           <p className="mt-3 text-xs text-ink/50">
-            {t(reviewStatusKey(reviewStatus ?? result.review_status))}
+            {t(reviewStatusKey('reviewed'))}
           </p>
         )}
       </section>

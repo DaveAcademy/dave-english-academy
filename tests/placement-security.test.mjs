@@ -93,8 +93,10 @@ check(rubric.includes('between 0 and 3'), 'rubric dimensions bounded 0..3');
 check(rubric.includes('missing rubric dimension'), 'all rubric dimensions required');
 
 // Expiry is enforced on access, not just by the client timer.
-check(next.includes("update public.placement_attempts set status = 'expired'"),
-  'get_next expires stale attempts on access');
+check(next.includes('perform public.submit_placement_attempt(p_attempt_id)'),
+  'get_next finalizes stale attempts with computed evidence (no discard)');
+check(!next.includes("set status = 'expired'"),
+  'get_next no longer marks attempts expired without a result');
 
 // Internals are revoked from clients.
 for (const fn of ['placement_grade_answer', 'placement_validate_rubric', 'placement_attempt_progress', 'placement_provisional_level']) {

@@ -98,15 +98,26 @@ check(!progress.includes("'answer_key'") && !progress.includes("'is_correct'"),
   'progress snapshot leaks no answer material');
 
 // Deadline + expiry on submit
-check(submit.includes("now() > deadline"), 'submit marks stale attempts expired');
+check(submit.includes("now() > deadline"), 'submit marks stale attempts expired (with computed result)');
+check(next.includes('perform public.submit_placement_attempt(p_attempt_id)'),
+  'expiry path finalizes the attempt via submit instead of discarding');
+check(rpcs.includes('submit_placement_review') && body(rpcs, 'submit_placement_review').includes("('submitted','reviewed','expired')"), 'expired attempts are reviewable');
+
+// Automatic grading normalization (case / whitespace / surrounding punctuation)
+check(rpcs.includes('create or replace function public.placement_normalize_answer(p text)'),
+  'answer normalization helper exists');
+check(body(rpcs, 'placement_grade_answer').includes('placement_normalize_answer('),
+  'gap_fill grading normalizes answers');
+check(rpcs.includes("'^[[:punct:]]+|[[:punct:]]+$'"), 'surrounding punctuation is stripped');
+check(rpcs.includes("'\\s+', ' ', 'g'"), 'internal whitespace is collapsed');
+check(rpcs.includes('fully automatic:'), 'result method documents the automatic pipeline');
 
 // Review lifecycle
 check(submit.length > 0 && rpcs.includes('submit_placement_review'),
   'review RPC exists');
-const review = body(rpcs, 'submit_placement_review');
-check(review.includes("status not in ('submitted','reviewed')"),
-  'reviews only accepted for finished attempts');
-check(review.includes("set status = 'reviewed'") && review.includes('final_level = p_final_level'),
+check(body(rpcs, 'submit_placement_review').includes("status not in ('submitted','reviewed','expired')"),
+  'reviews only accepted for finished (or finalized-expired) attempts');
+check(body(rpcs, 'submit_placement_review').includes("set status = 'reviewed'") && body(rpcs, 'submit_placement_review').includes('final_level = p_final_level'),
   'confirmed review updates attempt status and final level');
 
 console.log(failures === 0 ? 'ASCII-START placement-lifecycle ALL CHECKS PASS' : `${failures} FAILURES`);

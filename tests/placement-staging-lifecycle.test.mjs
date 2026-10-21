@@ -352,13 +352,17 @@ check(submit1b.ok && JSON.stringify(submit1b.json) === JSON.stringify(result),
   }
   await mgmtQuery(`update public.placement_attempts set deadline = now() - interval '1 hour' where id = ${s2AttemptId}`);
   const expired = await rpc(S2, 'get_next_placement_question', { p_attempt_id: s2AttemptId });
-  check(expired.ok && expired.json.phase === 'expired', `expired phase returned (${expired.json?.phase})`);
+  check(expired.ok && expired.json.phase === 'complete' && expired.json.submitted === true,
+    `stale attempt auto-finalized on access (phase ${expired.json?.phase})`);
   const saveExpired = await rpc(S2, 'save_placement_answer', {
     p_attempt_id: s2AttemptId, p_question_id: q1.json.question.id, p_answer: { option_index: 0 }, p_skipped: false,
   });
   check(!saveExpired.ok, `save after expiry rejected (${ERR(saveExpired)})`);
   const rows = await mgmtQuery(`select status from public.placement_attempts where id = ${s2AttemptId}`);
   check(rows[0].status === 'expired', 'attempt marked expired in the database');
+  const finalizedRow = await mgmtQuery(`select result is not null as has_result, estimated_level from public.placement_attempts where id = ${s2AttemptId}`);
+  check(finalizedRow[0].has_result === true && finalizedRow[0].estimated_level != null,
+    'expired attempt kept a computed preliminary result (evidence preserved)');
   // retake after expiry, then empty submit -> insufficient evidence
   const s2b = await rpc(S2, 'start_placement_attempt');
   check(s2b.ok && s2b.json.resumed === false, 'new attempt after expiry (cap not hit)');
@@ -372,6 +376,34 @@ check(submit1b.ok && JSON.stringify(submit1b.json) === JSON.stringify(result),
 }
 
 // ============================================================================
+// 12b. Normalization probe: wrong case + extra spaces + surrounding punctuation
+// on a gap_fill must still grade correct (deterministic keys, automatic grading).
+{
+  const s2p = await rpc(S2, 'start_placement_attempt');
+  check(s2p.ok, `probe attempt started (${ERR(s2p)})`);
+  const pid = s2p.json.attempt_id;
+  let step = (await rpc(S2, 'get_next_placement_question', { p_attempt_id: pid })).json;
+  // one wrong answer drives the estimate to A1, where the first gap_fill lives
+  const q1 = step.question;
+  const k1 = await mgmtQuery(`select answer_key, question_type from public.placement_questions where id = ${q1.id}`);
+  const wrong = k1[0].question_type === 'mcq'
+    ? { option_index: (k1[0].answer_key.option_index + 1) % (q1.prompt.options?.length || 4) }
+    : { text: 'zzzz' };
+  await rpc(S2, 'save_placement_answer', { p_attempt_id: pid, p_question_id: q1.id, p_answer: wrong, p_skipped: false });
+  step = (await rpc(S2, 'get_next_placement_question', { p_attempt_id: pid })).json;
+  const gq = step.question;
+  const k2 = await mgmtQuery(`select question_type, accepted_answers from public.placement_questions where id = ${gq.id}`);
+  check(k2[0].question_type === 'gap_fill', `probe served a gap_fill item (got ${k2[0].question_type})`);
+  const variant = '  ' + k2[0].accepted_answers[0].toUpperCase() + '!!  ';
+  const sv = await rpc(S2, 'save_placement_answer', {
+    p_attempt_id: pid, p_question_id: gq.id, p_answer: { text: variant }, p_skipped: false,
+  });
+  check(sv.ok, `normalization variant saved (${ERR(sv)})`);
+  const graded = await mgmtQuery(`select is_correct from public.placement_answers where attempt_id = ${pid} and question_id = ${gq.id}`);
+  check(graded[0].is_correct === true, 'normalized variant graded CORRECT');
+  await rpc(S2, 'submit_placement_attempt', { p_attempt_id: pid });
+}
+
 // 13. Retakes after submit are allowed and history persists.
 // ============================================================================
 {

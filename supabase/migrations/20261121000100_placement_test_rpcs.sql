@@ -113,6 +113,16 @@ $$;
 
 -- Grades one answer server-side. Returns NULL when the answer is skipped
 -- or the item is not objectively gradeable (writing/speaking).
+
+-- Normalizes free-text answers for deterministic comparison: lower-case,
+-- collapsed whitespace, and harmless surrounding punctuation removed.
+create or replace function public.placement_normalize_answer(p text)
+returns text language sql immutable as $$
+  select regexp_replace(
+           regexp_replace(btrim(lower(coalesce(p, ''))), '\s+', ' ', 'g'),
+           '^[[:punct:]]+|[[:punct:]]+$', '', 'g');
+$$;
+
 create or replace function public.placement_grade_answer(
   p_question_type text,
   p_answer_key jsonb,
@@ -130,8 +140,8 @@ begin
          = (nullif(p_answer_key->>'option_index', ''))::int;
   end if;
   if p_question_type = 'gap_fill' then
-    return btrim(lower(coalesce(p_answer->>'text', '')))
-         = any (select btrim(lower(a)) from jsonb_array_elements_text(p_accepted_answers) a);
+    return public.placement_normalize_answer(coalesce(p_answer->>'text', ''))
+         = any (select public.placement_normalize_answer(a) from jsonb_array_elements_text(p_accepted_answers) a);
   end if;
   return null;  -- writing/speaking prompts are never auto-graded
 end;
@@ -342,8 +352,13 @@ begin
   end if;
 
   if now() > v_attempt.deadline then
-    update public.placement_attempts set status = 'expired' where id = v_attempt.id;
-    return jsonb_build_object('phase', 'expired');
+    -- Finalize with whatever evidence exists instead of discarding the
+    -- attempt: computes the result from the recorded answers (unanswered
+    -- asked questions become skipped), stores it, and marks the attempt
+    -- 'expired'. A student who abandons a timed-out attempt still receives
+    -- a preliminary placement and appears in the teacher review queue.
+    perform public.submit_placement_attempt(p_attempt_id);
+    return jsonb_build_object('phase', 'complete', 'submitted', true);
   end if;
 
   v_asked := coalesce(
@@ -852,7 +867,7 @@ begin
       where q.skill = 'speaking'
         and q.id = any (select (value)::bigint from jsonb_array_elements(v_attempt.asked_question_ids) value)
     ), '[]'::jsonb),
-    'method', 'difficulty-weighted skill percentages; conservative median overall; thresholds 35/50/65/80/92; skipped counts as incorrect'
+    'method', 'fully automatic: difficulty-weighted skill percentages; conservative median overall; thresholds 35/50/65/80/92; skipped counts as incorrect; writing/speaking are unscored diagnostics'
   );
 
   update public.placement_attempts
@@ -1027,7 +1042,7 @@ begin
     end if;
   end if;
 
-  if v_attempt.status not in ('submitted','reviewed') then
+  if v_attempt.status not in ('submitted','reviewed','expired') then
     raise exception 'attempt is not ready for review';
   end if;
 
@@ -1096,6 +1111,7 @@ $$;
 -- ---------------------------------------------------------------------------
 -- Grants: public RPCs executable by authenticated users; internals locked.
 -- ---------------------------------------------------------------------------
+revoke all on function public.placement_normalize_answer(text) from public, anon, authenticated;
 revoke all on function public.placement_grade_answer(text, jsonb, jsonb, jsonb, boolean) from public, anon, authenticated;
 revoke all on function public.placement_validate_rubric(jsonb, text[]) from public, anon, authenticated;
 revoke all on function public.placement_attempt_progress(bigint) from public, anon, authenticated;
