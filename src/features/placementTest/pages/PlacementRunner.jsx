@@ -632,6 +632,7 @@ function Fixed60Result({ result, reviewStatus, finalLevel }) {
 function LegacyResult({ result, reviewStatus, finalLevel }) {
   const { t } = useTranslation('placement');
   const skills = result?.skills ?? {};
+  const perLevel = result?.per_level ?? {};
 
   return (
     <div className="space-y-4">
@@ -665,6 +666,24 @@ function LegacyResult({ result, reviewStatus, finalLevel }) {
         )}
         <p className="mt-2 text-xs text-ink/40">{t('legacyResultNote')}</p>
       </section>
+
+      {Object.keys(perLevel).length > 0 && (
+        <section className="rounded-2xl border border-ink/[0.06] bg-white p-4 shadow-card sm:p-5">
+          <h2 className="font-display text-base font-semibold text-ink">{t('levelBreakdown')}</h2>
+          <ul className="mt-3 space-y-2.5">
+            {Object.entries(perLevel).map(([lvl, v]) => (
+              <li key={lvl}>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium text-ink">{cefrLabel(Number(lvl))}</span>
+                  <span className="tabular-nums text-ink/60">
+                    {t('levelScore', { score: v.score, max: v.max, correct: v.correct })}
+                  </span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section className="rounded-2xl border border-ink/[0.06] bg-white p-4 shadow-card sm:p-5">
         <h2 className="font-display text-base font-semibold text-ink">{t('skillBreakdown')}</h2>

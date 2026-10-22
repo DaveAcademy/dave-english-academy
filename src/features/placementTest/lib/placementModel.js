@@ -89,8 +89,10 @@ export function attemptStatusTone(status) {
   }
 }
 
-// A result is "new format" when it carries the fixed-60 total. Legacy
-// (adaptive-era) results render with their own weighted-skill breakdown.
+// A result is "new format" when the attempt was created under the fixed-60
+// structure (format marker persisted server-side). Legacy adaptive attempts —
+// including legacy attempts finalized after the redesign — render with their
+// own scale and never as scores out of 600.
 export function isFixed60Result(result) {
-  return !!result && typeof result.total_score === 'number';
+  return !!result && result.format === 'fixed-60';
 }

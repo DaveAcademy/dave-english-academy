@@ -1,4 +1,4 @@
-// Placement Test STAGING lifecycle verification.
+﻿// Placement Test STAGING lifecycle verification.
 // Runs the complete student-to-teacher workflow against the ISOLATED staging
 // Supabase project (dave-english-academy-homework-test) using synthetic
 // accounts only. Sessions are emulated the way Supabase test helpers do:
@@ -420,6 +420,42 @@ check(submit1b.ok && JSON.stringify(submit1b.json) === JSON.stringify(result),
 }
 
 // ============================================================================
+// ============================================================================
+// 4b. Legacy adaptive attempts: finalized on access, never switched to the
+// fixed-60 format, scores never displayed as out of 600.
+// ============================================================================
+{
+  const legacy = await mgmtQuery(
+    `insert into public.placement_attempts (student_id, deadline, asked_question_ids, format)
+    values (${S1_ID}, now() - interval '2 hours', '[5,9,6,10,7,11]'::jsonb, 'legacy-adaptive')
+    returning id`);
+  const legacyId = legacy[0].id;
+  for (const [qid, ans] of [[5, 0], [6, 1], [7, 0]]) {
+    const ansJson = JSON.stringify({ option_index: ans });
+    await mgmtQuery(`insert into public.placement_answers (attempt_id, question_id, answer, skipped, is_correct, weight)
+      values (${legacyId}, ${qid}, '${ansJson}'::jsonb, false, true, 2)`);
+  }
+  const r = await rpc(S1, "get_next_placement_question", { p_attempt_id: legacyId });
+  check(r.ok && r.json.phase === "complete" && r.json.submitted === true,
+    `legacy attempt finalized on access (phase ${r.json?.phase})`);
+  const st = await mgmtQuery(`select format, status, result->>'format' as result_format,
+    result->>'max_score' as max_score, result->>'insufficient_evidence' as insufficient,
+    estimated_level from public.placement_attempts where id = ${legacyId}`);
+  check(st[0].format === "legacy-adaptive", "attempt format remains legacy-adaptive");
+  check(st[0].status === "expired", "legacy attempt expired after finalization");
+  check(st[0].result_format === "legacy-adaptive", "result carries the legacy-adaptive format marker");
+  check(Number(st[0].max_score) === 60, `max_score reflects asked items only (60, not 600: ${st[0].max_score})`);
+  check(st[0].insufficient === "true", "legacy partial attempt flagged insufficient evidence");
+  const ans = await mgmtQuery(`select count(*) as n from public.placement_answers where attempt_id = ${legacyId}`);
+  check(Number(ans[0].n) >= 3, `legacy answers preserved (${ans[0].n})`);
+  const lr = await rpc(T1, "submit_placement_review", {
+    p_attempt_id: legacyId, p_final_level: 2, p_reason: "Legacy partial attempt: only grammar evidence available",
+  });
+  check(lr.ok, `teacher can review the finalized legacy attempt (${ERR(lr)})`);
+  await mgmtQuery(`delete from public.placement_reviews where attempt_id = ${legacyId}`);
+  await mgmtQuery(`delete from public.placement_attempts where id = ${legacyId}`);
+}
+
 // 13. Retakes after submit are allowed and history persists.
 // ============================================================================
 {

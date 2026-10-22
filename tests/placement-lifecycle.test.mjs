@@ -71,7 +71,7 @@ check(submit.includes("coalesce(v_rec.correct, 0) * public.placement_points_per_
   'each correct answer earns exactly 10 points');
 check(submit.includes("'total_score', v_total_score") || submit.includes("'total_score', v_total_score,"),
   'total score persisted');
-check(submit.includes("'max_score', public.placement_max_score()"), 'maximum score persisted (600 scale)');
+check(submit.includes("case when v_attempt.format = 'fixed-60' then public.placement_max_score()"), 'maximum score persisted (600 for fixed-60 attempts, asked-based for legacy)');
 check(submit.includes("'per_level', v_level_result"), 'per-level breakdown persisted');
 check(submit.includes("'per_skill', v_skill_result"), 'per-skill breakdown persisted');
 check(submit.includes("'correct_count', v_correct_total"), 'correct-answer count persisted');
@@ -93,7 +93,7 @@ check(submit.includes("v_est = 1 and v_pcts[1] < 40 then 'low'"),
 check(submit.includes('public.placement_min_total_answered()'), 'minimum-answered rule enforced');
 check(submit.includes("'insufficient_evidence'"), 'insufficient-evidence state is produced');
 check(submit.includes("'estimated_level', v_est"), 'estimated level persisted (distinct from the score)');
-check(submit.includes("'format', 'fixed-60'"), 'result carries the fixed-60 format marker');
+check(submit.includes("'format', v_attempt.format"), 'result format follows the attempt format (fixed-60 vs legacy-adaptive)');
 check(submit.includes('superseded_result'), 're-finalized attempts preserve the superseded result');
 check(submit.includes("'writing_grading', 'completion-based credit"),
   'writing grading is explicitly labeled completion-based');

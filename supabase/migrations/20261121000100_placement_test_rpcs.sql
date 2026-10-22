@@ -29,6 +29,14 @@
 
 
 -- ---------------------------------------------------------------------------
+-- Attempt format marker. Attempts created before the fixed-60 structure
+-- default to 'legacy-adaptive'; they are finalized on access and can never
+-- continue under the fixed plan (an attempt must not switch formats midway).
+-- ---------------------------------------------------------------------------
+alter table public.placement_attempts
+  add column if not exists format text not null default 'legacy-adaptive';
+
+-- ---------------------------------------------------------------------------
 -- Tunable constants (single source of truth; tests extract these)
 -- ---------------------------------------------------------------------------
 create or replace function public.placement_entry_level()
@@ -289,6 +297,7 @@ begin
     into v_rec
     from unnest(v_asked) aq
     join public.placement_questions q on q.id = aq and q.cefr_level = v_lvl
+      and q.skill in ('grammar','vocabulary','reading')
     left join public.placement_answers pa
       on pa.attempt_id = p_attempt_id and pa.question_id = q.id;
     exit when coalesce(v_rec.asked, 0) = 0;
@@ -372,8 +381,8 @@ begin
     end loop;
   end;
 
-  insert into public.placement_attempts (student_id, deadline)
-  values (v_student.id, now() + public.placement_attempt_ttl())
+  insert into public.placement_attempts (student_id, deadline, format)
+  values (v_student.id, now() + public.placement_attempt_ttl(), 'fixed-60')
   returning * into v_attempt;
 
   return jsonb_build_object('attempt_id', v_attempt.id, 'resumed', false);
@@ -421,6 +430,13 @@ begin
   end if;
 
   if v_attempt.status <> 'in_progress' then
+    return jsonb_build_object('phase', 'complete', 'submitted', true);
+  end if;
+
+  -- legacy adaptive attempts are finalized on access; they cannot continue
+  -- under the fixed plan (an attempt must not switch formats midway)
+  if v_attempt.format <> 'fixed-60' then
+    perform public.submit_placement_attempt(p_attempt_id);
     return jsonb_build_object('phase', 'complete', 'submitted', true);
   end if;
 
@@ -709,12 +725,17 @@ begin
       where pa.attempt_id = v_attempt.id and pa.question_id = q.id
     );
 
-  -- per-level scoring: 10 points per correct answer
+  -- per-level scoring: 10 points per correct answer. The mastery percentage
+  -- used by the CEFR staircase counts OBJECTIVE items only (grammar,
+  -- vocabulary, reading): writing completion credit does not establish
+  -- CEFR-level proficiency, so it must not lift the estimated level.
   for v_lvl in 1..6 loop
     select
       count(*) as asked,
       count(*) filter (where pa.is_correct is true) as correct,
-      count(*) filter (where pa.skipped is true) as skipped
+      count(*) filter (where pa.skipped is true) as skipped,
+      count(*) filter (where q.skill <> 'writing') as obj_asked,
+      count(*) filter (where q.skill <> 'writing' and pa.is_correct is true) as obj_correct
     into v_rec
     from public.placement_questions q
     left join public.placement_answers pa
@@ -734,8 +755,8 @@ begin
       'max', coalesce(v_rec.asked, 0) * public.placement_points_per_question()
     ));
     v_pcts[v_lvl] := case
-      when coalesce(v_rec.asked, 0) = 0 then null
-      else coalesce(v_rec.correct, 0)::numeric / v_rec.asked * 100
+      when coalesce(v_rec.obj_asked, 0) = 0 then null
+      else coalesce(v_rec.obj_correct, 0)::numeric / v_rec.obj_asked * 100
     end;
   end loop;
 
@@ -806,11 +827,12 @@ begin
   ), '[]'::jsonb);
 
   v_evidence := jsonb_build_object(
-    'format', 'fixed-60',
+    'format', v_attempt.format,
     'per_level', v_level_result,
     'per_skill', v_skill_result,
     'total_score', v_total_score,
-    'max_score', public.placement_max_score(),
+    'max_score', case when v_attempt.format = 'fixed-60' then public.placement_max_score()
+                      else v_total_asked * public.placement_points_per_question() end,
     'correct_count', v_correct_total,
     'total_questions', public.placement_total_questions(),
     'estimated_level', v_est,

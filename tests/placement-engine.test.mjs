@@ -147,7 +147,10 @@ function scoreAttempt(answers /* array of {level, correct} */) {
 }
 
 // ---------------------------------------------------------------------------
-// CEFR staircase mirror: highest level L with every level 1..L >= 60%
+// CEFR staircase mirror: highest level L with every level 1..L >= 60%.
+// The percentages are OBJECTIVE-skill percentages only: writing completion
+// credit counts toward the 600-point score but must not lift the estimated
+// CEFR level (a completed response does not demonstrate level proficiency).
 // ---------------------------------------------------------------------------
 function estimate(perLevelPct) {
   let est = 0, seenFail = false;
@@ -200,6 +203,20 @@ check(confidence({ 1: 90, 2: 80, 3: 70, 4: 60, 5: 30, 6: 20 }, 60, r) === 'high'
 }
 
 // ---------------------------------------------------------------------------
+// Objective-only staircase in SQL: writing completion credit excluded
+// ---------------------------------------------------------------------------
+check(rpc.includes("count(*) filter (where q.skill <> 'writing') as obj_asked"),
+  'mastery pct counts objective items only (obj_asked)');
+check(rpc.includes("count(*) filter (where q.skill <> 'writing' and pa.is_correct is true) as obj_correct"),
+  'mastery pct counts objective correct only (obj_correct)');
+check(rpc.includes("coalesce(v_rec.obj_correct, 0)::numeric / v_rec.obj_asked * 100"),
+  'staircase pct = objective correct / objective asked');
+check(rpc.includes("add column if not exists format text not null default 'legacy-adaptive'"),
+  'attempt format column added (legacy default)');
+check(rpc.includes("v_attempt.format <> 'fixed-60' then\n    perform public.submit_placement_attempt(p_attempt_id);"),
+  'legacy attempts finalize on access (no format switch mid-attempt)');
+
+// ---------------------------------------------------------------------------
 // Frontend model mirror
 // ---------------------------------------------------------------------------
 const model = readFileSync(`${root}/src/features/placementTest/lib/placementModel.js`, 'utf8');
@@ -209,7 +226,8 @@ check(model.includes('isFixed60Result'), 'frontend distinguishes fixed-60 result
 check(model.includes("2: 'A1', 3: 'B', 4: 'B', 5: 'C', 6: 'C'"), 'frontend academy map matches the SQL mapping');
 
 // result payload contract (submit builds these fields)
-for (const f of ["'format', 'fixed-60'", "'per_level'", "'per_skill'", "'total_score'", "'max_score'", "'correct_count'", "'estimated_level'", "'insufficient_evidence'", "'recommended_academy_level'"]) {
+check(rpc.includes("'format', v_attempt.format"), 'result format follows the attempt format');
+for (const f of ["'per_level'", "'per_skill'", "'total_score'", "'max_score'", "'correct_count'", "'estimated_level'", "'insufficient_evidence'", "'recommended_academy_level'"]) {
   check(rpc.includes(f), `submit result includes ${f.replace(/'/g, '')}`);
 }
 check(rpc.includes("'writing_grading', 'completion-based credit"),
