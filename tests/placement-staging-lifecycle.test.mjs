@@ -35,6 +35,15 @@ if (!ACCESS_TOKEN) {
 }
 
 async function mgmtQuery(sql) {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try { return await mgmtQueryOnce(sql); }
+    catch (e) {
+      if (attempt < 2 && /mgmt 5\d\d/.test(e.message)) { await new Promise(r => setTimeout(r, 3000 * (attempt + 1))); continue; }
+      throw e;
+    }
+  }
+}
+async function mgmtQueryOnce(sql) {
   const res = await fetch(`https://api.supabase.com/v1/projects/${STAGING_REF}/database/query`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${ACCESS_TOKEN}`, 'Content-Type': 'application/json' },
@@ -176,38 +185,10 @@ async function serveAndAnswerOne() {
   return r.json;
 }
 
-// deterministic rubric-satisfying text for scored writing tasks
-const WRITING_POOL = ['yesterday', 'morning', 'coffee', 'window', 'garden', 'blanket', 'engine', 'ladder', 'candle', 'harbor', 'meadow', 'pencil', 'market', 'silver', 'bridge', 'autumn', 'planet', 'ribbon', 'shelter', 'thunder'];
-function writingTextFor(prompt) {
-  const min = (prompt && prompt.min_words) || 20;
-  const words = [];
-  for (let i = 0; i < min + 5; i++) words.push(WRITING_POOL[i % WRITING_POOL.length]);
-  return words.join(' ') + '.';
-}
-
-let writingCount = 0;
 let leakChecks = 0;
 for (let i = 0; i < 75; i++) {
   const p = await serveAndAnswerOne();
-  if (p.phase === 'speaking') { break; }
-  if (p.phase === 'writing') {
-    // scored writing item inside the sequence: satisfy the completion rubric
-    const wq = p.question;
-    const rawW = JSON.stringify(p);
-    check(!rawW.includes('answer_key') && !rawW.includes('explanation'), `writing ${wq.id} keyless`);
-    check(!asked.has(wq.id), `writing task ${wq.id} served only once`);
-    asked.add(wq.id);
-    served.push({ id: wq.id, skill: 'writing', cefr: wq.cefr_level, type: 'prompt', correct: true });
-    bySkill.writing = bySkill.writing || { asked: 0, correct: 0 };
-    bySkill.writing.asked++; bySkill.writing.correct++;
-    const text = writingTextFor(wq.prompt);
-    const sv = await rpc(S1, 'save_placement_answer', {
-      p_attempt_id: attemptId, p_question_id: wq.id, p_answer: { text }, p_skipped: false,
-    });
-    check(sv.ok, `writing item ${wq.id} saved with rubric-satisfying text (${ERR(sv)})`);
-    writingCount++;
-    continue;
-  }
+  if (p.phase === 'complete') break;
   if (p.phase !== 'question') throw new Error(`unexpected phase ${p.phase}`);
   const rawQ = JSON.stringify(p);
   check(!rawQ.includes('answer_key') && !rawQ.includes('explanation') && !rawQ.includes('"is_correct"'),
@@ -242,7 +223,7 @@ for (let i = 0; i < 75; i++) {
     bySkill[q.skill].correct++;
   }
 }
-check(leakChecks === 50, `keyless payloads verified across all ${leakChecks} objective questions`);
+check(leakChecks === 60, `keyless payloads verified across all ${leakChecks} questions`);
 
 // exactly 60 scored: 10 per level, sequential A1 -> C2, required distribution
 const levelsServed = served.map((x) => x.cefr);
@@ -257,10 +238,8 @@ check(JSON.stringify(levelsServed) === JSON.stringify(sorted),
 const distCount = {};
 for (const x of served) distCount[x.skill] = (distCount[x.skill] || 0) + 1;
 check((distCount.listening || 0) === 0, 'no listening questions served');
-check(distCount.writing === 10, `10 writing tasks served (${distCount.writing})`);
-check(distCount.grammar === 20, `20 grammar questions served (${distCount.grammar})`);
-check(distCount.vocabulary === 15, `15 vocabulary questions served (${distCount.vocabulary})`);
-check(distCount.reading === 15, `15 reading questions served (${distCount.reading})`);
+check(distCount.grammar === 30, `30 grammar questions served (${distCount.grammar})`);
+check(distCount.vocabulary === 30, `30 vocabulary questions served (${distCount.vocabulary})`);
 
 // ============================================================================
 // 9. Answer-key protection at the table level (student RLS).
@@ -271,15 +250,13 @@ check(distCount.reading === 15, `15 reading questions served (${distCount.readin
 }
 
 // ============================================================================
-// 5. After the 60 scored questions: unscored speaking diagnostic.
+// 5. After the 60 scored questions: the attempt is ready to submit.
 // ============================================================================
 {
   const p = await serveAndAnswerOne();
-  check(p.phase === 'speaking' && Array.isArray(p.prompts) && p.prompts.length >= 1,
-    `speaking prompts served once (${p.phase}, ${p.prompts?.length})`);
-  const p2 = await serveAndAnswerOne();
-  check(p2.phase === 'speaking' || p2.phase === 'complete', 'engine idempotent after speaking served');
-  check(writingCount === 10, `all 10 writing tasks answered inside the sequence (${writingCount})`);
+  check(p.phase === 'complete', `phase complete after 60 questions (${p.phase})`);
+  check(p.progress && p.progress.total_asked === 60, `all 60 questions served (`+(p.progress?.total_asked??`?`)+`)`);
+  check(p.progress && p.progress.total_asked === 60, `all 60 questions served (${p.progress?.total_asked})`);
 }
 
 // ============================================================================
@@ -398,64 +375,6 @@ check(submit1b.ok && JSON.stringify(submit1b.json) === JSON.stringify(result),
 }
 
 // ============================================================================
-// 12b. Normalization probe: with the fixed sequence the FIRST question is the
-// A1 gap_fill ("She ___ a teacher"), graded through placement_normalize_answer.
-// ============================================================================
-{
-  const s2p = await rpc(S2, 'start_placement_attempt');
-  check(s2p.ok, `probe attempt started (${ERR(s2p)})`);
-  const pid = s2p.json.attempt_id;
-  const step = (await rpc(S2, 'get_next_placement_question', { p_attempt_id: pid })).json;
-  const gq = step.question;
-  const k2 = await mgmtQuery(`select question_type, accepted_answers from public.placement_questions where id = ${gq.id}`);
-  check(k2[0].question_type === 'gap_fill', `probe served a gap_fill item (got ${k2[0].question_type})`);
-  const variant = '  ' + k2[0].accepted_answers[0].toUpperCase() + '!!  ';
-  const sv = await rpc(S2, 'save_placement_answer', {
-    p_attempt_id: pid, p_question_id: gq.id, p_answer: { text: variant }, p_skipped: false,
-  });
-  check(sv.ok, `normalization variant saved (${ERR(sv)})`);
-  const graded = await mgmtQuery(`select is_correct from public.placement_answers where attempt_id = ${pid} and question_id = ${gq.id}`);
-  check(graded[0].is_correct === true, 'normalized variant graded CORRECT');
-  await rpc(S2, 'submit_placement_attempt', { p_attempt_id: pid });
-}
-
-// ============================================================================
-// ============================================================================
-// 4b. Legacy adaptive attempts: finalized on access, never switched to the
-// fixed-60 format, scores never displayed as out of 600.
-// ============================================================================
-{
-  const legacy = await mgmtQuery(
-    `insert into public.placement_attempts (student_id, deadline, asked_question_ids, format)
-    values (${S1_ID}, now() - interval '2 hours', '[5,9,6,10,7,11]'::jsonb, 'legacy-adaptive')
-    returning id`);
-  const legacyId = legacy[0].id;
-  for (const [qid, ans] of [[5, 0], [6, 1], [7, 0]]) {
-    const ansJson = JSON.stringify({ option_index: ans });
-    await mgmtQuery(`insert into public.placement_answers (attempt_id, question_id, answer, skipped, is_correct, weight)
-      values (${legacyId}, ${qid}, '${ansJson}'::jsonb, false, true, 2)`);
-  }
-  const r = await rpc(S1, "get_next_placement_question", { p_attempt_id: legacyId });
-  check(r.ok && r.json.phase === "complete" && r.json.submitted === true,
-    `legacy attempt finalized on access (phase ${r.json?.phase})`);
-  const st = await mgmtQuery(`select format, status, result->>'format' as result_format,
-    result->>'max_score' as max_score, result->>'insufficient_evidence' as insufficient,
-    estimated_level from public.placement_attempts where id = ${legacyId}`);
-  check(st[0].format === "legacy-adaptive", "attempt format remains legacy-adaptive");
-  check(st[0].status === "expired", "legacy attempt expired after finalization");
-  check(st[0].result_format === "legacy-adaptive", "result carries the legacy-adaptive format marker");
-  check(Number(st[0].max_score) === 60, `max_score reflects asked items only (60, not 600: ${st[0].max_score})`);
-  check(st[0].insufficient === "true", "legacy partial attempt flagged insufficient evidence");
-  const ans = await mgmtQuery(`select count(*) as n from public.placement_answers where attempt_id = ${legacyId}`);
-  check(Number(ans[0].n) >= 3, `legacy answers preserved (${ans[0].n})`);
-  const lr = await rpc(T1, "submit_placement_review", {
-    p_attempt_id: legacyId, p_final_level: 2, p_reason: "Legacy partial attempt: only grammar evidence available",
-  });
-  check(lr.ok, `teacher can review the finalized legacy attempt (${ERR(lr)})`);
-  await mgmtQuery(`delete from public.placement_reviews where attempt_id = ${legacyId}`);
-  await mgmtQuery(`delete from public.placement_attempts where id = ${legacyId}`);
-}
-
 // 13. Retakes after submit are allowed and history persists.
 // ============================================================================
 {

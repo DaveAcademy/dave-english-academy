@@ -1,40 +1,38 @@
+
 -- 20261121000100_placement_test_rpcs.sql
 -- CEFR Placement Test: SECURITY DEFINER RPCs.
 --
--- Fixed-structure assessment (v2): exactly 60 scored questions, 10 per CEFR
--- level (A1..C2), presented sequentially from A1 to C2 with the per-level
--- skill distribution in placement_skill_distribution(). No adaptive early
--- termination and no skipped levels. Every question is worth 10 points;
--- maximum 600, minimum 0. Unanswered questions earn 0.
+-- Fixed-structure assessment (v3): exactly 60 scored multiple-choice
+-- questions - 5 grammar + 5 vocabulary at each CEFR level (A1..C2) - delivered
+-- sequentially from A1 to C2 with no adaptive early termination and no
+-- skipped levels. Every question is worth 10 points (maximum 600, minimum 0).
+-- Unanswered questions earn 0.
 --
--- Automatic processing: answers are graded server-side (objective keys for
--- mcq/gap_fill; a documented completion rubric for writing prompts - see
--- placement_grade_writing; speaking prompts are never auto-graded and remain
--- an unscored diagnostic). The total, per-level and per-skill scores, the
--- estimated CEFR level and its confidence are computed and persisted by
--- submit_placement_attempt. No teacher grading or approval is required for
--- the result to appear; the teacher dashboard is read-only diagnostics plus
--- an optional level adjustment.
+-- Fully automatic: answers are graded server-side against deterministic
+-- keys; the total, per-level (out of 100) and per-skill (grammar 300 /
+-- vocabulary 300) scores, the estimated CEFR level and its confidence are
+-- computed and persisted by submit_placement_attempt. No teacher grading or
+-- approval is required for the result to appear; the teacher dashboard is
+-- read-only diagnostics plus an optional level adjustment.
 --
 -- CEFR estimation (documented, not certified): estimated level = the highest
 -- level L such that every level 1..L has >= placement_mastery_threshold()%
--- correct (consecutive mastery staircase from A1 upward). A lucky high-level
--- score cannot lift the estimate past a failed lower level. Confidence is
--- reduced when evidence is insufficient (< 30 answered), when the top level
--- is C1/C2 with < 80% (10 items give limited evidence), or when the
+-- correct among its OBJECTIVE grammar/vocabulary items (consecutive mastery
+-- staircase from A1 upward). A lucky high-level score cannot lift the
+-- estimate past a failed lower level. Confidence is reduced when evidence is
+-- insufficient (< placement_min_total_answered() answered), when the top
+-- level is C1/C2 with < 80% (10 items give limited evidence), or when the
 -- mastery/non-mastery boundary is not clean.
 --
+-- Reading, listening, writing, and speaking are not part of the scored
+-- assessment (reading/listening for device- and passage-independence,
+-- writing/speaking because reliable automatic quality grading does not
+-- exist); their bank items remain published but are never served.
+--
 -- Answer-key protection, ownership checks, deadlines, duplicate-submission
--- protection, and RLS are unchanged from v1 (see docs/PLACEMENT_TEST.md).
+-- protection, and RLS are unchanged (see docs/PLACEMENT_TEST.md).
 
 
--- ---------------------------------------------------------------------------
--- Attempt format marker. Attempts created before the fixed-60 structure
--- default to 'legacy-adaptive'; they are finalized on access and can never
--- continue under the fixed plan (an attempt must not switch formats midway).
--- ---------------------------------------------------------------------------
-alter table public.placement_attempts
-  add column if not exists format text not null default 'legacy-adaptive';
 
 -- ---------------------------------------------------------------------------
 -- Tunable constants (single source of truth; tests extract these)
@@ -86,18 +84,19 @@ returns int language sql immutable as $$
   select 60;
 $$;
 
--- scored questions per level: grammar, vocabulary, reading, writing
+-- scored questions per level: grammar and vocabulary only (5 + 5)
 create or replace function public.placement_skill_distribution()
 returns jsonb language sql immutable as $$
   select '{
-    "1": {"grammar": 4, "vocabulary": 3, "reading": 2, "writing": 1},
-    "2": {"grammar": 4, "vocabulary": 2, "reading": 2, "writing": 2},
-    "3": {"grammar": 3, "vocabulary": 3, "reading": 2, "writing": 2},
-    "4": {"grammar": 3, "vocabulary": 2, "reading": 3, "writing": 2},
-    "5": {"grammar": 3, "vocabulary": 3, "reading": 3, "writing": 1},
-    "6": {"grammar": 3, "vocabulary": 2, "reading": 3, "writing": 2}
+    "1": {"grammar": 5, "vocabulary": 5},
+    "2": {"grammar": 5, "vocabulary": 5},
+    "3": {"grammar": 5, "vocabulary": 5},
+    "4": {"grammar": 5, "vocabulary": 5},
+    "5": {"grammar": 5, "vocabulary": 5},
+    "6": {"grammar": 5, "vocabulary": 5}
   }'::jsonb;
 $$;
+
 
 
 create or replace function public.placement_normalize_answer(p text)
@@ -106,57 +105,6 @@ returns text language sql immutable as $$
            regexp_replace(btrim(lower(coalesce(p, ''))), '\s+', ' ', 'g'),
            '^[[:punct:]]+|[[:punct:]]+$', '', 'g');
 $$;
-
--- ---------------------------------------------------------------------------
--- Writing completion rubric (deterministic, server-side). Awards the item's
--- 10 points only for a substantive, original response meeting the task's
--- minimum length. This is COMPLETION-BASED credit, not a quality assessment
--- of the writing; the result payload says so explicitly.
--- ---------------------------------------------------------------------------
-create or replace function public.placement_grade_writing(
-  p_prompt jsonb,
-  p_answer jsonb,
-  p_skipped boolean
-)
-returns boolean
-language plpgsql
-immutable
-as $$
-declare
-  v_text text;
-  v_min int;
-  v_words text[];
-  v_distinct int;
-  v_prompt_text text;
-  v_prompt_words text[];
-  v_new int;
-begin
-  if p_skipped is true or p_answer is null then
-    return null;  -- unanswered: 0 points via scoring
-  end if;
-  v_text := btrim(coalesce(p_answer->>'text', ''));
-  if v_text = '' then
-    return null;
-  end if;
-  v_min := coalesce(nullif(btrim(coalesce(p_prompt->>'min_words', '')), '')::int, 20);
-  v_words := string_to_array(regexp_replace(lower(v_text), '\s+', ' ', 'g'), ' ');
-  if coalesce(array_length(v_words, 1), 0) < v_min then
-    return false;  -- too short for the task
-  end if;
-  v_distinct := (select count(distinct w) from unnest(v_words) w);
-  if v_distinct < least(8, ceil(coalesce(array_length(v_words, 1), 0) / 3.0)) then
-    return false;  -- degenerate repetition
-  end if;
-  -- originality: at least 5 words not taken from the prompt itself
-  v_prompt_text := lower(btrim(coalesce(p_prompt->>'text', '') || ' ' || coalesce(p_prompt->>'guidance', '')));
-  v_prompt_words := string_to_array(regexp_replace(v_prompt_text, '\s+', ' ', 'g'), ' ');
-  select count(*) into v_new
-  from unnest(v_words) w
-  where not (w = any (v_prompt_words));
-  return coalesce(v_new, 0) >= 5;
-end;
-$$;
-
 
 create or replace function public.placement_grade_answer(
   p_question_type text,
@@ -182,10 +130,6 @@ begin
 end;
 $$;
 
--- ---------------------------------------------------------------------------
--- Progress snapshot: per-level and per-skill counts (no answer content).
--- Drives the student progress display and the teacher dashboard.
--- ---------------------------------------------------------------------------
 create or replace function public.placement_attempt_progress(p_attempt_id bigint)
 returns jsonb
 language plpgsql
@@ -200,6 +144,7 @@ declare
   v_rec record;
   v_levels jsonb := '{}'::jsonb;
   v_skills jsonb := '{}'::jsonb;
+  v_plan_skills constant text[] := array['grammar','vocabulary'];
   v_total int := 0;
   v_answered_total int := 0;
   v_s text;
@@ -238,7 +183,7 @@ begin
     v_answered_total := v_answered_total + coalesce(v_rec.answered, 0);
   end loop;
 
-  foreach v_s in array (array['grammar','vocabulary','reading','writing']) loop
+  foreach v_s in array v_plan_skills loop
     select
       count(*) as asked,
       count(pa.*) filter (where pa.answer is not null or pa.skipped) as answered,
@@ -268,50 +213,25 @@ begin
 end;
 $$;
 
-
--- Staircase estimate over the attempt's currently recorded answers.
--- Used for speaking-prompt selection and available for diagnostics; the
--- authoritative classification is computed in submit_placement_attempt.
-create or replace function public.placement_estimated_level(p_attempt_id bigint)
-returns smallint
-language plpgsql
-stable
-security definer
-set search_path = public
-as $$
-declare
-  v_asked bigint[];
-  v_lvl smallint;
-  v_rec record;
-  v_est smallint := 0;
-  v_seen_fail boolean := false;
-begin
-  select coalesce((select array_agg(value::bigint) from jsonb_array_elements(a.asked_question_ids) value), '{}')
-  into v_asked from public.placement_attempts a where a.id = p_attempt_id;
-  if v_asked is null then
-    return public.placement_entry_level();
-  end if;
-  for v_lvl in 1..6 loop
-    select count(*) as asked,
-           count(*) filter (where pa.is_correct is true) as correct
-    into v_rec
-    from unnest(v_asked) aq
-    join public.placement_questions q on q.id = aq and q.cefr_level = v_lvl
-      and q.skill in ('grammar','vocabulary','reading')
-    left join public.placement_answers pa
-      on pa.attempt_id = p_attempt_id and pa.question_id = q.id;
-    exit when coalesce(v_rec.asked, 0) = 0;
-    if coalesce(v_rec.correct, 0)::numeric / v_rec.asked * 100 >= public.placement_mastery_threshold()
-       and not v_seen_fail then
-      v_est := v_lvl;
-    else
-      v_seen_fail := true;
-    end if;
-  end loop;
-  return greatest(1::smallint, coalesce(nullif(v_est, 0), public.placement_entry_level()));
-end;
+create or replace function public.placement_entry_level()
+returns smallint language sql immutable as $$
+  select 1::smallint;  -- A1 floor: students with no mastered level are placed at A1
 $$;
 
+create or replace function public.placement_attempt_ttl()
+returns interval language sql immutable as $$
+  select interval '1 hour';
+$$;
+
+create or replace function public.placement_max_attempts()
+returns int language sql immutable as $$
+  select 5;
+$$;
+
+create or replace function public.placement_min_total_answered()
+returns int language sql immutable as $$
+  select 30;
+$$;
 
 create or replace function public.placement_recommended_academy_level(p_level smallint)
 returns text language sql immutable as $$
@@ -362,22 +282,24 @@ begin
     raise exception 'attempt limit reached';
   end if;
 
-  -- the fixed 60-question structure requires the full skill distribution
-  -- at every level; fail loudly at attempt start rather than mid-test
+  -- the fixed 60-question structure requires 5 grammar and 5 vocabulary
+  -- multiple-choice questions at every level; fail loudly at attempt start
   declare
     v_lvl smallint;
-    v_s text;
     v_need int;
-    v_dist jsonb := public.placement_skill_distribution();
   begin
     for v_lvl in 1..6 loop
-      foreach v_s in array (array['grammar','vocabulary','reading','writing']) loop
-        v_need := coalesce((v_dist -> (v_lvl::text) ->> v_s)::int, 0);
-        if (select count(*) from public.placement_questions
-            where skill = v_s and cefr_level = v_lvl and status = 'published') < v_need then
-          raise exception 'question bank incomplete: level % skill % has fewer than % published items', v_lvl, v_s, v_need;
-        end if;
-      end loop;
+      v_need := public.placement_questions_per_level() / 2;
+      if (select count(*) from public.placement_questions
+          where skill = 'grammar' and question_type = 'mcq'
+            and cefr_level = v_lvl and status = 'published') < v_need then
+        raise exception 'question bank incomplete: level % has fewer than % grammar mcq items', v_lvl, v_need;
+      end if;
+      if (select count(*) from public.placement_questions
+          where skill = 'vocabulary' and question_type = 'mcq'
+            and cefr_level = v_lvl and status = 'published') < v_need then
+        raise exception 'question bank incomplete: level % has fewer than % vocabulary mcq items', v_lvl, v_need;
+      end if;
     end loop;
   end;
 
@@ -392,9 +314,9 @@ $$;
 -- ---------------------------------------------------------------------------
 -- get_next_placement_question: serves the fixed plan sequentially.
 -- Question k (0-based) is taken from level (k/10)+1 at position (k%10) of
--- that level's distribution-ordered candidate list. No adaptive termination,
--- no skipped levels, no repeats. After question 60: two unscored speaking
--- prompts (diagnostic), then the attempt is ready to submit.
+-- that level's distribution-ordered candidate list (5 grammar then 5
+-- vocabulary). Multiple-choice only; no adaptive termination, no skipped
+-- levels, no repeats. After question 60 the attempt is ready to submit.
 -- ---------------------------------------------------------------------------
 create or replace function public.get_next_placement_question(p_attempt_id bigint)
 returns jsonb
@@ -414,6 +336,7 @@ declare
   v_need int;
   v_rem int;
   v_q public.placement_questions;
+  v_plan_skills constant text[] := array['grammar','vocabulary'];
 begin
   if v_profile_id is null then
     raise exception 'not authenticated';
@@ -430,13 +353,6 @@ begin
   end if;
 
   if v_attempt.status <> 'in_progress' then
-    return jsonb_build_object('phase', 'complete', 'submitted', true);
-  end if;
-
-  -- legacy adaptive attempts are finalized on access; they cannot continue
-  -- under the fixed plan (an attempt must not switch formats midway)
-  if v_attempt.format <> 'fixed-60' then
-    perform public.submit_placement_attempt(p_attempt_id);
     return jsonb_build_object('phase', 'complete', 'submitted', true);
   end if;
 
@@ -462,22 +378,10 @@ begin
       );
     if v_q.id is not null then
       return jsonb_build_object(
-        'phase', case
-                   when v_q.skill = 'writing' then 'writing'
-                   when v_q.skill = 'speaking' then 'speaking'
-                   else 'question'
-                 end,
-        'question', case when v_q.skill in ('writing','speaking') then jsonb_build_object(
+        'phase', 'question',
+        'question', jsonb_build_object(
           'id', v_q.id, 'skill', v_q.skill, 'cefr_level', v_q.cefr_level,
-          'question_type', v_q.question_type, 'prompt', v_q.prompt) end,
-        'prompts', case when v_q.skill = 'speaking' then (
-          select coalesce(jsonb_agg(jsonb_build_object(
-            'id', q2.id, 'skill', q2.skill, 'cefr_level', q2.cefr_level,
-            'question_type', q2.question_type, 'prompt', q2.prompt) order by q2.id), '[]'::jsonb)
-          from public.placement_questions q2
-          where q2.skill = 'speaking'
-            and q2.id = any (select (value)::bigint from jsonb_array_elements(v_attempt.asked_question_ids) value)
-        ) end,
+          'question_type', v_q.question_type, 'prompt', v_q.prompt),
         'progress', public.placement_attempt_progress(v_attempt.id)
       );
     end if;
@@ -485,14 +389,14 @@ begin
 
   v_asked_n := coalesce(array_length(v_asked, 1), 0);
 
-  -- fixed plan: 60 scored questions
+  -- fixed plan: 60 scored questions (5 grammar + 5 vocabulary per level)
   if v_asked_n < public.placement_total_questions() then
     v_level := (v_asked_n / public.placement_questions_per_level() + 1)::smallint;
     v_pos := (v_asked_n % public.placement_questions_per_level());
     v_dist := public.placement_skill_distribution() -> (v_level::text);
     v_rem := v_pos;
     v_q := null;
-    foreach v_s in array (array['grammar','vocabulary','reading','writing']) loop
+    foreach v_s in array v_plan_skills loop
       v_need := coalesce((v_dist ->> v_s)::int, 0);
       if v_rem < v_need then
         -- position indexes the level's FULL ordered candidate list; the
@@ -500,20 +404,19 @@ begin
         select c.* into v_q from (
           select q.*, row_number() over (order by q.id) as rn
           from public.placement_questions q
-          where q.skill = v_s and q.cefr_level = v_level
-            and q.status = 'published'
+          where q.skill = v_s and q.question_type = 'mcq'
+            and q.cefr_level = v_level and q.status = 'published'
         ) c
         where c.rn = v_rem + 1
           and c.id <> all(v_asked);
         if v_q.id is null then
           -- resumed attempt whose earlier asked set came from a different
-          -- plan version: serve the first unused candidate at this level so
-          -- the level still receives its full count
+          -- plan version: serve the first unused candidate at this level/skill
           select c.* into v_q from (
             select q.*, row_number() over (order by q.id) as rn
             from public.placement_questions q
-            where q.skill = v_s and q.cefr_level = v_level
-              and q.status = 'published'
+            where q.skill = v_s and q.question_type = 'mcq'
+              and q.cefr_level = v_level and q.status = 'published'
           ) c
           where c.id <> all(v_asked)
           order by c.rn
@@ -535,7 +438,7 @@ begin
     where id = v_attempt.id;
 
     return jsonb_build_object(
-      'phase', case when v_q.skill = 'writing' then 'writing' else 'question' end,
+      'phase', 'question',
       'question', jsonb_build_object(
         'id', v_q.id, 'skill', v_q.skill, 'cefr_level', v_q.cefr_level,
         'question_type', v_q.question_type, 'prompt', v_q.prompt),
@@ -543,42 +446,14 @@ begin
     );
   end if;
 
-  -- speaking diagnostic (unscored): attach two prompts once, nearest the
-  -- estimated level
-  if not exists (
-    select 1
-    from jsonb_array_elements(v_attempt.asked_question_ids) value
-    join public.placement_questions q on q.id = (value)::bigint
-    where q.skill = 'speaking'
-  ) then
-    for v_q in
-      select * from public.placement_questions
-      where skill = 'speaking' and status = 'published' and id <> all(v_asked)
-      order by abs(cefr_level - public.placement_estimated_level(p_attempt_id)), id
-      limit 2
-    loop
-      update public.placement_attempts
-      set asked_question_ids = asked_question_ids || to_jsonb(v_q.id)
-      where id = v_attempt.id;
-    end loop;
-  end if;
-
+  -- all 60 scored questions delivered: the attempt is ready to submit
   return jsonb_build_object(
-    'phase', 'speaking',
-    'prompts', (
-      select coalesce(jsonb_agg(jsonb_build_object(
-        'id', q.id, 'skill', q.skill, 'cefr_level', q.cefr_level,
-        'question_type', q.question_type, 'prompt', q.prompt) order by q.id), '[]'::jsonb)
-      from public.placement_questions q
-      where q.skill = 'speaking'
-        and q.id = any (select (value)::bigint from jsonb_array_elements(
-          (select asked_question_ids from public.placement_attempts where id = v_attempt.id)
-        ) value)
-    ),
+    'phase', 'complete',
     'progress', public.placement_attempt_progress(v_attempt.id)
   );
 end;
 $$;
+
 
 
 create or replace function public.save_placement_answer(
@@ -630,17 +505,9 @@ begin
     raise exception 'question not found';
   end if;
 
-  if v_q.question_type = 'prompt' then
-    if v_q.skill = 'writing' then
-      v_correct := public.placement_grade_writing(v_q.prompt, p_answer, coalesce(p_skipped, false));
-    else
-      v_correct := null;  -- speaking: never auto-graded (teacher-conducted diagnostic)
-    end if;
-  else
-    v_correct := public.placement_grade_answer(
-      v_q.question_type, v_q.answer_key, v_q.accepted_answers, p_answer, coalesce(p_skipped, false)
-    );
-  end if;
+  v_correct := public.placement_grade_answer(
+    v_q.question_type, v_q.answer_key, v_q.accepted_answers, p_answer, coalesce(p_skipped, false)
+  );
 
   insert into public.placement_answers
     (attempt_id, question_id, answer, skipped, is_correct, weight, answered_at)
@@ -657,9 +524,10 @@ $$;
 
 -- ---------------------------------------------------------------------------
 -- submit_placement_attempt: idempotent finalize. Grades everything
--- server-side, computes the 600-point total, per-level and per-skill scores,
--- and the estimated CEFR level (consecutive-mastery staircase). Unanswered
--- asked questions are recorded as skipped and earn 0.
+-- server-side, computes the 600-point total, per-level (out of 100) and
+-- per-skill (grammar 300 / vocabulary 300) scores, and the estimated CEFR
+-- level (consecutive-mastery staircase). Unanswered asked questions are
+-- recorded as skipped and earn 0.
 -- ---------------------------------------------------------------------------
 create or replace function public.submit_placement_attempt(p_attempt_id bigint)
 returns jsonb
@@ -672,10 +540,9 @@ declare
   v_attempt public.placement_attempts;
   v_lvl smallint;
   v_rec record;
-  v_dist jsonb := public.placement_skill_distribution();
-  v_skills text[] := array['grammar','vocabulary','reading','writing'];
-  v_s text;
   v_pcts numeric[];
+  v_s text;
+  v_plan_skills constant text[] := array['grammar','vocabulary'];
   v_level_result jsonb := '{}'::jsonb;
   v_skill_result jsonb := '{}'::jsonb;
   v_total_score int := 0;
@@ -689,7 +556,6 @@ declare
   v_confidence text;
   v_insufficient boolean := false;
   v_evidence jsonb;
-  v_speaking_prompt_ids jsonb;
 begin
   if v_profile_id is null then
     raise exception 'not authenticated';
@@ -712,36 +578,34 @@ begin
     return v_attempt.result;
   end if;
 
-  -- Unanswered asked questions -> skipped rows (objective + writing only;
-  -- speaking prompts are not answerable and earn nothing).
+  -- Unanswered asked questions -> skipped rows (grammar/vocabulary mcq only).
   insert into public.placement_answers
     (attempt_id, question_id, answer, skipped, is_correct, weight, answered_at)
   select v_attempt.id, q.id, null, true, null, 10, now()
   from public.placement_questions q
   where q.id = any (select (value)::bigint from jsonb_array_elements(v_attempt.asked_question_ids) value)
-    and q.skill in ('grammar','vocabulary','reading','writing')
+    and q.skill in ('grammar','vocabulary')
+    and q.question_type = 'mcq'
     and not exists (
       select 1 from public.placement_answers pa
       where pa.attempt_id = v_attempt.id and pa.question_id = q.id
     );
 
   -- per-level scoring: 10 points per correct answer. The mastery percentage
-  -- used by the CEFR staircase counts OBJECTIVE items only (grammar,
-  -- vocabulary, reading): writing completion credit does not establish
-  -- CEFR-level proficiency, so it must not lift the estimated level.
+  -- used by the CEFR staircase counts the level's grammar/vocabulary mcq
+  -- items only.
   for v_lvl in 1..6 loop
     select
       count(*) as asked,
       count(*) filter (where pa.is_correct is true) as correct,
-      count(*) filter (where pa.skipped is true) as skipped,
-      count(*) filter (where q.skill <> 'writing') as obj_asked,
-      count(*) filter (where q.skill <> 'writing' and pa.is_correct is true) as obj_correct
+      count(*) filter (where pa.skipped is true) as skipped
     into v_rec
     from public.placement_questions q
     left join public.placement_answers pa
       on pa.attempt_id = v_attempt.id and pa.question_id = q.id
     where q.cefr_level = v_lvl
-      and q.skill in ('grammar','vocabulary','reading','writing')
+      and q.skill in ('grammar','vocabulary')
+      and q.question_type = 'mcq'
       and q.id = any (select (value)::bigint from jsonb_array_elements(v_attempt.asked_question_ids) value);
 
     v_total_asked := v_total_asked + coalesce(v_rec.asked, 0);
@@ -755,16 +619,16 @@ begin
       'max', coalesce(v_rec.asked, 0) * public.placement_points_per_question()
     ));
     v_pcts[v_lvl] := case
-      when coalesce(v_rec.obj_asked, 0) = 0 then null
-      else coalesce(v_rec.obj_correct, 0)::numeric / v_rec.obj_asked * 100
+      when coalesce(v_rec.asked, 0) = 0 then null
+      else coalesce(v_rec.correct, 0)::numeric / v_rec.asked * 100
     end;
   end loop;
 
   v_total_score := v_correct_total * public.placement_points_per_question();
   v_total_answered := v_total_asked - v_total_skipped;
 
-  -- per-skill totals (grammar/vocabulary/reading scored; writing = completion credit)
-  foreach v_s in array v_skills loop
+  -- per-skill totals: grammar (max 300) and vocabulary (max 300)
+  foreach v_s in array v_plan_skills loop
     select
       count(*) as asked,
       count(*) filter (where pa.is_correct is true) as correct,
@@ -819,22 +683,16 @@ begin
     v_confidence := 'low';
   end if;
 
-  v_speaking_prompt_ids := coalesce((
-    select jsonb_agg(q.id order by q.id)
-    from public.placement_questions q
-    where q.skill = 'speaking'
-      and q.id = any (select (value)::bigint from jsonb_array_elements(v_attempt.asked_question_ids) value)
-  ), '[]'::jsonb);
-
   v_evidence := jsonb_build_object(
-    'format', v_attempt.format,
+    'format', 'fixed-60',
     'per_level', v_level_result,
     'per_skill', v_skill_result,
     'total_score', v_total_score,
-    'max_score', case when v_attempt.format = 'fixed-60' then public.placement_max_score()
-                      else v_total_asked * public.placement_points_per_question() end,
+    'max_score', public.placement_max_score(),
     'correct_count', v_correct_total,
     'total_questions', public.placement_total_questions(),
+    'grammar_max', 300,
+    'vocabulary_max', 300,
     'estimated_level', v_est,
     'confidence', v_confidence,
     'insufficient_evidence', v_insufficient,
@@ -842,20 +700,7 @@ begin
     'total_asked', v_total_asked,
     'total_answered', v_total_answered,
     'total_skipped', v_total_skipped,
-    'writing_grading', 'completion-based credit (server-validated minimum length and originality); not a quality assessment',
-    'writing', jsonb_build_object(
-      'asked', exists (
-        select 1 from jsonb_array_elements(v_attempt.asked_question_ids) value
-        join public.placement_questions q on q.id = (value)::bigint
-        where q.skill = 'writing'),
-      'answered', exists (
-        select 1 from public.placement_answers pa
-        join public.placement_questions q on q.id = pa.question_id
-        where pa.attempt_id = v_attempt.id and q.skill = 'writing'
-          and pa.answer is not null and pa.skipped is not true)
-    ),
-    'speaking_prompt_ids', v_speaking_prompt_ids,
-    'method', 'fully automatic: 60 fixed questions (10 per CEFR level, A1->C2), 10 points per correct answer, 600 maximum; estimated level = highest level with >= 60% consecutive mastery from A1; skipped/unanswered earn 0'
+    'method', 'fully automatic: 60 fixed multiple-choice questions (5 grammar + 5 vocabulary per CEFR level, A1->C2), 10 points per correct answer, 600 maximum; estimated level = highest level with >= 60% consecutive mastery from A1; skipped/unanswered earn 0'
   );
 
   -- preserve any previously stored result when re-finalizing (e.g. expired
@@ -876,6 +721,7 @@ begin
   return v_evidence;
 end;
 $$;
+
 
 
 create or replace function public.get_placement_attempt(p_attempt_id bigint)
@@ -1091,15 +937,10 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
--- v1 adaptive-engine functions superseded by the fixed-60 structure
+-- Functions superseded by the grammar/vocabulary-only fixed structure
 -- ---------------------------------------------------------------------------
-drop function if exists public.placement_objective_skills();
-drop function if exists public.placement_adaptive_estimate(numeric, smallint);
-drop function if exists public.placement_adaptive_estimate(numeric);
-drop function if exists public.placement_level_from_pct(numeric);
-drop function if exists public.placement_min_per_skill();
-drop function if exists public.placement_max_per_skill();
-drop function if exists public.placement_provisional_level(bigint);
+drop function if exists public.placement_grade_writing(jsonb, jsonb, boolean);
+drop function if exists public.placement_estimated_level(bigint);
 
 -- ---------------------------------------------------------------------------
 -- Grants: public RPCs executable by authenticated users; internals locked.
@@ -1107,8 +948,6 @@ drop function if exists public.placement_provisional_level(bigint);
 revoke all on function public.placement_normalize_answer(text) from public, anon, authenticated;
 revoke all on function public.placement_validate_rubric(jsonb, text[]) from public, anon, authenticated;
 revoke all on function public.placement_attempt_progress(bigint) from public, anon, authenticated;
-revoke all on function public.placement_estimated_level(bigint) from public, anon, authenticated;
-revoke all on function public.placement_grade_writing(jsonb, jsonb, boolean) from public, anon, authenticated;
 revoke all on function public.placement_grade_answer(text, jsonb, jsonb, jsonb, boolean) from public, anon, authenticated;
 
 grant execute on function public.placement_entry_level() to authenticated;
@@ -1129,3 +968,4 @@ grant execute on function public.submit_placement_attempt(bigint) to authenticat
 grant execute on function public.get_placement_attempt(bigint) to authenticated;
 grant execute on function public.list_my_placement_attempts() to authenticated;
 grant execute on function public.submit_placement_review(bigint, smallint, text, jsonb, jsonb, boolean) to authenticated;
+
