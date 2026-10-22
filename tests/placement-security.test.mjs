@@ -99,7 +99,7 @@ check(!next.includes("set status = 'expired'"),
   'get_next no longer marks attempts expired without a result');
 
 // Internals are revoked from clients.
-for (const fn of ['placement_grade_answer', 'placement_validate_rubric', 'placement_attempt_progress', 'placement_estimated_level', 'placement_grade_writing']) {
+for (const fn of ['placement_grade_answer', 'placement_validate_rubric', 'placement_attempt_progress']) {
   check(rpcs.includes(`revoke all on function public.${fn}`), `${fn} revoked from clients`);
 }
 // Public RPCs are granted to authenticated only.

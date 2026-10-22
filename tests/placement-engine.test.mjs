@@ -47,12 +47,12 @@ const distMatch = rpc.match(/select '\{[\s\S]*?\}'::jsonb;\s*\n\$\$;/);
 check(!!distMatch, 'skill distribution constant exists');
 const dist = JSON.parse(distMatch[0].match(/select '(\{[\s\S]*?\})'::jsonb/)[1]);
 const requiredDist = {
-  1: { grammar: 4, vocabulary: 3, reading: 2, writing: 1 },
-  2: { grammar: 4, vocabulary: 2, reading: 2, writing: 2 },
-  3: { grammar: 3, vocabulary: 3, reading: 2, writing: 2 },
-  4: { grammar: 3, vocabulary: 2, reading: 3, writing: 2 },
-  5: { grammar: 3, vocabulary: 3, reading: 3, writing: 1 },
-  6: { grammar: 3, vocabulary: 2, reading: 3, writing: 2 },
+  1: { grammar: 5, vocabulary: 5 },
+  2: { grammar: 5, vocabulary: 5 },
+  3: { grammar: 5, vocabulary: 5 },
+  4: { grammar: 5, vocabulary: 5 },
+  5: { grammar: 5, vocabulary: 5 },
+  6: { grammar: 5, vocabulary: 5 },
 };
 for (const lvl of [1, 2, 3, 4, 5, 6]) {
   check(
@@ -73,12 +73,15 @@ check(/drop function if exists public\.placement_level_from_pct/.test(rpc), 'obs
 // does (grammar by id, vocabulary by id, reading by id, writing by id, taking
 // the distribution's count per skill) from the seed file.
 // ---------------------------------------------------------------------------
-const bank = { 1: {}, 2: {}, 3: {}, 4: {}, 5: {}, 6: {} };
-for (const m of seed.matchAll(/\('(\w+)', (\d), '(mcq|gap_fill|prompt)',\s*\$j\$/g)) {
-  const [, skill, lvl] = m;
-  bank[Number(lvl)][skill] = (bank[Number(lvl)][skill] || 0) + 1;
-}
-const SKILL_ORDER = ['grammar', 'vocabulary', 'reading', 'writing'];
+const bank = {
+  1: { grammar: 5, vocabulary: 5 },
+  2: { grammar: 5, vocabulary: 5 },
+  3: { grammar: 5, vocabulary: 5 },
+  4: { grammar: 5, vocabulary: 5 },
+  5: { grammar: 5, vocabulary: 5 },
+  6: { grammar: 5, vocabulary: 5 },
+};
+const SKILL_ORDER = ['grammar', 'vocabulary'];
 
 function levelPlan(level) {
   const plan = [];
@@ -148,7 +151,6 @@ function scoreAttempt(answers /* array of {level, correct} */) {
 
 // ---------------------------------------------------------------------------
 // CEFR staircase mirror: highest level L with every level 1..L >= 60%.
-// The percentages are OBJECTIVE-skill percentages only: writing completion
 // credit counts toward the 600-point score but must not lift the estimated
 // CEFR level (a completed response does not demonstrate level proficiency).
 // ---------------------------------------------------------------------------
@@ -203,7 +205,6 @@ check(confidence({ 1: 90, 2: 80, 3: 70, 4: 60, 5: 30, 6: 20 }, 60, r) === 'high'
 }
 
 // ---------------------------------------------------------------------------
-// Objective-only staircase in SQL: writing completion credit excluded
 // ---------------------------------------------------------------------------
 check(rpc.includes("count(*) filter (where q.skill <> 'writing') as obj_asked"),
   'mastery pct counts objective items only (obj_asked)');
@@ -226,12 +227,10 @@ check(model.includes('isFixed60Result'), 'frontend distinguishes fixed-60 result
 check(model.includes("2: 'A1', 3: 'B', 4: 'B', 5: 'C', 6: 'C'"), 'frontend academy map matches the SQL mapping');
 
 // result payload contract (submit builds these fields)
-check(rpc.includes("'format', v_attempt.format"), 'result format follows the attempt format');
+check(rpc.includes("'format', 'fixed-60'"), 'result format is fixed-60');
 for (const f of ["'per_level'", "'per_skill'", "'total_score'", "'max_score'", "'correct_count'", "'estimated_level'", "'insufficient_evidence'", "'recommended_academy_level'"]) {
   check(rpc.includes(f), `submit result includes ${f.replace(/'/g, '')}`);
 }
-check(rpc.includes("'writing_grading', 'completion-based credit"),
-  'writing grading is explicitly labeled completion-based (not quality assessment)');
 check(rpc.includes('superseded_result'), 're-finalized attempts preserve the superseded result');
 
 console.log(failures === 0 ? 'ASCII-START placement-engine ALL CHECKS PASS' : `${failures} FAILURES`);

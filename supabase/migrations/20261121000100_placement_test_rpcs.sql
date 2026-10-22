@@ -34,6 +34,13 @@
 
 
 
+-- Attempt format marker. Attempts created before the grammar/vocabulary-only
+-- structure default to 'legacy-adaptive'; they are finalized on access and
+-- can never continue under the fixed plan.
+-- ---------------------------------------------------------------------------
+alter table public.placement_attempts
+  add column if not exists format text not null default 'legacy-adaptive';
+
 -- ---------------------------------------------------------------------------
 -- Tunable constants (single source of truth; tests extract these)
 -- ---------------------------------------------------------------------------
@@ -356,6 +363,13 @@ begin
     return jsonb_build_object('phase', 'complete', 'submitted', true);
   end if;
 
+  -- legacy adaptive attempts are finalized on access; they cannot continue
+  -- under the fixed plan (an attempt must not switch formats midway)
+  if v_attempt.format <> 'fixed-60' then
+    perform public.submit_placement_attempt(p_attempt_id);
+    return jsonb_build_object('phase', 'complete', 'submitted', true);
+  end if;
+
   if now() > v_attempt.deadline then
     -- finalize with whatever evidence exists instead of discarding the attempt
     perform public.submit_placement_attempt(p_attempt_id);
@@ -598,7 +612,9 @@ begin
     select
       count(*) as asked,
       count(*) filter (where pa.is_correct is true) as correct,
-      count(*) filter (where pa.skipped is true) as skipped
+      count(*) filter (where pa.skipped is true) as skipped,
+      count(*) filter (where q.skill <> 'writing') as obj_asked,
+      count(*) filter (where q.skill <> 'writing' and pa.is_correct is true) as obj_correct
     into v_rec
     from public.placement_questions q
     left join public.placement_answers pa
@@ -619,8 +635,8 @@ begin
       'max', coalesce(v_rec.asked, 0) * public.placement_points_per_question()
     ));
     v_pcts[v_lvl] := case
-      when coalesce(v_rec.asked, 0) = 0 then null
-      else coalesce(v_rec.correct, 0)::numeric / v_rec.asked * 100
+      when coalesce(v_rec.obj_asked, 0) = 0 then null
+      else coalesce(v_rec.obj_correct, 0)::numeric / v_rec.obj_asked * 100
     end;
   end loop;
 
@@ -688,7 +704,8 @@ begin
     'per_level', v_level_result,
     'per_skill', v_skill_result,
     'total_score', v_total_score,
-    'max_score', public.placement_max_score(),
+    'max_score', case when v_attempt.format = 'fixed-60' then public.placement_max_score()
+                      else v_total_asked * public.placement_points_per_question() end,
     'correct_count', v_correct_total,
     'total_questions', public.placement_total_questions(),
     'grammar_max', 300,
@@ -941,6 +958,19 @@ $$;
 -- ---------------------------------------------------------------------------
 drop function if exists public.placement_grade_writing(jsonb, jsonb, boolean);
 drop function if exists public.placement_estimated_level(bigint);
+
+-- ---------------------------------------------------------------------------
+-- Functions superseded by the grammar/vocabulary-only fixed structure
+-- ---------------------------------------------------------------------------
+drop function if exists public.placement_grade_writing(jsonb, jsonb, boolean);
+drop function if exists public.placement_estimated_level(bigint);
+drop function if exists public.placement_objective_skills();
+drop function if exists public.placement_adaptive_estimate(numeric, smallint);
+drop function if exists public.placement_adaptive_estimate(numeric);
+drop function if exists public.placement_level_from_pct(numeric);
+drop function if exists public.placement_min_per_skill();
+drop function if exists public.placement_max_per_skill();
+drop function if exists public.placement_provisional_level(bigint);
 
 -- ---------------------------------------------------------------------------
 -- Grants: public RPCs executable by authenticated users; internals locked.
