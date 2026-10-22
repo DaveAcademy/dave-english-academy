@@ -4,11 +4,9 @@
   "about": "Bu test ingliz tili darajangizni 60 savol bilan aniqlaydi (har bir daraja uchun 10 tadan, A1 dan C2 gacha, maksimum 600 ball). Bu avtomatik joylashuv tavsiyasi - rasmiy sertifikat emas.",
   "rules": {
     "duration": "Taxminan 20-30 daqiqa oladi. Testni boshlagandan keyin 1 soat ichida tugatish kerak.",
-    "sections": "Bo'limlar: grammatika, lug'at, o'qish va bitta yozma topshiriq. Ogzaki qism o'qituvchi bilan qisqa suhbat.",
+    "sections": "Bo‘limlar: faqat grammatika va lug‘at - A1 dan C2 gacha har bir darajada har bir turdan 5 tadan, jami 60 savol.",
     "adaptive": "Test 60 savoldan iborat: A1 (eng oson) dan C2 (eng qiyin) gacha har bir darajada 10 tadan, ketma-ket beriladi.",
-    "rules": "Halol va yordamsiz javob bering. Test davomida togri javoblarni korib bolmaydi, test yopilmaguncha qayta topshirib bolmaydi.",
-    "writing": "Yozma ish o'qituvchi tomonidan maxsus mezonlar asosida tekshiriladi.",
-    "speaking": "Ogzaki qism o'qituvchi bilan qisqa suhbat - mavzular oldindan korinadi."
+    "rules": "Halol va yordamsiz javob bering. Test davomida togri javoblarni korib bolmaydi, test yopilmaguncha qayta topshirib bolmaydi."
   },
   "start": "Testni boshlash",
   "resume": "Davom ettirish",

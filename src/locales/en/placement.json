@@ -4,11 +4,9 @@
   "about": "This test estimates your English level with 60 questions (10 per level, A1 to C2, 600 points maximum). It is an automated placement recommendation, not an official certificate.",
   "rules": {
     "duration": "Takes about 20-30 minutes. The attempt must be finished within 1 hour of starting.",
-    "sections": "Sections: grammar, vocabulary, reading, and one writing task. Speaking is a short live assessment with a teacher.",
+    "sections": "Sections: grammar and vocabulary only - 5 questions of each type at every level from A1 to C2, for a total of 60 questions.",
     "adaptive": "The test has 60 questions: 10 at each level from A1 (easiest) to C2 (hardest), presented in order.",
-    "rules": "Answer honestly and without help. You cannot see correct answers during the test, and you cannot retake while an attempt is running.",
-    "writing": "The writing task is reviewed by a teacher using a rubric.",
-    "speaking": "The speaking part is a short live assessment with a teacher - the test shows you the topics in advance."
+    "rules": "Answer honestly and without help. You cannot see correct answers during the test, and you cannot retake while an attempt is running."
   },
   "start": "Start the test",
   "resume": "Resume",
