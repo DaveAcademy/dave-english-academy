@@ -710,7 +710,7 @@ begin
     'correct_count', v_correct_total,
     'total_questions', public.placement_total_questions(),
     'grammar_max', 320,
-    'vocabulary_max', 300,
+    'vocabulary_max', 280,
     'estimated_level', v_est,
     'confidence', v_confidence,
     'insufficient_evidence', v_insufficient,

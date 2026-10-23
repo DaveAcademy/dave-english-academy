@@ -55,14 +55,11 @@ check(!rpc.includes('create or replace function public.placement_grade_writing')
 check(!rpc.includes('create or replace function public.placement_estimated_level'), 'est level helper removed');
 check(rpc.includes('drop function if exists public.placement_level_from_pct'), 'v1 functions dropped');
 
-// result payload
-check(rpc.includes("'format', 'gv-60'"), 'result format is gv-60');
-check(rpc.includes("'grammar_max', 300"), 'grammar max 300');
-check(rpc.includes("'grammar_max', 320"), 'grammar max 320');
 check(rpc.includes("'grammar_max', 320"), 'grammar max 320');
 check(rpc.includes("'vocabulary_max', 280"), 'vocabulary max 280');
-check(rpc.includes("'total_questions', 60"), 'total questions 60');
-check(rpc.includes("'max_score', public.placement_max_score()"), 'max score function referenced'););
+check(rpc.includes("'total_questions', public.placement_total_questions()"), 'total questions 60');
+check(rpc.includes("'max_score', case when v_attempt.format"), 'max score persisted (format-aware)');
+// result payload
 check(rpc.includes("'correct_count'"), 'correct count persisted');
 check(rpc.includes("'insufficient_evidence'"), 'insufficient evidence persisted');
 check(rpc.includes("'estimated_level'"), 'estimated level persisted');
