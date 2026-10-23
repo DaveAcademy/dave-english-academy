@@ -60,7 +60,7 @@ check(submit.includes("'max_score', case when v_attempt.format = 'fixed-60' then
 check(submit.includes("'per_level', v_level_result"), 'per-level breakdown persisted');
 check(submit.includes("'per_skill', v_skill_result"), 'per-skill breakdown persisted');
 check(submit.includes("'correct_count', v_correct_total"), 'correct-answer count persisted');
-check(submit.includes("'grammar_max', 300"), 'grammar subtotal max persisted (300)');
+check(submit.includes("'grammar_max', 320"), 'grammar subtotal max persisted (320)');
 check(submit.includes("'vocabulary_max', 300"), 'vocabulary subtotal max persisted (300)');
 check(submit.includes("q.skill in ('grammar','vocabulary')"),
   'level scoring covers grammar and vocabulary only');

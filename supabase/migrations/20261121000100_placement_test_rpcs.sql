@@ -709,7 +709,7 @@ begin
                       else v_total_asked * public.placement_points_per_question() end,
     'correct_count', v_correct_total,
     'total_questions', public.placement_total_questions(),
-    'grammar_max', 300,
+    'grammar_max', 320,
     'vocabulary_max', 300,
     'estimated_level', v_est,
     'confidence', v_confidence,
