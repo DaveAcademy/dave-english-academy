@@ -228,9 +228,9 @@ check(leakChecks === 60, `keyless payloads verified across all ${leakChecks} que
 // exactly 60 scored: 10 per level, sequential A1 -> C2, required distribution
 const levelsServed = served.map((x) => x.cefr);
 check(levelsServed.length === 60, `exactly 60 scored questions served (${levelsServed.length})`);
-for (let lvl = 1; lvl <= 6; lvl++) {
+for (let lvl = 1; lvl <= 4; lvl++) {
   const n = levelsServed.filter((l) => l === lvl).length;
-  check(n === 10, `level ${lvl}: exactly 10 questions served (${n})`);
+  check(n === 15, `level ${lvl}: exactly 15 questions served (${n})`);
 }
 const sorted = [...levelsServed].sort((a, b) => a - b);
 check(JSON.stringify(levelsServed) === JSON.stringify(sorted),
@@ -265,8 +265,8 @@ check(distCount.vocabulary === 28, `28 vocabulary questions served (${distCount.
 const submit1 = await rpc(S1, 'submit_placement_attempt', { p_attempt_id: attemptId });
 check(submit1.ok && submit1.json.estimated_level, `submit produced a result (${ERR(submit1)})`);
 const result = submit1.json;
-check(result.format === 'fixed-60', 'result carries the fixed-60 format marker');
 check(result.total_score === 600, `all-correct attempt scores 600/600 (${result.total_score})`);
+check(result.format === 'gv-60', 'result carries the gv-60 format marker');
 check(result.max_score === 600, 'max_score persisted as 600');
 check(result.correct_count === 60, `correct_count 60/60 (${result.correct_count})`);
 check(result.estimated_level === 4, `all-correct attempt estimates B2 (${result.estimated_level})`);
@@ -277,12 +277,12 @@ check(['A', 'A1', 'B', 'C'].includes(result.recommended_academy_level),
 
 {
   const levelResult = {};
-  for (let lvl = 1; lvl <= 6; lvl++) {
+  for (let lvl = 1; lvl <= 4; lvl++) {
     const items = served.filter((x) => x.cefr === lvl);
     const correct = items.filter((x) => x.correct).length;
     levelResult[lvl] = { correct, score: correct * 10, max: items.length * 10 };
   }
-  for (let lvl = 1; lvl <= 6; lvl++) {
+  for (let lvl = 1; lvl <= 4; lvl++) {
     const actual = result.per_level[String(lvl)];
     check(actual && actual.score === levelResult[lvl].score,
       `level ${lvl} score matches model (${actual?.score} vs ${levelResult[lvl].score})`);
