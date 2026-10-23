@@ -48,7 +48,7 @@ check(!next.includes('placement_mastery_threshold()') || !next.includes('v_seen_
 
 // Start: bank sufficiency guard
 check(start.includes('question bank incomplete'), 'attempt start validates the bank can supply the full plan');
-check(start.includes("'fixed-60'"), 'new attempts are created as fixed-60');
+check(start.includes("'gv-60'"), 'new attempts are created as gv-60');
 check(start.includes('format'), 'format column is set at attempt creation');
 
 // Scoring: 10 points per correct answer, per-level + per-skill, 600 max
@@ -73,19 +73,19 @@ check(submit.includes('insert into public.placement_answers') && submit.includes
 // CEFR staircase + confidence + insufficient evidence
 check(submit.includes('public.placement_mastery_threshold()'), 'staircase uses the documented mastery threshold');
 check(submit.includes('v_seen_fail'), 'a failed lower level caps the estimate (consecutive mastery)');
-check(submit.includes("v_est = 6 and v_pcts[6] < 80 then 'medium'"),
-  'C1/C2 estimates carry reduced confidence (limited evidence)');
+check(submit.includes("v_est = 4 and v_pcts[4] < 80 then 'medium'"),
+  'B2 estimates carry reduced confidence (moderate evidence at the top)');
 check(submit.includes("v_est = 1 and v_pcts[1] < 40 then 'low'"),
   'below-entry mastery is flagged low confidence');
 check(submit.includes('public.placement_min_total_answered()'), 'minimum-answered rule enforced');
 check(submit.includes("'insufficient_evidence'"), 'insufficient-evidence state is produced');
 check(submit.includes("'estimated_level', v_est"), 'estimated level persisted (distinct from the score)');
-check(submit.includes("'format', 'fixed-60'"), 'result carries the fixed-60 format marker');
+check(submit.includes("'format', 'gv-60'"), 'result carries the gv-60 format marker');
 
 // Legacy compatibility: format column + finalize-on-access
 check(rpcs.includes('add column if not exists format text not null default ' + "'legacy-adaptive'"),
   'legacy attempts default to the legacy-adaptive format');
-check(next.includes("v_attempt.format <> 'fixed-60'"),
+check(next.includes("v_attempt.format = 'legacy-adaptive'"),
   'legacy attempts finalize instead of switching formats');
 check(submit.includes("v_total_asked * public.placement_points_per_question()"),
   'legacy max_score reflects what was actually asked (never shown as out of 600)');

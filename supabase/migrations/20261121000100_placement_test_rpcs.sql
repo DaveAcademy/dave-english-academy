@@ -67,7 +67,7 @@ $$;
 
 create or replace function public.placement_questions_per_level()
 returns int language sql immutable as $$
-  select 10;
+  select 15;
 $$;
 
 create or replace function public.placement_points_per_question()
@@ -91,16 +91,14 @@ returns int language sql immutable as $$
   select 60;
 $$;
 
--- scored questions per level: grammar and vocabulary only (5 + 5)
+-- scored questions per level: grammar and vocabulary only (8 + 7)
 create or replace function public.placement_skill_distribution()
 returns jsonb language sql immutable as $$
   select '{
-    "1": {"grammar": 5, "vocabulary": 5},
-    "2": {"grammar": 5, "vocabulary": 5},
-    "3": {"grammar": 5, "vocabulary": 5},
-    "4": {"grammar": 5, "vocabulary": 5},
-    "5": {"grammar": 5, "vocabulary": 5},
-    "6": {"grammar": 5, "vocabulary": 5}
+    "1": {"grammar": 8, "vocabulary": 7},
+    "2": {"grammar": 8, "vocabulary": 7},
+    "3": {"grammar": 8, "vocabulary": 7},
+    "4": {"grammar": 8, "vocabulary": 7}
   }'::jsonb;
 $$;
 
@@ -289,29 +287,31 @@ begin
     raise exception 'attempt limit reached';
   end if;
 
-  -- the fixed 60-question structure requires 5 grammar and 5 vocabulary
-  -- multiple-choice questions at every level; fail loudly at attempt start
+  -- the fixed 60-question structure requires 8 grammar and 7 vocabulary
+  -- multiple-choice questions at every level (A1-B2); fail loudly at start
   declare
     v_lvl smallint;
-    v_need int;
+    v_need_g int;
+    v_need_v int;
   begin
-    for v_lvl in 1..6 loop
-      v_need := public.placement_questions_per_level() / 2;
+    for v_lvl in 1..4 loop
+      v_need_g := 8;
+      v_need_v := 7;
       if (select count(*) from public.placement_questions
           where skill = 'grammar' and question_type = 'mcq'
-            and cefr_level = v_lvl and status = 'published') < v_need then
-        raise exception 'question bank incomplete: level % has fewer than % grammar mcq items', v_lvl, v_need;
+            and cefr_level = v_lvl and status = 'published') < v_need_g then
+        raise exception 'question bank incomplete: level % has fewer than % grammar mcq items', v_lvl, v_need_g;
       end if;
       if (select count(*) from public.placement_questions
           where skill = 'vocabulary' and question_type = 'mcq'
-            and cefr_level = v_lvl and status = 'published') < v_need then
-        raise exception 'question bank incomplete: level % has fewer than % vocabulary mcq items', v_lvl, v_need;
+            and cefr_level = v_lvl and status = 'published') < v_need_v then
+        raise exception 'question bank incomplete: level % has fewer than % vocabulary mcq items', v_lvl, v_need_v;
       end if;
     end loop;
   end;
 
   insert into public.placement_attempts (student_id, deadline, format)
-  values (v_student.id, now() + public.placement_attempt_ttl(), 'fixed-60')
+  values (v_student.id, now() + public.placement_attempt_ttl(), 'gv-60')
   returning * into v_attempt;
 
   return jsonb_build_object('attempt_id', v_attempt.id, 'resumed', false);
@@ -365,7 +365,7 @@ begin
 
   -- legacy adaptive attempts are finalized on access; they cannot continue
   -- under the fixed plan (an attempt must not switch formats midway)
-  if v_attempt.format <> 'fixed-60' then
+  if v_attempt.format = 'legacy-adaptive' then
     perform public.submit_placement_attempt(p_attempt_id);
     return jsonb_build_object('phase', 'complete', 'submitted', true);
   end if;
@@ -682,7 +682,7 @@ begin
 
   -- confidence: insufficient evidence, top-level caution (10 items at C1/C2
   -- are limited evidence), and boundary cleanliness
-  for v_lvl in (v_est + 1)..6 loop
+  for v_lvl in (v_est + 1)..4 loop
     if v_pcts[v_lvl] is not null and v_pcts[v_lvl] >= 40 then
       v_boundary_clean := false;
     end if;
@@ -690,9 +690,10 @@ begin
   v_confidence := case
     when v_insufficient then 'low'
     when v_est = 1 and v_pcts[1] < 40 then 'low'      -- below-entry mastery: weak estimate
-    when v_est = 6 and v_pcts[6] < 80 then 'medium'   -- 10 C2 items: limited evidence
-    when v_est = 5 and v_pcts[5] < 80 then 'medium'
-    when v_boundary_clean then 'high'
+
+
+    when v_est = 4 and v_pcts[4] < 80 then 'medium'   -- 15 B2 items: moderate evidence at the top
+        when v_boundary_clean then 'high'
     else 'medium'
   end;
   if v_insufficient then
@@ -700,7 +701,7 @@ begin
   end if;
 
   v_evidence := jsonb_build_object(
-    'format', 'fixed-60',
+    'format', 'gv-60',
     'per_level', v_level_result,
     'per_skill', v_skill_result,
     'total_score', v_total_score,

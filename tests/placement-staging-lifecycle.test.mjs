@@ -238,8 +238,8 @@ check(JSON.stringify(levelsServed) === JSON.stringify(sorted),
 const distCount = {};
 for (const x of served) distCount[x.skill] = (distCount[x.skill] || 0) + 1;
 check((distCount.listening || 0) === 0, 'no listening questions served');
-check(distCount.grammar === 30, `30 grammar questions served (${distCount.grammar})`);
-check(distCount.vocabulary === 30, `30 vocabulary questions served (${distCount.vocabulary})`);
+check(distCount.grammar === 32, `32 grammar questions served (${distCount.grammar})`);
+check(distCount.vocabulary === 28, `28 vocabulary questions served (${distCount.vocabulary})`);
 
 // ============================================================================
 // 9. Answer-key protection at the table level (student RLS).
@@ -269,7 +269,7 @@ check(result.format === 'fixed-60', 'result carries the fixed-60 format marker')
 check(result.total_score === 600, `all-correct attempt scores 600/600 (${result.total_score})`);
 check(result.max_score === 600, 'max_score persisted as 600');
 check(result.correct_count === 60, `correct_count 60/60 (${result.correct_count})`);
-check(result.estimated_level === 6, `all-correct attempt estimates C2 (${result.estimated_level})`);
+check(result.estimated_level === 4, `all-correct attempt estimates B2 (${result.estimated_level})`);
 check(result.insufficient_evidence === false, 'full attempt is not flagged insufficient');
 check(['high', 'medium', 'low'].includes(result.confidence), `confidence present (${result.confidence})`);
 check(['A', 'A1', 'B', 'C'].includes(result.recommended_academy_level),

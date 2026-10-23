@@ -34,7 +34,7 @@ const MAX_SCORE = fnReturnsInt('placement_max_score');
 const MASTERY = fnReturnsInt('placement_mastery_threshold');
 const MIN_ANSWERED = fnReturnsInt('placement_min_total_answered');
 const MAX_ATTEMPTS = fnReturnsInt('placement_max_attempts');
-check(PER_LEVEL === 10, `10 questions per level, got ${PER_LEVEL}`);
+check(PER_LEVEL === 15, `15 questions per level, got ${PER_LEVEL}`);
 check(POINTS === 10, `10 points per question, got ${POINTS}`);
 check(TOTAL === 60, `60 total questions, got ${TOTAL}`);
 check(MAX_SCORE === 600, `600 max score, got ${MAX_SCORE}`);
@@ -47,14 +47,12 @@ const distMatch = rpc.match(/select '\{[\s\S]*?\}'::jsonb;\s*\n\$\$;/);
 check(!!distMatch, 'skill distribution constant exists');
 const dist = JSON.parse(distMatch[0].match(/select '(\{[\s\S]*?\})'::jsonb/)[1]);
 const requiredDist = {
-  1: { grammar: 5, vocabulary: 5 },
-  2: { grammar: 5, vocabulary: 5 },
-  3: { grammar: 5, vocabulary: 5 },
-  4: { grammar: 5, vocabulary: 5 },
-  5: { grammar: 5, vocabulary: 5 },
-  6: { grammar: 5, vocabulary: 5 },
+  1: { grammar: 8, vocabulary: 7 },
+  2: { grammar: 8, vocabulary: 7 },
+  3: { grammar: 8, vocabulary: 7 },
+  4: { grammar: 8, vocabulary: 7 },
 };
-for (const lvl of [1, 2, 3, 4, 5, 6]) {
+for (const lvl of [1, 2, 3, 4]) {
   check(
     JSON.stringify(dist[String(lvl)]) === JSON.stringify(requiredDist[lvl]),
     `level ${lvl} distribution matches the required structure`
@@ -74,12 +72,10 @@ check(/drop function if exists public\.placement_level_from_pct/.test(rpc), 'obs
 // the distribution's count per skill) from the seed file.
 // ---------------------------------------------------------------------------
 const bank = {
-  1: { grammar: 5, vocabulary: 5 },
-  2: { grammar: 5, vocabulary: 5 },
-  3: { grammar: 5, vocabulary: 5 },
-  4: { grammar: 5, vocabulary: 5 },
-  5: { grammar: 5, vocabulary: 5 },
-  6: { grammar: 5, vocabulary: 5 },
+  1: { grammar: 11, vocabulary: 8 },
+  2: { grammar: 10, vocabulary: 8 },
+  3: { grammar: 10, vocabulary: 8 },
+  4: { grammar: 10, vocabulary: 8 },
 };
 const SKILL_ORDER = ['grammar', 'vocabulary'];
 
@@ -92,7 +88,7 @@ function levelPlan(level) {
   return plan;
 }
 
-for (const lvl of [1, 2, 3, 4, 5, 6]) {
+for (const lvl of [1, 2, 3, 4]) {
   const plan = levelPlan(lvl);
   const total = plan.reduce((s, p) => s + p.count, 0);
   check(total === PER_LEVEL, `level ${lvl} plan has ${PER_LEVEL} questions (got ${total})`);
@@ -214,7 +210,7 @@ check(rpc.includes("coalesce(v_rec.obj_correct, 0)::numeric / v_rec.obj_asked * 
   'staircase pct = objective correct / objective asked');
 check(rpc.includes("add column if not exists format text not null default 'legacy-adaptive'"),
   'attempt format column added (legacy default)');
-check(rpc.includes("v_attempt.format <> 'fixed-60' then\n    perform public.submit_placement_attempt(p_attempt_id);"),
+check(rpc.includes("v_attempt.format = 'legacy-adaptive'"),
   'legacy attempts finalize on access (no format switch mid-attempt)');
 
 // ---------------------------------------------------------------------------
@@ -227,7 +223,7 @@ check(model.includes('isFixed60Result'), 'frontend distinguishes fixed-60 result
 check(model.includes("2: 'A1', 3: 'B', 4: 'B', 5: 'C', 6: 'C'"), 'frontend academy map matches the SQL mapping');
 
 // result payload contract (submit builds these fields)
-check(rpc.includes("'format', 'fixed-60'"), 'result format is fixed-60');
+check(rpc.includes("'format', 'gv-60'"), 'result format is gv-60');
 for (const f of ["'per_level'", "'per_skill'", "'total_score'", "'max_score'", "'correct_count'", "'estimated_level'", "'insufficient_evidence'", "'recommended_academy_level'"]) {
   check(rpc.includes(f), `submit result includes ${f.replace(/'/g, '')}`);
 }
