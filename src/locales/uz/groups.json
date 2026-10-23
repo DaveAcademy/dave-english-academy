@@ -1,0 +1,49 @@
+{
+  "title": "Guruhlarni boshqarish",
+  "subtitle": "O'quvchi guruhlarini yarating, qayta nomlang va tartiblang.",
+  "addGroup": "Guruh qo'shish",
+  "createGroup": "Guruh yaratish",
+  "createFirstGroup": "Birinchi guruhni yaratish",
+  "editGroup": "Guruhni tahrirlash",
+  "createGroupTitle": "Guruh yaratish",
+  "editGroupTitle": "Guruhni tahrirlash",
+  "columns": {
+    "name": "Guruh nomi",
+    "status": "Holati",
+    "students": "O'quvchilar",
+    "lessons": "Darslar",
+    "created": "Yaratilgan",
+    "actions": "Amallar"
+  },
+  "status": {
+    "active": "Faol",
+    "inactive": "Nofaol"
+  },
+  "form": {
+    "name": "Guruh nomi",
+    "namePlaceholder": "masalan: D darajasi, Tongi B, Kesh B",
+    "active": "Faol",
+    "activeHint": "Nofaol guruhlar yangi tayinlashlar uchun ro'yxatlarda ko'rinmaydi."
+  },
+  "adminOnly": {
+    "title": "Faqat administratorlar uchun",
+    "description": "Guruhlarni boshqarish faqat administratorlarga ruxsat etilgan."
+  },
+  "emptyState": {
+    "title": "Hozircha guruhlar yo'q",
+    "description": "O'quvchilarni tartiblash uchun birinchi guruhingizni yarating."
+  },
+  "confirm": {
+    "deleteTitle": "Guruhni o'chirish?",
+    "deleteMessage": "Bu guruhni doimiy o'chiradi. Bu amalni qaytarib bo'lmaydi."
+  },
+  "tooltip": {
+    "cannotDelete": "O'chirish mumkin emas: guruhda biriktirilgan o'quvchilar yoki darslar bor"
+  },
+  "error": {
+    "nameRequired": "Guruh nomi majburiy.",
+    "duplicateName": "Bu nomli guruh allaqachon mavjud.",
+    "somethingWentWrong": "Nimadir xato ketdi. Iltimos, qayta urinib ko'ring.",
+    "deleteFailed": "Guruhni o'chirish amalga oshmadi."
+  }
+}

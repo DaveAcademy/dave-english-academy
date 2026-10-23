@@ -1,0 +1,265 @@
+﻿supabase : Initialising login role...
+At line:1 char:12
++ $content = supabase db query --linked "SELECT prosrc FROM pg_proc p J ...
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Initialising login role...:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+Γöé prosrc                                                                                                                                           Γöé
+Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöñ
+Γöé                                                                                                                                                  Γöé
+Γöé declare                                                                                                                                          Γöé
+Γöé   v_student_id bigint;                                                                                                                           Γöé
+Γöé   v_academy_level text;                                                                                                                          Γöé
+Γöé   v_words_correct integer := 0;                                                                                                                  Γöé
+Γöé   v_words_total integer := 0;                                                                                                                    Γöé
+Γöé   v_score numeric := 0;                                                                                                                          Γöé
+Γöé   v_results jsonb := '[]'::jsonb;                                                                                                                Γöé
+Γöé   r record;                                                                                                                                      Γöé
+Γöé   v_correct boolean;                                                                                                                             Γöé
+Γöé   v_points numeric;                                                                                                                              Γöé
+Γöé   v_elapsed_ms numeric;                                                                                                                          Γöé
+Γöé   v_speed_bonus numeric;                                                                                                                         Γöé
+Γöé   v_session_id bigint;                                                                                                                           Γöé
+Γöé   v_is_new_best boolean;                                                                                                                         Γöé
+Γöé   v_metric_key text;                                                                                                                             Γöé
+Γöé   v_round_game_type text;                                                                                                                        Γöé
+Γöé   v_round_level integer;                                                                                                                         Γöé
+Γöé   v_round_size integer;                                                                                                                          Γöé
+Γöé   v_payload jsonb;                                                                                                                               Γöé
+Γöé   v_submitted_words text[];                                                                                                                      Γöé
+Γöé   v_canonical_words text[];                                                                                                                      Γöé
+Γöé   v_pass boolean;                                                                                                                                Γöé
+Γöé   v_current_level integer;                                                                                                                       Γöé
+Γöé   v_leveled_up boolean := false;                                                                                                                 Γöé
+Γöé   v_tier text;                                                                                                                                   Γöé
+Γöé   v_is_perfect boolean := false;                                                                                                                 Γöé
+Γöé   v_points_awarded integer;                                                                                                                      Γöé
+Γöé   v_game_points_total integer;                                                                                                                   Γöé
+Γöé begin                                                                                                                                            Γöé
+Γöé   if p_game_type not in (                                                                                                                        Γöé
+Γöé     'word_scramble', 'vocabulary_quiz', 'word_match', 'speed_challenge',                                                                         Γöé
+Γöé     'word_builder', 'listening_challenge', 'sentence_scramble', 'word_detective',                                                                Γöé
+Γöé     'grammar_battle', 'picture_quiz', 'hangman'                                                                                                  Γöé
+Γöé   ) then                                                                                                                                         Γöé
+Γöé     raise exception 'Unknown game_type: %', p_game_type;                                                                                         Γöé
+Γöé   end if;                                                                                                                                        Γöé
+Γöé   v_metric_key := case p_game_type                                                                                                               Γöé
+Γöé     when 'word_scramble' then 'game_words_scrambled_correct'                                                                                     Γöé
+Γöé     when 'vocabulary_quiz' then 'game_vocabulary_quiz_correct'                                                                                   Γöé
+Γöé     when 'word_match' then 'game_word_match_correct'                                                                                             Γöé
+Γöé     when 'speed_challenge' then 'game_speed_challenge_correct'                                                                                   Γöé
+Γöé     when 'word_builder' then 'game_word_builder_correct'                                                                                         Γöé
+Γöé     when 'listening_challenge' then 'game_listening_challenge_correct'                                                                           Γöé
+Γöé     when 'sentence_scramble' then 'game_sentence_scramble_correct'                                                                               Γöé
+Γöé     when 'word_detective' then 'game_word_detective_correct'                                                                                     Γöé
+Γöé     when 'grammar_battle' then 'game_grammar_battle_correct'                                                                                     Γöé
+Γöé     when 'picture_quiz' then 'game_picture_quiz_correct'                                                                                         Γöé
+Γöé     when 'hangman' then 'game_hangman_correct'                                                                                                   Γöé
+Γöé   end;                                                                                                                                           Γöé
+Γöé                                                                                                                                                  Γöé
+Γöé   select id, level into v_student_id, v_academy_level from public.students where profile_id = auth.uid();                                        Γöé
+Γöé   if v_student_id is null then                                                                                                                   Γöé
+Γöé     raise exception 'No student record for the current user';                                                                                    Γöé
+Γöé   end if;                                                                                                                                        Γöé
+Γöé                                                                                                                                                  Γöé
+Γöé   update public.game_rounds                                                                                                                      Γöé
+Γöé      set consumed_at = now()                                                                                                                     Γöé
+Γöé    where id = p_round_id                                                                                                                         Γöé
+Γöé      and student_id = v_student_id                                                                                                               Γöé
+Γöé      and consumed_at is null                                                                                                                     Γöé
+Γöé   returning game_type, level, array_length(vocabulary_ids, 1)                                                                                    Γöé
+Γöé     into v_round_game_type, v_round_level, v_round_size;                                                                                         Γöé
+Γöé                                                                                                                                                  Γöé
+Γöé   if not found then                                                                                                                              Γöé
+Γöé     raise exception 'This round is invalid or has already been submitted' using errcode = 'P0001';                                               Γöé
+Γöé   end if;                                                                                                                                        Γöé
+Γöé                                                                                                                                                  Γöé
+Γöé   if v_round_game_type <> p_game_type then                                                                                                       Γöé
+Γöé     raise exception 'Round/game type mismatch';                                                                                                  Γöé
+Γöé   end if;                                                                                                                                        Γöé
+Γöé                                                                                                                                                  Γöé
+Γöé   if p_game_type in ('word_scramble', 'vocabulary_quiz', 'word_match', 'speed_challenge', 'word_builder', 'listening_challenge', 'hangman') then Γöé
+Γöé     for r in                                                                                                                                     Γöé
+Γöé       select                                                                                                                                     Γöé
+Γöé         (a->>'vocabulary_id')::uuid as vocabulary_id,                                                                                            Γöé
+Γöé         a->>'answer' as answer,                                                                                                                  Γöé
+Γöé         coalesce((a->>'used_hint')::boolean, false) as used_hint,                                                                                Γöé
+Γöé         coalesce((a->>'skipped')::boolean, false) as skipped,                                                                                    Γöé
+Γöé         (a->>'elapsed_ms')::numeric as elapsed_ms                                                                                                Γöé
+Γöé       from jsonb_array_elements(p_answers) as a                                                                                                  Γöé
+Γöé     loop                                                                                                                                         Γöé
+Γöé       v_words_total := v_words_total + 1;                                                                                                        Γöé
+Γöé                                                                                                                                                  Γöé
+Γöé       select (not r.skipped) and (                                                                                                               Γöé
+Γöé         case p_game_type                                                                                                                         Γöé
+Γöé           when 'word_scramble' then lower(trim(r.answer)) = lower(v.english)                                                                     Γöé
+Γöé           when 'vocabulary_quiz' then trim(r.answer) = v.uzbek                                                                                   Γöé
+Γöé           when 'word_match' then trim(r.answer) = v.uzbek                                                                                        Γöé
+Γöé           when 'speed_challenge' then trim(r.answer) = v.uzbek                                                                                   Γöé
+Γöé           when 'word_builder' then lower(trim(r.answer)) = lower(v.english)                                                                      Γöé
+Γöé           when 'listening_challenge' then trim(r.answer) = v.uzbek                                                                               Γöé
+Γöé           when 'hangman' then lower(trim(r.answer)) = lower(v.english)                                                                           Γöé
+Γöé         end                                                                                                                                      Γöé
+Γöé       )                                                                                                                                          Γöé
+Γöé         into v_correct                                                                                                                           Γöé
+Γöé       from public.student_available_vocabulary() v                                                                                               Γöé
+Γöé       where v.id = r.vocabulary_id;                                                                                                              Γöé
+Γöé                                                                                                                                                  Γöé
+Γöé       v_correct := coalesce(v_correct, false);                                                                                                   Γöé
+Γöé                                                                                                                                                  Γöé
+Γöé       if v_correct then                                                                                                                          Γöé
+Γöé         v_words_correct := v_words_correct + 1;                                                                                                  Γöé
+Γöé         if p_game_type = 'speed_challenge' then                                                                                                  Γöé
+Γöé           v_elapsed_ms := greatest(0, least(coalesce(r.elapsed_ms, 10000), 10000));                                                              Γöé
+Γöé           v_speed_bonus := round(5 * (1 - v_elapsed_ms / 10000));                                                                                Γöé
+Γöé           v_points := 10 + v_speed_bonus;                                                                                                        Γöé
+Γöé         else                                                                                                                                     Γöé
+Γöé           v_points := case when r.used_hint then 5 else 10 end;                                                                                  Γöé
+Γöé         end if;                                                                                                                                  Γöé
+Γöé         v_score := v_score + v_points;                                                                                                           Γöé
+Γöé       end if;                                                                                                                                    Γöé
+Γöé                                                                                                                                                  Γöé
+Γöé       insert into public.game_word_history (student_id, vocabulary_id, times_seen, times_correct, last_seen_at)                                  Γöé
+Γöé       values (v_student_id, r.vocabulary_id, 1, case when v_correct then 1 else 0 end, now())                                                    Γöé
+Γöé       on conflict (student_id, vocabulary_id) do update set                                                                                      Γöé
+Γöé         times_seen = game_word_history.times_seen + 1,                                                                                           Γöé
+Γöé         times_correct = game_word_history.times_correct + case when v_correct then 1 else 0 end,                                                 Γöé
+Γöé         last_seen_at = now();                                                                                                                    Γöé
+Γöé                                                                                                                                                  Γöé
+Γöé       v_results := v_results || jsonb_build_object('vocabulary_id', r.vocabulary_id, 'correct', v_correct);                                      Γöé
+Γöé     end loop;                                                                                                                                    Γöé
+Γöé                                                                                                                                                  Γöé
+Γöé     v_pass := v_words_total > 0 and (v_words_correct::numeric / v_words_total) >= 0.70;                                                          Γöé
+Γöé   elsif p_game_type = 'picture_quiz' then                                                                                                        Γöé
+Γöé     for r in                                                                                                                                     Γöé
+Γöé       select                                                                                                                                     Γöé
+Γöé         (a->>'content_id')::uuid as content_id,                                                                                                  Γöé
+Γöé         a->>'answer' as answer,                                                                                                                  Γöé
+Γöé         coalesce((a->>'skipped')::boolean, false) as skipped                                                                                     Γöé
+Γöé       from jsonb_array_elements(p_answers) as a                                                                                                  Γöé
+Γöé     loop                                                                                                                                         Γöé
+Γöé       v_words_total := v_words_total + 1;                                                                                                        Γöé
+Γöé       v_payload := (select payload from public.game_content_bank where id = r.content_id and game_type = 'picture_quiz');                        Γöé
+Γöé       v_correct := v_payload is not null and not r.skipped                                                                                       Γöé
+Γöé         and lower(trim(coalesce(r.answer, ''))) = lower(trim(coalesce(v_payload->>'english', '')));                                              Γöé
+Γöé       v_correct := coalesce(v_correct, false);                                                                                                   Γöé
+Γöé                                                                                                                                                  Γöé
+Γöé       if v_correct then                                                                                                                          Γöé
+Γöé         v_words_correct := v_words_correct + 1;                                                                                                  Γöé
+Γöé         v_points := 10;                                                                                                                          Γöé
+Γöé         v_score := v_score + v_points;                                                                                                           Γöé
+Γöé       end if;                                                                                                                                    Γöé
+Γöé                                                                                                                                                  Γöé
+Γöé       v_results := v_results || jsonb_build_object('content_id', r.content_id, 'correct', v_correct);                                            Γöé
+Γöé     end loop;                                                                                                                                    Γöé
+Γöé                                                                                                                                                  Γöé
+Γöé     v_pass := v_words_total > 0 and (v_words_correct::numeric / v_words_total) >= 0.70;                                                          Γöé
+Γöé   else                                                                                                                                           Γöé
+Γöé     for r in                                                                                                                                     Γöé
+Γöé       select                                                                                                                                     Γöé
+Γöé         (a->>'content_id')::uuid as content_id,                                                                                                  Γöé
+Γöé         a->>'answer' as answer,                                                                                                                  Γöé
+Γöé         a->'words' as answer_words,                                                                                                              Γöé
+Γöé         coalesce((a->>'wrong_index')::int, -1) as wrong_index,                                                                                   Γöé
+Γöé         a->>'correction' as correction,                                                                                                          Γöé
+Γöé         coalesce((a->>'skipped')::boolean, false) as skipped                                                                                     Γöé
+Γöé       from jsonb_array_elements(p_answers) as a                                                                                                  Γöé
+Γöé     loop                                                                                                                                         Γöé
+Γöé       v_words_total := v_words_total + 1;                                                                                                        Γöé
+Γöé       v_payload := (select payload from public.game_content_bank where id = r.content_id and game_type = p_game_type);                           Γöé
+Γöé       v_correct := false;                                                                                                                        Γöé
+Γöé                                                                                                                                                  Γöé
+Γöé       if v_payload is not null and not r.skipped then                                                                                            Γöé
+Γöé         if p_game_type = 'sentence_scramble' then                                                                                                Γöé
+Γöé           select array_agg(w) into v_submitted_words from jsonb_array_elements_text(coalesce(r.answer_words, '[]'::jsonb)) w;                    Γöé
+Γöé           select array_agg(w) into v_canonical_words from jsonb_array_elements_text(v_payload->'words') w;                                       Γöé
+Γöé           v_correct := v_submitted_words = v_canonical_words;                                                                                    Γöé
+Γöé         elsif p_game_type = 'word_detective' then                                                                                                Γöé
+Γöé           v_correct := r.wrong_index = coalesce((v_payload->>'wrong_index')::int, -2)                                                            Γöé
+Γöé             and lower(trim(coalesce(r.correction, ''))) = lower(trim(coalesce(v_payload->>'correction', '')));                                   Γöé
+Γöé         elsif p_game_type = 'grammar_battle' then                                                                                                Γöé
+Γöé           v_correct := trim(coalesce(r.answer, '')) = ((v_payload->'options') ->> ((v_payload->>'correct_index')::int));                         Γöé
+Γöé         end if;                                                                                                                                  Γöé
+Γöé       end if;                                                                                                                                    Γöé
+Γöé                                                                                                                                                  Γöé
+Γöé       v_correct := coalesce(v_correct, false);                                                                                                   Γöé
+Γöé       if v_correct then                                                                                                                          Γöé
+Γöé         v_words_correct := v_words_correct + 1;                                                                                                  Γöé
+Γöé         v_points := 10;                                                                                                                          Γöé
+Γöé         v_score := v_score + v_points;                                                                                                           Γöé
+Γöé       end if;                                                                                                                                    Γöé
+Γöé                                                                                                                                                  Γöé
+Γöé       v_results := v_results || jsonb_build_object('content_id', r.content_id, 'correct', v_correct);                                            Γöé
+Γöé     end loop;                                                                                                                                    Γöé
+Γöé                                                                                                                                                  Γöé
+Γöé     if p_game_type = 'grammar_battle' then                                                                                                       Γöé
+Γöé       v_pass := v_round_size is not null and v_words_total >= v_round_size;                                                                      Γöé
+Γöé     else                                                                                                                                         Γöé
+Γöé       v_pass := v_words_total > 0 and (v_words_correct::numeric / v_words_total) >= 0.70;                                                        Γöé
+Γöé     end if;                                                                                                                                      Γöé
+Γöé   end if;                                                                                                                                        Γöé
+Γöé                                                                                                                                                  Γöé
+Γöé   select v_score > coalesce(max(score), -1)                                                                                                      Γöé
+Γöé     into v_is_new_best                                                                                                                           Γöé
+Γöé   from public.game_sessions                                                                                                                      Γöé
+Γöé   where student_id = v_student_id and game_type = p_game_type;                                                                                   Γöé
+Γöé                                                                                                                                                  Γöé
+Γöé   insert into public.game_sessions (student_id, game_type, score, words_correct, words_total, level, academy_level)                              Γöé
+Γöé   values (v_student_id, p_game_type, v_score, v_words_correct, v_words_total, v_round_level, v_academy_level)                                    Γöé
+Γöé   returning id into v_session_id;                                                                                                                Γöé
+Γöé                                                                                                                                                  Γöé
+Γöé   if v_pass and v_round_level is not null then                                                                                                   Γöé
+Γöé     update public.game_level_progress                                                                                                            Γöé
+Γöé        set current_level = v_round_level + 1,                                                                                                    Γöé
+Γöé            best_level_reached = greatest(best_level_reached, v_round_level + 1),                                                                 Γöé
+Γöé            updated_at = now()                                                                                                                    Γöé
+Γöé      where student_id = v_student_id and game_type = p_game_type                                                                                 Γöé
+Γöé        and current_level = v_round_level;                                                                                                        Γöé
+Γöé     v_leveled_up := found;                                                                                                                       Γöé
+Γöé   end if;                                                                                                                                        Γöé
+Γöé                                                                                                                                                  Γöé
+Γöé   if v_leveled_up then                                                                                                                           Γöé
+Γöé     v_tier := public.game_level_to_tier(v_round_level);                                                                                          Γöé
+Γöé     v_is_perfect := v_words_total > 0 and v_words_correct = v_words_total;                                                                       Γöé
+Γöé                                                                                                                                                  Γöé
+Γöé     insert into public.game_points_transactions (student_id, game_type, level, tier, points, is_perfect, game_session_id)                        Γöé
+Γöé     values (                                                                                                                                     Γöé
+Γöé       v_student_id, p_game_type, v_round_level, v_tier,                                                                                          Γöé
+Γöé       10 + public.game_tier_bonus(v_tier) + case when v_is_perfect then 5 else 0 end,                                                            Γöé
+Γöé       v_is_perfect, v_session_id                                                                                                                 Γöé
+Γöé     )                                                                                                                                            Γöé
+Γöé     on conflict (student_id, game_type, level) do nothing                                                                                        Γöé
+Γöé     returning points into v_points_awarded;                                                                                                      Γöé
+Γöé   end if;                                                                                                                                        Γöé
+Γöé                                                                                                                                                  Γöé
+Γöé   select coalesce(sum(points), 0) into v_game_points_total                                                                                       Γöé
+Γöé   from public.game_points_transactions                                                                                                           Γöé
+Γöé   where student_id = v_student_id;                                                                                                               Γöé
+Γöé                                                                                                                                                  Γöé
+Γöé   select current_level into v_current_level                                                                                                      Γöé
+Γöé   from public.game_level_progress                                                                                                                Γöé
+Γöé   where student_id = v_student_id and game_type = p_game_type;                                                                                   Γöé
+Γöé                                                                                                                                                  Γöé
+Γöé   perform public.bump_student_metric(v_student_id, v_metric_key, v_words_correct);                                                               Γöé
+Γöé   perform public.evaluate_achievements(v_student_id);                                                                                            Γöé
+Γöé                                                                                                                                                  Γöé
+Γöé   return jsonb_build_object(                                                                                                                     Γöé
+Γöé     'session_id', v_session_id,                                                                                                                  Γöé
+Γöé     'score', v_score,                                                                                                                            Γöé
+Γöé     'words_correct', v_words_correct,                                                                                                            Γöé
+Γöé     'words_total', v_words_total,                                                                                                                Γöé
+Γöé     'is_new_best', coalesce(v_is_new_best, true),                                                                                                Γöé
+Γöé     'results', v_results,                                                                                                                        Γöé
+Γöé     'level', v_round_level,                                                                                                                      Γöé
+Γöé     'pass', coalesce(v_pass, false),                                                                                                             Γöé
+Γöé     'leveled_up', v_leveled_up,                                                                                                                  Γöé
+Γöé     'current_level', v_current_level,                                                                                                            Γöé
+Γöé     'game_points_awarded', coalesce(v_points_awarded, 0),                                                                                        Γöé
+Γöé     'game_points_is_perfect', v_is_perfect,                                                                                                      Γöé
+Γöé     'game_points_total', v_game_points_total                                                                                                     Γöé
+Γöé   );                                                                                                                                             Γöé
+Γöé end;                                                                                                                                             Γöé
+Γöé                                                                                                                                                  Γöé
+ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ

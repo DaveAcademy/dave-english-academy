@@ -1,0 +1,52 @@
+// Badge.jsx
+// Renders a raw data value (level letter, active/inactive status) as a
+// localized label - the prop stays the stable English/DB value, only the
+// on-screen text goes through t().
+
+import { useTranslation } from 'react-i18next';
+import { TONE } from '../../../utils/tone';
+import { WEBSITE_STATUS_META } from '../../../lib/websiteEngagement';
+
+const LEVEL_STYLES = {
+  A: 'bg-levelA/10 text-levelA border-levelA/30',
+  A1: 'bg-levelA1/10 text-levelA1 border-levelA1/30',
+  B: 'bg-levelB/10 text-levelB border-levelB/30',
+  C: 'bg-levelC/10 text-levelC border-levelC/30',
+};
+
+export function LevelBadge({ level }) {
+  const { t } = useTranslation('common');
+  return (
+    <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${LEVEL_STYLES[level] || ''}`}>
+      {t(`level${level}`, { defaultValue: `Level ${level}` })}
+    </span>
+  );
+}
+
+export function StatusBadge({ status }) {
+  const { t } = useTranslation('common');
+  const isActive = status === 'Active';
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold ${
+        isActive ? 'bg-active/10 text-active border-active/30' : 'bg-inactive/10 text-inactive border-inactive/30'
+      }`}
+    >
+      <span className={`h-1.5 w-1.5 rounded-full ${isActive ? 'bg-active' : 'bg-inactive'}`} />
+      {t(isActive ? 'active' : 'inactive')}
+    </span>
+  );
+}
+
+// Website Engagement status - a separate dimension from account status
+// above, see lib/websiteEngagement.js.
+export function WebsiteStatusBadge({ status }) {
+  const meta = WEBSITE_STATUS_META[status];
+  if (!meta) return <span className="text-xs text-ink/40">—</span>;
+  const tone = TONE[meta.tone];
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${tone.soft} ${tone.text}`}>
+      {meta.emoji} {meta.label}
+    </span>
+  );
+}

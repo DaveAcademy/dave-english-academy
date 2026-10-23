@@ -4,6 +4,7 @@
 // Setup bootstrap flow (claim_first_admin RPC).
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { validateTeacherLevels } from "./validateLevels.ts";
 
 const ALLOWED_ORIGINS = [
   "https://dave-english-academy.vercel.app",
@@ -79,7 +80,7 @@ Deno.serve(async (req: Request) => {
     return json({ error: "Forbidden" }, 403, origin);
   }
 
-  let body: { email?: string; full_name?: string; role?: string; student_id?: number };
+  let body: { email?: string; full_name?: string; role?: string; student_id?: number; levels?: unknown };
   try {
     body = await req.json();
   } catch {
@@ -90,14 +91,28 @@ Deno.serve(async (req: Request) => {
   const role = body.role;
   const studentId = role === "student" ? body.student_id : undefined;
 
+  // Optional class levels for newly created teachers only. Omitted means
+  // no assignments - never an automatic grant. Levels on a student (or
+  // any other role) payload are rejected so a misbuilt client cannot
+  // silently mis-provision an account.
+  if (role !== "teacher" && body.levels !== undefined) {
+    return json({ error: "levels is only accepted for role 'teacher'." }, 400, origin);
+  }
+  const levelsCheck = role === "teacher"
+    ? validateTeacherLevels(body.levels)
+    : { ok: true as const, levels: [] as never[] };
+  if (!levelsCheck.ok) {
+    return json({ error: levelsCheck.error }, 400, origin);
+  }
+
   if (!email || typeof email !== "string") {
     return json({ error: "email is required" }, 400, origin);
   }
   if (!["teacher", "student"].includes(role ?? "")) {
     return json({ error: "role must be 'teacher' or 'student'" }, 400, origin);
   }
-  if (studentId !== undefined && typeof studentId !== "number") {
-    return json({ error: "student_id must be a number" }, 400, origin);
+  if (studentId !== undefined && !Number.isSafeInteger(studentId)) {
+    return json({ error: "student_id must be an integer" }, 400, origin);
   }
 
   const password = randomPassword();
@@ -110,6 +125,11 @@ Deno.serve(async (req: Request) => {
       password,
       email_confirm: true,
       user_metadata: { full_name: full_name ?? "", role },
+      // Immutable recovery evidence (service-role-only app_metadata): the
+      // student row this login was provisioned for. Students cannot read or
+      // modify app_metadata; self-claim-student reads it server-side and only
+      // links when it identifies exactly one eligible unlinked student.
+      ...(role === "student" && studentId !== undefined ? { app_metadata: { student_id: studentId } } : {}),
     });
 
   if (createError) {
@@ -119,29 +139,121 @@ Deno.serve(async (req: Request) => {
     return json({ error: createError.message }, status, origin);
   }
 
-  if (studentId !== undefined && created.user) {
-    const { error: linkError, count } = await adminClient
-      .from("students")
-      .update({ profile_id: created.user.id }, { count: "exact" })
-      .eq("id", studentId)
-      .is("profile_id", null);
+  // Invariant: every student-role login must end up pointing at exactly one
+  // students row, created here if the caller didn't pick an existing one -
+  // never left to a later, optional, manual step. There is no other path
+  // in the app that can link an already-created orphaned account.
+  if (role === "student" && created.user) {
+    if (studentId !== undefined) {
+      const { error: linkError, count } = await adminClient
+        .from("students")
+        .update({ profile_id: created.user.id }, { count: "exact" })
+        .eq("id", studentId)
+        .is("profile_id", null);
 
-    if (linkError || count === 0) {
-      // The login account already exists at this point - don't fail the
-      // whole request, just report that linking didn't happen so the
-      // admin can retry linking separately rather than losing the account.
+      if (linkError || count === 0) {
+        // The login account already exists at this point - don't fail the
+        // whole request, just report that linking didn't happen so the
+        // admin can retry linking separately rather than losing the account.
+        return json(
+          {
+            email: created.user.email ?? email,
+            password,
+            full_name: full_name ?? "",
+            role,
+            linkWarning: "Account created, but linking to that student failed (it may already be linked).",
+          },
+          200,
+          origin,
+        );
+      }
+    } else {
+      // No existing roster row selected - create one instead of leaving
+      // the login unlinked. level/payment_deadline take safe placeholder
+      // defaults; monthly_fee/status/join_date fall back to their own
+      // table defaults. Same shape as StudentForm's "Add Student" - an
+      // admin can edit these afterward via the Students page.
+      const { data: newStudent, error: createStudentError } = await adminClient
+        .from("students")
+        .insert({
+          real_name: full_name,
+          level: "A",
+          payment_deadline: 1,
+          profile_id: created.user.id,
+        })
+        .select("id")
+        .single();
+
+      if (createStudentError) {
+        return json(
+          {
+            email: created.user.email ?? email,
+            password,
+            full_name: full_name ?? "",
+            role,
+            linkWarning: "Account created, but the student record could not be created automatically: " +
+              createStudentError.message,
+          },
+          200,
+          origin,
+        );
+      }
+
+      // Stamp the same immutable recovery evidence for auto-created roster
+      // rows. The account is already linked here; this only preserves the
+      // association so a later-unlinked row can still be recovered exactly.
+      const { error: evidenceError } = await adminClient.auth.admin.updateUserById(created.user.id, {
+        app_metadata: { student_id: newStudent.id },
+      });
+      if (evidenceError) {
+        return json(
+          {
+            email: created.user.email ?? email,
+            password,
+            full_name: full_name ?? "",
+            role,
+            claimWarning: "Account and student record are linked, but the recovery evidence could not be saved: " +
+              evidenceError.message,
+          },
+          200,
+          origin,
+        );
+      }
+    }
+  }
+
+  // Teacher level assignments (migration 0017/0135): without a row here the
+  // new teacher can neither save nor view attendance. Insert exactly the
+  // explicitly requested levels - empty means none. Upsert on the unique
+  // pair makes retries safe (no duplicate rows, ever).
+  const assignedLevels: string[] = [];
+  if (role === "teacher" && created.user && levelsCheck.levels.length > 0) {
+    const { error: levelsError } = await adminClient
+      .from("teacher_group_assignments")
+      .upsert(
+        levelsCheck.levels.map((level) => ({ teacher_id: created.user!.id, level })),
+        { onConflict: "teacher_id,level", ignoreDuplicates: true },
+      );
+    if (levelsError) {
+      // Same convention as student linkWarning below: the login already
+      // exists, so report success-with-warning rather than failing blindly
+      // or pretending the teacher is fully provisioned.
       return json(
         {
           email: created.user.email ?? email,
           password,
           full_name: full_name ?? "",
           role,
-          linkWarning: "Account created, but linking to that student failed (it may already be linked).",
+          levels: assignedLevels,
+          levelsWarning: "Account created, but level assignments failed (" +
+            levelsError.message +
+            "). Assign levels in Settings → Teacher level assignments, or the teacher cannot take attendance.",
         },
         200,
         origin,
       );
     }
+    assignedLevels.push(...levelsCheck.levels);
   }
 
   return json(
@@ -150,6 +262,7 @@ Deno.serve(async (req: Request) => {
       password,
       full_name: full_name ?? "",
       role,
+      ...(role === "teacher" ? { levels: assignedLevels } : {}),
     },
     200,
     origin,

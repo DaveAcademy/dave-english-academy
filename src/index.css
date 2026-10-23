@@ -11,7 +11,7 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid #1F5E6B;
+  outline: 2px solid #7EA1FF;
   outline-offset: 2px;
 }
 
@@ -27,8 +27,358 @@ body {
   @apply w-full rounded-lg border border-ink/15 bg-white px-3 py-2 text-sm text-ink shadow-sm focus:border-brand-500;
 }
 
+@keyframes shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-3px); }
+  40%, 60% { transform: translateX(3px); }
+}
+.animate-shake {
+  animation: shake 0.4s ease-in-out;
+}
+
 .ruled-texture {
   background-image: repeating-linear-gradient(
     to bottom, transparent, transparent 27px, rgba(255, 255, 255, 0.06) 27px, rgba(255, 255, 255, 0.06) 28px
   );
 }
+
+/* ---- Phone-only density (≤639.98px). Desktop/tablet unchanged. ----
+   Trims vertical whitespace on phones; body text and tap targets stay
+   usable. All selectors below are scoped to phone widths only. */
+@media (max-width: 639.98px) {
+  /* Page headers (portal mb-5/mb-6 + staff; gradient hero headers excluded) */
+  main header[class*="mb-6"],
+  main header[class*="mb-5"] { margin-bottom: 0.75rem; }
+  main header[class]:not([class*="bg-gradient"]) h1[class] { font-size: 1.125rem; line-height: 1.4; }
+  /* Top-level page sections only (semantic <section> direct children) */
+  main > div > section[class*="mb-6"],
+  main > div > section[class*="mb-5"] { margin-bottom: 1rem; }
+  /* Empty / loading states */
+  main div[class*="p-10"][class*="text-center"] { padding: 1.25rem 1rem; }
+  main div[class*="p-8"][class*="text-center"] { padding: 1.25rem 1rem; }
+  /* Centered dialogs (ConfirmDialog, auth cards, recognition modals) */
+  div[class*="max-w-sm"][class*="p-6"] { padding: 1.25rem; }
+  div[class*="max-w-sm"] [class*="mt-6"] { margin-top: 1rem; }
+  /* Bottom-sheet chrome (student/group sheets) */
+  div[class*="rounded-t-2xl"] > [class*="px-5"] { padding-left: 1rem; padding-right: 1rem; }
+  div[class*="rounded-t-2xl"] > [class*="py-4"] { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+  div[class*="rounded-t-2xl"][class*="p-5"] { padding: 1rem; }
+  /* Field stacks inside forms and bottom sheets only */
+  form [class*="space-y-4"] > :not([hidden]) ~ :not([hidden]),
+  div[class*="rounded-t-2xl"] [class*="space-y-4"] > :not([hidden]) ~ :not([hidden]) { margin-top: 0.75rem; }
+  /* Create-form cards */
+  main form[class*="p-4"] { padding: 0.75rem; }
+  main form[class*="gap-3"] { gap: 0.5rem; }
+  /* Form controls: py-2 → py-1.5 equivalent, still comfortably tappable */
+  .input { padding-top: 0.375rem; padding-bottom: 0.375rem; }
+  main input[class*="py-2"],
+  main select[class*="py-2"],
+  main textarea[class*="py-2"] { padding-top: 0.375rem; padding-bottom: 0.375rem; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes drawerIn {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+.animate-fade { animation: fadeIn 0.2s ease-out; }
+.animate-drawer-in { animation: drawerIn 0.2s ease-out; }
+
+@keyframes bounceIn {
+  0% { opacity: 0; transform: scale(0.3); }
+  50% { opacity: 1; transform: scale(1.05); }
+  70% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes correctPop {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.15); }
+  60% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+@keyframes incorrectShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+@keyframes letterReveal {
+  from { opacity: 0; transform: translateY(8px) scale(0.8); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes confettiBurst {
+  0% { opacity: 1; transform: translateY(0) rotate(0deg); }
+  100% { opacity: 0; transform: translateY(-40px) rotate(720deg); }
+}
+
+@keyframes countdownPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+.animate-correct { animation: correctPop 0.35s ease-out; }
+.animate-incorrect { animation: incorrectShake 0.4s ease-in-out; }
+.animate-letter-reveal { animation: letterReveal 0.25s ease-out both; }
+.animate-slide-up { animation: slideUp 0.3s ease-out both; }
+
+/* ---- Global website font (admin-chosen, single site-wide setting). ----
+   Set at runtime from app_settings.website_font (see lib/websiteFont.js).
+   Defaults to Plus Jakarta Sans (also the Tailwind theme default). */
+:root {
+  --font-app: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+body,
+.font-body,
+.font-display {
+  font-family: var(--font-app) !important;
+}
+
+/* ---- Dark theme: applied when <html data-theme="dark">. Centralized remap of the light design tokens (generated from the actual utility inventory, plus hand-tuned bases below). Light mode is byte-identical to before. */
+[data-theme="dark"] { color-scheme: dark; }
+[data-theme="dark"] body { background-color: #0B1220; color: #E8EDF6; }
+[data-theme="dark"] .bg-white { background-color: #16213A; }
+[data-theme="dark"] .bg-cloud\/60 { background-color: rgb(148 163 184 / 0.16); }
+[data-theme="dark"] :focus-visible { outline-color: #7EA1FF; }
+[data-theme="dark"] .input { background-color: #16213A; border-color: rgb(255 255 255 / 0.14); color: #E8EDF6; }
+[data-theme="dark"] .input::placeholder { color: rgb(148 163 184 / 0.7); }
+[data-theme="dark"] .bg-amber-100 { background-color: color-mix(in srgb, #F59E0B 24%, rgb(11 18 32 / 1)); }
+[data-theme="dark"] .bg-amber-200 { background-color: color-mix(in srgb, #F59E0B 36%, rgb(11 18 32 / 1)); }
+[data-theme="dark"] .bg-amber-50 { background-color: color-mix(in srgb, #F59E0B 16%, rgb(11 18 32 / 1)); }
+[data-theme="dark"] .bg-amber-50\/30 { background-color: color-mix(in srgb, #F59E0B 16%, rgb(11 18 32 / 0.3)); }
+[data-theme="dark"] .bg-amber-50\/40 { background-color: color-mix(in srgb, #F59E0B 16%, rgb(11 18 32 / 0.4)); }
+[data-theme="dark"] .bg-amber-50\/60 { background-color: color-mix(in srgb, #F59E0B 16%, rgb(11 18 32 / 0.6)); }
+[data-theme="dark"] .bg-brand-100 { background-color: #22336B; }
+[data-theme="dark"] .bg-brand-100\/60 { background-color: #22336B; }
+[data-theme="dark"] .bg-brand-50 { background-color: #1A2650; }
+[data-theme="dark"] .bg-brand-50\/30 { background-color: #1A2650; }
+[data-theme="dark"] .bg-brand-50\/40 { background-color: #1A2650; }
+[data-theme="dark"] .bg-brand-50\/50 { background-color: #1A2650; }
+[data-theme="dark"] .bg-brand-50\/60 { background-color: #1A2650; }
+[data-theme="dark"] .bg-brand-50\/70 { background-color: #1A2650; }
+[data-theme="dark"] .bg-cyan-200 { background-color: color-mix(in srgb, #06B6D4 36%, rgb(11 18 32 / 1)); }
+[data-theme="dark"] .bg-emerald-100 { background-color: color-mix(in srgb, #10B981 24%, rgb(11 18 32 / 1)); }
+[data-theme="dark"] .bg-emerald-200 { background-color: color-mix(in srgb, #10B981 36%, rgb(11 18 32 / 1)); }
+[data-theme="dark"] .bg-emerald-50 { background-color: color-mix(in srgb, #10B981 16%, rgb(11 18 32 / 1)); }
+[data-theme="dark"] .bg-emerald-50\/60 { background-color: color-mix(in srgb, #10B981 16%, rgb(11 18 32 / 0.6)); }
+[data-theme="dark"] .bg-fuchsia-200 { background-color: color-mix(in srgb, #D946EF 36%, rgb(11 18 32 / 1)); }
+[data-theme="dark"] .bg-gray-200 { background-color: color-mix(in srgb, #6B7280 36%, rgb(11 18 32 / 1)); }
+[data-theme="dark"] .bg-gray-50\/60 { background-color: color-mix(in srgb, #6B7280 16%, rgb(11 18 32 / 0.6)); }
+[data-theme="dark"] .bg-green-100 { background-color: color-mix(in srgb, #22C55E 24%, rgb(11 18 32 / 1)); }
+[data-theme="dark"] .bg-indigo-200 { background-color: color-mix(in srgb, #6366F1 36%, rgb(11 18 32 / 1)); }
+[data-theme="dark"] .bg-ink { background-color: #2E3B55; }
+[data-theme="dark"] .bg-ink\/\[0\.015\] { background-color: #2E3B55; }
+[data-theme="dark"] .bg-ink\/\[0\.02\] { background-color: #2E3B55; }
+[data-theme="dark"] .bg-ink\/\[0\.03\] { background-color: #2E3B55; }
+[data-theme="dark"] .bg-ink\/\[0\.04\] { background-color: #2E3B55; }
+[data-theme="dark"] .bg-ink\/\[0\.05\] { background-color: #2E3B55; }
+[data-theme="dark"] .bg-ink\/\[0\.06\] { background-color: #2E3B55; }
+[data-theme="dark"] .bg-ink\/\[0\.07\] { background-color: #2E3B55; }
+[data-theme="dark"] .bg-ink\/\[0\.08\] { background-color: #2E3B55; }
+[data-theme="dark"] .bg-ink\/\[0\.10\] { background-color: #2E3B55; }
+[data-theme="dark"] .bg-ink\/10 { background-color: #2E3B55; }
+[data-theme="dark"] .bg-ink\/15 { background-color: #2E3B55; }
+[data-theme="dark"] .bg-ink\/20 { background-color: #2E3B55; }
+[data-theme="dark"] .bg-ink\/30 { background-color: #2E3B55; }
+[data-theme="dark"] .bg-ink\/40 { background-color: #2E3B55; }
+[data-theme="dark"] .bg-ink\/5 { background-color: #2E3B55; }
+[data-theme="dark"] .bg-ink\/50 { background-color: #2E3B55; }
+[data-theme="dark"] .bg-ink\/60 { background-color: #2E3B55; }
+[data-theme="dark"] .bg-ink\/70 { background-color: #2E3B55; }
+[data-theme="dark"] .bg-ink\/90 { background-color: #2E3B55; }
+[data-theme="dark"] .bg-lime-100 { background-color: color-mix(in srgb, #84CC16 24%, rgb(11 18 32 / 1)); }
+[data-theme="dark"] .bg-lime-200 { background-color: color-mix(in srgb, #84CC16 36%, rgb(11 18 32 / 1)); }
+[data-theme="dark"] .bg-orange-100 { background-color: color-mix(in srgb, #F97316 24%, rgb(11 18 32 / 1)); }
+[data-theme="dark"] .bg-orange-50 { background-color: color-mix(in srgb, #F97316 16%, rgb(11 18 32 / 1)); }
+[data-theme="dark"] .bg-orange-50\/70 { background-color: color-mix(in srgb, #F97316 16%, rgb(11 18 32 / 0.7)); }
+[data-theme="dark"] .bg-paper { background-color: #0B1220; }
+[data-theme="dark"] .bg-paper\/40 { background-color: #0B1220; }
+[data-theme="dark"] .bg-paper\/50 { background-color: #0B1220; }
+[data-theme="dark"] .bg-paper\/60 { background-color: #0B1220; }
+[data-theme="dark"] .bg-red-100 { background-color: color-mix(in srgb, #EF4444 24%, rgb(11 18 32 / 1)); }
+[data-theme="dark"] .bg-red-200 { background-color: color-mix(in srgb, #EF4444 36%, rgb(11 18 32 / 1)); }
+[data-theme="dark"] .bg-red-50 { background-color: color-mix(in srgb, #EF4444 16%, rgb(11 18 32 / 1)); }
+[data-theme="dark"] .bg-red-50\/40 { background-color: color-mix(in srgb, #EF4444 16%, rgb(11 18 32 / 0.4)); }
+[data-theme="dark"] .bg-rose-100 { background-color: color-mix(in srgb, #F43F5E 24%, rgb(11 18 32 / 1)); }
+[data-theme="dark"] .bg-rose-200 { background-color: color-mix(in srgb, #F43F5E 36%, rgb(11 18 32 / 1)); }
+[data-theme="dark"] .bg-rose-50 { background-color: color-mix(in srgb, #F43F5E 16%, rgb(11 18 32 / 1)); }
+[data-theme="dark"] .bg-sky-100 { background-color: color-mix(in srgb, #0EA5E9 24%, rgb(11 18 32 / 1)); }
+[data-theme="dark"] .bg-sky-200 { background-color: color-mix(in srgb, #0EA5E9 36%, rgb(11 18 32 / 1)); }
+[data-theme="dark"] .bg-sky-50 { background-color: color-mix(in srgb, #0EA5E9 16%, rgb(11 18 32 / 1)); }
+[data-theme="dark"] .bg-slate-100 { background-color: color-mix(in srgb, #64748B 24%, rgb(11 18 32 / 1)); }
+[data-theme="dark"] .bg-slate-200 { background-color: color-mix(in srgb, #64748B 36%, rgb(11 18 32 / 1)); }
+[data-theme="dark"] .bg-slate-300 { background-color: #334155; }
+[data-theme="dark"] .bg-slate-400 { background-color: #475569; }
+[data-theme="dark"] .bg-teal-100 { background-color: color-mix(in srgb, #14B8A6 24%, rgb(11 18 32 / 1)); }
+[data-theme="dark"] .bg-teal-200 { background-color: color-mix(in srgb, #14B8A6 36%, rgb(11 18 32 / 1)); }
+[data-theme="dark"] .bg-violet-100 { background-color: color-mix(in srgb, #8B5CF6 24%, rgb(11 18 32 / 1)); }
+[data-theme="dark"] .bg-violet-200 { background-color: color-mix(in srgb, #8B5CF6 36%, rgb(11 18 32 / 1)); }
+[data-theme="dark"] .bg-violet-50 { background-color: color-mix(in srgb, #8B5CF6 16%, rgb(11 18 32 / 1)); }
+[data-theme="dark"] .border-amber-100 { border-color: color-mix(in srgb, #F59E0B 38%, transparent); }
+[data-theme="dark"] .border-amber-200 { border-color: color-mix(in srgb, #F59E0B 38%, transparent); }
+[data-theme="dark"] .border-amber-300 { border-color: color-mix(in srgb, #F59E0B 38%, transparent); }
+[data-theme="dark"] .border-amber-300\/40 { border-color: color-mix(in srgb, #F59E0B 38%, transparent); }
+[data-theme="dark"] .border-amber-300\/60 { border-color: color-mix(in srgb, #F59E0B 38%, transparent); }
+[data-theme="dark"] .border-amber-400 { border-color: color-mix(in srgb, #F59E0B 38%, transparent); }
+[data-theme="dark"] .border-amber-500\/20 { border-color: color-mix(in srgb, #F59E0B 38%, transparent); }
+[data-theme="dark"] .border-amber-500\/40 { border-color: color-mix(in srgb, #F59E0B 38%, transparent); }
+[data-theme="dark"] .border-amber-600\/15 { border-color: color-mix(in srgb, #F59E0B 38%, transparent); }
+[data-theme="dark"] .border-brand-100 { border-color: #2A3A75; }
+[data-theme="dark"] .border-brand-200 { border-color: #31448A; }
+[data-theme="dark"] .border-brand-300 { border-color: #3D55AC; }
+[data-theme="dark"] .border-emerald-100 { border-color: color-mix(in srgb, #10B981 38%, transparent); }
+[data-theme="dark"] .border-emerald-200 { border-color: color-mix(in srgb, #10B981 38%, transparent); }
+[data-theme="dark"] .border-emerald-300 { border-color: color-mix(in srgb, #10B981 38%, transparent); }
+[data-theme="dark"] .border-emerald-400 { border-color: color-mix(in srgb, #10B981 38%, transparent); }
+[data-theme="dark"] .border-fuchsia-400 { border-color: color-mix(in srgb, #D946EF 38%, transparent); }
+[data-theme="dark"] .border-gray-300\/40 { border-color: color-mix(in srgb, #6B7280 38%, transparent); }
+[data-theme="dark"] .border-indigo-300 { border-color: color-mix(in srgb, #6366F1 38%, transparent); }
+[data-theme="dark"] .border-ink\/\[0\.03\] { border-color: rgb(255 255 255 / 0.03); }
+[data-theme="dark"] .border-ink\/\[0\.04\] { border-color: rgb(255 255 255 / 0.04); }
+[data-theme="dark"] .border-ink\/\[0\.06\] { border-color: rgb(255 255 255 / 0.06); }
+[data-theme="dark"] .border-ink\/\[0\.08\] { border-color: rgb(255 255 255 / 0.08); }
+[data-theme="dark"] .border-ink\/\[0\.1\] { border-color: rgb(255 255 255 / 0.1); }
+[data-theme="dark"] .border-ink\/10 { border-color: rgb(255 255 255 / 0.1); }
+[data-theme="dark"] .border-ink\/15 { border-color: rgb(255 255 255 / 0.15); }
+[data-theme="dark"] .border-ink\/20 { border-color: rgb(255 255 255 / 0.2); }
+[data-theme="dark"] .border-ink\/30 { border-color: rgb(255 255 255 / 0.3); }
+[data-theme="dark"] .border-ink\/5 { border-color: rgb(255 255 255 / 0.05); }
+[data-theme="dark"] .border-lime-500 { border-color: color-mix(in srgb, #84CC16 38%, transparent); }
+[data-theme="dark"] .border-orange-100 { border-color: color-mix(in srgb, #F97316 38%, transparent); }
+[data-theme="dark"] .border-orange-200 { border-color: color-mix(in srgb, #F97316 38%, transparent); }
+[data-theme="dark"] .border-red-200 { border-color: color-mix(in srgb, #EF4444 38%, transparent); }
+[data-theme="dark"] .border-red-300 { border-color: color-mix(in srgb, #EF4444 38%, transparent); }
+[data-theme="dark"] .border-rose-400 { border-color: color-mix(in srgb, #F43F5E 38%, transparent); }
+[data-theme="dark"] .border-sky-500 { border-color: color-mix(in srgb, #0EA5E9 38%, transparent); }
+[data-theme="dark"] .border-slate-300 { border-color: color-mix(in srgb, #64748B 38%, transparent); }
+[data-theme="dark"] .border-teal-300 { border-color: color-mix(in srgb, #14B8A6 38%, transparent); }
+[data-theme="dark"] .border-teal-400 { border-color: color-mix(in srgb, #14B8A6 38%, transparent); }
+[data-theme="dark"] .border-violet-100 { border-color: color-mix(in srgb, #8B5CF6 38%, transparent); }
+[data-theme="dark"] .border-violet-200 { border-color: color-mix(in srgb, #8B5CF6 38%, transparent); }
+[data-theme="dark"] .border-violet-300 { border-color: color-mix(in srgb, #8B5CF6 38%, transparent); }
+[data-theme="dark"] .divide-ink\/\[0\.04\] { border-color: rgb(255 255 255 / 0.04); }
+[data-theme="dark"] .divide-ink\/\[0\.06\] { border-color: rgb(255 255 255 / 0.06); }
+[data-theme="dark"] .divide-ink\/5 { border-color: rgb(255 255 255 / 0.05); }
+[data-theme="dark"] .from-amber-50 { --tw-gradient-from: color-mix(in srgb, #F59E0B 16%, rgb(11 18 32)); }
+[data-theme="dark"] .from-cyan-50 { --tw-gradient-from: color-mix(in srgb, #06B6D4 16%, rgb(11 18 32)); }
+[data-theme="dark"] .from-emerald-50 { --tw-gradient-from: color-mix(in srgb, #10B981 16%, rgb(11 18 32)); }
+[data-theme="dark"] .from-fuchsia-50 { --tw-gradient-from: color-mix(in srgb, #D946EF 16%, rgb(11 18 32)); }
+[data-theme="dark"] .from-indigo-50 { --tw-gradient-from: color-mix(in srgb, #6366F1 16%, rgb(11 18 32)); }
+[data-theme="dark"] .from-lime-50 { --tw-gradient-from: color-mix(in srgb, #84CC16 16%, rgb(11 18 32)); }
+[data-theme="dark"] .from-orange-50 { --tw-gradient-from: color-mix(in srgb, #F97316 16%, rgb(11 18 32)); }
+[data-theme="dark"] .from-red-50 { --tw-gradient-from: color-mix(in srgb, #EF4444 16%, rgb(11 18 32)); }
+[data-theme="dark"] .from-rose-50 { --tw-gradient-from: color-mix(in srgb, #F43F5E 16%, rgb(11 18 32)); }
+[data-theme="dark"] .from-sky-50 { --tw-gradient-from: color-mix(in srgb, #0EA5E9 16%, rgb(11 18 32)); }
+[data-theme="dark"] .from-slate-50 { --tw-gradient-from: color-mix(in srgb, #64748B 16%, rgb(11 18 32)); }
+[data-theme="dark"] .from-teal-50 { --tw-gradient-from: color-mix(in srgb, #14B8A6 16%, rgb(11 18 32)); }
+[data-theme="dark"] .from-violet-50 { --tw-gradient-from: color-mix(in srgb, #8B5CF6 16%, rgb(11 18 32)); }
+[data-theme="dark"] .text-active { color: #3DD598; }
+[data-theme="dark"] .text-amber-600 { color: color-mix(in srgb, #F59E0B 65%, white); }
+[data-theme="dark"] .text-amber-700 { color: color-mix(in srgb, #F59E0B 55%, white); }
+[data-theme="dark"] .text-amber-800 { color: color-mix(in srgb, #F59E0B 45%, white); }
+[data-theme="dark"] .text-amber-800\/70 { color: color-mix(in srgb, color-mix(in srgb, #F59E0B 45%, white) 70%, transparent); }
+[data-theme="dark"] .text-amber-800\/80 { color: color-mix(in srgb, color-mix(in srgb, #F59E0B 45%, white) 80%, transparent); }
+[data-theme="dark"] .text-amber-900 { color: color-mix(in srgb, #F59E0B 55%, white); }
+[data-theme="dark"] .text-brand-500 { color: #7E97FF; }
+[data-theme="dark"] .text-brand-600 { color: #8FA6FF; }
+[data-theme="dark"] .text-brand-600\/60 { color: color-mix(in srgb, #8FA6FF 60%, transparent); }
+[data-theme="dark"] .text-brand-600\/70 { color: color-mix(in srgb, #8FA6FF 70%, transparent); }
+[data-theme="dark"] .text-brand-700 { color: #A9BCFF; }
+[data-theme="dark"] .text-brand-700\/70 { color: color-mix(in srgb, #A9BCFF 70%, transparent); }
+[data-theme="dark"] .text-brand-800 { color: #C3D2FF; }
+[data-theme="dark"] .text-emerald-600 { color: color-mix(in srgb, #10B981 65%, white); }
+[data-theme="dark"] .text-emerald-700 { color: color-mix(in srgb, #10B981 55%, white); }
+[data-theme="dark"] .text-emerald-700\/80 { color: color-mix(in srgb, color-mix(in srgb, #10B981 55%, white) 80%, transparent); }
+[data-theme="dark"] .text-emerald-800 { color: color-mix(in srgb, #10B981 45%, white); }
+[data-theme="dark"] .text-fuchsia-700\/60 { color: color-mix(in srgb, color-mix(in srgb, #D946EF 55%, white) 60%, transparent); }
+[data-theme="dark"] .text-fuchsia-900 { color: color-mix(in srgb, #D946EF 55%, white); }
+[data-theme="dark"] .text-gray-500 { color: #94A3B8; }
+[data-theme="dark"] .text-gray-600 { color: color-mix(in srgb, #6B7280 65%, white); }
+[data-theme="dark"] .text-green-600 { color: color-mix(in srgb, #22C55E 65%, white); }
+[data-theme="dark"] .text-green-700 { color: color-mix(in srgb, #22C55E 55%, white); }
+[data-theme="dark"] .text-inactive { color: #F0938A; }
+[data-theme="dark"] .text-inactive\/60 { color: color-mix(in srgb, #F0938A 60%, transparent); }
+[data-theme="dark"] .text-inactive\/80 { color: color-mix(in srgb, #F0938A 80%, transparent); }
+[data-theme="dark"] .text-ink { color: rgb(232 237 246 / 1); }
+[data-theme="dark"] .text-ink\/15 { color: rgb(232 237 246 / 0.15); }
+[data-theme="dark"] .text-ink\/20 { color: rgb(232 237 246 / 0.2); }
+[data-theme="dark"] .text-ink\/25 { color: rgb(232 237 246 / 0.25); }
+[data-theme="dark"] .text-ink\/30 { color: rgb(232 237 246 / 0.3); }
+[data-theme="dark"] .text-ink\/35 { color: rgb(232 237 246 / 0.35); }
+[data-theme="dark"] .text-ink\/40 { color: rgb(232 237 246 / 0.4); }
+[data-theme="dark"] .text-ink\/45 { color: rgb(232 237 246 / 0.45); }
+[data-theme="dark"] .text-ink\/50 { color: rgb(232 237 246 / 0.5); }
+[data-theme="dark"] .text-ink\/55 { color: rgb(232 237 246 / 0.55); }
+[data-theme="dark"] .text-ink\/60 { color: rgb(232 237 246 / 0.6); }
+[data-theme="dark"] .text-ink\/65 { color: rgb(232 237 246 / 0.65); }
+[data-theme="dark"] .text-ink\/70 { color: rgb(232 237 246 / 0.7); }
+[data-theme="dark"] .text-ink\/75 { color: rgb(232 237 246 / 0.75); }
+[data-theme="dark"] .text-ink\/80 { color: rgb(232 237 246 / 0.8); }
+[data-theme="dark"] .text-levelA { color: #82BDE9; }
+[data-theme="dark"] .text-levelB { color: #F6C46A; }
+[data-theme="dark"] .text-levelC { color: #B79CED; }
+[data-theme="dark"] .text-lime-600 { color: color-mix(in srgb, #84CC16 65%, white); }
+[data-theme="dark"] .text-lime-700 { color: color-mix(in srgb, #84CC16 55%, white); }
+[data-theme="dark"] .text-lime-700\/60 { color: color-mix(in srgb, color-mix(in srgb, #84CC16 55%, white) 60%, transparent); }
+[data-theme="dark"] .text-lime-900 { color: color-mix(in srgb, #84CC16 55%, white); }
+[data-theme="dark"] .text-orange-600 { color: color-mix(in srgb, #F97316 65%, white); }
+[data-theme="dark"] .text-orange-700 { color: color-mix(in srgb, #F97316 55%, white); }
+[data-theme="dark"] .text-red-600 { color: color-mix(in srgb, #EF4444 65%, white); }
+[data-theme="dark"] .text-red-700 { color: color-mix(in srgb, #EF4444 55%, white); }
+[data-theme="dark"] .text-red-800 { color: color-mix(in srgb, #EF4444 45%, white); }
+[data-theme="dark"] .text-rose-600 { color: color-mix(in srgb, #F43F5E 65%, white); }
+[data-theme="dark"] .text-rose-700 { color: color-mix(in srgb, #F43F5E 55%, white); }
+[data-theme="dark"] .text-sky-600 { color: color-mix(in srgb, #0EA5E9 65%, white); }
+[data-theme="dark"] .text-sky-700 { color: color-mix(in srgb, #0EA5E9 55%, white); }
+[data-theme="dark"] .text-sky-700\/60 { color: color-mix(in srgb, color-mix(in srgb, #0EA5E9 55%, white) 60%, transparent); }
+[data-theme="dark"] .text-sky-900 { color: color-mix(in srgb, #0EA5E9 55%, white); }
+[data-theme="dark"] .text-slate-500 { color: #94A3B8; }
+[data-theme="dark"] .text-slate-600 { color: color-mix(in srgb, #64748B 65%, white); }
+[data-theme="dark"] .text-slate-700 { color: color-mix(in srgb, #64748B 55%, white); }
+[data-theme="dark"] .text-teal-700 { color: color-mix(in srgb, #14B8A6 55%, white); }
+[data-theme="dark"] .text-teal-800 { color: color-mix(in srgb, #14B8A6 45%, white); }
+[data-theme="dark"] .text-violet-600 { color: color-mix(in srgb, #8B5CF6 65%, white); }
+[data-theme="dark"] .text-violet-600\/50 { color: color-mix(in srgb, color-mix(in srgb, #8B5CF6 65%, white) 50%, transparent); }
+[data-theme="dark"] .text-violet-600\/60 { color: color-mix(in srgb, color-mix(in srgb, #8B5CF6 65%, white) 60%, transparent); }
+[data-theme="dark"] .text-violet-600\/70 { color: color-mix(in srgb, color-mix(in srgb, #8B5CF6 65%, white) 70%, transparent); }
+[data-theme="dark"] .text-violet-700 { color: color-mix(in srgb, #8B5CF6 55%, white); }
+[data-theme="dark"] .text-violet-700\/60 { color: color-mix(in srgb, color-mix(in srgb, #8B5CF6 55%, white) 60%, transparent); }
+[data-theme="dark"] .to-amber-50 { --tw-gradient-to: color-mix(in srgb, #F59E0B 16%, rgb(11 18 32)); }
+[data-theme="dark"] .to-blue-100 { --tw-gradient-to: color-mix(in srgb, #3B82F6 24%, rgb(11 18 32)); }
+[data-theme="dark"] .to-emerald-100 { --tw-gradient-to: color-mix(in srgb, #10B981 24%, rgb(11 18 32)); }
+[data-theme="dark"] .to-gray-100 { --tw-gradient-to: color-mix(in srgb, #6B7280 24%, rgb(11 18 32)); }
+[data-theme="dark"] .to-green-100 { --tw-gradient-to: color-mix(in srgb, #22C55E 24%, rgb(11 18 32)); }
+[data-theme="dark"] .to-orange-100 { --tw-gradient-to: color-mix(in srgb, #F97316 24%, rgb(11 18 32)); }
+[data-theme="dark"] .to-orange-50 { --tw-gradient-to: color-mix(in srgb, #F97316 16%, rgb(11 18 32)); }
+[data-theme="dark"] .to-orange-50\/80 { --tw-gradient-to: color-mix(in srgb, #F97316 16%, rgb(11 18 32)); }
+[data-theme="dark"] .to-purple-100 { --tw-gradient-to: color-mix(in srgb, #A855F7 24%, rgb(11 18 32)); }
+[data-theme="dark"] .to-sky-100 { --tw-gradient-to: color-mix(in srgb, #0EA5E9 24%, rgb(11 18 32)); }
+[data-theme="dark"] .to-teal-100 { --tw-gradient-to: color-mix(in srgb, #14B8A6 24%, rgb(11 18 32)); }
+[data-theme="dark"] .to-violet-100 { --tw-gradient-to: color-mix(in srgb, #8B5CF6 24%, rgb(11 18 32)); }
+[data-theme="dark"] .to-violet-50 { --tw-gradient-to: color-mix(in srgb, #8B5CF6 16%, rgb(11 18 32)); }
+[data-theme="dark"] .to-yellow-100 { --tw-gradient-to: color-mix(in srgb, #EAB308 24%, rgb(11 18 32)); }
